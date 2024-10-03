@@ -1,0 +1,133 @@
+name: Main
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - ".gitignore"
+      - ".github/dependabot.yml"
+      - "deny.toml"
+  pull_request:
+    paths-ignore:
+      - ".gitignore"
+      - ".github/dependabot.yml"
+      - "deny.toml"
+env:
+  CARGO_TERM_COLOR: always
+jobs:
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Taplo
+        run: cargo install --locked taplo-cli
+
+      - name: Format
+        run: |
+          cargo fmt --all --check
+          taplo fmt --check
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libudev-dev
+
+      - name: Instal stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v2
+
+        # Run only clippy on all features to check if it compiles and skip for all other commands.
+      - name: Clippy
+        run: cargo clippy --all-features --tests -- -D warnings
+
+      - name: Rustdoc
+        run: cargo rustdoc -- -D warnings
+
+  doctest:
+    name: Doctest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libudev-dev
+
+      - name: Instal stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v2
+
+      - name: Test doc
+        run: cargo test --no-default-features --doc
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends libudev-dev
+
+      - name: Instal stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install LLVM tools
+        run: rustup component add llvm-tools-preview
+
+      - name: Install Tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Test
+        run: cargo tarpaulin --no-default-features --engine llvm --out lcov
+
+      - name: Upload code coverage results
+        if: github.actor != 'dependabot[bot]'
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: lcov.info
+
+  codecov:
+    name: Upload to Codecov
+    if: github.actor != 'dependabot[bot]'
+    needs: [format, lint, doctest, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Download code coverage results
+        uses: actions/download-artifact@v4
+        with:
+          name: code-coverage-report
+
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
