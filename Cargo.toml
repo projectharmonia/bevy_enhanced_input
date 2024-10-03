@@ -1,0 +1,26 @@
+[package]
+name = "bevy_enhanced_input"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.14", default-features = false, features = ["serialize"] }
+bevy_egui = { version = "0.29", default-features = false, optional = true }
+serde = "1.0"
+bitflags = { version = "2.6", features = ["serde"] }
+interpolation = "0.3"
+
+[dev-dependencies]
+bevy = { version = "0.14", default-features = false, features = [
+  "bevy_gilrs",
+  "x11",
+] }
+
+[features]
+default = ["ui_priority"]
+
+# Prioritizes 'bevy_ui' actions when processing inputs.
+ui_priority = ['bevy/bevy_ui']
+
+# Prioritizes 'egui' over actions when processing inputs.
+egui_priority = ['dep:bevy_egui']

@@ -1,0 +1,8 @@
+# Binaries
+target
+
+# Code coverage
+html
+
+# For library
+Cargo.lock
