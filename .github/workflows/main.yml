@@ -40,11 +40,6 @@ jobs:
       - name: Clone repo
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends libudev-dev
-
       - name: Instal stable toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -64,11 +59,6 @@ jobs:
     steps:
       - name: Clone repo
         uses: actions/checkout@v4
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install --no-install-recommends libudev-dev
 
       - name: Instal stable toolchain
         uses: dtolnay/rust-toolchain@stable
