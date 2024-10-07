@@ -35,12 +35,6 @@ fn add_instance<C: InputContext>(
     trigger: Trigger<OnAdd, C>,
     mut set: ParamSet<(&World, ResMut<InputContexts>)>,
 ) {
-    debug!(
-        "adding input context `{}` to `{}`",
-        any::type_name::<C>(),
-        trigger.entity(),
-    );
-
     // We need to borrow both the world and contexts,
     // but we can't use `resource_scope` because observers
     // don't provide mutable access to the world.
@@ -51,16 +45,10 @@ fn add_instance<C: InputContext>(
 }
 
 fn rebuild_instance<C: InputContext>(
-    trigger: Trigger<RebuildInputContexts>,
+    _trigger: Trigger<RebuildInputContexts>,
     mut commands: Commands,
     mut set: ParamSet<(&World, ResMut<InputContexts>)>,
 ) {
-    debug!(
-        "rebuilding input context `{}` for `{}`",
-        any::type_name::<C>(),
-        trigger.entity()
-    );
-
     let mut contexts = mem::take(&mut *set.p1());
     contexts.rebuild::<C>(set.p0(), &mut commands);
     *set.p1() = contexts;
@@ -71,12 +59,6 @@ fn remove_instance<C: InputContext>(
     mut commands: Commands,
     mut contexts: ResMut<InputContexts>,
 ) {
-    debug!(
-        "removing input context `{}` from `{}`",
-        any::type_name::<C>(),
-        trigger.entity()
-    );
-
     contexts.remove::<C>(&mut commands, trigger.entity());
 }
 
@@ -85,6 +67,8 @@ pub(crate) struct InputContexts(Vec<ContextInstance>);
 
 impl InputContexts {
     fn add<C: InputContext>(&mut self, world: &World, entity: Entity) {
+        debug!("adding `{}` to `{entity}`", any::type_name::<C>());
+
         if let Some(index) = self.index::<C>() {
             match &mut self.0[index] {
                 ContextInstance::Exclusive { maps, .. } => {
@@ -109,6 +93,8 @@ impl InputContexts {
 
     fn rebuild<C: InputContext>(&mut self, world: &World, commands: &mut Commands) {
         if let Some(index) = self.index::<C>() {
+            debug!("rebuilding `{}`", any::type_name::<C>());
+
             match &mut self.0[index] {
                 ContextInstance::Exclusive { maps, .. } => {
                     for (entity, map) in maps {
@@ -130,6 +116,8 @@ impl InputContexts {
     }
 
     fn remove<C: InputContext>(&mut self, commands: &mut Commands, entity: Entity) {
+        debug!("removing `{}` from `{entity}`", any::type_name::<C>());
+
         let context_index = self
             .index::<C>()
             .expect("context should be instantiated before removal");
@@ -161,6 +149,7 @@ impl InputContexts {
 
         if empty {
             // Remove the instance if no entity references it.
+            debug!("removing empty `{}`", any::type_name::<C>());
             self.0.remove(context_index);
         }
     }

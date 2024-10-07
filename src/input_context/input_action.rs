@@ -96,6 +96,11 @@ impl ActionData {
         state: ActionState,
         value: ActionValue,
     ) {
+        trace!(
+            "changing state from `{:?}` to `{state:?}` with `{value:?}`",
+            self.state
+        );
+
         // Trigger an event for each entity separately
         // since it's cheaper to copy the event than to clone the entities.
         for &entity in entities {

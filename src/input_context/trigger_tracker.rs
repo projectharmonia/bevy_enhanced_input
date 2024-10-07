@@ -39,6 +39,10 @@ impl TriggerTracker {
                 self.value.dim(),
                 "modifiers should preserve action dimentions"
             );
+            trace!(
+                "`{modifier:?}` changes `{:?}` to `{new_value:?}`",
+                self.value
+            );
 
             self.value = new_value;
         }
@@ -55,6 +59,7 @@ impl TriggerTracker {
         // All conditions must be evaluated to update their internal state/delta time.
         for condition in conditions {
             let state = condition.update_state(world, actions_data, delta, self.value);
+            trace!("`{condition:?}` returns state `{state:?}`");
             match condition.kind() {
                 ConditionKind::Explicit => {
                     self.found_explicit = true;

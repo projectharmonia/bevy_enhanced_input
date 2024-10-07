@@ -1,4 +1,4 @@
-use std::any::TypeId;
+use std::any::{self, TypeId};
 
 use bevy::{prelude::*, utils::Entry};
 
@@ -74,6 +74,7 @@ impl ContextMap {
 
 pub struct ActionMap {
     type_id: TypeId,
+    action_name: &'static str,
     consumes_input: bool,
     accumulation: Accumulation,
     dim: ActionValueDim,
@@ -88,6 +89,7 @@ impl ActionMap {
     fn new<A: InputAction>() -> Self {
         Self {
             type_id: TypeId::of::<A>(),
+            action_name: any::type_name::<A>(),
             dim: A::DIM,
             consumes_input: A::CONSUMES_INPUT,
             accumulation: A::ACCUMULATION,
@@ -137,6 +139,8 @@ impl ActionMap {
         entities: &[Entity],
         delta: f32,
     ) {
+        trace!("updating action `{}`", self.action_name);
+
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for input_map in &mut self.inputs {
             if let Some(value) = reader.read(input_map.input, self.consumes_input) {

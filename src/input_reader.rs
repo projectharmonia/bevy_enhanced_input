@@ -214,7 +214,7 @@ struct InputTracker {
 
 bitflags! {
     /// Modifiers for both left and right keys.
-    #[derive(Default, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+    #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub struct KeyboardModifiers: u8 {
         /// Corresponds to [`KeyCode::AltLeft`] and [`KeyCode::AltRight`].
         const ALT = 0b00000001;
@@ -227,7 +227,7 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Copy, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Input {
     Keyboard {
         key_code: KeyCode,
