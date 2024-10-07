@@ -97,14 +97,27 @@ impl ActionMap {
     }
 
     pub fn with_wasd(&mut self) -> &mut Self {
-        self.with(InputMap::new(KeyCode::KeyW).with_modifier(SwizzleAxis::YXZ))
-            .with(InputMap::new(KeyCode::KeyA).with_modifier(Negate))
+        self.with_dir_keys([KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD])
+    }
+
+    pub fn with_arrows(&mut self) -> &mut Self {
+        self.with_dir_keys([
+            KeyCode::ArrowUp,
+            KeyCode::ArrowLeft,
+            KeyCode::ArrowDown,
+            KeyCode::ArrowRight,
+        ])
+    }
+
+    pub fn with_dir_keys(&mut self, key_codes: [KeyCode; 4]) -> &mut Self {
+        self.with(InputMap::new(key_codes[0]).with_modifier(SwizzleAxis::YXZ))
+            .with(InputMap::new(key_codes[1]).with_modifier(Negate))
             .with(
-                InputMap::new(KeyCode::KeyS)
+                InputMap::new(key_codes[2])
                     .with_modifier(Negate)
                     .with_modifier(SwizzleAxis::YXZ),
             )
-            .with(InputMap::new(KeyCode::KeyD))
+            .with(InputMap::new(key_codes[3]))
     }
 
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
