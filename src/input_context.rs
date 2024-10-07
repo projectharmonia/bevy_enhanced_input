@@ -26,6 +26,10 @@ impl ContextAppExt for App {
     }
 }
 
+pub trait InputContext: Component {
+    fn context_map(world: &World, entity: Entity) -> ContextMap;
+}
+
 #[derive(Resource, Default, Deref)]
 pub(crate) struct InputContexts(Vec<ContextInstance>);
 
@@ -58,11 +62,11 @@ pub(crate) struct ContextInstance {
 }
 
 impl ContextInstance {
-    fn new<C: InputContext>(entity: Entity) -> Self {
+    fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
         Self {
             entity,
             type_id: TypeId::of::<C>(),
-            map: C::context_map(),
+            map: C::context_map(world, entity),
         }
     }
 
@@ -77,13 +81,9 @@ impl ContextInstance {
     }
 }
 
-pub trait InputContext: Component {
-    fn context_map() -> ContextMap;
-}
-
 fn on_context_add<C: InputContext>(
     trigger: Trigger<OnAdd, C>,
-    mut contexts: ResMut<InputContexts>,
+    mut set: ParamSet<(&World, ResMut<InputContexts>)>,
 ) {
     debug!(
         "adding input context `{}` to `{}`",
@@ -91,7 +91,8 @@ fn on_context_add<C: InputContext>(
         trigger.entity(),
     );
 
-    contexts.insert(ContextInstance::new::<C>(trigger.entity()));
+    let instace = ContextInstance::new::<C>(set.p0(), trigger.entity());
+    set.p1().insert(instace);
 }
 
 fn on_context_remove<C: InputContext>(

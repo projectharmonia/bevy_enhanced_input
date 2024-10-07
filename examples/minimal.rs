@@ -20,7 +20,7 @@ fn main() {
 struct OnFoot;
 
 impl InputContext for OnFoot {
-    fn context_map() -> ContextMap {
+    fn context_map(_world: &World, _entity: Entity) -> ContextMap {
         let mut map = ContextMap::default();
 
         map.bind::<Walk>().with_wasd();
@@ -56,7 +56,7 @@ impl InputAction for EnterCar {
 struct InCar;
 
 impl InputContext for InCar {
-    fn context_map() -> ContextMap {
+    fn context_map(_world: &World, _entity: Entity) -> ContextMap {
         let mut map = ContextMap::default();
 
         map.bind::<Drive>().with_wasd();
