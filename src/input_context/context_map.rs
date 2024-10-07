@@ -66,10 +66,6 @@ impl ContextMap {
             data.trigger_removed(commands, entities, action_map.dim);
         }
     }
-
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut ActionMap> {
-        self.actions.iter_mut()
-    }
 }
 
 pub struct ActionMap {
@@ -124,10 +120,6 @@ impl ActionMap {
     pub fn with(&mut self, map: impl Into<InputMap>) -> &mut Self {
         self.inputs.push(map.into());
         self
-    }
-
-    pub fn clear_mappings(&mut self) {
-        self.inputs.clear();
     }
 
     fn update(
