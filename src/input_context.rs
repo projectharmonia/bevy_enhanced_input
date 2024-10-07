@@ -141,7 +141,7 @@ impl InputContexts {
                     .position(|&(mapped_entity, _)| mapped_entity == entity)
                     .expect("entity should be inserted before removal");
 
-                let (_, mut map) = maps.swap_remove(entity_index);
+                let (_, map) = maps.swap_remove(entity_index);
                 map.trigger_removed(commands, &[entity]);
 
                 maps.is_empty()

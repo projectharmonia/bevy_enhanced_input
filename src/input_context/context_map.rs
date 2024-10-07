@@ -57,9 +57,8 @@ impl ContextMap {
         }
     }
 
-    pub(super) fn trigger_removed(&mut self, commands: &mut Commands, entities: &[Entity]) {
-        // TODO: Consider redundantly store dimention in the data.
-        for action_map in &mut self.actions {
+    pub(super) fn trigger_removed(&self, commands: &mut Commands, entities: &[Entity]) {
+        for action_map in &self.actions {
             let data = self
                 .actions_data
                 .get(&action_map.type_id)
