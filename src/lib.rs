@@ -16,6 +16,7 @@ pub mod prelude {
         input_reader::KeyboardModifiers,
         EnhancedInputPlugin,
     };
+    pub use bevy_enhanced_input_macros::InputAction;
 }
 
 use bevy::{ecs::system::SystemState, input::InputSystem, prelude::*};

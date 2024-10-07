@@ -31,26 +31,17 @@ impl InputContext for OnFoot {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, InputAction)]
+#[action_dim(Axis2D)]
 struct Walk;
 
-impl InputAction for Walk {
-    const DIM: ActionValueDim = ActionValueDim::Axis2D;
-}
-
-#[derive(Debug)]
+#[derive(Debug, InputAction)]
+#[action_dim(Bool)]
 struct Jump;
 
-impl InputAction for Jump {
-    const DIM: ActionValueDim = ActionValueDim::Bool;
-}
-
-#[derive(Debug)]
+#[derive(Debug, InputAction)]
+#[action_dim(Bool)]
 struct EnterCar;
-
-impl InputAction for EnterCar {
-    const DIM: ActionValueDim = ActionValueDim::Bool;
-}
 
 #[derive(Component)]
 struct InCar;
@@ -66,19 +57,13 @@ impl InputContext for InCar {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, InputAction)]
+#[action_dim(Axis2D)]
 struct Drive;
 
-impl InputAction for Drive {
-    const DIM: ActionValueDim = ActionValueDim::Axis2D;
-}
-
-#[derive(Debug)]
+#[derive(Debug, InputAction)]
+#[action_dim(Bool)]
 struct ExitCar;
-
-impl InputAction for ExitCar {
-    const DIM: ActionValueDim = ActionValueDim::Bool;
-}
 
 fn spawn(mut commands: Commands) {
     commands.spawn(OnFoot);
