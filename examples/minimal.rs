@@ -86,9 +86,7 @@ fn spawn(mut commands: Commands) {
 
 fn walk(trigger: Trigger<ActionEvent<Walk>>) {
     if let ActionEventKind::Fired {
-        value,
-        fired_secs,
-        elapsed_secs: _,
+        value, fired_secs, ..
     } = trigger.event().kind
     {
         info!("walking with direction `{value:?}` for `{fired_secs}` secs");
@@ -113,9 +111,7 @@ fn enter_car(trigger: Trigger<ActionEvent<EnterCar>>, mut commands: Commands) {
 
 fn drive(trigger: Trigger<ActionEvent<Drive>>) {
     if let ActionEventKind::Fired {
-        value,
-        fired_secs,
-        elapsed_secs: _,
+        value, fired_secs, ..
     } = trigger.event().kind
     {
         info!("driving with direction `{value:?}` for `{fired_secs}` secs");
