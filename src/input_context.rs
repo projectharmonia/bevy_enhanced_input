@@ -232,9 +232,7 @@ impl ContextInstance {
             ContextInstance::Shared { priority, .. } => priority,
         }
     }
-}
 
-impl ContextInstance {
     fn type_id(&self) -> TypeId {
         match *self {
             ContextInstance::Exclusive { type_id, .. } => type_id,
