@@ -50,7 +50,7 @@ impl ContextMap {
         world: &World,
         commands: &mut Commands,
         reader: &mut InputReader,
-        entity: Entity,
+        entities: &[Entity],
         delta: f32,
     ) {
         for action_map in &mut self.actions {
@@ -59,18 +59,18 @@ impl ContextMap {
                 commands,
                 reader,
                 &mut self.actions_data,
-                entity,
+                entities,
                 delta,
             );
         }
     }
 
-    pub(super) fn trigger_removed(mut self, commands: &mut Commands, entity: Entity) {
+    pub(super) fn trigger_removed(&mut self, commands: &mut Commands, entity: Entity) {
         // TODO: Consider redundantly store dimention in the data.
-        for action_map in self.actions.drain(..) {
+        for action_map in &mut self.actions {
             let data = self
                 .actions_data
-                .remove(&action_map.type_id)
+                .get(&action_map.type_id)
                 .expect("data and actions should have matching type IDs");
             data.trigger_removed(commands, entity, action_map.dim);
         }
@@ -147,7 +147,7 @@ impl ActionMap {
         commands: &mut Commands,
         reader: &mut InputReader,
         actions_data: &mut ActionsData,
-        entity: Entity,
+        entities: &[Entity],
         delta: f32,
     ) {
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
@@ -169,7 +169,7 @@ impl ActionMap {
             .get_mut(&self.type_id)
             .expect("data and actions should have matching type IDs");
 
-        data.update(commands, entity, state, value, delta);
+        data.update(commands, entities, state, value, delta);
     }
 }
 

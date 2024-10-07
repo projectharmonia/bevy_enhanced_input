@@ -24,7 +24,7 @@ pub struct ActionData {
     state: ActionState,
     elapsed_secs: f32,
     fired_secs: f32,
-    trigger_events: fn(&Self, &mut Commands, Entity, ActionState, ActionValue),
+    trigger_events: fn(&Self, &mut Commands, &[Entity], ActionState, ActionValue),
 }
 
 impl ActionData {
@@ -40,7 +40,7 @@ impl ActionData {
     pub fn update(
         &mut self,
         commands: &mut Commands,
-        entity: Entity,
+        entities: &[Entity],
         state: ActionState,
         value: ActionValue,
         delta: f32,
@@ -58,7 +58,7 @@ impl ActionData {
             }
         }
 
-        (self.trigger_events)(self, commands, entity, state, value);
+        (self.trigger_events)(self, commands, entities, state, value);
 
         // Reset time for updated state.
         self.state = state;
@@ -78,7 +78,7 @@ impl ActionData {
         (self.trigger_events)(
             self,
             commands,
-            entity,
+            &[entity],
             ActionState::None,
             ActionValue::zero(dim),
         );
@@ -87,75 +87,79 @@ impl ActionData {
     fn trigger<A: InputAction>(
         &self,
         commands: &mut Commands,
-        entity: Entity,
+        entities: &[Entity],
         state: ActionState,
         value: ActionValue,
     ) {
-        match (self.state(), state) {
-            (ActionState::None, ActionState::None) => (),
-            (ActionState::None, ActionState::Ongoing) => commands.trigger_targets(
-                ActionEvent::<A>::from(ActionEventKind::Started { value }),
-                entity,
-            ),
-            (ActionState::None, ActionState::Fired) => {
-                commands.trigger_targets(
+        // Trigger an event for each entity separately
+        // since it's cheaper to copy the event than to clone the entities.
+        for &entity in entities {
+            match (self.state(), state) {
+                (ActionState::None, ActionState::None) => (),
+                (ActionState::None, ActionState::Ongoing) => commands.trigger_targets(
                     ActionEvent::<A>::from(ActionEventKind::Started { value }),
                     entity,
-                );
-                commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Fired {
+                ),
+                (ActionState::None, ActionState::Fired) => {
+                    commands.trigger_targets(
+                        ActionEvent::<A>::from(ActionEventKind::Started { value }),
+                        entity,
+                    );
+                    commands.trigger_targets(
+                        ActionEvent::<A>::from(ActionEventKind::Fired {
+                            value,
+                            fired_secs: 0.0,
+                            elapsed_secs: 0.0,
+                        }),
+                        entity,
+                    );
+                }
+                (ActionState::Ongoing, ActionState::None) => commands.trigger_targets(
+                    ActionEvent::<A>::from(ActionEventKind::Canceled {
                         value,
-                        fired_secs: 0.0,
-                        elapsed_secs: 0.0,
+                        elapsed_secs: self.elapsed_secs,
                     }),
                     entity,
-                );
+                ),
+                (ActionState::Ongoing, ActionState::Ongoing) => commands.trigger_targets(
+                    ActionEvent::<A>::from(ActionEventKind::Ongoing {
+                        value,
+                        elapsed_secs: self.elapsed_secs,
+                    }),
+                    entity,
+                ),
+                (ActionState::Ongoing, ActionState::Fired) => commands.trigger_targets(
+                    ActionEvent::<A>::from(ActionEventKind::Fired {
+                        value,
+                        fired_secs: self.fired_secs,
+                        elapsed_secs: self.elapsed_secs,
+                    }),
+                    entity,
+                ),
+                (ActionState::Fired, ActionState::None) => commands.trigger_targets(
+                    ActionEvent::<A>::from(ActionEventKind::Completed {
+                        value,
+                        fired_secs: self.fired_secs,
+                        elapsed_secs: self.elapsed_secs,
+                    }),
+                    entity,
+                ),
+                (ActionState::Fired, ActionState::Ongoing) => commands.trigger_targets(
+                    ActionEvent::<A>::from(ActionEventKind::Ongoing {
+                        value,
+                        elapsed_secs: self.elapsed_secs,
+                    }),
+                    entity,
+                ),
+                (ActionState::Fired, ActionState::Fired) => commands.trigger_targets(
+                    ActionEvent::<A>::from(ActionEventKind::Fired {
+                        value,
+                        fired_secs: self.fired_secs,
+                        elapsed_secs: self.elapsed_secs,
+                    }),
+                    entity,
+                ),
             }
-            (ActionState::Ongoing, ActionState::None) => commands.trigger_targets(
-                ActionEvent::<A>::from(ActionEventKind::Canceled {
-                    value,
-                    elapsed_secs: self.elapsed_secs,
-                }),
-                entity,
-            ),
-            (ActionState::Ongoing, ActionState::Ongoing) => commands.trigger_targets(
-                ActionEvent::<A>::from(ActionEventKind::Ongoing {
-                    value,
-                    elapsed_secs: self.elapsed_secs,
-                }),
-                entity,
-            ),
-            (ActionState::Ongoing, ActionState::Fired) => commands.trigger_targets(
-                ActionEvent::<A>::from(ActionEventKind::Fired {
-                    value,
-                    fired_secs: self.fired_secs,
-                    elapsed_secs: self.elapsed_secs,
-                }),
-                entity,
-            ),
-            (ActionState::Fired, ActionState::None) => commands.trigger_targets(
-                ActionEvent::<A>::from(ActionEventKind::Completed {
-                    value,
-                    fired_secs: self.fired_secs,
-                    elapsed_secs: self.elapsed_secs,
-                }),
-                entity,
-            ),
-            (ActionState::Fired, ActionState::Ongoing) => commands.trigger_targets(
-                ActionEvent::<A>::from(ActionEventKind::Ongoing {
-                    value,
-                    elapsed_secs: self.elapsed_secs,
-                }),
-                entity,
-            ),
-            (ActionState::Fired, ActionState::Fired) => commands.trigger_targets(
-                ActionEvent::<A>::from(ActionEventKind::Fired {
-                    value,
-                    fired_secs: self.fired_secs,
-                    elapsed_secs: self.elapsed_secs,
-                }),
-                entity,
-            ),
         }
     }
 

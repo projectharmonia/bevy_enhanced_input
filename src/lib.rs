@@ -39,9 +39,7 @@ impl EnhancedInputPlugin {
             reader.update_state();
             let delta = time.delta_seconds();
 
-            for instance in contexts.iter_mut() {
-                instance.update(world, &mut commands, &mut reader, delta);
-            }
+            contexts.update(world, &mut commands, &mut reader, delta);
         });
 
         state.apply(world);
