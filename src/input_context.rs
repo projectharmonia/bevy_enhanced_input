@@ -78,8 +78,6 @@ impl ContextInstance {
 }
 
 pub trait InputContext: Component {
-    const PRIORITY: usize = 0;
-
     fn context_map() -> ContextMap;
 }
 
