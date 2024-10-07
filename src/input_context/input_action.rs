@@ -74,11 +74,16 @@ impl ActionData {
         }
     }
 
-    pub fn trigger_removed(&self, commands: &mut Commands, entity: Entity, dim: ActionValueDim) {
+    pub fn trigger_removed(
+        &self,
+        commands: &mut Commands,
+        entities: &[Entity],
+        dim: ActionValueDim,
+    ) {
         (self.trigger_events)(
             self,
             commands,
-            &[entity],
+            entities,
             ActionState::None,
             ActionValue::zero(dim),
         );

@@ -23,14 +23,15 @@ impl ContextAppExt for App {
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
         debug!("registering context `{}`", any::type_name::<C>());
 
-        self.observe(on_context_add::<C>)
-            .observe(on_context_remove::<C>);
+        self.observe(add_instance::<C>)
+            .observe(rebuild_instance::<C>)
+            .observe(remove_instance::<C>);
 
         self
     }
 }
 
-fn on_context_add<C: InputContext>(
+fn add_instance<C: InputContext>(
     trigger: Trigger<OnAdd, C>,
     mut set: ParamSet<(&World, ResMut<InputContexts>)>,
 ) {
@@ -49,7 +50,23 @@ fn on_context_add<C: InputContext>(
     *set.p1() = contexts;
 }
 
-fn on_context_remove<C: InputContext>(
+fn rebuild_instance<C: InputContext>(
+    trigger: Trigger<RebuildInputContexts>,
+    mut commands: Commands,
+    mut set: ParamSet<(&World, ResMut<InputContexts>)>,
+) {
+    debug!(
+        "rebuilding input context `{}` for `{}`",
+        any::type_name::<C>(),
+        trigger.entity()
+    );
+
+    let mut contexts = mem::take(&mut *set.p1());
+    contexts.rebuild::<C>(set.p0(), &mut commands);
+    *set.p1() = contexts;
+}
+
+fn remove_instance<C: InputContext>(
     trigger: Trigger<OnRemove, C>,
     mut commands: Commands,
     mut contexts: ResMut<InputContexts>,
@@ -90,6 +107,28 @@ impl InputContexts {
         }
     }
 
+    fn rebuild<C: InputContext>(&mut self, world: &World, commands: &mut Commands) {
+        if let Some(index) = self.index::<C>() {
+            match &mut self.0[index] {
+                ContextInstance::Exclusive { maps, .. } => {
+                    for (entity, map) in maps {
+                        map.trigger_removed(commands, &[*entity]);
+                        *map = C::context_map(world, *entity);
+                    }
+                }
+                ContextInstance::Shared { map, entities, .. } => {
+                    map.trigger_removed(commands, entities);
+
+                    // For shared contexts rebuild the map using the first entity.
+                    let entity = *entities
+                        .first()
+                        .expect("instances should be immediately removed when empty");
+                    *map = C::context_map(world, entity);
+                }
+            }
+        }
+    }
+
     fn remove<C: InputContext>(&mut self, commands: &mut Commands, entity: Entity) {
         let context_index = self
             .index::<C>()
@@ -103,7 +142,7 @@ impl InputContexts {
                     .expect("entity should be inserted before removal");
 
                 let (_, mut map) = maps.swap_remove(entity_index);
-                map.trigger_removed(commands, entity);
+                map.trigger_removed(commands, &[entity]);
 
                 maps.is_empty()
             }
@@ -114,7 +153,7 @@ impl InputContexts {
                     .expect("entity should be inserted before removal");
 
                 entities.swap_remove(entity_index);
-                map.trigger_removed(commands, entity);
+                map.trigger_removed(commands, &[entity]);
 
                 entities.is_empty()
             }
@@ -225,3 +264,12 @@ pub enum ContextKind {
     /// Useful for games where multiple characters are controlled with the same input.
     Shared,
 }
+
+/// A trigger that causes the reconstruction of all active context maps.
+///
+/// Use it when you change your application settings and want to reload the mappings.
+///
+/// This will also reset all actions to [`ActionState::None`](crate::action_state::ActionState::None)
+/// and trigger the corresponding events.
+#[derive(Event)]
+pub struct RebuildInputContexts;

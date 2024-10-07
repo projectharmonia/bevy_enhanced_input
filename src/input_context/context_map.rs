@@ -57,14 +57,14 @@ impl ContextMap {
         }
     }
 
-    pub(super) fn trigger_removed(&mut self, commands: &mut Commands, entity: Entity) {
+    pub(super) fn trigger_removed(&mut self, commands: &mut Commands, entities: &[Entity]) {
         // TODO: Consider redundantly store dimention in the data.
         for action_map in &mut self.actions {
             let data = self
                 .actions_data
                 .get(&action_map.type_id)
                 .expect("data and actions should have matching type IDs");
-            data.trigger_removed(commands, entity, action_map.dim);
+            data.trigger_removed(commands, entities, action_map.dim);
         }
     }
 
