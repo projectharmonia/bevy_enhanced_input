@@ -79,13 +79,13 @@ impl InputContexts {
                 }
             }
         } else {
-            let instance = ContextInstance::new::<C>(world, entity);
-            let priority = Reverse(instance.priority());
+            let priority = Reverse(C::PRIORITY);
             let index = self
                 .0
                 .binary_search_by_key(&priority, |instance| Reverse(instance.priority()))
                 .unwrap_or_else(|e| e);
 
+            let instance = ContextInstance::new::<C>(world, entity);
             self.0.insert(index, instance);
         }
     }
@@ -157,10 +157,12 @@ impl InputContexts {
 enum ContextInstance {
     Exclusive {
         type_id: TypeId,
+        priority: usize,
         maps: Vec<(Entity, ContextMap)>,
     },
     Shared {
         type_id: TypeId,
+        priority: usize,
         entities: Vec<Entity>,
         map: ContextMap,
     },
@@ -173,10 +175,12 @@ impl ContextInstance {
         match C::KIND {
             ContextKind::Exclusive => Self::Exclusive {
                 type_id,
+                priority: C::PRIORITY,
                 maps: vec![(entity, map)],
             },
             ContextKind::Shared => Self::Shared {
                 type_id,
+                priority: C::PRIORITY,
                 entities: vec![entity],
                 map,
             },
@@ -184,15 +188,9 @@ impl ContextInstance {
     }
 
     fn priority(&self) -> usize {
-        match self {
-            ContextInstance::Exclusive { maps, .. } => {
-                let (_, map) = maps
-                    .first()
-                    .expect("exclusive instances should be immediately removed when empty");
-
-                map.priority()
-            }
-            ContextInstance::Shared { map, .. } => map.priority(),
+        match *self {
+            ContextInstance::Exclusive { priority, .. } => priority,
+            ContextInstance::Shared { priority, .. } => priority,
         }
     }
 }
@@ -208,6 +206,7 @@ impl ContextInstance {
 
 pub trait InputContext: Component {
     const KIND: ContextKind = ContextKind::Shared;
+    const PRIORITY: usize = 0;
 
     fn context_map(world: &World, entity: Entity) -> ContextMap;
 }

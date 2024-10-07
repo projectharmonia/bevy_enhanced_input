@@ -16,19 +16,11 @@ use crate::{
 
 #[derive(Default)]
 pub struct ContextMap {
-    priority: usize,
     actions: Vec<ActionMap>,
     actions_data: ActionsData,
 }
 
 impl ContextMap {
-    pub fn with_priority(priority: usize) -> Self {
-        Self {
-            priority,
-            ..Default::default()
-        }
-    }
-
     pub fn bind<A: InputAction>(&mut self) -> &mut ActionMap {
         let type_id = TypeId::of::<A>();
         match self.actions_data.entry(type_id) {
@@ -78,10 +70,6 @@ impl ContextMap {
 
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut ActionMap> {
         self.actions.iter_mut()
-    }
-
-    pub(super) fn priority(&self) -> usize {
-        self.priority
     }
 }
 
