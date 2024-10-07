@@ -29,8 +29,35 @@ impl ContextAppExt for App {
     }
 }
 
-pub trait InputContext: Component {
-    fn context_map(world: &World, entity: Entity) -> ContextMap;
+fn on_context_add<C: InputContext>(
+    trigger: Trigger<OnAdd, C>,
+    mut set: ParamSet<(&World, ResMut<InputContexts>)>,
+) {
+    debug!(
+        "adding input context `{}` to `{}`",
+        any::type_name::<C>(),
+        trigger.entity(),
+    );
+
+    let instace = ContextInstance::new::<C>(set.p0(), trigger.entity());
+    set.p1().insert(instace);
+}
+
+fn on_context_remove<C: InputContext>(
+    trigger: Trigger<OnRemove, C>,
+    mut commands: Commands,
+    mut contexts: ResMut<InputContexts>,
+) {
+    debug!(
+        "removing input context `{}` from `{}`",
+        any::type_name::<C>(),
+        trigger.entity()
+    );
+
+    let instance = contexts.remove::<C>(trigger.entity());
+    instance
+        .map
+        .trigger_removed(&mut commands, trigger.entity());
 }
 
 #[derive(Resource, Default, Deref)]
@@ -85,33 +112,6 @@ impl ContextInstance {
     }
 }
 
-fn on_context_add<C: InputContext>(
-    trigger: Trigger<OnAdd, C>,
-    mut set: ParamSet<(&World, ResMut<InputContexts>)>,
-) {
-    debug!(
-        "adding input context `{}` to `{}`",
-        any::type_name::<C>(),
-        trigger.entity(),
-    );
-
-    let instace = ContextInstance::new::<C>(set.p0(), trigger.entity());
-    set.p1().insert(instace);
-}
-
-fn on_context_remove<C: InputContext>(
-    trigger: Trigger<OnRemove, C>,
-    mut commands: Commands,
-    mut contexts: ResMut<InputContexts>,
-) {
-    debug!(
-        "removing input context `{}` from `{}`",
-        any::type_name::<C>(),
-        trigger.entity()
-    );
-
-    let instance = contexts.remove::<C>(trigger.entity());
-    instance
-        .map
-        .trigger_removed(&mut commands, trigger.entity());
+pub trait InputContext: Component {
+    fn context_map(world: &World, entity: Entity) -> ContextMap;
 }
