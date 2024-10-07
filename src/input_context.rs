@@ -256,7 +256,7 @@ pub enum ContextKind {
 ///
 /// Use it when you change your application settings and want to reload the mappings.
 ///
-/// This will also reset all actions to [`ActionState::None`](crate::action_state::ActionState::None)
+/// This will also reset all actions to [`ActionState::None`](crate::input_context::input_action::ActionState::None)
 /// and trigger the corresponding events.
 #[derive(Event)]
 pub struct RebuildInputContexts;
