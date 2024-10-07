@@ -4,7 +4,10 @@ pub mod input_condition;
 pub mod input_modifier;
 pub mod trigger_tracker;
 
-use std::any::{self, TypeId};
+use std::{
+    any::{self, TypeId},
+    cmp::Reverse,
+};
 
 use bevy::prelude::*;
 
@@ -35,8 +38,9 @@ pub(crate) struct InputContexts(Vec<ContextInstance>);
 
 impl InputContexts {
     fn insert(&mut self, instance: ContextInstance) {
+        let priority = Reverse(instance.map.priority());
         let index = self
-            .binary_search_by_key(&instance.map.priority(), |reg| reg.map.priority())
+            .binary_search_by_key(&priority, |reg| Reverse(reg.map.priority()))
             .unwrap_or_else(|e| e);
         self.0.insert(index, instance);
     }
