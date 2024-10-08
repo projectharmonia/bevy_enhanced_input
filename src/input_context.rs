@@ -231,7 +231,7 @@ impl ContextInstance {
 }
 
 pub trait InputContext: Component {
-    const KIND: ContextKind = ContextKind::Shared;
+    const KIND: ContextKind = ContextKind::Exclusive;
     const PRIORITY: usize = 0;
 
     fn context_map(world: &World, entity: Entity) -> ContextMap;
