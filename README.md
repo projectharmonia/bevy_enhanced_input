@@ -16,6 +16,8 @@ For example, if you have a player character that can be on foot or drive a car, 
 perform different actions. On foot, pressing <kbd>Space</kbd> could make the character jump, while when driving, pressing <kbd>Space</kbd>
 should act as a brake.
 
+## Core concepts
+
 Entities can have any number of contexts, with evaluation order controlled by a defined priority. Actions can also consume inputs,
 allowing you to layer behaviors on top of each other.
 
@@ -29,6 +31,8 @@ However, you can also add gameplay-based conditions like "Can jump" by implement
 
 To respond to action changes, you can use observers. For example, with the condition "Hold for 1 sec", you can trigger a strong attack
 on "Completed", or a regular attack on "Cancelled".
+
+Check out the [quick start guide](https://docs.rs/bevy_enhanced_input) for more details.
 
 ## Bevy compatibility
 
