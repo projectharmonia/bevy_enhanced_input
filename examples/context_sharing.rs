@@ -1,4 +1,6 @@
-//! Simple setup with a single context.
+//! Two entities that share a single context.
+//! This could be used for games where you control multiple characters at the same time,
+//! such as Binary Land for NES.
 
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
@@ -13,7 +15,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<Player>() // All contexts should be registered inside the app.
+        app.add_input_context::<Player>()
             .add_systems(Startup, Self::spawn)
             .observe(Self::move_character)
             .observe(Self::jump);
@@ -22,7 +24,8 @@ impl Plugin for GamePlugin {
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
-        // To associate an entity with actions, insert the context.
+        // Spawn two entities with the same context.
+        commands.spawn(Player);
         commands.spawn(Player);
     }
 
@@ -31,15 +34,16 @@ impl GamePlugin {
             value, fired_secs, ..
         } = trigger.event().kind
         {
-            info!("moving with direction `{value:?}` for `{fired_secs}` secs");
+            info!(
+                "entity `{}` moving with direction `{value:?}` for `{fired_secs}` secs",
+                trigger.entity()
+            );
         }
     }
 
     fn jump(trigger: Trigger<ActionEvent<Jump>>) {
-        // If you are not interested in action value, we provide
-        // methods to quickly check action kind on the event.
         if trigger.event().is_started() {
-            info!("jumping in the air");
+            info!("entity `{}` jumping in the air", trigger.entity());
         }
     }
 }
@@ -47,13 +51,17 @@ impl GamePlugin {
 #[derive(Component)]
 struct Player;
 
-// To define mappings just implement a context trait.
 impl InputContext for Player {
+    // By default all context instances are processed individually.
+    // This means if multiple entities spawned with the same mappings,
+    // actions from the first processed context may consume inputs.
+    // Make it shared to have a single context instance for all entities
+    // with this context.
+    const KIND: ContextKind = ContextKind::Shared;
+
     fn context_map(_world: &World, _entity: Entity) -> ContextMap {
         let mut map = ContextMap::default();
 
-        // WASD and arrows are very common,
-        // so we provide a built-in helper.
         map.bind::<Move>().with_wasd();
         map.bind::<Jump>().with(KeyCode::Space);
 
@@ -61,8 +69,6 @@ impl InputContext for Player {
     }
 }
 
-// All actions should implement `InputAction` trait.
-// It can be done manually, but we provide a derive for convenience.
 #[derive(Debug, InputAction)]
 #[action_dim(Axis2D)]
 struct Move;

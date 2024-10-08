@@ -10,7 +10,7 @@ pub mod prelude {
             input_action::{ActionEvent, ActionEventKind, InputAction},
             input_condition::*,
             input_modifier::*,
-            ContextAppExt, InputContext,
+            ContextAppExt, ContextKind, InputContext,
         },
         input_reader::Input,
         input_reader::KeyboardModifiers,

@@ -34,6 +34,8 @@ on "Completed", or a regular attack on "Cancelled".
 
 Check out the [quick start guide](https://docs.rs/bevy_enhanced_input) for more details.
 
+See also examples in the repo. [simple.rs](examples/simple.rs) should be a good starting point.
+
 ## Bevy compatibility
 
 | bevy        | bevy_enhanced_input |

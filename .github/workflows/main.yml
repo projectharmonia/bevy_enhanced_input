@@ -46,9 +46,8 @@ jobs:
       - name: Cache crates
         uses: Swatinem/rust-cache@v2
 
-        # Run only clippy on all features to check if it compiles and skip for all other commands.
       - name: Clippy
-        run: cargo clippy --all-features --tests -- -D warnings
+        run: cargo clippy --tests --examples -- -D warnings
 
       - name: Rustdoc
         run: cargo rustdoc -- -D warnings
