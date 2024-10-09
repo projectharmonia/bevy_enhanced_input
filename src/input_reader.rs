@@ -108,9 +108,9 @@ impl InputReader<'_, '_> {
     fn reset_input(&mut self) {
         self.tracker.key_codes.clear();
         self.tracker.modifiers = KeyboardModifiers::empty();
+        self.tracker.mouse_buttons.clear();
         self.tracker.mouse_motion = None;
         self.tracker.mouse_wheel = None;
-        self.tracker.mouse_buttons.clear();
         self.tracker.gamepad_buttons.clear();
         self.tracker.gamepad_axes.clear();
     }
@@ -229,9 +229,9 @@ struct InputTracker {
     ignore_mouse: bool,
     key_codes: HashMap<KeyCode, ActionValue>,
     modifiers: KeyboardModifiers,
+    mouse_buttons: HashMap<MouseButton, ActionValue>,
     mouse_motion: Option<ActionValue>,
     mouse_wheel: Option<ActionValue>,
-    mouse_buttons: HashMap<MouseButton, ActionValue>,
     gamepad_buttons: HashMap<GamepadButton, ActionValue>,
     gamepad_axes: HashMap<GamepadAxis, ActionValue>,
 }
