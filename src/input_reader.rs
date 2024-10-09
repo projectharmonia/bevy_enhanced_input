@@ -75,13 +75,23 @@ impl InputReader<'_, '_> {
             .tracker
             .gamepad_buttons
             .iter()
-            .map(|(&button, &value)| (Input::GamepadButton(button), value));
+            .flat_map(|(&button, values)| {
+                values
+                    .iter()
+                    .map(move |(&gamepad, &value)| (gamepad.into(), button, value))
+            })
+            .map(|(device, button, value)| (Input::GamepadButton { device, button }, value));
 
         let gamepad_axes = self
             .tracker
             .gamepad_axes
             .iter()
-            .map(|(&axis, &value)| (Input::GamepadAxis(axis), value));
+            .flat_map(|(&axis, values)| {
+                values
+                    .iter()
+                    .map(move |(&gamepad, &value)| (gamepad.into(), axis, value))
+            })
+            .map(|(device, axis, value)| (Input::GamepadAxis { device, axis }, value));
 
         key_codes
             .chain(mouse_buttons)
@@ -146,18 +156,22 @@ impl InputReader<'_, '_> {
         }
 
         for input in self.gamepad_button_events.read() {
-            self.tracker
+            let buttons = self
+                .tracker
                 .gamepad_buttons
-                .insert(input.button, input.state.into());
+                .entry(input.button.button_type)
+                .or_default();
+            buttons.insert(input.button.gamepad, input.state.into());
         }
 
         for event in self.gamepad_axis_events.read() {
-            let axis = GamepadAxis {
-                gamepad: event.gamepad,
-                axis_type: event.axis_type,
-            };
+            let axes = self
+                .tracker
+                .gamepad_axes
+                .entry(event.axis_type)
+                .or_default();
 
-            self.tracker.gamepad_axes.insert(axis, event.value.into());
+            axes.insert(event.gamepad, event.value.into());
         }
     }
 
@@ -220,20 +234,62 @@ impl InputReader<'_, '_> {
                     self.tracker.mouse_wheel
                 }
             }
-            Input::GamepadButton(gamepad_button) => {
-                if consume {
-                    self.tracker.gamepad_buttons.remove(&gamepad_button)
-                } else {
-                    self.tracker.gamepad_buttons.get(&gamepad_button).copied()
+            Input::GamepadButton { device, button } => match device {
+                GamepadDevice::Any => {
+                    if consume {
+                        let values = self.tracker.gamepad_buttons.remove(&button)?;
+
+                        values
+                            .iter()
+                            .map(|(_, &value)| value)
+                            .find(|value| value.as_bool())
+                    } else {
+                        let values = self.tracker.gamepad_buttons.get_mut(&button)?;
+
+                        values
+                            .iter()
+                            .map(|(_, &value)| value)
+                            .find(|value| value.as_bool())
+                    }
                 }
-            }
-            Input::GamepadAxis(gamepad_axis) => {
-                if consume {
-                    self.tracker.gamepad_axes.remove(&gamepad_axis)
-                } else {
-                    self.tracker.gamepad_axes.get(&gamepad_axis).copied()
+                GamepadDevice::Id(gamepad) => {
+                    let buttons = self.tracker.gamepad_buttons.get_mut(&button)?;
+                    if consume {
+                        buttons.remove(&gamepad)
+                    } else {
+                        buttons.get(&gamepad).copied()
+                    }
                 }
-            }
+            },
+            Input::GamepadAxis { device, axis } => match device {
+                GamepadDevice::Any => {
+                    if consume {
+                        let values = self.tracker.gamepad_axes.remove(&axis)?;
+                        if values.is_empty() {
+                            None
+                        } else {
+                            let sum: f32 = values.iter().map(|(_, value)| value.as_axis1d()).sum();
+                            Some(sum.into())
+                        }
+                    } else {
+                        let values = self.tracker.gamepad_axes.get_mut(&axis)?;
+                        if values.is_empty() {
+                            None
+                        } else {
+                            let sum: f32 = values.iter().map(|(_, value)| value.as_axis1d()).sum();
+                            Some(sum.into())
+                        }
+                    }
+                }
+                GamepadDevice::Id(gamepad) => {
+                    let values = self.tracker.gamepad_axes.get_mut(&axis)?;
+                    if consume {
+                        values.remove(&gamepad)
+                    } else {
+                        values.get_mut(&gamepad).copied()
+                    }
+                }
+            },
         }
     }
 }
@@ -290,8 +346,8 @@ struct InputTracker {
     mouse_buttons: HashMap<MouseButton, ActionValue>,
     mouse_motion: Option<ActionValue>,
     mouse_wheel: Option<ActionValue>,
-    gamepad_buttons: HashMap<GamepadButton, ActionValue>,
-    gamepad_axes: HashMap<GamepadAxis, ActionValue>,
+    gamepad_buttons: HashMap<GamepadButtonType, HashMap<Gamepad, ActionValue>>,
+    gamepad_axes: HashMap<GamepadAxisType, HashMap<Gamepad, ActionValue>>,
 }
 
 bitflags! {
@@ -309,6 +365,9 @@ bitflags! {
     }
 }
 
+/// All input that can be associated with an action.
+///
+/// See also [`InputReader::read`] for binding input at runtime.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Input {
     Keyboard {
@@ -325,8 +384,14 @@ pub enum Input {
     MouseWheel {
         modifiers: KeyboardModifiers,
     },
-    GamepadButton(GamepadButton),
-    GamepadAxis(GamepadAxis),
+    GamepadButton {
+        device: GamepadDevice,
+        button: GamepadButtonType,
+    },
+    GamepadAxis {
+        device: GamepadDevice,
+        axis: GamepadAxisType,
+    },
 }
 
 impl From<KeyCode> for Input {
@@ -344,5 +409,24 @@ impl From<MouseButton> for Input {
             button,
             modifiers: KeyboardModifiers::empty(),
         }
+    }
+}
+
+/// Associated gamepad for [`Input`].
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+pub enum GamepadDevice {
+    /// Matches input from any gamepad.
+    ///
+    /// For an axis, the [`ActionValue`] will be calculated as the sum of inputs from all gamepads.
+    /// For a button, the [`ActionValue`] will be `true` if any gamepad has this button pressed.
+    Any,
+
+    /// Matches input from specific gamepad.
+    Id(Gamepad),
+}
+
+impl From<Gamepad> for GamepadDevice {
+    fn from(value: Gamepad) -> Self {
+        Self::Id(value)
     }
 }
