@@ -428,6 +428,24 @@ impl From<MouseButton> for Input {
     }
 }
 
+impl From<GamepadButtonType> for Input {
+    fn from(button: GamepadButtonType) -> Self {
+        Self::GamepadButton {
+            button,
+            device: GamepadDevice::Any,
+        }
+    }
+}
+
+impl From<GamepadAxisType> for Input {
+    fn from(axis: GamepadAxisType) -> Self {
+        Self::GamepadAxis {
+            axis,
+            device: GamepadDevice::Any,
+        }
+    }
+}
+
 /// Associated gamepad for [`Input`].
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum GamepadDevice {

@@ -200,3 +200,9 @@ impl From<KeyCode> for InputMap {
         Self::new(value)
     }
 }
+
+impl From<GamepadButtonType> for InputMap {
+    fn from(value: GamepadButtonType) -> Self {
+        Self::new(value)
+    }
+}
