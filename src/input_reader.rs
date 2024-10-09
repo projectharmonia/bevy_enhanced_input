@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use crate::action_value::ActionValue;
 
 #[derive(SystemParam)]
-pub(super) struct InputReader<'w, 's> {
+pub struct InputReader<'w, 's> {
     mouse_motion_events: EventReader<'w, 's, MouseMotion>,
     mouse_wheel_events: EventReader<'w, 's, MouseWheel>,
     keyboard_events: EventReader<'w, 's, KeyboardInput>,
@@ -24,61 +24,69 @@ pub(super) struct InputReader<'w, 's> {
     gamepad_button_events: EventReader<'w, 's, GamepadButtonInput>,
     gamepad_axis_events: EventReader<'w, 's, GamepadAxisChangedEvent>,
     tracker: Local<'s, InputTracker>,
-    #[cfg(feature = "ui_priority")]
-    interactions: Query<'w, 's, &'static Interaction>,
-    #[cfg(feature = "egui_priority")]
-    egui: Query<'w, 's, &'static EguiContext>,
 }
 
 impl InputReader<'_, '_> {
-    pub(super) fn update_state(&mut self) {
-        self.tracker.reset_input();
+    pub fn set_ignore_keyboard(&mut self, ignore: bool) {
+        self.tracker.ignore_keyboard = ignore;
+    }
 
-        for input in self.keyboard_events.read() {
-            // Record modifiers redundantly for quick access.
-            match input.key_code {
-                KeyCode::AltLeft | KeyCode::AltRight => {
-                    self.tracker.modifiers &= KeyboardModifiers::ALT;
+    pub fn set_ignore_mouse(&mut self, ignore: bool) {
+        self.tracker.ignore_mouse = ignore;
+    }
+
+    pub fn update_state(&mut self) {
+        self.reset_input();
+
+        if !self.tracker.ignore_keyboard {
+            for input in self.keyboard_events.read() {
+                // Record modifiers redundantly for quick access.
+                match input.key_code {
+                    KeyCode::AltLeft | KeyCode::AltRight => {
+                        self.tracker.modifiers &= KeyboardModifiers::ALT;
+                    }
+                    KeyCode::ControlLeft | KeyCode::ControlRight => {
+                        self.tracker.modifiers &= KeyboardModifiers::CONTROL;
+                    }
+                    KeyCode::ShiftLeft | KeyCode::ShiftRight => {
+                        self.tracker.modifiers &= KeyboardModifiers::SHIFT;
+                    }
+                    KeyCode::SuperLeft | KeyCode::SuperRight => {
+                        self.tracker.modifiers &= KeyboardModifiers::SUPER;
+                    }
+                    _ => (),
                 }
-                KeyCode::ControlLeft | KeyCode::ControlRight => {
-                    self.tracker.modifiers &= KeyboardModifiers::CONTROL;
-                }
-                KeyCode::ShiftLeft | KeyCode::ShiftRight => {
-                    self.tracker.modifiers &= KeyboardModifiers::SHIFT;
-                }
-                KeyCode::SuperLeft | KeyCode::SuperRight => {
-                    self.tracker.modifiers &= KeyboardModifiers::SUPER;
-                }
-                _ => (),
+
+                self.tracker
+                    .key_codes
+                    .insert(input.key_code, input.state.into());
+            }
+        }
+
+        if !self.tracker.ignore_mouse {
+            if !self.mouse_motion_events.is_empty() {
+                let mouse_motion: Vec2 = self
+                    .mouse_motion_events
+                    .read()
+                    .map(|event| event.delta)
+                    .sum();
+                self.tracker.mouse_motion = Some(mouse_motion.into());
             }
 
-            self.tracker
-                .key_codes
-                .insert(input.key_code, input.state.into());
-        }
+            if !self.mouse_wheel_events.is_empty() {
+                let mouse_wheel: Vec2 = self
+                    .mouse_wheel_events
+                    .read()
+                    .map(|event| Vec2::new(event.x, event.y))
+                    .sum();
+                self.tracker.mouse_wheel = Some(mouse_wheel.into());
+            }
 
-        if !self.mouse_motion_events.is_empty() {
-            let mouse_motion: Vec2 = self
-                .mouse_motion_events
-                .read()
-                .map(|event| event.delta)
-                .sum();
-            self.tracker.mouse_motion = Some(mouse_motion.into());
-        }
-
-        if !self.mouse_wheel_events.is_empty() {
-            let mouse_wheel: Vec2 = self
-                .mouse_wheel_events
-                .read()
-                .map(|event| Vec2::new(event.x, event.y))
-                .sum();
-            self.tracker.mouse_wheel = Some(mouse_wheel.into());
-        }
-
-        for input in self.mouse_button_events.read() {
-            self.tracker
-                .mouse_buttons
-                .insert(input.button, input.state.into());
+            for input in self.mouse_button_events.read() {
+                self.tracker
+                    .mouse_buttons
+                    .insert(input.button, input.state.into());
+            }
         }
 
         for input in self.gamepad_button_events.read() {
@@ -95,35 +103,16 @@ impl InputReader<'_, '_> {
 
             self.tracker.gamepad_axes.insert(axis, event.value.into());
         }
+    }
 
-        #[cfg(feature = "ui_priority")]
-        {
-            if self
-                .interactions
-                .iter()
-                .any(|&interaction| interaction != Interaction::None)
-            {
-                self.tracker.mouse_buttons.clear();
-                self.tracker.mouse_wheel = None;
-            }
-        }
-
-        #[cfg(feature = "egui_priority")]
-        {
-            if self
-                .egui
-                .iter()
-                .any(|ctx| ctx.get().is_pointer_over_area() || ctx.get().wants_pointer_input())
-            {
-                self.tracker.mouse_buttons.clear();
-                self.tracker.mouse_wheel = None;
-            }
-
-            if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
-                self.tracker.key_codes.clear();
-                self.tracker.modifiers = KeyboardModifiers::empty();
-            }
-        }
+    fn reset_input(&mut self) {
+        self.tracker.key_codes.clear();
+        self.tracker.modifiers = KeyboardModifiers::empty();
+        self.tracker.mouse_motion = None;
+        self.tracker.mouse_wheel = None;
+        self.tracker.mouse_buttons.clear();
+        self.tracker.gamepad_buttons.clear();
+        self.tracker.gamepad_axes.clear();
     }
 
     pub(super) fn read(&mut self, input: Input, consume: bool) -> Option<ActionValue> {
@@ -193,8 +182,51 @@ impl InputReader<'_, '_> {
     }
 }
 
+#[derive(SystemParam)]
+pub struct UiInput<'w, 's> {
+    #[cfg(feature = "ui_priority")]
+    interactions: Query<'w, 's, &'static Interaction>,
+    #[cfg(feature = "egui_priority")]
+    egui: Query<'w, 's, &'static EguiContext>,
+}
+
+impl UiInput<'_, '_> {
+    pub fn wants_keyboard(&self) -> bool {
+        #[cfg(feature = "egui_priority")]
+        if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn wants_mouse(&self) -> bool {
+        #[cfg(feature = "ui_priority")]
+        if self
+            .interactions
+            .iter()
+            .any(|&interaction| interaction != Interaction::None)
+        {
+            return true;
+        }
+
+        #[cfg(feature = "egui_priority")]
+        if self
+            .egui
+            .iter()
+            .any(|ctx| ctx.get().is_pointer_over_area() || ctx.get().wants_pointer_input())
+        {
+            return true;
+        }
+
+        false
+    }
+}
+
 #[derive(Resource, Default)]
 struct InputTracker {
+    ignore_keyboard: bool,
+    ignore_mouse: bool,
     key_codes: HashMap<KeyCode, ActionValue>,
     modifiers: KeyboardModifiers,
     mouse_motion: Option<ActionValue>,
@@ -202,18 +234,6 @@ struct InputTracker {
     mouse_buttons: HashMap<MouseButton, ActionValue>,
     gamepad_buttons: HashMap<GamepadButton, ActionValue>,
     gamepad_axes: HashMap<GamepadAxis, ActionValue>,
-}
-
-impl InputTracker {
-    fn reset_input(&mut self) {
-        self.key_codes.clear();
-        self.modifiers = KeyboardModifiers::empty();
-        self.mouse_motion = None;
-        self.mouse_wheel = None;
-        self.mouse_buttons.clear();
-        self.gamepad_buttons.clear();
-        self.gamepad_axes.clear();
-    }
 }
 
 bitflags! {
