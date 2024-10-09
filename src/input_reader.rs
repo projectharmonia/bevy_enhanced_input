@@ -242,14 +242,14 @@ impl InputReader<'_, '_> {
                         values
                             .iter()
                             .map(|(_, &value)| value)
-                            .find(|value| value.as_bool())
+                            .max_by_key(|value| value.as_bool())
                     } else {
                         let values = self.tracker.gamepad_buttons.get_mut(&button)?;
 
                         values
                             .iter()
                             .map(|(_, &value)| value)
-                            .find(|value| value.as_bool())
+                            .max_by_key(|value| value.as_bool())
                     }
                 }
                 GamepadDevice::Id(gamepad) => {
