@@ -393,14 +393,14 @@ impl Input {
     /// Returns [`Input::MouseMotion`] without keyboard modifiers.
     pub fn mouse_motion() -> Self {
         Self::MouseMotion {
-            modifiers: KeyboardModifiers::empty(),
+            modifiers: Default::default(),
         }
     }
 
     /// Returns [`Input::MouseWheel`] without keyboard modifiers.
     pub fn mouse_wheel() -> Self {
         Self::MouseWheel {
-            modifiers: KeyboardModifiers::empty(),
+            modifiers: Default::default(),
         }
     }
 }
@@ -409,7 +409,7 @@ impl From<KeyCode> for Input {
     fn from(key_code: KeyCode) -> Self {
         Self::Keyboard {
             key_code,
-            modifiers: KeyboardModifiers::empty(),
+            modifiers: Default::default(),
         }
     }
 }
@@ -418,7 +418,7 @@ impl From<MouseButton> for Input {
     fn from(button: MouseButton) -> Self {
         Self::MouseButton {
             button,
-            modifiers: KeyboardModifiers::empty(),
+            modifiers: Default::default(),
         }
     }
 }
