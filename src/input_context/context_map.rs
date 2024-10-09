@@ -10,17 +10,28 @@ use super::{
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
-    input_reader::{Input, InputReader},
+    input_reader::{GamepadDevice, Input, InputReader},
     prelude::{Negate, SwizzleAxis},
 };
 
 #[derive(Default)]
 pub struct ContextMap {
+    gamepad: GamepadDevice,
     actions: Vec<ActionMap>,
     actions_data: ActionsData,
 }
 
 impl ContextMap {
+    /// Associates context with gamepad.
+    ///
+    /// By default it's [`GamepadDevice::Any`].
+    pub fn with_gamepad(gamepad: impl Into<GamepadDevice>) -> Self {
+        Self {
+            gamepad: gamepad.into(),
+            ..Default::default()
+        }
+    }
+
     pub fn bind<A: InputAction>(&mut self) -> &mut ActionMap {
         let type_id = TypeId::of::<A>();
         match self.actions_data.entry(type_id) {
@@ -51,6 +62,7 @@ impl ContextMap {
                 commands,
                 reader,
                 &mut self.actions_data,
+                self.gamepad,
                 entities,
                 delta,
             );
@@ -141,6 +153,7 @@ impl ActionMap {
         commands: &mut Commands,
         reader: &mut InputReader,
         actions_data: &mut ActionsData,
+        gamepad: GamepadDevice,
         entities: &[Entity],
         delta: f32,
     ) {
@@ -148,7 +161,7 @@ impl ActionMap {
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for input_map in &mut self.inputs {
-            if let Some(value) = reader.value(input_map.input, self.consumes_input) {
+            if let Some(value) = reader.value(input_map.input, gamepad, self.consumes_input) {
                 self.last_value = value.convert(self.dim);
             }
             let mut current_tracker = TriggerTracker::new(self.last_value);

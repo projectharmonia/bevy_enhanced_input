@@ -75,23 +75,15 @@ impl InputReader<'_, '_> {
             .tracker
             .gamepad_buttons
             .iter()
-            .flat_map(|(&button, values)| {
-                values
-                    .iter()
-                    .map(move |(&gamepad, &value)| (gamepad.into(), button, value))
-            })
-            .map(|(device, button, value)| (Input::GamepadButton { device, button }, value));
+            .flat_map(|(&button, values)| values.iter().map(move |(_, &value)| (button, value)))
+            .map(|(button, value)| (Input::GamepadButton { button }, value));
 
         let gamepad_axes = self
             .tracker
             .gamepad_axes
             .iter()
-            .flat_map(|(&axis, values)| {
-                values
-                    .iter()
-                    .map(move |(&gamepad, &value)| (gamepad.into(), axis, value))
-            })
-            .map(|(device, axis, value)| (Input::GamepadAxis { device, axis }, value));
+            .flat_map(|(&axis, values)| values.iter().map(move |(_, &value)| (axis, value)))
+            .map(|(axis, value)| (Input::GamepadAxis { axis }, value));
 
         key_codes
             .chain(mouse_buttons)
@@ -185,7 +177,12 @@ impl InputReader<'_, '_> {
         self.tracker.gamepad_axes.clear();
     }
 
-    pub(super) fn value(&mut self, input: Input, consume: bool) -> Option<ActionValue> {
+    pub(super) fn value(
+        &mut self,
+        input: Input,
+        gamepad: GamepadDevice,
+        consume: bool,
+    ) -> Option<ActionValue> {
         match input {
             Input::Keyboard {
                 key_code,
@@ -234,7 +231,7 @@ impl InputReader<'_, '_> {
                     self.tracker.mouse_wheel
                 }
             }
-            Input::GamepadButton { device, button } => match device {
+            Input::GamepadButton { button } => match gamepad {
                 GamepadDevice::Any => {
                     if consume {
                         let values = self.tracker.gamepad_buttons.remove(&button)?;
@@ -261,7 +258,7 @@ impl InputReader<'_, '_> {
                     }
                 }
             },
-            Input::GamepadAxis { device, axis } => match device {
+            Input::GamepadAxis { axis } => match gamepad {
                 GamepadDevice::Any => {
                     if consume {
                         let values = self.tracker.gamepad_axes.remove(&axis)?;
@@ -385,11 +382,9 @@ pub enum Input {
         modifiers: KeyboardModifiers,
     },
     GamepadButton {
-        device: GamepadDevice,
         button: GamepadButtonType,
     },
     GamepadAxis {
-        device: GamepadDevice,
         axis: GamepadAxisType,
     },
 }
@@ -430,44 +425,38 @@ impl From<MouseButton> for Input {
 
 impl From<GamepadButtonType> for Input {
     fn from(button: GamepadButtonType) -> Self {
-        Self::GamepadButton {
-            button,
-            device: GamepadDevice::Any,
-        }
+        Self::GamepadButton { button }
     }
 }
 
 impl From<GamepadAxisType> for Input {
     fn from(axis: GamepadAxisType) -> Self {
-        Self::GamepadAxis {
-            axis,
-            device: GamepadDevice::Any,
-        }
+        Self::GamepadAxis { axis }
     }
 }
 
-/// Associated gamepad for [`Input`].
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+/// Associated gamepad.
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
 pub enum GamepadDevice {
     /// Matches input from any gamepad.
     ///
     /// For an axis, the [`ActionValue`] will be calculated as the sum of inputs from all gamepads.
     /// For a button, the [`ActionValue`] will be `true` if any gamepad has this button pressed.
+    #[default]
     Any,
 
     /// Matches input from specific gamepad.
     Id(Gamepad),
 }
 
-impl GamepadDevice {
-    /// Create a device with specific ID.
-    pub fn id(id: usize) -> Self {
-        Self::Id(Gamepad::new(id))
-    }
-}
-
 impl From<Gamepad> for GamepadDevice {
     fn from(value: Gamepad) -> Self {
         Self::Id(value)
+    }
+}
+
+impl From<usize> for GamepadDevice {
+    fn from(value: usize) -> Self {
+        Gamepad::new(value).into()
     }
 }
