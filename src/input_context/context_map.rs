@@ -143,7 +143,7 @@ impl ActionMap {
 
     pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
         self.with(stick.x())
-            .with(InputMap::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
+            .with(InputMap::from(stick.y()).with_modifier(SwizzleAxis::YXZ))
     }
 
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
@@ -203,7 +203,7 @@ pub struct InputMap {
 }
 
 impl InputMap {
-    pub fn new(input: impl Into<Input>) -> Self {
+    pub fn new(input: Input) -> Self {
         Self {
             input: input.into(),
             modifiers: Default::default(),
@@ -224,19 +224,19 @@ impl InputMap {
 
 impl From<KeyCode> for InputMap {
     fn from(value: KeyCode) -> Self {
-        Self::new(value)
+        Self::new(value.into())
     }
 }
 
 impl From<GamepadButtonType> for InputMap {
     fn from(value: GamepadButtonType) -> Self {
-        Self::new(value)
+        Self::new(value.into())
     }
 }
 
 impl From<GamepadAxisType> for InputMap {
     fn from(value: GamepadAxisType) -> Self {
-        Self::new(value)
+        Self::new(value.into())
     }
 }
 
