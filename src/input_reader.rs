@@ -1,3 +1,5 @@
+use std::marker::PhantomData;
+
 use bevy::{
     ecs::system::SystemParam,
     input::{
@@ -238,6 +240,8 @@ impl InputReader<'_, '_> {
 
 #[derive(SystemParam)]
 pub struct UiInput<'w, 's> {
+    /// Marker to make the struct compile even when all features are disabled.
+    marker: PhantomData<(&'w (), &'s ())>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
     #[cfg(feature = "egui_priority")]

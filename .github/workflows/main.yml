@@ -47,7 +47,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Clippy
-        run: cargo clippy --tests --examples -- -D warnings
+        run: cargo clippy --all-features --tests --examples -- -D warnings
 
       - name: Rustdoc
         run: cargo rustdoc -- -D warnings
@@ -67,6 +67,25 @@ jobs:
 
       - name: Test doc
         run: cargo test --no-default-features --doc
+
+  feature-combinations:
+    name: Feature combinations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone repo
+        uses: actions/checkout@v4
+
+      - name: Instal stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache crates
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Cargo Hack
+        run: cargo install cargo-hack
+
+      - name: Check feature combinations
+        run: cargo hack check --feature-powerset
 
   test:
     name: Test
