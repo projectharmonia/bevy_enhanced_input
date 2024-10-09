@@ -394,6 +394,22 @@ pub enum Input {
     },
 }
 
+impl Input {
+    /// Returns [`Input::MouseMotion`] without keyboard modifiers.
+    pub fn mouse_motion() -> Self {
+        Self::MouseMotion {
+            modifiers: KeyboardModifiers::empty(),
+        }
+    }
+
+    /// Returns [`Input::MouseWheel`] without keyboard modifiers.
+    pub fn mouse_wheel() -> Self {
+        Self::MouseWheel {
+            modifiers: KeyboardModifiers::empty(),
+        }
+    }
+}
+
 impl From<KeyCode> for Input {
     fn from(key_code: KeyCode) -> Self {
         Self::Keyboard {
