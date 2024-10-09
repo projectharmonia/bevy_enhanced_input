@@ -459,6 +459,13 @@ pub enum GamepadDevice {
     Id(Gamepad),
 }
 
+impl GamepadDevice {
+    /// Create a device with specific ID.
+    pub fn id(id: usize) -> Self {
+        Self::Id(Gamepad::new(id))
+    }
+}
+
 impl From<Gamepad> for GamepadDevice {
     fn from(value: Gamepad) -> Self {
         Self::Id(value)
