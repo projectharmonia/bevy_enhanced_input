@@ -109,11 +109,11 @@ impl ActionMap {
     }
 
     pub fn with_wasd(&mut self) -> &mut Self {
-        self.with_dir_keys([KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD])
+        self.with_axis2d([KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD])
     }
 
     pub fn with_arrows(&mut self) -> &mut Self {
-        self.with_dir_keys([
+        self.with_axis2d([
             KeyCode::ArrowUp,
             KeyCode::ArrowLeft,
             KeyCode::ArrowDown,
@@ -121,15 +121,29 @@ impl ActionMap {
         ])
     }
 
-    pub fn with_dir_keys(&mut self, key_codes: [KeyCode; 4]) -> &mut Self {
-        self.with(InputMap::new(key_codes[0]).with_modifier(SwizzleAxis::YXZ))
-            .with(InputMap::new(key_codes[1]).with_modifier(Negate))
+    pub fn with_dpad(&mut self) -> &mut Self {
+        self.with_axis2d([
+            GamepadButtonType::DPadUp,
+            GamepadButtonType::DPadLeft,
+            GamepadButtonType::DPadDown,
+            GamepadButtonType::DPadRight,
+        ])
+    }
+
+    pub fn with_axis2d<I: Into<Input> + Copy>(&mut self, inputs: [I; 4]) -> &mut Self {
+        self.with(InputMap::new(inputs[0].into()).with_modifier(SwizzleAxis::YXZ))
+            .with(InputMap::new(inputs[1].into()).with_modifier(Negate))
             .with(
-                InputMap::new(key_codes[2])
+                InputMap::new(inputs[2].into())
                     .with_modifier(Negate)
                     .with_modifier(SwizzleAxis::YXZ),
             )
-            .with(InputMap::new(key_codes[3]))
+            .with(InputMap::new(inputs[3].into()))
+    }
+
+    pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
+        self.with(stick.x())
+            .with(InputMap::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
     }
 
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
@@ -217,5 +231,40 @@ impl From<KeyCode> for InputMap {
 impl From<GamepadButtonType> for InputMap {
     fn from(value: GamepadButtonType) -> Self {
         Self::new(value)
+    }
+}
+
+impl From<GamepadAxisType> for InputMap {
+    fn from(value: GamepadAxisType) -> Self {
+        Self::new(value)
+    }
+}
+
+/// Represents the side of a gamepad's analog stick.
+///
+/// See also [`ActionMap::with_stick`].
+#[derive(Clone, Copy, Debug)]
+pub enum GamepadStick {
+    /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
+    Left,
+    /// Corresponds to [`GamepadAxisType::RightStickX`] and [`GamepadAxisType::RightStickY`]
+    Right,
+}
+
+impl GamepadStick {
+    /// Returns associated X axis.
+    pub fn x(self) -> GamepadAxisType {
+        match self {
+            GamepadStick::Left => GamepadAxisType::LeftStickX,
+            GamepadStick::Right => GamepadAxisType::RightStickX,
+        }
+    }
+
+    /// Returns associated Y axis.
+    pub fn y(self) -> GamepadAxisType {
+        match self {
+            GamepadStick::Left => GamepadAxisType::LeftStickY,
+            GamepadStick::Right => GamepadAxisType::RightStickY,
+        }
     }
 }

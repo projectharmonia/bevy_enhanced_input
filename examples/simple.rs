@@ -47,15 +47,27 @@ impl GamePlugin {
 #[derive(Component)]
 struct Player;
 
-// To define mappings just implement a context trait.
+// To define mappings for actions, implement the context trait.
+// Multiple inputs can be assigned to a single action,
+// and the action will respond to any of them.
 impl InputContext for Player {
     fn context_map(_world: &World, _entity: Entity) -> ContextMap {
         let mut map = ContextMap::default();
 
-        // WASD and arrows are very common,
-        // so we provide a built-in helper.
-        map.bind::<Move>().with_wasd();
-        map.bind::<Jump>().with(KeyCode::Space);
+        // Mappings like WASD or sticks are very common,
+        // so we provide built-ins to assign all keys/axes at once.
+        map.bind::<Move>()
+            .with_wasd()
+            .with_stick(GamepadStick::Left);
+        map.bind::<Move>()
+            .with_wasd()
+            .with_stick(GamepadStick::Left);
+
+        // If you don't need keyboard modifiers, you can pass
+        // buttons directly, thanks to the `From` impl.
+        map.bind::<Jump>()
+            .with(KeyCode::Space)
+            .with(GamepadButtonType::South);
 
         map
     }

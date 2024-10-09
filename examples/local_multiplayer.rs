@@ -57,16 +57,28 @@ impl InputContext for Player {
         // across all contexts.
         let index = **world.get::<PlayerIndex>(entity).unwrap();
 
+        // By default context read inputs from all gamepads,
+        // but for local multiplayer we need assign specific
+        // gamepad index.
+        let mut map = ContextMap::with_gamepad(index);
+
         // Assign different mappings based player index.
-        let mut map = ContextMap::default();
         match index {
             0 => {
-                map.bind::<Move>().with_wasd();
-                map.bind::<Jump>().with(KeyCode::Space);
+                map.bind::<Move>()
+                    .with_wasd()
+                    .with_stick(GamepadStick::Left);
+                map.bind::<Jump>()
+                    .with(KeyCode::Space)
+                    .with(GamepadButtonType::South);
             }
             1 => {
-                map.bind::<Move>().with_arrows();
-                map.bind::<Jump>().with(KeyCode::Numpad0);
+                map.bind::<Move>()
+                    .with_arrows()
+                    .with_stick(GamepadStick::Left);
+                map.bind::<Jump>()
+                    .with(KeyCode::Numpad0)
+                    .with(GamepadButtonType::South);
             }
             _ => {
                 panic!("game expects only 2 players");

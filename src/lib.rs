@@ -6,7 +6,7 @@ pub mod prelude {
     pub use super::{
         action_value::{ActionValue, ActionValueDim},
         input_context::{
-            context_map::{ActionMap, ContextMap, InputMap},
+            context_map::{ActionMap, ContextMap, GamepadStick, InputMap},
             input_action::{Accumulation, ActionEvent, ActionEventKind, InputAction},
             input_condition::*,
             input_modifier::*,
