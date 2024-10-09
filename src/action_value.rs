@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{input::ButtonState, prelude::*};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
@@ -121,5 +121,14 @@ impl From<Vec2> for ActionValue {
 impl From<Vec3> for ActionValue {
     fn from(value: Vec3) -> Self {
         ActionValue::Axis3D(value)
+    }
+}
+
+impl From<ButtonState> for ActionValue {
+    fn from(value: ButtonState) -> Self {
+        match value {
+            ButtonState::Pressed => true.into(),
+            ButtonState::Released => false.into(),
+        }
     }
 }

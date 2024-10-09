@@ -4,7 +4,6 @@ use bevy::{
         gamepad::{GamepadAxisChangedEvent, GamepadButtonInput},
         keyboard::KeyboardInput,
         mouse::{MouseButtonInput, MouseMotion, MouseWheel},
-        ButtonState,
     },
     prelude::*,
     utils::HashMap,
@@ -53,12 +52,9 @@ impl InputReader<'_, '_> {
                 _ => (),
             }
 
-            let pressed = match input.state {
-                ButtonState::Pressed => true.into(),
-                ButtonState::Released => false.into(),
-            };
-
-            self.tracker.key_codes.insert(input.key_code, pressed);
+            self.tracker
+                .key_codes
+                .insert(input.key_code, input.state.into());
         }
 
         if !self.mouse_motion_events.is_empty() {
@@ -80,21 +76,15 @@ impl InputReader<'_, '_> {
         }
 
         for input in self.mouse_button_events.read() {
-            let pressed = match input.state {
-                ButtonState::Pressed => true.into(),
-                ButtonState::Released => false.into(),
-            };
-
-            self.tracker.mouse_buttons.insert(input.button, pressed);
+            self.tracker
+                .mouse_buttons
+                .insert(input.button, input.state.into());
         }
 
         for input in self.gamepad_button_events.read() {
-            let pressed = match input.state {
-                ButtonState::Pressed => true.into(),
-                ButtonState::Released => false.into(),
-            };
-
-            self.tracker.gamepad_buttons.insert(input.button, pressed);
+            self.tracker
+                .gamepad_buttons
+                .insert(input.button, input.state.into());
         }
 
         for event in self.gamepad_axis_events.read() {
