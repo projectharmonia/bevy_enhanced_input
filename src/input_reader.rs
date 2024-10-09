@@ -33,6 +33,8 @@ pub(super) struct InputReader<'w, 's> {
 
 impl InputReader<'_, '_> {
     pub(super) fn update_state(&mut self) {
+        self.tracker.reset_input();
+
         for input in self.keyboard_events.read() {
             // Record modifiers redundantly for quick access.
             match input.key_code {
@@ -210,6 +212,18 @@ struct InputTracker {
     mouse_buttons: HashMap<MouseButton, ActionValue>,
     gamepad_buttons: HashMap<GamepadButton, ActionValue>,
     gamepad_axes: HashMap<GamepadAxis, ActionValue>,
+}
+
+impl InputTracker {
+    fn reset_input(&mut self) {
+        self.key_codes.clear();
+        self.modifiers = KeyboardModifiers::empty();
+        self.mouse_motion = None;
+        self.mouse_wheel = None;
+        self.mouse_buttons.clear();
+        self.gamepad_buttons.clear();
+        self.gamepad_axes.clear();
+    }
 }
 
 bitflags! {
