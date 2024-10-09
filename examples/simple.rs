@@ -64,9 +64,9 @@ impl InputContext for Player {
 // All actions should implement `InputAction` trait.
 // It can be done manually, but we provide a derive for convenience.
 #[derive(Debug, InputAction)]
-#[action_dim(Axis2D)]
+#[input_action(dim = Axis2D)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[action_dim(Bool)]
+#[input_action(dim = Bool)]
 struct Jump;

@@ -7,7 +7,7 @@ pub mod prelude {
         action_value::{ActionValue, ActionValueDim},
         input_context::{
             context_map::{ActionMap, ContextMap, InputMap},
-            input_action::{ActionEvent, ActionEventKind, InputAction},
+            input_action::{Accumulation, ActionEvent, ActionEventKind, InputAction},
             input_condition::*,
             input_modifier::*,
             ContextAppExt, ContextKind, InputContext,

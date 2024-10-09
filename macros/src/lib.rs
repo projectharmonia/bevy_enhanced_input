@@ -1,50 +1,51 @@
+use darling::FromDeriveInput;
 use proc_macro::TokenStream;
-use proc_macro2::TokenTree;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Meta};
+use syn::{parse_macro_input, DeriveInput, Ident};
 
-#[proc_macro_derive(InputAction, attributes(action_dim))]
+#[derive(FromDeriveInput)]
+#[darling(attributes(input_action))]
+struct InputActionOpts {
+    dim: Ident,
+    #[darling(default)]
+    accumulation: Option<Ident>,
+    #[darling(default)]
+    consumes_input: bool,
+}
+
+#[proc_macro_derive(InputAction, attributes(input_action))]
 pub fn input_action_derive(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
 
-    const ATTR_NAME: &str = "action_dim";
-    let mut dim = None;
-    for attr in input.attrs {
-        let Meta::List(list) = attr.meta else {
-            continue;
-        };
-
-        if list
-            .path
-            .segments
-            .iter()
-            .any(|segment| segment.ident == ATTR_NAME)
-        {
-            assert!(dim.is_none(), "`{ATTR_NAME}` can be defined only once");
-
-            let mut token_iter = list.tokens.into_iter();
-            let token = token_iter
-                .next()
-                .unwrap_or_else(|| panic!("`{ATTR_NAME}` should have argument"));
-
-            let TokenTree::Ident(indent) = token else {
-                panic!("`{token}` is invalid argument for `{ATTR_NAME}`");
-            };
-
-            dim = Some(indent);
-
-            assert!(
-                token_iter.next().is_none(),
-                "`{ATTR_NAME}` should have only a single argument"
-            );
+    let opts = match InputActionOpts::from_derive_input(&input) {
+        Ok(value) => value,
+        Err(e) => {
+            return e.write_errors().into();
         }
-    }
+    };
 
-    let dim = dim.unwrap_or_else(|| panic!("`InputAction` should have `{ATTR_NAME}` attribute"));
     let struct_name = input.ident;
+    let dim = opts.dim;
+    let accumulation = if let Some(accumulation) = opts.accumulation {
+        quote! {
+            const ACCUMULATION: Accumulation = Accumulation::#accumulation;
+        }
+    } else {
+        Default::default()
+    };
+    let consumes_input = if opts.consumes_input {
+        quote! {
+            const CONSUMES_INPUT: bool = true;
+        }
+    } else {
+        Default::default()
+    };
+
     TokenStream::from(quote! {
         impl InputAction for #struct_name {
             const DIM: ActionValueDim = ActionValueDim::#dim;
+            #accumulation
+            #consumes_input
         }
     })
 }

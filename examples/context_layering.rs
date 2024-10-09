@@ -81,15 +81,15 @@ impl InputContext for Player {
 }
 
 #[derive(Debug, InputAction)]
-#[action_dim(Axis2D)]
+#[input_action(dim = Axis2D)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[action_dim(Bool)]
+#[input_action(dim = Bool)]
 struct Jump;
 
 #[derive(Debug, InputAction)]
-#[action_dim(Bool)]
+#[input_action(dim = Bool)]
 struct EnterWater;
 
 /// Context that overrides some actions from [`Player`].
@@ -113,9 +113,9 @@ impl InputContext for Swimming {
 }
 
 #[derive(Debug, InputAction)]
-#[action_dim(Bool)]
+#[input_action(dim = Bool)]
 struct Dive;
 
 #[derive(Debug, InputAction)]
-#[action_dim(Bool)]
+#[input_action(dim = Bool)]
 struct ExitWater;

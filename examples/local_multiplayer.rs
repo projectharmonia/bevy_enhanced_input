@@ -78,9 +78,9 @@ impl InputContext for Player {
 }
 
 #[derive(Debug, InputAction)]
-#[action_dim(Axis2D)]
+#[input_action(dim = Axis2D)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[action_dim(Bool)]
+#[input_action(dim = Bool)]
 struct Jump;
