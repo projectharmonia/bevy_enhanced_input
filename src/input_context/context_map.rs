@@ -148,7 +148,7 @@ impl ActionMap {
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for input_map in &mut self.inputs {
-            if let Some(value) = reader.read(input_map.input, self.consumes_input) {
+            if let Some(value) = reader.value(input_map.input, self.consumes_input) {
                 self.last_value = value.convert(self.dim);
             }
             let mut current_tracker = TriggerTracker::new(self.last_value);

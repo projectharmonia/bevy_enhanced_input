@@ -35,7 +35,61 @@ impl InputReader<'_, '_> {
         self.tracker.ignore_mouse = ignore;
     }
 
-    pub fn update_state(&mut self) {
+    pub fn read(&mut self) -> impl Iterator<Item = (Input, ActionValue)> + '_ {
+        self.update_state();
+
+        let modifiers = self.tracker.modifiers;
+        let key_codes = self
+            .tracker
+            .key_codes
+            .iter()
+            .map(move |(&key_code, &value)| {
+                (
+                    Input::Keyboard {
+                        key_code,
+                        modifiers,
+                    },
+                    value,
+                )
+            });
+
+        let mouse_buttons = self
+            .tracker
+            .mouse_buttons
+            .iter()
+            .map(move |(&button, &value)| (Input::MouseButton { button, modifiers }, value));
+
+        let mouse_motion = self
+            .tracker
+            .mouse_motion
+            .map(|value| (Input::MouseMotion { modifiers }, value));
+
+        let mouse_wheel = self
+            .tracker
+            .mouse_wheel
+            .map(|value| (Input::MouseWheel { modifiers }, value));
+
+        let gamepad_buttons = self
+            .tracker
+            .gamepad_buttons
+            .iter()
+            .map(|(&button, &value)| (Input::GamepadButton(button), value));
+
+        let gamepad_axes = self
+            .tracker
+            .gamepad_axes
+            .iter()
+            .map(|(&axis, &value)| (Input::GamepadAxis(axis), value));
+
+        key_codes
+            .chain(mouse_buttons)
+            .chain(mouse_motion)
+            .chain(mouse_wheel)
+            .chain(gamepad_buttons)
+            .chain(gamepad_axes)
+    }
+
+    pub(super) fn update_state(&mut self) {
         self.reset_input();
 
         if !self.tracker.ignore_keyboard {
@@ -115,7 +169,7 @@ impl InputReader<'_, '_> {
         self.tracker.gamepad_axes.clear();
     }
 
-    pub(super) fn read(&mut self, input: Input, consume: bool) -> Option<ActionValue> {
+    pub(super) fn value(&mut self, input: Input, consume: bool) -> Option<ActionValue> {
         match input {
             Input::Keyboard {
                 key_code,
