@@ -1,5 +1,3 @@
-use std::marker::PhantomData;
-
 use bevy::{
     ecs::system::SystemParam,
     input::{
@@ -18,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use crate::action_value::ActionValue;
 
 #[derive(SystemParam)]
-pub struct InputReader<'w, 's> {
+pub(super) struct InputReader<'w, 's> {
     mouse_motion_events: EventReader<'w, 's, MouseMotion>,
     mouse_wheel_events: EventReader<'w, 's, MouseWheel>,
     keyboard_events: EventReader<'w, 's, KeyboardInput>,
@@ -26,77 +24,17 @@ pub struct InputReader<'w, 's> {
     gamepad_button_events: EventReader<'w, 's, GamepadButtonInput>,
     gamepad_axis_events: EventReader<'w, 's, GamepadAxisChangedEvent>,
     tracker: Local<'s, InputTracker>,
+    #[cfg(feature = "ui_priority")]
+    interactions: Query<'w, 's, &'static Interaction>,
+    #[cfg(feature = "egui_priority")]
+    egui: Query<'w, 's, &'static EguiContext>,
 }
 
 impl InputReader<'_, '_> {
-    pub fn set_ignore_keyboard(&mut self, ignore: bool) {
-        self.tracker.ignore_keyboard = ignore;
-    }
-
-    pub fn set_ignore_mouse(&mut self, ignore: bool) {
-        self.tracker.ignore_mouse = ignore;
-    }
-
-    pub fn read(&mut self) -> impl Iterator<Item = (Input, ActionValue)> + '_ {
-        self.update_state();
-
-        let modifiers = self.tracker.modifiers;
-        let key_codes = self
-            .tracker
-            .key_codes
-            .iter()
-            .map(move |(&key_code, &value)| {
-                (
-                    Input::Keyboard {
-                        key_code,
-                        modifiers,
-                    },
-                    value,
-                )
-            });
-
-        let mouse_buttons = self
-            .tracker
-            .mouse_buttons
-            .iter()
-            .map(move |(&button, &value)| (Input::MouseButton { button, modifiers }, value));
-
-        let mouse_motion = self
-            .tracker
-            .mouse_motion
-            .map(|value| (Input::MouseMotion { modifiers }, value));
-
-        let mouse_wheel = self
-            .tracker
-            .mouse_wheel
-            .map(|value| (Input::MouseWheel { modifiers }, value));
-
-        let gamepad_buttons = self
-            .tracker
-            .gamepad_buttons
-            .iter()
-            .flat_map(|(&button, values)| values.iter().map(move |(_, &value)| (button, value)))
-            .map(|(button, value)| (Input::GamepadButton { button }, value));
-
-        let gamepad_axes = self
-            .tracker
-            .gamepad_axes
-            .iter()
-            .flat_map(|(&axis, values)| values.iter().map(move |(_, &value)| (axis, value)))
-            .map(|(axis, value)| (Input::GamepadAxis { axis }, value));
-
-        key_codes
-            .chain(mouse_buttons)
-            .chain(mouse_motion)
-            .chain(mouse_wheel)
-            .chain(gamepad_buttons)
-            .chain(gamepad_axes)
-    }
-
     pub(super) fn update_state(&mut self) {
         self.reset_input();
 
-        if !self.tracker.ignore_keyboard {
+        if !self.ui_wants_keyboard() {
             for input in self.keyboard_events.read() {
                 // Record modifiers redundantly for quick access.
                 match input.key_code {
@@ -121,7 +59,7 @@ impl InputReader<'_, '_> {
             }
         }
 
-        if !self.tracker.ignore_mouse {
+        if !self.ui_wants_mouse() {
             if !self.mouse_motion_events.is_empty() {
                 let mouse_motion: Vec2 = self
                     .mouse_motion_events
@@ -175,6 +113,37 @@ impl InputReader<'_, '_> {
         self.tracker.mouse_wheel = None;
         self.tracker.gamepad_buttons.clear();
         self.tracker.gamepad_axes.clear();
+    }
+
+    fn ui_wants_keyboard(&self) -> bool {
+        #[cfg(feature = "egui_priority")]
+        if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
+            return true;
+        }
+
+        false
+    }
+
+    fn ui_wants_mouse(&self) -> bool {
+        #[cfg(feature = "ui_priority")]
+        if self
+            .interactions
+            .iter()
+            .any(|&interaction| interaction != Interaction::None)
+        {
+            return true;
+        }
+
+        #[cfg(feature = "egui_priority")]
+        if self
+            .egui
+            .iter()
+            .any(|ctx| ctx.get().is_pointer_over_area() || ctx.get().wants_pointer_input())
+        {
+            return true;
+        }
+
+        false
     }
 
     pub(super) fn value(
@@ -291,53 +260,8 @@ impl InputReader<'_, '_> {
     }
 }
 
-#[derive(SystemParam)]
-pub struct UiInput<'w, 's> {
-    /// Marker to make the struct compile even when all features are disabled.
-    marker: PhantomData<(&'w (), &'s ())>,
-    #[cfg(feature = "ui_priority")]
-    interactions: Query<'w, 's, &'static Interaction>,
-    #[cfg(feature = "egui_priority")]
-    egui: Query<'w, 's, &'static EguiContext>,
-}
-
-impl UiInput<'_, '_> {
-    pub fn wants_keyboard(&self) -> bool {
-        #[cfg(feature = "egui_priority")]
-        if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
-            return true;
-        }
-
-        false
-    }
-
-    pub fn wants_mouse(&self) -> bool {
-        #[cfg(feature = "ui_priority")]
-        if self
-            .interactions
-            .iter()
-            .any(|&interaction| interaction != Interaction::None)
-        {
-            return true;
-        }
-
-        #[cfg(feature = "egui_priority")]
-        if self
-            .egui
-            .iter()
-            .any(|ctx| ctx.get().is_pointer_over_area() || ctx.get().wants_pointer_input())
-        {
-            return true;
-        }
-
-        false
-    }
-}
-
 #[derive(Resource, Default)]
 struct InputTracker {
-    ignore_keyboard: bool,
-    ignore_mouse: bool,
     key_codes: HashMap<KeyCode, ActionValue>,
     modifiers: KeyboardModifiers,
     mouse_buttons: HashMap<MouseButton, ActionValue>,

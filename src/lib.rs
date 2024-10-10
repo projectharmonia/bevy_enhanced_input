@@ -12,7 +12,7 @@ pub mod prelude {
             input_modifier::*,
             ContextAppExt, ContextKind, InputContext,
         },
-        input_reader::{GamepadDevice, Input, InputReader, KeyboardModifiers},
+        input_reader::{GamepadDevice, Input, KeyboardModifiers},
         EnhancedInputPlugin,
     };
     pub use bevy_enhanced_input_macros::InputAction;
@@ -21,8 +21,7 @@ pub mod prelude {
 use bevy::{ecs::system::SystemState, input::InputSystem, prelude::*};
 
 use input_context::InputContexts;
-use input_reader::UiInput;
-use prelude::*;
+use input_reader::InputReader;
 
 pub struct EnhancedInputPlugin;
 
@@ -34,14 +33,9 @@ impl Plugin for EnhancedInputPlugin {
 }
 
 impl EnhancedInputPlugin {
-    fn update(
-        world: &mut World,
-        state: &mut SystemState<(Commands, InputReader, UiInput, Res<Time>)>,
-    ) {
+    fn update(world: &mut World, state: &mut SystemState<(Commands, InputReader, Res<Time>)>) {
         world.resource_scope(|world, mut contexts: Mut<InputContexts>| {
-            let (mut commands, mut reader, ui_input, time) = state.get(world);
-            reader.set_ignore_keyboard(ui_input.wants_keyboard());
-            reader.set_ignore_mouse(ui_input.wants_mouse());
+            let (mut commands, mut reader, time) = state.get(world);
             reader.update_state();
 
             let delta = time.delta_seconds();
