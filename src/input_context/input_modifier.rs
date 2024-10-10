@@ -357,7 +357,7 @@ pub enum SmoothingMethod {
 
 /// Inverts value per axis.
 ///
-/// Inverses all axes by default.
+/// By default, all axes are inverted.
 #[derive(Debug)]
 pub struct Negate {
     pub x: bool,
@@ -366,30 +366,39 @@ pub struct Negate {
 }
 
 impl Negate {
-    /// Returns [`Self`] with only x negated.
-    pub fn x() -> Self {
+    /// Returns [`Self`] with invertion for all axes set to `invert`
+    pub fn all(invert: bool) -> Self {
         Self {
-            x: true,
+            x: invert,
+            y: invert,
+            z: invert,
+        }
+    }
+
+    /// Returns [`Self`] with invertion for x set to `invert`
+    pub fn x(invert: bool) -> Self {
+        Self {
+            x: invert,
             y: false,
             z: false,
         }
     }
 
-    /// Returns [`Self`] with only y negated.
-    pub fn y() -> Self {
+    /// Returns [`Self`] with invertion for y set to `invert`
+    pub fn y(invert: bool) -> Self {
         Self {
             x: false,
-            y: true,
+            y: invert,
             z: false,
         }
     }
 
-    /// Returns [`Self`] with only z negated.
-    pub fn z() -> Self {
+    /// Returns [`Self`] with invertion for z set to `invert`
+    pub fn z(invert: bool) -> Self {
         Self {
             x: false,
             y: false,
-            z: true,
+            z: invert,
         }
     }
 }
