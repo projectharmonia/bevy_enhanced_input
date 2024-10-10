@@ -355,17 +355,63 @@ pub enum SmoothingMethod {
     Linear,
 }
 
+/// Inverts value per axis.
+///
+/// Inverses all axes by default.
 #[derive(Debug)]
-pub struct Negate;
+pub struct Negate {
+    pub x: bool,
+    pub y: bool,
+    pub z: bool,
+}
+
+impl Negate {
+    /// Returns [`Self`] with only x negated.
+    pub fn x() -> Self {
+        Self {
+            x: true,
+            y: false,
+            z: false,
+        }
+    }
+
+    /// Returns [`Self`] with only y negated.
+    pub fn y() -> Self {
+        Self {
+            x: false,
+            y: true,
+            z: false,
+        }
+    }
+
+    /// Returns [`Self`] with only z negated.
+    pub fn z() -> Self {
+        Self {
+            x: false,
+            y: false,
+            z: true,
+        }
+    }
+}
+
+impl Default for Negate {
+    fn default() -> Self {
+        Self {
+            x: true,
+            y: true,
+            z: true,
+        }
+    }
+}
 
 impl InputModifier for Negate {
     fn apply(&mut self, _world: &World, _delta: f32, value: ActionValue) -> ActionValue {
-        match value {
-            ActionValue::Bool(value) => (!value).into(),
-            ActionValue::Axis1D(value) => (-value).into(),
-            ActionValue::Axis2D(value) => (-value).into(),
-            ActionValue::Axis3D(value) => (-value).into(),
-        }
+        let x = if self.x { 1.0 } else { -1.0 };
+        let y = if self.y { 1.0 } else { -1.0 };
+        let z = if self.z { 1.0 } else { -1.0 };
+        let negated = value.as_axis3d() * Vec3::new(x, y, z);
+
+        ActionValue::Axis3D(negated).convert(value.dim())
     }
 }
 

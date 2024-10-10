@@ -132,10 +132,10 @@ impl ActionMap {
 
     pub fn with_axis2d<I: Into<Input> + Copy>(&mut self, inputs: [I; 4]) -> &mut Self {
         self.with(InputMap::new(inputs[0].into()).with_modifier(SwizzleAxis::YXZ))
-            .with(InputMap::new(inputs[1].into()).with_modifier(Negate))
+            .with(InputMap::new(inputs[1].into()).with_modifier(Negate::default()))
             .with(
                 InputMap::new(inputs[2].into())
-                    .with_modifier(Negate)
+                    .with_modifier(Negate::default())
                     .with_modifier(SwizzleAxis::YXZ),
             )
             .with(InputMap::new(inputs[3].into()))
