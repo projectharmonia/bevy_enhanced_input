@@ -59,9 +59,6 @@ impl InputContext for Player {
         map.bind::<Move>()
             .with_wasd()
             .with_stick(GamepadStick::Left);
-        map.bind::<Move>()
-            .with_wasd()
-            .with_stick(GamepadStick::Left);
 
         // If you don't need keyboard modifiers, you can pass
         // buttons directly, thanks to the `From` impl.
