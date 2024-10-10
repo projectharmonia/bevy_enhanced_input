@@ -161,6 +161,7 @@ impl ActionMap {
         self
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn update(
         &mut self,
         world: &World,
@@ -205,7 +206,7 @@ pub struct InputMap {
 impl InputMap {
     pub fn new(input: Input) -> Self {
         Self {
-            input: input.into(),
+            input,
             modifiers: Default::default(),
             conditions: Default::default(),
         }
