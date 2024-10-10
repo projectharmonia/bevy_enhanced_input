@@ -286,9 +286,7 @@ bitflags! {
     }
 }
 
-/// All input that can be associated with an action.
-///
-/// See also [`InputReader::read`] for binding input at runtime.
+/// All inputs that can be associated with an action.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Input {
     Keyboard {
