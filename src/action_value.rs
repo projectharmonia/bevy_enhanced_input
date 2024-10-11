@@ -65,7 +65,7 @@ impl ActionValue {
         match self {
             Self::Bool(value) => {
                 if value {
-                    Vec2::X * 1.0
+                    Vec2::X
                 } else {
                     Vec2::ZERO
                 }
@@ -80,7 +80,7 @@ impl ActionValue {
         match self {
             Self::Bool(value) => {
                 if value {
-                    Vec3::X * 1.0
+                    Vec3::X
                 } else {
                     Vec3::ZERO
                 }
