@@ -200,13 +200,13 @@ impl ContextInstance {
     fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
         let type_id = TypeId::of::<C>();
         let map = C::context_map(world, entity);
-        match C::KIND {
-            ContextKind::Exclusive => Self::Exclusive {
+        match C::MODE {
+            ContextMode::Exclusive => Self::Exclusive {
                 type_id,
                 priority: C::PRIORITY,
                 maps: vec![(entity, map)],
             },
-            ContextKind::Shared => Self::Shared {
+            ContextMode::Shared => Self::Shared {
                 type_id,
                 priority: C::PRIORITY,
                 entities: vec![entity],
@@ -231,24 +231,31 @@ impl ContextInstance {
 }
 
 pub trait InputContext: Component {
-    const KIND: ContextKind = ContextKind::Exclusive;
+    const MODE: ContextMode = ContextMode::Exclusive;
     const PRIORITY: usize = 0;
 
     fn context_map(world: &World, entity: Entity) -> ContextMap;
 }
 
-/// Configures how instances for an input context will be managed.
+/// Configures how instances of [`InputContext`] will be managed.
 #[derive(Default, Debug)]
-pub enum ContextKind {
-    /// Store a separate context for each entity.
+pub enum ContextMode {
+    /// Instantiate a new context for each entity.
     ///
-    /// Useful for local multiplayer, where each player has different input mappings.
+    /// The context will be created and removed with the component.
+    ///
+    /// With this mode you can assign different mappings using the same context type.
+    ///
+    /// Useful for local multiplayer scenarios where each player has different input mappings.
     #[default]
     Exclusive,
 
     /// Share a single context instance among all entities.
     ///
-    /// Useful for games where multiple characters are controlled with the same input.
+    /// The context will be created once for the first insertion reused for all other entities
+    /// with the same component. It will be removed once no context components of this type exist.
+    ///
+    /// Useful for games where multiple entities are controlled with the same input.
     Shared,
 }
 

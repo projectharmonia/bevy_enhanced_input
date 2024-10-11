@@ -10,7 +10,7 @@ pub mod prelude {
             input_action::{Accumulation, ActionEvent, ActionEventKind, InputAction},
             input_condition::*,
             input_modifier::*,
-            ContextAppExt, ContextKind, InputContext,
+            ContextAppExt, ContextMode, InputContext,
         },
         input_reader::{GamepadDevice, Input, KeyboardModifiers},
         EnhancedInputPlugin,

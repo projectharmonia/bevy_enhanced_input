@@ -57,7 +57,7 @@ impl InputContext for Player {
     // actions from the first processed context may consume inputs.
     // Make it shared to have a single context instance for all entities
     // with this context.
-    const KIND: ContextKind = ContextKind::Shared;
+    const MODE: ContextMode = ContextMode::Shared;
 
     fn context_map(_world: &World, _entity: Entity) -> ContextMap {
         let mut map = ContextMap::default();
