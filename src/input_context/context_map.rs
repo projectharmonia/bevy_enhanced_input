@@ -109,36 +109,36 @@ impl ActionMap {
     }
 
     pub fn with_wasd(&mut self) -> &mut Self {
-        self.with_axis2d([KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD])
+        self.with_axis2d(KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD)
     }
 
     pub fn with_arrows(&mut self) -> &mut Self {
-        self.with_axis2d([
+        self.with_axis2d(
             KeyCode::ArrowUp,
             KeyCode::ArrowLeft,
             KeyCode::ArrowDown,
             KeyCode::ArrowRight,
-        ])
+        )
     }
 
     pub fn with_dpad(&mut self) -> &mut Self {
-        self.with_axis2d([
+        self.with_axis2d(
             GamepadButtonType::DPadUp,
             GamepadButtonType::DPadLeft,
             GamepadButtonType::DPadDown,
             GamepadButtonType::DPadRight,
-        ])
+        )
     }
 
-    pub fn with_axis2d<I: Into<Input> + Copy>(&mut self, inputs: [I; 4]) -> &mut Self {
-        self.with(InputMap::new(inputs[0].into()).with_modifier(SwizzleAxis::YXZ))
-            .with(InputMap::new(inputs[1].into()).with_modifier(Negate::default()))
+    pub fn with_axis2d<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
+        self.with(InputMap::new(up.into()).with_modifier(SwizzleAxis::YXZ))
+            .with(InputMap::new(left.into()).with_modifier(Negate::default()))
             .with(
-                InputMap::new(inputs[2].into())
+                InputMap::new(down.into())
                     .with_modifier(Negate::default())
                     .with_modifier(SwizzleAxis::YXZ),
             )
-            .with(InputMap::new(inputs[3].into()))
+            .with(InputMap::new(right.into()))
     }
 
     pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
