@@ -30,35 +30,40 @@ impl GamePlugin {
     }
 
     fn move_character(trigger: Trigger<ActionEvent<Move>>) {
-        if let ActionEventKind::Fired {
-            value, fired_secs, ..
-        } = trigger.event().kind
-        {
-            info!("moving with direction `{value:?}` for `{fired_secs}` secs");
+        let event = trigger.event();
+        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
+            info!(
+                "moving with direction `{:?}` for `{fired_secs}` secs",
+                event.value
+            );
         }
     }
 
     fn jump(trigger: Trigger<ActionEvent<Jump>>) {
-        if trigger.event().is_started() {
+        let event = trigger.event();
+        if event.kind.is_started() {
             info!("jumping in the air");
         }
     }
 
     fn enter_water(trigger: Trigger<ActionEvent<EnterWater>>, mut commands: Commands) {
-        if trigger.event().is_started() {
+        let event = trigger.event();
+        if event.kind.is_started() {
             info!("entering water");
             commands.entity(trigger.entity()).insert(Swimming);
         }
     }
 
     fn dive(trigger: Trigger<ActionEvent<Dive>>) {
-        if trigger.event().is_started() {
+        let event = trigger.event();
+        if event.kind.is_started() {
             info!("diving");
         }
     }
 
     fn exit_water(trigger: Trigger<ActionEvent<ExitWater>>, mut commands: Commands) {
-        if trigger.event().is_fired() {
+        let event = trigger.event();
+        if event.kind.is_fired() {
             info!("exiting water");
             commands.entity(trigger.entity()).remove::<Swimming>();
         }

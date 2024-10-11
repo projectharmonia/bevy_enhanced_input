@@ -27,17 +27,19 @@ impl GamePlugin {
     }
 
     fn move_character(trigger: Trigger<ActionEvent<Move>>, players: Query<&PlayerIndex>) {
-        if let ActionEventKind::Fired {
-            value, fired_secs, ..
-        } = trigger.event().kind
-        {
+        let event = trigger.event();
+        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
             let index = **players.get(trigger.entity()).unwrap();
-            info!("player {index} moving with direction `{value:?}` for `{fired_secs}` secs");
+            info!(
+                "player {index} moving with direction `{:?}` for `{fired_secs}` secs",
+                event.value
+            );
         }
     }
 
     fn jump(trigger: Trigger<ActionEvent<Jump>>, players: Query<&PlayerIndex>) {
-        if trigger.event().is_started() {
+        let event = trigger.event();
+        if event.kind.is_started() {
             let index = **players.get(trigger.entity()).unwrap();
             info!("player {index} jumping in the air");
         }

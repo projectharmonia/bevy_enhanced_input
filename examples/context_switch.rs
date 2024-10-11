@@ -30,22 +30,25 @@ impl GamePlugin {
     }
 
     fn move_character(trigger: Trigger<ActionEvent<Move>>) {
-        if let ActionEventKind::Fired {
-            value, fired_secs, ..
-        } = trigger.event().kind
-        {
-            info!("moving with direction `{value:?}` for `{fired_secs}` secs");
+        let event = trigger.event();
+        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
+            info!(
+                "moving with direction `{:?}` for `{fired_secs}` secs",
+                event.value
+            );
         }
     }
 
     fn jump(trigger: Trigger<ActionEvent<Jump>>) {
-        if trigger.event().is_started() {
+        let event = trigger.event();
+        if event.kind.is_started() {
             info!("jumping in the air");
         }
     }
 
     fn enter_car(trigger: Trigger<ActionEvent<EnterCar>>, mut commands: Commands) {
-        if trigger.event().is_started() {
+        let event = trigger.event();
+        if event.kind.is_started() {
             info!("entering car");
             commands
                 .entity(trigger.entity())
@@ -55,13 +58,15 @@ impl GamePlugin {
     }
 
     fn brake(trigger: Trigger<ActionEvent<Brake>>) {
-        if trigger.event().is_fired() {
+        let event = trigger.event();
+        if event.kind.is_fired() {
             info!("holding brake");
         }
     }
 
     fn exit_car(trigger: Trigger<ActionEvent<ExitCar>>, mut commands: Commands) {
-        if trigger.event().is_started() {
+        let event = trigger.event();
+        if event.kind.is_started() {
             info!("exiting car");
             commands
                 .entity(trigger.entity())

@@ -30,20 +30,21 @@ impl GamePlugin {
     }
 
     fn move_character(trigger: Trigger<ActionEvent<Move>>) {
-        if let ActionEventKind::Fired {
-            value, fired_secs, ..
-        } = trigger.event().kind
-        {
+        let event = trigger.event();
+        let entity = trigger.entity();
+        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
             info!(
-                "entity `{}` moving with direction `{value:?}` for `{fired_secs}` secs",
-                trigger.entity()
+                "entity `{entity}` moving with direction `{:?}` for `{fired_secs}` secs",
+                event.value
             );
         }
     }
 
     fn jump(trigger: Trigger<ActionEvent<Jump>>) {
-        if trigger.event().is_started() {
-            info!("entity `{}` jumping in the air", trigger.entity());
+        let event = trigger.event();
+        let entity = trigger.entity();
+        if event.kind.is_started() {
+            info!("entity `{entity}` jumping in the air");
         }
     }
 }

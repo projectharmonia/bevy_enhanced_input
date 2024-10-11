@@ -107,66 +107,80 @@ impl ActionData {
             match (self.state(), state) {
                 (ActionState::None, ActionState::None) => (),
                 (ActionState::None, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Started { value }),
+                    ActionEvent::<A>::new(ActionEventKind::Started, value),
                     entity,
                 ),
                 (ActionState::None, ActionState::Fired) => {
                     commands.trigger_targets(
-                        ActionEvent::<A>::from(ActionEventKind::Started { value }),
+                        ActionEvent::<A>::new(ActionEventKind::Started, value),
                         entity,
                     );
                     commands.trigger_targets(
-                        ActionEvent::<A>::from(ActionEventKind::Fired {
+                        ActionEvent::<A>::new(
+                            ActionEventKind::Fired {
+                                fired_secs: 0.0,
+                                elapsed_secs: 0.0,
+                            },
                             value,
-                            fired_secs: 0.0,
-                            elapsed_secs: 0.0,
-                        }),
+                        ),
                         entity,
                     );
                 }
                 (ActionState::Ongoing, ActionState::None) => commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Canceled {
+                    ActionEvent::<A>::new(
+                        ActionEventKind::Canceled {
+                            elapsed_secs: self.elapsed_secs,
+                        },
                         value,
-                        elapsed_secs: self.elapsed_secs,
-                    }),
+                    ),
                     entity,
                 ),
                 (ActionState::Ongoing, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Ongoing {
+                    ActionEvent::<A>::new(
+                        ActionEventKind::Ongoing {
+                            elapsed_secs: self.elapsed_secs,
+                        },
                         value,
-                        elapsed_secs: self.elapsed_secs,
-                    }),
+                    ),
                     entity,
                 ),
                 (ActionState::Ongoing, ActionState::Fired) => commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Fired {
+                    ActionEvent::<A>::new(
+                        ActionEventKind::Fired {
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
                         value,
-                        fired_secs: self.fired_secs,
-                        elapsed_secs: self.elapsed_secs,
-                    }),
+                    ),
                     entity,
                 ),
                 (ActionState::Fired, ActionState::None) => commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Completed {
+                    ActionEvent::<A>::new(
+                        ActionEventKind::Completed {
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
                         value,
-                        fired_secs: self.fired_secs,
-                        elapsed_secs: self.elapsed_secs,
-                    }),
+                    ),
                     entity,
                 ),
                 (ActionState::Fired, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Ongoing {
+                    ActionEvent::<A>::new(
+                        ActionEventKind::Ongoing {
+                            elapsed_secs: self.elapsed_secs,
+                        },
                         value,
-                        elapsed_secs: self.elapsed_secs,
-                    }),
+                    ),
                     entity,
                 ),
                 (ActionState::Fired, ActionState::Fired) => commands.trigger_targets(
-                    ActionEvent::<A>::from(ActionEventKind::Fired {
+                    ActionEvent::<A>::new(
+                        ActionEventKind::Fired {
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
                         value,
-                        fired_secs: self.fired_secs,
-                        elapsed_secs: self.elapsed_secs,
-                    }),
+                    ),
                     entity,
                 ),
             }
@@ -199,18 +213,19 @@ pub enum ActionState {
     Fired,
 }
 
-#[derive(Debug, Event, Deref)]
+#[derive(Debug, Event)]
 pub struct ActionEvent<A: InputAction> {
     pub marker: PhantomData<A>,
-    #[deref]
     pub kind: ActionEventKind,
+    pub value: ActionValue,
 }
 
-impl<A: InputAction> From<ActionEventKind> for ActionEvent<A> {
-    fn from(kind: ActionEventKind) -> Self {
+impl<A: InputAction> ActionEvent<A> {
+    fn new(kind: ActionEventKind, value: ActionValue) -> Self {
         Self {
             marker: PhantomData,
             kind,
+            value,
         }
     }
 }
@@ -219,8 +234,6 @@ impl<A: InputAction> From<ActionEventKind> for ActionEvent<A> {
 pub enum ActionEventKind {
     /// Triggers every frame when an action state is [`ActionState::Fired`].
     Fired {
-        value: ActionValue,
-
         /// Time that this action was in [`ActionState::Fired`] state.
         fired_secs: f32,
 
@@ -230,20 +243,16 @@ pub enum ActionEventKind {
 
     /// Triggers when an action switches its state from [`ActionState::None`]
     /// to [`ActionState::Fired`] or [`ActionState::Ongoing`].
-    Started { value: ActionValue },
+    Started,
 
     /// Triggers every frame when an action state is [`ActionState::Ongoing`].
     Ongoing {
-        value: ActionValue,
-
         /// Time that this action was in [`ActionState::Ongoing`] state.
         elapsed_secs: f32,
     },
 
     /// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`],
     Completed {
-        value: ActionValue,
-
         /// Time that this action was in [`ActionState::Fired`] state.
         fired_secs: f32,
 
@@ -253,8 +262,6 @@ pub enum ActionEventKind {
 
     /// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`],
     Canceled {
-        value: ActionValue,
-
         /// Time that this action was in [`ActionState::Ongoing`] state.
         elapsed_secs: f32,
     },
