@@ -8,7 +8,19 @@ use super::input_action::{ActionState, ActionsData, InputAction};
 use crate::action_value::ActionValue;
 use primitives::{Actuation, HeldTimer};
 
+/// Defines how input activates.
+///
+/// Most conditions analyze the input itself, checking for minimum actuation values
+/// and validating patterns like short taps, prolonged holds, or the typical "press"
+/// or "release" events.
+///
+/// You can define your own conditions based on the world state.
+///
+/// Conditions can be applied both to inputs and actions.
+/// See [`ActionMap::with_condition`](super::context_instance::ActionMap::with_condition)
+/// and [`InputMap::with_condition`](super::context_instance::InputMap::with_condition).
 pub trait InputCondition: Sync + Send + Debug + 'static {
+    /// Returns calculates state.
     fn evaluate(
         &mut self,
         world: &World,
@@ -17,24 +29,37 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
         value: ActionValue,
     ) -> ActionState;
 
+    /// Returns how the condition is combined with others.
     fn kind(&self) -> ConditionKind {
         ConditionKind::Explicit
     }
 }
 
-/// Determines how a condition it contributes to [`ActionState`].
+/// Determines how a condition contributes to the final [`ActionState`].
 pub enum ConditionKind {
+    /// The most significant [`ActionState`] from all explicit conditions will be the
+    /// resulting state.
+    ///
+    /// If no explicit conditions are provided, the action will be set to [`ActionState::Fired`] on
+    /// any non-zero value, functioning similarly to a [`Down`] condition with a zero actuation threshold.
     Explicit,
+
+    /// If any implicit condition fails to return [`ActionState::Fired`],
+    /// it will override all results from explicit actions with [`ActionState::None`].
+    ///
+    /// Useful if you want to force fail for an action or an input.
     Implicit,
 }
 
 /// Returns [`ActionState::Fired`] when the input exceeds the actuation threshold.
 #[derive(Default, Debug)]
 pub struct Down {
+    /// Trigger threshold.
     pub actuation: Actuation,
 }
 
 impl Down {
+    #[must_use]
     pub fn new(actuation: Actuation) -> Self {
         Self { actuation }
     }
@@ -61,11 +86,13 @@ impl InputCondition for Down {
 /// Holding the input will not cause further triggers.
 #[derive(Default, Debug)]
 pub struct Pressed {
+    /// Trigger threshold.
     pub actuation: Actuation,
     actuated: bool,
 }
 
 impl Pressed {
+    #[must_use]
     pub fn new(actuation: Actuation) -> Self {
         Self {
             actuation,
@@ -97,11 +124,13 @@ impl InputCondition for Pressed {
 /// [`ActionState::Fired`] once when the input drops back below the actuation threshold.
 #[derive(Default, Debug)]
 pub struct Released {
+    /// Trigger threshold.
     pub actuation: Actuation,
     actuated: bool,
 }
 
 impl Released {
+    #[must_use]
     pub fn new(actuation: Actuation) -> Self {
         Self {
             actuation,
@@ -146,6 +175,7 @@ pub struct Hold {
     // Should this trigger fire only once, or fire every frame once the hold time threshold is met?
     pub one_shot: bool,
 
+    /// Trigger threshold.
     pub actuation: Actuation,
 
     held_timer: HeldTimer,
@@ -154,6 +184,7 @@ pub struct Hold {
 }
 
 impl Hold {
+    #[must_use]
     pub fn new(hold_time: f32) -> Self {
         Self {
             hold_time,
@@ -164,16 +195,19 @@ impl Hold {
         }
     }
 
+    #[must_use]
     pub fn one_shot(mut self, one_shot: bool) -> Self {
         self.one_shot = one_shot;
         self
     }
 
+    #[must_use]
     pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
         self.actuation = actuation.into();
         self
     }
 
+    #[must_use]
     pub fn with_held_timer(mut self, held_timer: HeldTimer) -> Self {
         self.held_timer = held_timer;
         self
@@ -221,12 +255,14 @@ pub struct HoldAndRelease {
     // How long does the input have to be held to cause trigger.
     pub hold_time: f32,
 
+    /// Trigger threshold.
     pub actuation: Actuation,
 
     held_timer: HeldTimer,
 }
 
 impl HoldAndRelease {
+    #[must_use]
     pub fn new(hold_time: f32) -> Self {
         Self {
             hold_time,
@@ -235,11 +271,13 @@ impl HoldAndRelease {
         }
     }
 
+    #[must_use]
     pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
         self.actuation = actuation.into();
         self
     }
 
+    #[must_use]
     pub fn with_held_timer(mut self, held_timer: HeldTimer) -> Self {
         self.held_timer = held_timer;
         self
@@ -280,8 +318,10 @@ impl InputCondition for HoldAndRelease {
 /// Returns [`ActionState::None`] when the input is actuated more than [`Self::release_time`] seconds.
 #[derive(Debug)]
 pub struct Tap {
+    /// Time window within which the action must be released to register as a tap.
     pub release_time: f32,
 
+    /// Trigger threshold.
     pub actuation: Actuation,
 
     held_timer: HeldTimer,
@@ -289,6 +329,7 @@ pub struct Tap {
 }
 
 impl Tap {
+    #[must_use]
     pub fn new(release_time: f32) -> Self {
         Self {
             release_time,
@@ -298,11 +339,13 @@ impl Tap {
         }
     }
 
+    #[must_use]
     pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
         self.actuation = actuation.into();
         self
     }
 
+    #[must_use]
     pub fn with_held_timer(mut self, held_timer: HeldTimer) -> Self {
         self.held_timer = held_timer;
         self
@@ -357,6 +400,7 @@ pub struct Pulse {
     /// Whether to trigger when the input first exceeds the actuation threshold or wait for the first interval.
     pub trigger_on_start: bool,
 
+    /// Trigger threshold.
     pub actuation: Actuation,
 
     held_timer: HeldTimer,
@@ -365,6 +409,7 @@ pub struct Pulse {
 }
 
 impl Pulse {
+    #[must_use]
     pub fn new(interval: f32) -> Self {
         Self {
             interval,
@@ -376,21 +421,25 @@ impl Pulse {
         }
     }
 
+    #[must_use]
     pub fn with_trigger_limit(mut self, trigger_limit: u32) -> Self {
         self.trigger_limit = trigger_limit;
         self
     }
 
+    #[must_use]
     pub fn trigger_on_start(mut self, trigger_on_start: bool) -> Self {
         self.trigger_on_start = trigger_on_start;
         self
     }
 
+    #[must_use]
     pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
         self.actuation = actuation.into();
         self
     }
 
+    #[must_use]
     pub fn with_held_timer(mut self, held_timer: HeldTimer) -> Self {
         self.held_timer = held_timer;
         self
@@ -440,6 +489,7 @@ impl InputCondition for Pulse {
 /// Inherits [`ActionState`] from the specified action.
 #[derive(Debug)]
 pub struct Chord<A: InputAction> {
+    /// Required action.
     pub marker: PhantomData<A>,
 }
 
@@ -481,6 +531,7 @@ impl<A: InputAction> InputCondition for Chord<A> {
 /// Could be used for chords to avoid triggering required actions.
 #[derive(Debug)]
 pub struct BlockedBy<A: InputAction> {
+    /// Action that blocks this condition when active.
     pub marker: PhantomData<A>,
 }
 

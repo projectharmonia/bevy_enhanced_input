@@ -15,6 +15,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::action_value::ActionValue;
 
+/// Reads input from multiple sources.
+///
+/// We use event-based reading to prevent newly created
+/// context access previosly pressed inputs.
 #[derive(SystemParam)]
 pub(super) struct InputReader<'w, 's> {
     mouse_motion_events: EventReader<'w, 's, MouseMotion>,
@@ -31,6 +35,9 @@ pub(super) struct InputReader<'w, 's> {
 }
 
 impl InputReader<'_, '_> {
+    /// Reads all events and transforms into [`Input`] representation.
+    ///
+    /// Should be called on each system run before [`Self::value`].
     pub(super) fn update_state(&mut self) {
         self.reset_input();
 
@@ -146,6 +153,10 @@ impl InputReader<'_, '_> {
         false
     }
 
+    /// Reads the [`ActionValue`] for the given [`Input`].
+    ///
+    /// For gamepad input, it reads exclusively from `gamepad`.
+    /// If `consume` is set to `true`, the value will be consumed and unavailable for subsequent calls.
     pub(super) fn value(
         &mut self,
         input: Input,
@@ -260,6 +271,7 @@ impl InputReader<'_, '_> {
     }
 }
 
+/// Accumulates informations from events.
 #[derive(Resource, Default)]
 struct InputTracker {
     key_codes: HashMap<KeyCode, ActionValue>,
@@ -286,29 +298,28 @@ bitflags! {
     }
 }
 
-/// All inputs that can be associated with an action.
+/// Inputs that can be associated with an
+/// [`InputAction`](super::input_context::input_action::InputAction).
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Input {
+    /// Keyboard button, will be captured as [`ActionValue::Bool`].
     Keyboard {
         key_code: KeyCode,
         modifiers: KeyboardModifiers,
     },
+    /// Mouse button, will be captured as [`ActionValue::Bool`].
     MouseButton {
         button: MouseButton,
         modifiers: KeyboardModifiers,
     },
-    MouseMotion {
-        modifiers: KeyboardModifiers,
-    },
-    MouseWheel {
-        modifiers: KeyboardModifiers,
-    },
-    GamepadButton {
-        button: GamepadButtonType,
-    },
-    GamepadAxis {
-        axis: GamepadAxisType,
-    },
+    /// Mouse movement, will be captured as [`ActionValue::Axis2D`].
+    MouseMotion { modifiers: KeyboardModifiers },
+    /// Mouse wheel, will be captured as [`ActionValue::Axis1D`].
+    MouseWheel { modifiers: KeyboardModifiers },
+    /// Gamepad button, will be captured as [`ActionValue::Bool`].
+    GamepadButton { button: GamepadButtonType },
+    /// Gamepad stick axis, will be captured as [`ActionValue::Axis1D`].
+    GamepadAxis { axis: GamepadAxisType },
 }
 
 impl Input {

@@ -58,6 +58,8 @@ impl InputContext for Player {
 
         // Mappings like WASD or sticks are very common,
         // so we provide built-ins to assign all keys/axes at once.
+        // We don't assign any conditions. In this case the action will
+        // be triggered with any non-zero value.
         ctx.bind::<Move>()
             .with_wasd()
             .with_stick(GamepadStick::Left);

@@ -6,31 +6,18 @@
 
 Dynamic and contextual input mappings inspired by [Unreal Engine Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine) for Bevy.
 
-## What makes Enhanced Input... enhanced?
+## Features
 
-Instead of directly reacting to inputs from various sources (like keyboard, gamepad, etc.), you assign them to your gameplay actions,
-like "Move" or "Jump" which are just regular structs. Actions are assigned to contexts, which are components that represent the current
-state of the player character, like "OnFoot" or "InCar".
+* Map inputs from various sources (keyboard, gamepad, etc.) to gameplay actions like `Jump`, `Move`, or `Attack`.
+* Assign actions to different contexts like `OnFoot` or `InCar`, which are regular components.
+* Activate or deactivate contexts by simply adding or removing components.
+* Control how actions accumulate input from sources and consume it.
+* Layer multiple contexts on a single entity, controlled by priority.
+* Apply modifiers to inputs, such as dead zones, inversion, scaling, etc., or create custom modifiers by implementing a trait.
+* Assign conditions for how and when an action is triggered, like "hold", "double-tap" or "chord", etc. You can also create custom conditions, such as "on the ground".
+* React on actions with observers.
 
-For example, if you have a player character that can be on foot or drive a car, you can swap the context to have the same keys
-perform different actions. On foot, pressing <kbd>Space</kbd> could make the character jump, while when driving, pressing <kbd>Space</kbd>
-should act as a brake.
-
-## Core concepts
-
-Entities can have any number of contexts, with evaluation order controlled by a defined priority. Actions can also consume inputs,
-allowing you to layer behaviors on top of each other.
-
-Instead of reacting to raw input data like "Released" or "Pressed", the crate provides modifiers and conditions.
-
-Modifiers let you change the input before passing it to the action. We provide common modifiers, like dead zones, inversion, and scaling,
-but you can add your own by implementing a trait.
-
-Conditions define how an action activates. We also provide built-in conditions, such as "Pressed", "Released", "Hold for n secs", etc.
-However, you can also add gameplay-based conditions like "Can jump" by implementing a trait.
-
-To respond to action changes, you can use observers. For example, with the condition "Hold for 1 sec", you can trigger a strong attack
-on "Completed", or a regular attack on "Cancelled".
+## Getting Started
 
 Check out the [quick start guide](https://docs.rs/bevy_enhanced_input) for more details.
 

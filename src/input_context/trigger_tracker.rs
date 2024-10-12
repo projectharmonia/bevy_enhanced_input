@@ -9,6 +9,9 @@ use super::{
 };
 use crate::action_value::ActionValue;
 
+/// Helper to calculate [`ActionState`] based on its modifiers and conditions.
+///
+/// Could be used to track both input-level state and action-level state.
 pub(super) struct TriggerTracker {
     value: ActionValue,
     state: ActionState,
@@ -17,6 +20,7 @@ pub(super) struct TriggerTracker {
 }
 
 impl TriggerTracker {
+    #[must_use]
     pub(super) fn new(value: ActionValue) -> Self {
         Self {
             value,
@@ -77,8 +81,11 @@ impl TriggerTracker {
         }
     }
 
+    /// Merges input-level tracker into an action-level tracker.
     pub(super) fn merge(&mut self, other: Self, accumulation: Accumulation) {
         if other.blocked {
+            // Input-level tracker that are blocked by a condition
+            // shouldn't affection action-level trackers.
             return;
         }
 

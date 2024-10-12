@@ -15,7 +15,21 @@ use bevy::prelude::*;
 use crate::input_reader::InputReader;
 use context_instance::ContextInstance;
 
+/// An extension trait for [`App`] to register contexts.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// let mut app = App::new();
+/// app.add_input_context::<Player>();
+/// # #[derive(Component)]
+/// # struct Player;
+/// # impl InputContext for Player {
+/// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
+/// # }
+/// ```
 pub trait ContextAppExt {
+    /// Registers an input context.
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self;
 }
 
@@ -186,7 +200,7 @@ impl ContextInstances {
     }
 }
 
-/// Instances of [`InputContext`] for the same type.
+/// Instances of [`InputContext`] for the same type based on [`InputContext::MODE`].
 enum InstanceGroup {
     Exclusive {
         type_id: TypeId,
@@ -202,6 +216,7 @@ enum InstanceGroup {
 }
 
 impl InstanceGroup {
+    #[must_use]
     fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
         let type_id = TypeId::of::<C>();
         let ctx = C::context_instance(world, entity);
@@ -235,10 +250,73 @@ impl InstanceGroup {
     }
 }
 
+/// Contexts are components that associate entities with [`InputAction`](input_action::InputAction)s.
+///
+/// Inserting this component associates [`ContextInstance`] for this
+/// entity in a resource.
+///
+/// Removing deactivates [`ContextInstance`] for the entity end trigger
+/// transitions for all actions to [`ActionState::None`](input_action::ActionState::None).
+///
+/// Each context should be registered using [`ContextAppExt::add_input_context`].
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// #[derive(Component)]
+/// struct Player;
+///
+/// impl InputContext for Player {
+///     fn context_instance(world: &World, entity: Entity) -> ContextInstance {
+///         // You can use world to access the necessaary data.
+///         let settings = world.resource::<AppSettings>();
+///
+///         // To can also access the context
+///         // component itself from the entity.
+///         let player = world.get::<Self>(entity).unwrap();
+///
+///         let mut ctx = ContextInstance::default();
+///
+///         ctx.bind::<Move>()
+///             .with_wasd()
+///             .with_stick(GamepadStick::Left);
+///
+///         ctx.bind::<Jump>()
+///             .with(KeyCode::Space)
+///             .with(GamepadButtonType::South);
+///
+///         ctx
+///     }
+/// }
+/// # #[derive(Debug, InputAction)]
+/// # #[input_action(dim = Axis2D)]
+/// # struct Move;
+/// # #[derive(Debug, InputAction)]
+/// # #[input_action(dim = Bool)]
+/// # struct Jump;
+/// # #[derive(Resource)]
+/// # struct AppSettings;
+/// ```
 pub trait InputContext: Component {
+    /// Configures how context will be instantiated.
     const MODE: ContextMode = ContextMode::Exclusive;
+
+    /// Determines the evaluation order of [`ContextInstance`]s produced
+    /// by this component.
+    ///
+    /// Ordering is global.
+    /// Contexts with a higher priority evaluated first.
     const PRIORITY: usize = 0;
 
+    /// Creates a new instance for the given entity.
+    ///
+    /// In the implementation you need call [`ContextInstance::bind`]
+    /// to associate it with [`InputAction`](input_action::InputAction)s.
+    ///
+    /// The function is called on each context instantiation
+    /// which depends on [`Self::MODE`].
+    /// You can also rebuild all contexts by triggering [`RebuildInputContexts`].
+    #[must_use]
     fn context_instance(world: &World, entity: Entity) -> ContextInstance;
 }
 

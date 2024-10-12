@@ -7,7 +7,20 @@ use interpolation::Ease;
 
 use crate::action_value::{ActionValue, ActionValueDim};
 
+/// Pre-processors that alter the raw input values.
+///
+/// Input modifiers are useful for applying sensitivity settings, smoothing input over multiple frames,
+/// or changing how input behaves based on the state of the player.
+///
+/// Because you have access to the world when making your own modifier, you can access any game state you want.
+///
+/// Modifiers can be applied both to inputs and actions.
+/// See [`ActionMap::with_modifier`](super::context_instance::ActionMap::with_modifier)
+/// and [`InputMap::with_modifier`](super::context_instance::InputMap::with_modifier).
 pub trait InputModifier: Sync + Send + Debug + 'static {
+    /// Returns pre-processed value.
+    ///
+    /// Called each frame.
     fn apply(&mut self, world: &World, delta: f32, value: ActionValue) -> ActionValue;
 }
 
@@ -88,6 +101,7 @@ impl InputModifier for DeadZone {
     }
 }
 
+/// Dead zone behavior.
 #[derive(Default, Clone, Copy, Debug)]
 pub enum DeadZoneKind {
     // Apply dead zone logic to all axes simultaneously.
@@ -109,6 +123,7 @@ pub enum DeadZoneKind {
 /// Can't be applied to [`ActionValue::Bool`].
 #[derive(Clone, Copy, Debug)]
 pub struct ExponentialCurve {
+    /// Curve exponent.
     pub exponent: Vec3,
 }
 
@@ -297,9 +312,10 @@ impl Smooth {
 /// Can't be applied to [`ActionValue::Bool`].
 #[derive(Debug)]
 pub struct SmoothDelta {
+    /// Defines how value will be smoothed.
     pub smoothing_method: SmoothingMethod,
 
-    /// Speed, or alpha.
+    /// Speed or alpha.
     ///
     /// If the speed given is 0, then jump to the target.
     pub speed: f32,
@@ -310,6 +326,7 @@ pub struct SmoothDelta {
 }
 
 impl SmoothDelta {
+    #[must_use]
     pub fn new(smoothing_method: SmoothingMethod, speed: f32) -> Self {
         Self {
             smoothing_method,
@@ -360,8 +377,13 @@ pub enum SmoothingMethod {
 /// By default, all axes are inverted.
 #[derive(Debug)]
 pub struct Negate {
+    /// Wheter to inverse the X axis.
     pub x: bool,
+
+    /// Wheter to inverse the Y axis.
     pub y: bool,
+
+    /// Wheter to inverse the Z axis.
     pub z: bool,
 }
 
