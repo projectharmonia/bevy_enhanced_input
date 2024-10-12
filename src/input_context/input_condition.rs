@@ -9,7 +9,7 @@ use crate::action_value::ActionValue;
 use primitives::{Actuation, HeldTimer};
 
 pub trait InputCondition: Sync + Send + Debug + 'static {
-    fn update_state(
+    fn evaluate(
         &mut self,
         world: &World,
         actions_data: &ActionsData,
@@ -41,7 +41,7 @@ impl Down {
 }
 
 impl InputCondition for Down {
-    fn update_state(
+    fn evaluate(
         &mut self,
         _world: &World,
         _actions_data: &ActionsData,
@@ -75,7 +75,7 @@ impl Pressed {
 }
 
 impl InputCondition for Pressed {
-    fn update_state(
+    fn evaluate(
         &mut self,
         _world: &World,
         _actions_data: &ActionsData,
@@ -111,7 +111,7 @@ impl Released {
 }
 
 impl InputCondition for Released {
-    fn update_state(
+    fn evaluate(
         &mut self,
         _world: &World,
         _actions_data: &ActionsData,
@@ -181,7 +181,7 @@ impl Hold {
 }
 
 impl InputCondition for Hold {
-    fn update_state(
+    fn evaluate(
         &mut self,
         world: &World,
         _actions_data: &ActionsData,
@@ -247,7 +247,7 @@ impl HoldAndRelease {
 }
 
 impl InputCondition for HoldAndRelease {
-    fn update_state(
+    fn evaluate(
         &mut self,
         world: &World,
         _actions_data: &ActionsData,
@@ -310,7 +310,7 @@ impl Tap {
 }
 
 impl InputCondition for Tap {
-    fn update_state(
+    fn evaluate(
         &mut self,
         world: &World,
         _actions_data: &ActionsData,
@@ -398,7 +398,7 @@ impl Pulse {
 }
 
 impl InputCondition for Pulse {
-    fn update_state(
+    fn evaluate(
         &mut self,
         world: &World,
         _actions_data: &ActionsData,
@@ -452,7 +452,7 @@ impl<A: InputAction> Default for Chord<A> {
 }
 
 impl<A: InputAction> InputCondition for Chord<A> {
-    fn update_state(
+    fn evaluate(
         &mut self,
         _world: &World,
         actions_data: &ActionsData,
@@ -493,7 +493,7 @@ impl<A: InputAction> Default for BlockedBy<A> {
 }
 
 impl<A: InputAction> InputCondition for BlockedBy<A> {
-    fn update_state(
+    fn evaluate(
         &mut self,
         _world: &World,
         actions_data: &ActionsData,

@@ -58,7 +58,7 @@ impl TriggerTracker {
         // Note: No early outs permitted!
         // All conditions must be evaluated to update their internal state/delta time.
         for condition in conditions {
-            let state = condition.update_state(world, actions_data, delta, self.value);
+            let state = condition.evaluate(world, actions_data, delta, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
             match condition.kind() {
                 ConditionKind::Explicit => {
