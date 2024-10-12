@@ -437,9 +437,9 @@ impl Default for Negate {
 
 impl InputModifier for Negate {
     fn apply(&mut self, _world: &World, _delta: f32, value: ActionValue) -> ActionValue {
-        let x = if self.x { 1.0 } else { -1.0 };
-        let y = if self.y { 1.0 } else { -1.0 };
-        let z = if self.z { 1.0 } else { -1.0 };
+        let x = if self.x { -1.0 } else { 1.0 };
+        let y = if self.y { -1.0 } else { 1.0 };
+        let z = if self.z { -1.0 } else { 1.0 };
         let negated = value.as_axis3d() * Vec3::new(x, y, z);
 
         ActionValue::Axis3D(negated).convert(value.dim())
