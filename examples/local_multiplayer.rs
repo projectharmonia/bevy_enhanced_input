@@ -53,7 +53,7 @@ struct PlayerIndex(usize);
 struct Player;
 
 impl InputContext for Player {
-    fn context_map(world: &World, entity: Entity) -> ContextMap {
+    fn context_instance(world: &World, entity: Entity) -> ContextInstance {
         // Could be stored in the context itself, but it's usually
         // better to have a separate component that is shared
         // across all contexts.
@@ -62,23 +62,23 @@ impl InputContext for Player {
         // By default context read inputs from all gamepads,
         // but for local multiplayer we need assign specific
         // gamepad index.
-        let mut map = ContextMap::with_gamepad(index);
+        let mut ctx = ContextInstance::with_gamepad(index);
 
         // Assign different mappings based player index.
         match index {
             0 => {
-                map.bind::<Move>()
+                ctx.bind::<Move>()
                     .with_wasd()
                     .with_stick(GamepadStick::Left);
-                map.bind::<Jump>()
+                ctx.bind::<Jump>()
                     .with(KeyCode::Space)
                     .with(GamepadButtonType::South);
             }
             1 => {
-                map.bind::<Move>()
+                ctx.bind::<Move>()
                     .with_arrows()
                     .with_stick(GamepadStick::Left);
-                map.bind::<Jump>()
+                ctx.bind::<Jump>()
                     .with(KeyCode::Numpad0)
                     .with(GamepadButtonType::South);
             }
@@ -87,7 +87,7 @@ impl InputContext for Player {
             }
         }
 
-        map
+        ctx
     }
 }
 

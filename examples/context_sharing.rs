@@ -60,13 +60,13 @@ impl InputContext for Player {
     // with this context.
     const MODE: ContextMode = ContextMode::Shared;
 
-    fn context_map(_world: &World, _entity: Entity) -> ContextMap {
-        let mut map = ContextMap::default();
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut ctx = ContextInstance::default();
 
-        map.bind::<Move>().with_wasd();
-        map.bind::<Jump>().with(KeyCode::Space);
+        ctx.bind::<Move>().with_wasd();
+        ctx.bind::<Jump>().with(KeyCode::Space);
 
-        map
+        ctx
     }
 }
 

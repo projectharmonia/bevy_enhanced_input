@@ -80,14 +80,14 @@ impl GamePlugin {
 struct OnFoot;
 
 impl InputContext for OnFoot {
-    fn context_map(_world: &World, _entity: Entity) -> ContextMap {
-        let mut map = ContextMap::default();
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut instance = ContextInstance::default();
 
-        map.bind::<Move>().with_wasd();
-        map.bind::<Jump>().with(KeyCode::Space);
-        map.bind::<EnterCar>().with(KeyCode::Enter);
+        instance.bind::<Move>().with_wasd();
+        instance.bind::<Jump>().with(KeyCode::Space);
+        instance.bind::<EnterCar>().with(KeyCode::Enter);
 
-        map
+        instance
     }
 }
 
@@ -107,14 +107,14 @@ struct EnterCar;
 struct InCar;
 
 impl InputContext for InCar {
-    fn context_map(_world: &World, _entity: Entity) -> ContextMap {
-        let mut map = ContextMap::default();
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut ctx = ContextInstance::default();
 
-        map.bind::<Move>().with_wasd();
-        map.bind::<ExitCar>().with(KeyCode::Enter);
-        map.bind::<Brake>().with(KeyCode::Space);
+        ctx.bind::<Move>().with_wasd();
+        ctx.bind::<ExitCar>().with(KeyCode::Enter);
+        ctx.bind::<Brake>().with(KeyCode::Space);
 
-        map
+        ctx
     }
 }
 

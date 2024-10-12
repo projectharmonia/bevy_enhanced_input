@@ -15,13 +15,13 @@ use crate::{
 };
 
 #[derive(Default)]
-pub struct ContextMap {
+pub struct ContextInstance {
     gamepad: GamepadDevice,
     actions: Vec<ActionMap>,
     actions_data: ActionsData,
 }
 
-impl ContextMap {
+impl ContextInstance {
     /// Associates context with gamepad.
     ///
     /// By default it's [`GamepadDevice::Any`].

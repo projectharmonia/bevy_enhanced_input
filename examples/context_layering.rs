@@ -74,14 +74,14 @@ impl GamePlugin {
 struct Player;
 
 impl InputContext for Player {
-    fn context_map(_world: &World, _entity: Entity) -> ContextMap {
-        let mut map = ContextMap::default();
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut ctx = ContextInstance::default();
 
-        map.bind::<Move>().with_wasd();
-        map.bind::<Jump>().with(KeyCode::Space);
-        map.bind::<EnterWater>().with(KeyCode::Enter);
+        ctx.bind::<Move>().with_wasd();
+        ctx.bind::<Jump>().with(KeyCode::Space);
+        ctx.bind::<EnterWater>().with(KeyCode::Enter);
 
-        map
+        ctx
     }
 }
 
@@ -104,8 +104,8 @@ struct Swimming;
 impl InputContext for Swimming {
     const PRIORITY: usize = 1; // Set higher priority to execute its actions first.
 
-    fn context_map(_world: &World, _entity: Entity) -> ContextMap {
-        let mut map = ContextMap::default();
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut map = ContextInstance::default();
 
         // Dive and exit actions will consume, the input preventing
         // lower level priorities to see the input.
