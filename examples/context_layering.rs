@@ -107,9 +107,9 @@ impl InputContext for Swimming {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut map = ContextInstance::default();
 
-        // Dive and exit actions will consume, the input preventing
-        // lower level priorities to see the input.
-        // Consuming behavior is configurable in the `InputAction` trait.
+        // `Player` has lower priority, so `Dive` and `ExitWater` consume inputs first,
+        // preventing `Jump` and `EnterWater` from being triggered.
+        // The consuming behavior can be configured in the `InputAction` trait.
         map.bind::<Dive>().with(KeyCode::Space);
         map.bind::<ExitWater>().with(KeyCode::Enter);
 
