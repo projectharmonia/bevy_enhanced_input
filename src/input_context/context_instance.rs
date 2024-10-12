@@ -110,11 +110,10 @@ pub struct ActionMap {
     consumes_input: bool,
     accumulation: Accumulation,
     dim: ActionValueDim,
-    last_value: ActionValue,
 
     modifiers: Vec<Box<dyn InputModifier>>,
     conditions: Vec<Box<dyn InputCondition>>,
-    inputs: Vec<InputMap>,
+    inputs: Vec<(ActionValue, InputMap)>,
 }
 
 impl ActionMap {
@@ -126,7 +125,6 @@ impl ActionMap {
             dim: A::DIM,
             consumes_input: A::CONSUMES_INPUT,
             accumulation: A::ACCUMULATION,
-            last_value: ActionValue::zero(A::DIM),
             modifiers: Default::default(),
             conditions: Default::default(),
             inputs: Default::default(),
@@ -245,7 +243,7 @@ impl ActionMap {
     /// # struct Jump;
     /// ```
     pub fn with(&mut self, map: impl Into<InputMap>) -> &mut Self {
-        self.inputs.push(map.into());
+        self.inputs.push((ActionValue::zero(self.dim), map.into()));
         self
     }
 
@@ -263,11 +261,13 @@ impl ActionMap {
         trace!("updating action `{}`", self.action_name);
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
-        for input_map in &mut self.inputs {
-            if let Some(value) = reader.value(input_map.input, gamepad, self.consumes_input) {
-                self.last_value = value.convert(self.dim);
+        for (value, input_map) in &mut self.inputs {
+            if let Some(new_value) = reader.value(input_map.input, gamepad, self.consumes_input) {
+                // Retain the old value and update it if a new one
+                // is available since the reader is event-based.
+                *value = new_value.convert(self.dim);
             }
-            let mut current_tracker = TriggerTracker::new(self.last_value);
+            let mut current_tracker = TriggerTracker::new(*value);
             current_tracker.apply_modifiers(world, delta, &mut input_map.modifiers);
             current_tracker.apply_conditions(world, actions_data, delta, &mut input_map.conditions);
             tracker.merge(current_tracker, self.accumulation);

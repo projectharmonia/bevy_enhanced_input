@@ -153,10 +153,12 @@ impl InputReader<'_, '_> {
         false
     }
 
-    /// Reads the [`ActionValue`] for the given [`Input`].
+    /// Returns the [`ActionValue`] for the given [`Input`] from input events.
     ///
-    /// For gamepad input, it reads exclusively from `gamepad`.
-    /// If `consume` is set to `true`, the value will be consumed and unavailable for subsequent calls.
+    /// Returns [`None`] if there were no events for the given input.
+    ///
+    /// For gamepad input, it exclusively reads from the specified `gamepad`.
+    /// If `consume` is `true`, the value will be consumed and unavailable for subsequent calls.
     pub(super) fn value(
         &mut self,
         input: Input,
