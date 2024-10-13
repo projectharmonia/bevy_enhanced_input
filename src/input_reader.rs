@@ -24,7 +24,7 @@ pub(super) struct InputReader<'w, 's> {
     gamepad_axis: Res<'w, Axis<GamepadAxis>>,
     gamepads: Res<'w, Gamepads>,
     consumed: Local<'s, ConsumedInput>,
-    gamepad: Local<'s, GamepadDevice>,
+    params: Local<'s, ReaderParams>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
     #[cfg(feature = "egui_priority")]
@@ -62,13 +62,20 @@ impl InputReader<'_, '_> {
 
     /// Assignes a gamepad from which [`Self::value`] should read input.
     pub(super) fn set_gamepad(&mut self, gamepad: GamepadDevice) {
-        *self.gamepad = gamepad;
+        self.params.gamepad = gamepad;
+    }
+
+    /// Enables or disables consuming in [`Self::value`].
+    ///
+    /// If the value is consumed, will unavailable for subsequent calls.
+    pub(super) fn set_consume_input(&mut self, consume_input: bool) {
+        self.params.consume_input = consume_input;
     }
 
     /// Returns the [`ActionValue`] for the given [`Input`] if exists.
     ///
-    /// If `consume` is `true`, the value will be consumed and unavailable for subsequent calls.
-    pub(super) fn value(&mut self, input: Input, consume: bool) -> ActionValue {
+    /// See also [`Self::set_consume_input`] and [`Self::set_gamepad`].
+    pub(super) fn value(&mut self, input: Input) -> ActionValue {
         match input {
             Input::Keyboard {
                 key_code,
@@ -78,7 +85,7 @@ impl InputReader<'_, '_> {
                     && !self.consumed.key_codes.contains(&key_code)
                     && self.modifiers_pressed(modifiers);
 
-                if pressed && consume {
+                if pressed && self.params.consume_input {
                     self.consumed.key_codes.insert(key_code);
                     self.consumed.modifiers.insert(modifiers);
                 }
@@ -90,7 +97,7 @@ impl InputReader<'_, '_> {
                     && !self.consumed.mouse_buttons.contains(&button)
                     && self.modifiers_pressed(modifiers);
 
-                if pressed && consume {
+                if pressed && self.params.consume_input {
                     self.consumed.mouse_buttons.insert(button);
                     self.consumed.modifiers.insert(modifiers);
                 }
@@ -129,7 +136,7 @@ impl InputReader<'_, '_> {
             }
             Input::GamepadButton { button } => {
                 let input = GamepadInput {
-                    gamepad: *self.gamepad,
+                    gamepad: self.params.gamepad,
                     input: button,
                 };
 
@@ -137,7 +144,7 @@ impl InputReader<'_, '_> {
                     return false.into();
                 }
 
-                let pressed = match *self.gamepad {
+                let pressed = match self.params.gamepad {
                     GamepadDevice::Any => self.gamepads.iter().any(|gamepad| {
                         self.gamepad_buttons.pressed(GamepadButton {
                             gamepad,
@@ -150,7 +157,7 @@ impl InputReader<'_, '_> {
                     }),
                 };
 
-                if pressed && consume {
+                if pressed && self.params.consume_input {
                     self.consumed.gamepad_buttons.insert(input);
                 }
 
@@ -158,7 +165,7 @@ impl InputReader<'_, '_> {
             }
             Input::GamepadAxis { axis } => {
                 let input = GamepadInput {
-                    gamepad: *self.gamepad,
+                    gamepad: self.params.gamepad,
                     input: axis,
                 };
 
@@ -166,7 +173,7 @@ impl InputReader<'_, '_> {
                     return 0.0.into();
                 }
 
-                let value = match *self.gamepad {
+                let value = match self.params.gamepad {
                     GamepadDevice::Any => self.gamepads.iter().find_map(|gamepad| {
                         self.gamepad_axis.get_unclamped(GamepadAxis {
                             gamepad,
@@ -181,7 +188,7 @@ impl InputReader<'_, '_> {
 
                 let value = value.unwrap_or_default();
 
-                if value != 0.0 && consume {
+                if value != 0.0 && self.params.consume_input {
                     self.consumed.gamepad_axes.insert(input);
                 }
 
@@ -246,6 +253,16 @@ impl ConsumedInput {
 struct GamepadInput<T: Hash + Eq> {
     gamepad: GamepadDevice,
     input: T,
+}
+
+/// Parameters for [`InputReader`].
+#[derive(Default)]
+struct ReaderParams {
+    /// Whether to consume input after reading from [`InputReader::value`].
+    consume_input: bool,
+
+    /// Associated gamepad.
+    gamepad: GamepadDevice,
 }
 
 bitflags! {

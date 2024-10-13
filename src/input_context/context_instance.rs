@@ -262,11 +262,10 @@ impl ActionMap {
     ) {
         trace!("updating action `{}`", self.action_name);
 
+        reader.set_consume_input(self.consume_input);
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for input_map in &mut self.inputs {
-            let mut value = reader.value(input_map.input, self.consume_input);
-            value = value.convert(self.dim);
-
+            let value = reader.value(input_map.input).convert(self.dim);
             if input_map.ignored {
                 // Ignore until we read zero for this mapping.
                 if value.as_bool() {
