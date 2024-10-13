@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use bevy::{
     ecs::system::SystemParam,
     input::mouse::{MouseMotion, MouseWheel},
@@ -126,11 +128,12 @@ impl InputReader<'_, '_> {
                 value.into()
             }
             Input::GamepadButton { button } => {
-                if self
-                    .consumed
-                    .gamepad_buttons
-                    .contains(&(*self.gamepad, button))
-                {
+                let input = GamepadInput {
+                    gamepad: *self.gamepad,
+                    input: button,
+                };
+
+                if self.consumed.gamepad_buttons.contains(&input) {
                     return false.into();
                 }
 
@@ -148,15 +151,18 @@ impl InputReader<'_, '_> {
                 };
 
                 if pressed && consume {
-                    self.consumed
-                        .gamepad_buttons
-                        .insert((*self.gamepad, button));
+                    self.consumed.gamepad_buttons.insert(input);
                 }
 
                 pressed.into()
             }
             Input::GamepadAxis { axis } => {
-                if self.consumed.gamepad_axes.contains(&(*self.gamepad, axis)) {
+                let input = GamepadInput {
+                    gamepad: *self.gamepad,
+                    input: axis,
+                };
+
+                if self.consumed.gamepad_axes.contains(&input) {
                     return 0.0.into();
                 }
 
@@ -176,7 +182,7 @@ impl InputReader<'_, '_> {
                 let value = value.unwrap_or_default();
 
                 if value != 0.0 && consume {
-                    self.consumed.gamepad_axes.insert((*self.gamepad, axis));
+                    self.consumed.gamepad_axes.insert(input);
                 }
 
                 value.into()
@@ -216,8 +222,8 @@ struct ConsumedInput {
     mouse_buttons: HashSet<MouseButton>,
     mouse_motion: bool,
     mouse_wheel: bool,
-    gamepad_buttons: HashSet<(GamepadDevice, GamepadButtonType)>,
-    gamepad_axes: HashSet<(GamepadDevice, GamepadAxisType)>,
+    gamepad_buttons: HashSet<GamepadInput<GamepadButtonType>>,
+    gamepad_axes: HashSet<GamepadInput<GamepadAxisType>>,
 }
 
 impl ConsumedInput {
@@ -232,6 +238,14 @@ impl ConsumedInput {
         self.gamepad_buttons.clear();
         self.gamepad_axes.clear();
     }
+}
+
+/// Similar to [`GamepadButton`] or [`GamepadAxis`],
+/// but uses [`GamepadDevice`] that can map any gamepad.
+#[derive(Hash, PartialEq, Eq)]
+struct GamepadInput<T: Hash + Eq> {
+    gamepad: GamepadDevice,
+    input: T,
 }
 
 bitflags! {
