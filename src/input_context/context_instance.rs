@@ -171,20 +171,20 @@ impl ActionMap {
     /// This is a convenience "preset" that uses [`SwizzleAxis`] and [`Negate`] to
     /// bind the keys to cardinal directions.
     pub fn with_axis2d<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
-        self.with(InputMap::from(up.into()).with_modifier(SwizzleAxis::YXZ))
-            .with(InputMap::from(left.into()).with_modifier(Negate::default()))
+        self.with(InputMap::new(up).with_modifier(SwizzleAxis::YXZ))
+            .with(InputMap::new(left).with_modifier(Negate::default()))
             .with(
-                InputMap::from(down.into())
+                InputMap::new(down)
                     .with_modifier(Negate::default())
                     .with_modifier(SwizzleAxis::YXZ),
             )
-            .with(InputMap::from(right.into()))
+            .with(InputMap::new(right))
     }
 
     /// Maps the given stick as 2-dimentional input.
     pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
         self.with(stick.x())
-            .with(InputMap::from(stick.y()).with_modifier(SwizzleAxis::YXZ))
+            .with(InputMap::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
     }
 
     /// Adds action-level modifier.
@@ -241,7 +241,7 @@ impl ActionMap {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(InputMap::from(KeyCode::Space).with_condition(Down::default()));
+    ///     .with(InputMap::new(KeyCode::Space).with_condition(Down::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(dim = Bool)]
     /// # struct Jump;
@@ -311,6 +311,16 @@ pub struct InputMap {
 }
 
 impl InputMap {
+    /// Creates a new instance without modifiers and conditions.
+    pub fn new(input: impl Into<Input>) -> Self {
+        Self {
+            input: input.into(),
+            modifiers: Default::default(),
+            conditions: Default::default(),
+            ignored: true,
+        }
+    }
+
     /// Adds modifier.
     #[must_use]
     pub fn with_modifier(mut self, modifier: impl InputModifier) -> Self {
@@ -328,30 +338,25 @@ impl InputMap {
 
 impl From<KeyCode> for InputMap {
     fn from(value: KeyCode) -> Self {
-        Self::from(Input::from(value))
+        Self::new(value)
     }
 }
 
 impl From<GamepadButtonType> for InputMap {
     fn from(value: GamepadButtonType) -> Self {
-        Self::from(Input::from(value))
+        Self::new(value)
     }
 }
 
 impl From<GamepadAxisType> for InputMap {
     fn from(value: GamepadAxisType) -> Self {
-        Self::from(Input::from(value))
+        Self::new(value)
     }
 }
 
 impl From<Input> for InputMap {
     fn from(input: Input) -> Self {
-        Self {
-            input,
-            modifiers: Default::default(),
-            conditions: Default::default(),
-            ignored: true,
-        }
+        Self::new(input)
     }
 }
 
