@@ -92,7 +92,7 @@ impl EnhancedInputPlugin {
     fn update(world: &mut World, state: &mut SystemState<(Commands, InputReader, Res<Time>)>) {
         world.resource_scope(|world, mut contexts: Mut<ContextInstances>| {
             let (mut commands, mut reader, time) = state.get(world);
-            reader.update_state();
+            reader.reset();
 
             let delta = time.delta_seconds();
 

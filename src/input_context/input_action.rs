@@ -416,8 +416,11 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// For multi-axis actions, like `Move`, use [`ActionValueDim::Axis2D`] or [`ActionValueDim::Axis3D`].
     const DIM: ActionValueDim;
 
-    /// Specifies whether this action should swallow any inputs bound to it or
-    /// allow them to pass through to affect other actions.
+    /// Specifies whether this action should swallow any [`Input`](crate::input_reader::Input)s
+    /// bound to it or allow them to pass through to affect other actions.
+    ///
+    /// Inputs are consumed only if their [`KeyboardModifiers`](crate::input_reader::KeyboardModifiers)
+    /// are also pressed.
     ///
     /// Consuming is global and affect actions in all contexts.
     const CONSUMES_INPUT: bool = true;

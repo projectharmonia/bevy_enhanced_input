@@ -1,12 +1,8 @@
 use bevy::{
     ecs::system::SystemParam,
-    input::{
-        gamepad::{GamepadAxisChangedEvent, GamepadButtonInput},
-        keyboard::KeyboardInput,
-        mouse::{MouseButtonInput, MouseMotion, MouseWheel},
-    },
+    input::mouse::{MouseMotion, MouseWheel},
     prelude::*,
-    utils::HashMap,
+    utils::HashSet,
 };
 #[cfg(feature = "egui_priority")]
 use bevy_egui::EguiContext;
@@ -16,18 +12,16 @@ use serde::{Deserialize, Serialize};
 use crate::action_value::ActionValue;
 
 /// Reads input from multiple sources.
-///
-/// We use event-based reading to prevent newly created
-/// context access previosly pressed inputs.
 #[derive(SystemParam)]
 pub(super) struct InputReader<'w, 's> {
+    key_codes: Res<'w, ButtonInput<KeyCode>>,
+    mouse_buttons: Res<'w, ButtonInput<MouseButton>>,
     mouse_motion_events: EventReader<'w, 's, MouseMotion>,
     mouse_wheel_events: EventReader<'w, 's, MouseWheel>,
-    keyboard_events: EventReader<'w, 's, KeyboardInput>,
-    mouse_button_events: EventReader<'w, 's, MouseButtonInput>,
-    gamepad_button_events: EventReader<'w, 's, GamepadButtonInput>,
-    gamepad_axis_events: EventReader<'w, 's, GamepadAxisChangedEvent>,
-    tracker: Local<'s, InputTracker>,
+    gamepad_buttons: Res<'w, ButtonInput<GamepadButton>>,
+    gamepad_axis: Res<'w, Axis<GamepadAxis>>,
+    gamepads: Res<'w, Gamepads>,
+    consumed: Local<'s, ConsumedInput>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
     #[cfg(feature = "egui_priority")]
@@ -35,110 +29,22 @@ pub(super) struct InputReader<'w, 's> {
 }
 
 impl InputReader<'_, '_> {
-    /// Reads all events and transforms into [`Input`] representation.
-    ///
-    /// Should be called on each system run before [`Self::value`].
-    pub(super) fn update_state(&mut self) {
-        self.reset_input();
+    /// Resets all consumed values.
+    pub(super) fn reset(&mut self) {
+        self.consumed.reset();
 
-        if !self.ui_wants_keyboard() {
-            for input in self.keyboard_events.read() {
-                // Record modifiers redundantly for quick access.
-                match input.key_code {
-                    KeyCode::AltLeft | KeyCode::AltRight => {
-                        self.tracker.modifiers &= KeyboardModifiers::ALT;
-                    }
-                    KeyCode::ControlLeft | KeyCode::ControlRight => {
-                        self.tracker.modifiers &= KeyboardModifiers::CONTROL;
-                    }
-                    KeyCode::ShiftLeft | KeyCode::ShiftRight => {
-                        self.tracker.modifiers &= KeyboardModifiers::SHIFT;
-                    }
-                    KeyCode::SuperLeft | KeyCode::SuperRight => {
-                        self.tracker.modifiers &= KeyboardModifiers::SUPER;
-                    }
-                    _ => (),
-                }
-
-                self.tracker
-                    .key_codes
-                    .insert(input.key_code, input.state.into());
-            }
-        }
-
-        if !self.ui_wants_mouse() {
-            if !self.mouse_motion_events.is_empty() {
-                let mouse_motion: Vec2 = self
-                    .mouse_motion_events
-                    .read()
-                    .map(|event| event.delta)
-                    .sum();
-                self.tracker.mouse_motion = Some(mouse_motion.into());
-            }
-
-            if !self.mouse_wheel_events.is_empty() {
-                let mouse_wheel: Vec2 = self
-                    .mouse_wheel_events
-                    .read()
-                    .map(|event| Vec2::new(event.x, event.y))
-                    .sum();
-                self.tracker.mouse_wheel = Some(mouse_wheel.into());
-            }
-
-            for input in self.mouse_button_events.read() {
-                self.tracker
-                    .mouse_buttons
-                    .insert(input.button, input.state.into());
-            }
-        }
-
-        for input in self.gamepad_button_events.read() {
-            let buttons = self
-                .tracker
-                .gamepad_buttons
-                .entry(input.button.button_type)
-                .or_default();
-            buttons.insert(input.button.gamepad, input.state.into());
-        }
-
-        for event in self.gamepad_axis_events.read() {
-            let axes = self
-                .tracker
-                .gamepad_axes
-                .entry(event.axis_type)
-                .or_default();
-
-            axes.insert(event.gamepad, event.value.into());
-        }
-    }
-
-    fn reset_input(&mut self) {
-        self.tracker.key_codes.clear();
-        self.tracker.modifiers = KeyboardModifiers::empty();
-        self.tracker.mouse_buttons.clear();
-        self.tracker.mouse_motion = None;
-        self.tracker.mouse_wheel = None;
-        self.tracker.gamepad_buttons.clear();
-        self.tracker.gamepad_axes.clear();
-    }
-
-    fn ui_wants_keyboard(&self) -> bool {
         #[cfg(feature = "egui_priority")]
         if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
-            return true;
+            self.consumed.ui_wants_keyboard = true;
         }
 
-        false
-    }
-
-    fn ui_wants_mouse(&self) -> bool {
         #[cfg(feature = "ui_priority")]
         if self
             .interactions
             .iter()
             .any(|&interaction| interaction != Interaction::None)
         {
-            return true;
+            self.consumed.ui_wants_mouse = true;
         }
 
         #[cfg(feature = "egui_priority")]
@@ -147,15 +53,11 @@ impl InputReader<'_, '_> {
             .iter()
             .any(|ctx| ctx.get().is_pointer_over_area() || ctx.get().wants_pointer_input())
         {
-            return true;
+            self.consumed.ui_wants_mouse = true;
         }
-
-        false
     }
 
-    /// Returns the [`ActionValue`] for the given [`Input`] from input events.
-    ///
-    /// Returns [`None`] if there were no events for the given input.
+    /// Returns the [`ActionValue`] for the given [`Input`] if exists.
     ///
     /// For gamepad input, it exclusively reads from the specified `gamepad`.
     /// If `consume` is `true`, the value will be consumed and unavailable for subsequent calls.
@@ -164,125 +66,166 @@ impl InputReader<'_, '_> {
         input: Input,
         gamepad: GamepadDevice,
         consume: bool,
-    ) -> Option<ActionValue> {
+    ) -> ActionValue {
         match input {
             Input::Keyboard {
                 key_code,
                 modifiers,
             } => {
-                if !self.tracker.modifiers.contains(modifiers) {
-                    return None;
+                let pressed = self.key_codes.pressed(key_code)
+                    && !self.consumed.key_codes.contains(&key_code)
+                    && self.modifiers_pressed(modifiers);
+
+                if pressed && consume {
+                    self.consumed.key_codes.insert(key_code);
+                    self.consumed.modifiers.insert(modifiers);
                 }
 
-                if consume {
-                    self.tracker.key_codes.remove(&key_code)
-                } else {
-                    self.tracker.key_codes.get(&key_code).copied()
-                }
+                pressed.into()
             }
             Input::MouseButton { button, modifiers } => {
-                if !self.tracker.modifiers.contains(modifiers) {
-                    return None;
+                let pressed = self.mouse_buttons.pressed(button)
+                    && !self.consumed.mouse_buttons.contains(&button)
+                    && self.modifiers_pressed(modifiers);
+
+                if pressed && consume {
+                    self.consumed.mouse_buttons.insert(button);
+                    self.consumed.modifiers.insert(modifiers);
                 }
 
-                if consume {
-                    self.tracker.mouse_buttons.remove(&button)
-                } else {
-                    self.tracker.mouse_buttons.get(&button).copied()
-                }
+                pressed.into()
             }
             Input::MouseMotion { modifiers } => {
-                if !self.tracker.modifiers.contains(modifiers) {
-                    return None;
+                if self.consumed.mouse_motion || !self.modifiers_pressed(modifiers) {
+                    return Vec2::ZERO.into();
                 }
 
-                if consume {
-                    self.tracker.mouse_motion.take()
-                } else {
-                    self.tracker.mouse_motion
-                }
+                let value: Vec2 = self
+                    .mouse_motion_events
+                    .read()
+                    .map(|event| event.delta)
+                    .sum();
+
+                self.consumed.mouse_motion = true;
+
+                value.into()
             }
             Input::MouseWheel { modifiers } => {
-                if !self.tracker.modifiers.contains(modifiers) {
-                    return None;
+                if self.consumed.mouse_wheel || !self.modifiers_pressed(modifiers) {
+                    return Vec2::ZERO.into();
                 }
 
-                if consume {
-                    self.tracker.mouse_wheel.take()
-                } else {
-                    self.tracker.mouse_wheel
-                }
+                let value: Vec2 = self
+                    .mouse_wheel_events
+                    .read()
+                    .map(|event| Vec2::new(event.x, event.y))
+                    .sum();
+
+                self.consumed.mouse_wheel = true;
+
+                value.into()
             }
-            Input::GamepadButton { button } => match gamepad {
-                GamepadDevice::Any => {
-                    if consume {
-                        let values = self.tracker.gamepad_buttons.remove(&button)?;
+            Input::GamepadButton { button } => {
+                if self.consumed.gamepad_buttons.contains(&(gamepad, button)) {
+                    return false.into();
+                }
 
-                        values
-                            .iter()
-                            .map(|(_, &value)| value)
-                            .max_by_key(|value| value.as_bool())
-                    } else {
-                        let values = self.tracker.gamepad_buttons.get_mut(&button)?;
+                let pressed = match gamepad {
+                    GamepadDevice::Any => self.gamepads.iter().any(|gamepad| {
+                        self.gamepad_buttons.pressed(GamepadButton {
+                            gamepad,
+                            button_type: button,
+                        })
+                    }),
+                    GamepadDevice::Id(gamepad) => self.gamepad_buttons.pressed(GamepadButton {
+                        gamepad,
+                        button_type: button,
+                    }),
+                };
 
-                        values
-                            .iter()
-                            .map(|(_, &value)| value)
-                            .max_by_key(|value| value.as_bool())
-                    }
+                if pressed && consume {
+                    self.consumed.gamepad_buttons.insert((gamepad, button));
                 }
-                GamepadDevice::Id(gamepad) => {
-                    let buttons = self.tracker.gamepad_buttons.get_mut(&button)?;
-                    if consume {
-                        buttons.remove(&gamepad)
-                    } else {
-                        buttons.get(&gamepad).copied()
-                    }
+
+                pressed.into()
+            }
+            Input::GamepadAxis { axis } => {
+                if self.consumed.gamepad_axes.contains(&(gamepad, axis)) {
+                    return 0.0.into();
                 }
-            },
-            Input::GamepadAxis { axis } => match gamepad {
-                GamepadDevice::Any => {
-                    if consume {
-                        let values = self.tracker.gamepad_axes.remove(&axis)?;
-                        if values.is_empty() {
-                            None
-                        } else {
-                            let sum: f32 = values.iter().map(|(_, value)| value.as_axis1d()).sum();
-                            Some(sum.into())
-                        }
-                    } else {
-                        let values = self.tracker.gamepad_axes.get_mut(&axis)?;
-                        if values.is_empty() {
-                            None
-                        } else {
-                            let sum: f32 = values.iter().map(|(_, value)| value.as_axis1d()).sum();
-                            Some(sum.into())
-                        }
-                    }
+
+                let value = match gamepad {
+                    GamepadDevice::Any => self.gamepads.iter().find_map(|gamepad| {
+                        self.gamepad_axis.get_unclamped(GamepadAxis {
+                            gamepad,
+                            axis_type: axis,
+                        })
+                    }),
+                    GamepadDevice::Id(gamepad) => self.gamepad_axis.get_unclamped(GamepadAxis {
+                        gamepad,
+                        axis_type: axis,
+                    }),
+                };
+
+                let value = value.unwrap_or_default();
+
+                if value != 0.0 && consume {
+                    self.consumed.gamepad_axes.insert((gamepad, axis));
                 }
-                GamepadDevice::Id(gamepad) => {
-                    let values = self.tracker.gamepad_axes.get_mut(&axis)?;
-                    if consume {
-                        values.remove(&gamepad)
-                    } else {
-                        values.get_mut(&gamepad).copied()
-                    }
-                }
-            },
+
+                value.into()
+            }
         }
+    }
+
+    fn modifiers_pressed(&self, modifiers: KeyboardModifiers) -> bool {
+        if self.consumed.modifiers.intersects(modifiers) {
+            return false;
+        }
+
+        for (_, modifier) in modifiers.iter_names() {
+            let key_codes = match modifier {
+                KeyboardModifiers::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
+                KeyboardModifiers::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
+                KeyboardModifiers::SHIFT => [KeyCode::ShiftLeft, KeyCode::ShiftRight],
+                KeyboardModifiers::SUPER => [KeyCode::SuperLeft, KeyCode::SuperRight],
+                _ => unreachable!("iteration should yield only named flags"),
+            };
+
+            if !self.key_codes.any_pressed(key_codes) {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
-/// Accumulates informations from events.
 #[derive(Resource, Default)]
-struct InputTracker {
-    key_codes: HashMap<KeyCode, ActionValue>,
+struct ConsumedInput {
+    ui_wants_keyboard: bool,
+    ui_wants_mouse: bool,
+    key_codes: HashSet<KeyCode>,
     modifiers: KeyboardModifiers,
-    mouse_buttons: HashMap<MouseButton, ActionValue>,
-    mouse_motion: Option<ActionValue>,
-    mouse_wheel: Option<ActionValue>,
-    gamepad_buttons: HashMap<GamepadButtonType, HashMap<Gamepad, ActionValue>>,
-    gamepad_axes: HashMap<GamepadAxisType, HashMap<Gamepad, ActionValue>>,
+    mouse_buttons: HashSet<MouseButton>,
+    mouse_motion: bool,
+    mouse_wheel: bool,
+    gamepad_buttons: HashSet<(GamepadDevice, GamepadButtonType)>,
+    gamepad_axes: HashSet<(GamepadDevice, GamepadAxisType)>,
+}
+
+impl ConsumedInput {
+    fn reset(&mut self) {
+        self.ui_wants_keyboard = false;
+        self.ui_wants_mouse = false;
+        self.key_codes.clear();
+        self.modifiers = KeyboardModifiers::empty();
+        self.mouse_buttons.clear();
+        self.mouse_motion = false;
+        self.mouse_wheel = false;
+        self.gamepad_buttons.clear();
+        self.gamepad_axes.clear();
+    }
 }
 
 bitflags! {
@@ -371,7 +314,7 @@ impl From<GamepadAxisType> for Input {
 }
 
 /// Associated gamepad.
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Default, Hash, PartialEq, Eq)]
 pub enum GamepadDevice {
     /// Matches input from any gamepad.
     ///

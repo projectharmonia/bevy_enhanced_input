@@ -33,6 +33,10 @@ use crate::{
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
 ///
+/// New instances won't react to currently held inputs until they are released.
+/// This prevents unintended behavior where switching contexts using the same key
+/// could cause an immediate switch back, as buttons are rarely pressed for only a single frame.
+///
 /// [`ActionState`]: super::input_action::ActionState
 #[derive(Default)]
 pub struct ContextInstance {
@@ -113,7 +117,7 @@ pub struct ActionMap {
 
     modifiers: Vec<Box<dyn InputModifier>>,
     conditions: Vec<Box<dyn InputCondition>>,
-    inputs: Vec<(ActionValue, InputMap)>,
+    inputs: Vec<InputMap>,
 }
 
 impl ActionMap {
@@ -243,7 +247,7 @@ impl ActionMap {
     /// # struct Jump;
     /// ```
     pub fn with(&mut self, map: impl Into<InputMap>) -> &mut Self {
-        self.inputs.push((ActionValue::zero(self.dim), map.into()));
+        self.inputs.push(map.into());
         self
     }
 
@@ -261,13 +265,20 @@ impl ActionMap {
         trace!("updating action `{}`", self.action_name);
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
-        for (value, input_map) in &mut self.inputs {
-            if let Some(new_value) = reader.value(input_map.input, gamepad, self.consumes_input) {
-                // Retain the old value and update it if a new one
-                // is available since the reader is event-based.
-                *value = new_value.convert(self.dim);
+        for input_map in &mut self.inputs {
+            let mut value = reader.value(input_map.input, gamepad, self.consumes_input);
+            value = value.convert(self.dim);
+
+            if input_map.ignored {
+                // Ignore until we read zero for this mapping.
+                if value.as_bool() {
+                    continue;
+                } else {
+                    input_map.ignored = false;
+                }
             }
-            let mut current_tracker = TriggerTracker::new(*value);
+
+            let mut current_tracker = TriggerTracker::new(value);
             current_tracker.apply_modifiers(world, delta, &mut input_map.modifiers);
             current_tracker.apply_conditions(world, actions_data, delta, &mut input_map.conditions);
             tracker.merge(current_tracker, self.accumulation);
@@ -290,6 +301,13 @@ pub struct InputMap {
     pub input: Input,
     pub modifiers: Vec<Box<dyn InputModifier>>,
     pub conditions: Vec<Box<dyn InputCondition>>,
+
+    /// Newly created mappings are ignored by default until until a zero
+    /// value is read for them.
+    ///
+    /// This prevents newly created contexts from reacting to currently
+    /// held inputs until they are released.
+    ignored: bool,
 }
 
 impl InputMap {
@@ -332,6 +350,7 @@ impl From<Input> for InputMap {
             input,
             modifiers: Default::default(),
             conditions: Default::default(),
+            ignored: true,
         }
     }
 }
