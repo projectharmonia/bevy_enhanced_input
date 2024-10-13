@@ -83,13 +83,13 @@ impl ContextInstance {
         entities: &[Entity],
         delta: f32,
     ) {
+        reader.set_gamepad(self.gamepad);
         for action_map in &mut self.actions {
             action_map.update(
                 world,
                 commands,
                 reader,
                 &mut self.actions_data,
-                self.gamepad,
                 entities,
                 delta,
             );
@@ -251,14 +251,12 @@ impl ActionMap {
         self
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn update(
         &mut self,
         world: &World,
         commands: &mut Commands,
         reader: &mut InputReader,
         actions_data: &mut ActionsData,
-        gamepad: GamepadDevice,
         entities: &[Entity],
         delta: f32,
     ) {
@@ -266,7 +264,7 @@ impl ActionMap {
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for input_map in &mut self.inputs {
-            let mut value = reader.value(input_map.input, gamepad, self.consumes_input);
+            let mut value = reader.value(input_map.input, self.consumes_input);
             value = value.convert(self.dim);
 
             if input_map.ignored {

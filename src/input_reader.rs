@@ -22,6 +22,7 @@ pub(super) struct InputReader<'w, 's> {
     gamepad_axis: Res<'w, Axis<GamepadAxis>>,
     gamepads: Res<'w, Gamepads>,
     consumed: Local<'s, ConsumedInput>,
+    gamepad: Local<'s, GamepadDevice>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
     #[cfg(feature = "egui_priority")]
@@ -57,16 +58,15 @@ impl InputReader<'_, '_> {
         }
     }
 
+    /// Assignes a gamepad from which [`Self::value`] should read input.
+    pub(super) fn set_gamepad(&mut self, gamepad: GamepadDevice) {
+        *self.gamepad = gamepad;
+    }
+
     /// Returns the [`ActionValue`] for the given [`Input`] if exists.
     ///
-    /// For gamepad input, it exclusively reads from the specified `gamepad`.
     /// If `consume` is `true`, the value will be consumed and unavailable for subsequent calls.
-    pub(super) fn value(
-        &mut self,
-        input: Input,
-        gamepad: GamepadDevice,
-        consume: bool,
-    ) -> ActionValue {
+    pub(super) fn value(&mut self, input: Input, consume: bool) -> ActionValue {
         match input {
             Input::Keyboard {
                 key_code,
@@ -126,11 +126,15 @@ impl InputReader<'_, '_> {
                 value.into()
             }
             Input::GamepadButton { button } => {
-                if self.consumed.gamepad_buttons.contains(&(gamepad, button)) {
+                if self
+                    .consumed
+                    .gamepad_buttons
+                    .contains(&(*self.gamepad, button))
+                {
                     return false.into();
                 }
 
-                let pressed = match gamepad {
+                let pressed = match *self.gamepad {
                     GamepadDevice::Any => self.gamepads.iter().any(|gamepad| {
                         self.gamepad_buttons.pressed(GamepadButton {
                             gamepad,
@@ -144,17 +148,19 @@ impl InputReader<'_, '_> {
                 };
 
                 if pressed && consume {
-                    self.consumed.gamepad_buttons.insert((gamepad, button));
+                    self.consumed
+                        .gamepad_buttons
+                        .insert((*self.gamepad, button));
                 }
 
                 pressed.into()
             }
             Input::GamepadAxis { axis } => {
-                if self.consumed.gamepad_axes.contains(&(gamepad, axis)) {
+                if self.consumed.gamepad_axes.contains(&(*self.gamepad, axis)) {
                     return 0.0.into();
                 }
 
-                let value = match gamepad {
+                let value = match *self.gamepad {
                     GamepadDevice::Any => self.gamepads.iter().find_map(|gamepad| {
                         self.gamepad_axis.get_unclamped(GamepadAxis {
                             gamepad,
@@ -170,7 +176,7 @@ impl InputReader<'_, '_> {
                 let value = value.unwrap_or_default();
 
                 if value != 0.0 && consume {
-                    self.consumed.gamepad_axes.insert((gamepad, axis));
+                    self.consumed.gamepad_axes.insert((*self.gamepad, axis));
                 }
 
                 value.into()
