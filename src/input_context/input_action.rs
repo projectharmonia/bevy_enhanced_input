@@ -400,12 +400,12 @@ impl ActionEventKind {
 /// struct Move;
 /// ```
 ///
-/// Optionally you can pass `consumes_input` and/or `accumulation`:
+/// Optionally you can pass `consume_input` and/or `accumulation`:
 ///
 /// ```
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(Debug, InputAction)]
-/// #[input_action(dim = Axis2D, accumulation = Cumulative, consumes_input = false)]
+/// #[input_action(dim = Axis2D, accumulation = Cumulative, consume_input = false)]
 /// struct Move;
 /// ```
 pub trait InputAction: Debug + Send + Sync + 'static {
@@ -423,7 +423,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// are also pressed.
     ///
     /// Consuming is global and affect actions in all contexts.
-    const CONSUMES_INPUT: bool = true;
+    const CONSUME_INPUT: bool = true;
 
     /// Associated accumulation behavior.
     const ACCUMULATION: Accumulation = Accumulation::MaxAbs;

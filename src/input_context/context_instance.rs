@@ -111,7 +111,7 @@ impl ContextInstance {
 pub struct ActionMap {
     type_id: TypeId,
     action_name: &'static str,
-    consumes_input: bool,
+    consume_input: bool,
     accumulation: Accumulation,
     dim: ActionValueDim,
 
@@ -127,7 +127,7 @@ impl ActionMap {
             type_id: TypeId::of::<A>(),
             action_name: any::type_name::<A>(),
             dim: A::DIM,
-            consumes_input: A::CONSUMES_INPUT,
+            consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
             modifiers: Default::default(),
             conditions: Default::default(),
@@ -264,7 +264,7 @@ impl ActionMap {
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for input_map in &mut self.inputs {
-            let mut value = reader.value(input_map.input, self.consumes_input);
+            let mut value = reader.value(input_map.input, self.consume_input);
             value = value.convert(self.dim);
 
             if input_map.ignored {
