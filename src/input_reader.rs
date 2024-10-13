@@ -75,8 +75,8 @@ impl InputReader<'_, '_> {
     /// Returns the [`ActionValue`] for the given [`Input`] if exists.
     ///
     /// See also [`Self::set_consume_input`] and [`Self::set_gamepad`].
-    pub(super) fn value(&mut self, input: Input) -> ActionValue {
-        match input {
+    pub(super) fn value(&mut self, input: impl Into<Input>) -> ActionValue {
+        match input.into() {
             Input::Keyboard {
                 key_code,
                 modifiers,
@@ -373,5 +373,44 @@ impl From<Gamepad> for GamepadDevice {
 impl From<usize> for GamepadDevice {
     fn from(value: usize) -> Self {
         Gamepad::new(value).into()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use bevy::ecs::system::SystemState;
+
+    use super::*;
+
+    #[test]
+    fn key_code() {
+        let (mut world, mut state) = init_world();
+
+        world
+            .resource_mut::<ButtonInput<KeyCode>>()
+            .press(KeyCode::Space);
+
+        let mut reader = state.get(&world);
+        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(true));
+        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(true));
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(true));
+        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(false));
+    }
+
+    fn init_world<'w, 's>() -> (World, SystemState<InputReader<'w, 's>>) {
+        let mut world = World::new();
+        world.init_resource::<ButtonInput<KeyCode>>();
+        world.init_resource::<ButtonInput<MouseButton>>();
+        world.init_resource::<Events<MouseMotion>>();
+        world.init_resource::<Events<MouseWheel>>();
+        world.init_resource::<ButtonInput<GamepadButton>>();
+        world.init_resource::<Axis<GamepadAxis>>();
+        world.init_resource::<Gamepads>();
+
+        let state = SystemState::<InputReader>::new(&mut world);
+
+        (world, state)
     }
 }
