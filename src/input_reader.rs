@@ -343,16 +343,49 @@ pub enum Input {
 
 impl Input {
     /// Returns [`Input::MouseMotion`] without keyboard modifiers.
-    pub fn mouse_motion() -> Self {
+    #[must_use]
+    pub const fn mouse_motion() -> Self {
         Self::MouseMotion {
-            modifiers: Default::default(),
+            modifiers: Modifiers::empty(),
         }
     }
 
     /// Returns [`Input::MouseWheel`] without keyboard modifiers.
-    pub fn mouse_wheel() -> Self {
+    #[must_use]
+    pub const fn mouse_wheel() -> Self {
         Self::MouseWheel {
-            modifiers: Default::default(),
+            modifiers: Modifiers::empty(),
+        }
+    }
+
+    /// Returns new instance without any keyboard modifiers.
+    ///
+    /// # Panics
+    ///
+    /// Panics when called on [`Self::GamepadButton`] or [`Self::GamepadAxis`].
+    #[must_use]
+    pub const fn without_modifiers(self) -> Self {
+        self.with_modifiers(Modifiers::empty())
+    }
+
+    /// Returns new instance with the replaced keyboard modifiers.
+    ///
+    /// # Panics
+    ///
+    /// Panics when called on [`Self::GamepadButton`] or [`Self::GamepadAxis`].
+    #[must_use]
+    pub const fn with_modifiers(self, modifiers: Modifiers) -> Self {
+        match self {
+            Input::Keyboard { key_code, .. } => Self::Keyboard {
+                key_code,
+                modifiers,
+            },
+            Input::MouseButton { button, .. } => Self::MouseButton { button, modifiers },
+            Input::MouseMotion { .. } => Self::MouseMotion { modifiers },
+            Input::MouseWheel { .. } => Self::MouseWheel { modifiers },
+            Input::GamepadButton { .. } | Input::GamepadAxis { .. } => {
+                panic!("keyboard modifiers can't be applied to gamepads")
+            }
         }
     }
 }
