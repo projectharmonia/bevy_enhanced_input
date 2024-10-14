@@ -81,7 +81,8 @@ impl InputReader<'_, '_> {
                 key_code,
                 modifiers,
             } => {
-                let pressed = self.key_codes.pressed(key_code)
+                let pressed = !self.consumed.ui_wants_keyboard
+                    && self.key_codes.pressed(key_code)
                     && !self.consumed.key_codes.contains(&key_code)
                     && self.modifiers_pressed(modifiers);
 
@@ -93,7 +94,8 @@ impl InputReader<'_, '_> {
                 pressed.into()
             }
             Input::MouseButton { button, modifiers } => {
-                let pressed = self.mouse_buttons.pressed(button)
+                let pressed = !self.consumed.ui_wants_mouse
+                    && self.mouse_buttons.pressed(button)
                     && !self.consumed.mouse_buttons.contains(&button)
                     && self.modifiers_pressed(modifiers);
 
@@ -198,6 +200,10 @@ impl InputReader<'_, '_> {
     }
 
     fn modifiers_pressed(&self, modifiers: Modifiers) -> bool {
+        if !modifiers.is_empty() && self.consumed.ui_wants_keyboard {
+            return false;
+        }
+
         if self.consumed.modifiers.intersects(modifiers) {
             return false;
         }
