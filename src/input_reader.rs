@@ -77,8 +77,8 @@ impl InputReader<'_, '_> {
     }
 
     /// Assignes a gamepad from which [`Self::value`] should read input.
-    pub(super) fn set_gamepad(&mut self, gamepad: GamepadDevice) {
-        self.params.gamepad = gamepad;
+    pub(super) fn set_gamepad(&mut self, gamepad: impl Into<GamepadDevice>) {
+        self.params.gamepad = gamepad.into();
     }
 
     /// Enables or disables consuming in [`Self::value`].
