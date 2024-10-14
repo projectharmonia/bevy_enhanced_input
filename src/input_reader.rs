@@ -218,15 +218,7 @@ impl InputReader<'_, '_> {
             return false;
         }
 
-        for (_, modifier) in modifiers.iter_names() {
-            let key_codes = match modifier {
-                Modifiers::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
-                Modifiers::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
-                Modifiers::SHIFT => [KeyCode::ShiftLeft, KeyCode::ShiftRight],
-                Modifiers::SUPER => [KeyCode::SuperLeft, KeyCode::SuperRight],
-                _ => unreachable!("iteration should yield only named flags"),
-            };
-
+        for key_codes in modifiers.iter_key_codes() {
             if !self.key_codes.any_pressed(key_codes) {
                 return false;
             }
@@ -292,6 +284,36 @@ bitflags! {
         const SHIFT = 0b00000100;
         /// Corresponds to [`KeyCode::SuperLeft`] and [`KeyCode::SuperRight`].
         const SUPER = 0b00001000;
+    }
+}
+
+impl Modifiers {
+    /// Returns an iterator over the key codes corresponding to the set modifier bits.
+    ///
+    /// Each item contains left and right key codes.
+    pub fn iter_key_codes(self) -> impl Iterator<Item = [KeyCode; 2]> {
+        self.iter_names().map(|(_, modifier)| match modifier {
+            Modifiers::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
+            Modifiers::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
+            Modifiers::SHIFT => [KeyCode::ShiftLeft, KeyCode::ShiftRight],
+            Modifiers::SUPER => [KeyCode::SuperLeft, KeyCode::SuperRight],
+            _ => unreachable!("iteration should yield only named flags"),
+        })
+    }
+}
+
+impl From<KeyCode> for Modifiers {
+    /// Converts key into a named modifier
+    ///
+    /// Returns [`Modifiers::empty`] if the key is not a modifier.
+    fn from(value: KeyCode) -> Self {
+        match value {
+            KeyCode::AltLeft | KeyCode::AltRight => Modifiers::ALT,
+            KeyCode::ControlLeft | KeyCode::ControlRight => Modifiers::CONTROL,
+            KeyCode::ShiftLeft | KeyCode::ShiftRight => Modifiers::SHIFT,
+            KeyCode::SuperLeft | KeyCode::SuperRight => Modifiers::SUPER,
+            _ => Modifiers::empty(),
+        }
     }
 }
 
