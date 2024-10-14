@@ -65,7 +65,7 @@ pub mod prelude {
             input_modifier::*,
             ContextAppExt, ContextMode, InputContext,
         },
-        input_reader::{GamepadDevice, Input, KeyboardModifiers},
+        input_reader::{GamepadDevice, Input, Modifiers},
         EnhancedInputPlugin,
     };
     pub use bevy_enhanced_input_macros::InputAction;

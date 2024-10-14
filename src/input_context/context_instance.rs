@@ -226,7 +226,7 @@ impl ActionMap {
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>().with(Input::Keyboard {
     ///     key_code: KeyCode::Space,
-    ///     modifiers: KeyboardModifiers::CONTROL,
+    ///     modifiers: Modifiers::CONTROL,
     /// });
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(dim = Bool)]

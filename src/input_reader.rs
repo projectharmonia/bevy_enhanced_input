@@ -197,17 +197,17 @@ impl InputReader<'_, '_> {
         }
     }
 
-    fn modifiers_pressed(&self, modifiers: KeyboardModifiers) -> bool {
+    fn modifiers_pressed(&self, modifiers: Modifiers) -> bool {
         if self.consumed.modifiers.intersects(modifiers) {
             return false;
         }
 
         for (_, modifier) in modifiers.iter_names() {
             let key_codes = match modifier {
-                KeyboardModifiers::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
-                KeyboardModifiers::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
-                KeyboardModifiers::SHIFT => [KeyCode::ShiftLeft, KeyCode::ShiftRight],
-                KeyboardModifiers::SUPER => [KeyCode::SuperLeft, KeyCode::SuperRight],
+                Modifiers::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
+                Modifiers::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
+                Modifiers::SHIFT => [KeyCode::ShiftLeft, KeyCode::ShiftRight],
+                Modifiers::SUPER => [KeyCode::SuperLeft, KeyCode::SuperRight],
                 _ => unreachable!("iteration should yield only named flags"),
             };
 
@@ -225,7 +225,7 @@ struct ConsumedInput {
     ui_wants_keyboard: bool,
     ui_wants_mouse: bool,
     key_codes: HashSet<KeyCode>,
-    modifiers: KeyboardModifiers,
+    modifiers: Modifiers,
     mouse_buttons: HashSet<MouseButton>,
     mouse_motion: bool,
     mouse_wheel: bool,
@@ -238,7 +238,7 @@ impl ConsumedInput {
         self.ui_wants_keyboard = false;
         self.ui_wants_mouse = false;
         self.key_codes.clear();
-        self.modifiers = KeyboardModifiers::empty();
+        self.modifiers = Modifiers::empty();
         self.mouse_buttons.clear();
         self.mouse_motion = false;
         self.mouse_wheel = false;
@@ -266,9 +266,9 @@ struct ReaderParams {
 }
 
 bitflags! {
-    /// Modifiers for both left and right keys.
+    /// Keyboard modifiers for both left and right keys.
     #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-    pub struct KeyboardModifiers: u8 {
+    pub struct Modifiers: u8 {
         /// Corresponds to [`KeyCode::AltLeft`] and [`KeyCode::AltRight`].
         const ALT = 0b00000001;
         /// Corresponds to [`KeyCode::ControlLeft`] and [`KeyCode::ControlRight`].
@@ -287,17 +287,17 @@ pub enum Input {
     /// Keyboard button, will be captured as [`ActionValue::Bool`].
     Keyboard {
         key_code: KeyCode,
-        modifiers: KeyboardModifiers,
+        modifiers: Modifiers,
     },
     /// Mouse button, will be captured as [`ActionValue::Bool`].
     MouseButton {
         button: MouseButton,
-        modifiers: KeyboardModifiers,
+        modifiers: Modifiers,
     },
     /// Mouse movement, will be captured as [`ActionValue::Axis2D`].
-    MouseMotion { modifiers: KeyboardModifiers },
+    MouseMotion { modifiers: Modifiers },
     /// Mouse wheel, will be captured as [`ActionValue::Axis1D`].
-    MouseWheel { modifiers: KeyboardModifiers },
+    MouseWheel { modifiers: Modifiers },
     /// Gamepad button, will be captured as [`ActionValue::Bool`].
     GamepadButton { button: GamepadButtonType },
     /// Gamepad stick axis, will be captured as [`ActionValue::Axis1D`].

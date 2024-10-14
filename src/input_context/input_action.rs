@@ -419,7 +419,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// Specifies whether this action should swallow any [`Input`](crate::input_reader::Input)s
     /// bound to it or allow them to pass through to affect other actions.
     ///
-    /// Inputs are consumed only if their [`KeyboardModifiers`](crate::input_reader::KeyboardModifiers)
+    /// Inputs are consumed only if their [`Modifiers`](crate::input_reader::Modifiers)
     /// are also pressed.
     ///
     /// Consuming is global and affect actions in all contexts.
