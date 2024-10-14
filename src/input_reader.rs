@@ -25,6 +25,8 @@ pub(super) struct InputReader<'w, 's> {
     gamepads: Res<'w, Gamepads>,
     consumed: Local<'s, ConsumedInput>,
     params: Local<'s, ReaderParams>,
+    mouse_wheel: Local<'s, Vec2>,
+    mouse_motion: Local<'s, Vec2>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
     #[cfg(feature = "egui_priority")]
@@ -58,6 +60,20 @@ impl InputReader<'_, '_> {
         {
             self.consumed.ui_wants_mouse = true;
         }
+
+        // Mouse motion and wheel input need to be accumulated
+        // because they only exist as events, and subsequent reads
+        // will return zero.
+        *self.mouse_motion = self
+            .mouse_motion_events
+            .read()
+            .map(|event| event.delta)
+            .sum();
+        *self.mouse_wheel = self
+            .mouse_wheel_events
+            .read()
+            .map(|event| Vec2::new(event.x, event.y))
+            .sum();
     }
 
     /// Assignes a gamepad from which [`Self::value`] should read input.
@@ -107,32 +123,26 @@ impl InputReader<'_, '_> {
                 pressed.into()
             }
             Input::MouseMotion { modifiers } => {
-                if self.consumed.mouse_motion || !self.modifiers_pressed(modifiers) {
+                if self.consumed.ui_wants_mouse || !self.modifiers_pressed(modifiers) {
                     return Vec2::ZERO.into();
                 }
 
-                let value: Vec2 = self
-                    .mouse_motion_events
-                    .read()
-                    .map(|event| event.delta)
-                    .sum();
-
-                self.consumed.mouse_motion = true;
+                let value = *self.mouse_motion;
+                if self.params.consume_input {
+                    *self.mouse_motion = Vec2::ZERO;
+                }
 
                 value.into()
             }
             Input::MouseWheel { modifiers } => {
-                if self.consumed.mouse_wheel || !self.modifiers_pressed(modifiers) {
+                if self.consumed.ui_wants_mouse || !self.modifiers_pressed(modifiers) {
                     return Vec2::ZERO.into();
                 }
 
-                let value: Vec2 = self
-                    .mouse_wheel_events
-                    .read()
-                    .map(|event| Vec2::new(event.x, event.y))
-                    .sum();
-
-                self.consumed.mouse_wheel = true;
+                let value = *self.mouse_wheel;
+                if self.params.consume_input {
+                    *self.mouse_wheel = Vec2::ZERO;
+                }
 
                 value.into()
             }
@@ -226,6 +236,9 @@ impl InputReader<'_, '_> {
     }
 }
 
+/// Tracks all consumed input from Bevy resources.
+///
+/// Mouse motion and wheel can be consumed directly since we accumulate them.
 #[derive(Resource, Default)]
 struct ConsumedInput {
     ui_wants_keyboard: bool,
@@ -233,8 +246,6 @@ struct ConsumedInput {
     key_codes: HashSet<KeyCode>,
     modifiers: Modifiers,
     mouse_buttons: HashSet<MouseButton>,
-    mouse_motion: bool,
-    mouse_wheel: bool,
     gamepad_buttons: HashSet<GamepadInput<GamepadButtonType>>,
     gamepad_axes: HashSet<GamepadInput<GamepadAxisType>>,
 }
@@ -246,8 +257,6 @@ impl ConsumedInput {
         self.key_codes.clear();
         self.modifiers = Modifiers::empty();
         self.mouse_buttons.clear();
-        self.mouse_motion = false;
-        self.mouse_wheel = false;
         self.gamepad_buttons.clear();
         self.gamepad_axes.clear();
     }
