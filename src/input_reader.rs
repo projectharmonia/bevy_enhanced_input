@@ -448,7 +448,7 @@ impl From<usize> for GamepadDevice {
 
 #[cfg(test)]
 mod tests {
-    use bevy::ecs::system::SystemState;
+    use bevy::{ecs::system::SystemState, input::mouse::MouseScrollUnit};
 
     use super::*;
 
@@ -456,17 +456,141 @@ mod tests {
     fn key_code() {
         let (mut world, mut state) = init_world();
 
-        world
-            .resource_mut::<ButtonInput<KeyCode>>()
-            .press(KeyCode::Space);
+        let key_code = KeyCode::Space;
+        world.resource_mut::<ButtonInput<KeyCode>>().press(key_code);
 
         let mut reader = state.get(&world);
-        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(true));
-        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(true));
+        assert_eq!(reader.value(key_code), ActionValue::Bool(true));
+        assert_eq!(reader.value(KeyCode::Escape), ActionValue::Bool(false));
 
         reader.set_consume_input(true);
-        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(true));
-        assert_eq!(reader.value(KeyCode::Space), ActionValue::Bool(false));
+        assert_eq!(reader.value(key_code), ActionValue::Bool(true));
+        assert_eq!(reader.value(key_code), ActionValue::Bool(false));
+    }
+
+    #[test]
+    fn mouse_button() {
+        let (mut world, mut state) = init_world();
+
+        let button = MouseButton::Left;
+        world
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .press(button);
+
+        let mut reader = state.get(&world);
+        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(reader.value(MouseButton::Right), ActionValue::Bool(false));
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(reader.value(button), ActionValue::Bool(false));
+    }
+
+    #[test]
+    fn mouse_motion() {
+        let (mut world, mut state) = init_world();
+
+        let value = Vec2::ONE;
+        world.send_event(MouseMotion { delta: value });
+
+        let input = Input::mouse_motion();
+        let mut reader = state.get(&world);
+        reader.update_state();
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+    }
+
+    #[test]
+    fn mouse_wheel() {
+        let (mut world, mut state) = init_world();
+
+        let value = Vec2::ONE;
+        world.send_event(MouseWheel {
+            x: value.x,
+            y: value.y,
+            unit: MouseScrollUnit::Line,
+            window: Entity::PLACEHOLDER,
+        });
+
+        let input = Input::mouse_wheel();
+        let mut reader = state.get(&world);
+        reader.update_state();
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+    }
+
+    #[test]
+    fn gamepad_button() {
+        let (mut world, mut state) = init_world();
+
+        let button = GamepadButtonType::South;
+        let gamepad = Gamepad::new(0);
+        world
+            .resource_mut::<ButtonInput<GamepadButton>>()
+            .press(GamepadButton {
+                gamepad,
+                button_type: button,
+            });
+
+        let mut reader = state.get(&world);
+        reader.set_gamepad(gamepad);
+        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(
+            reader.value(GamepadButtonType::North),
+            ActionValue::Bool(false)
+        );
+
+        reader.set_gamepad(Gamepad::new(1));
+        assert_eq!(
+            reader.value(button),
+            ActionValue::Bool(false),
+            "should read only from `{gamepad:?}`"
+        );
+
+        reader.set_gamepad(gamepad);
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(reader.value(button), ActionValue::Bool(false));
+    }
+
+    #[test]
+    fn key_code_with_modifier() {
+        let (mut world, mut state) = init_world();
+
+        let key_code = KeyCode::Space;
+        let modifier = KeyCode::ControlLeft;
+        let mut key_codes = world.resource_mut::<ButtonInput<KeyCode>>();
+        key_codes.press(key_code);
+        key_codes.press(modifier);
+
+        let input = Input::Keyboard {
+            key_code,
+            modifiers: modifier.into(),
+        };
+        let mut reader = state.get(&world);
+        assert_eq!(reader.value(input), ActionValue::Bool(true));
+        assert_eq!(
+            reader.value(input.without_modifiers()),
+            ActionValue::Bool(true)
+        );
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::ALT)),
+            ActionValue::Bool(false)
+        );
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::CONTROL | Modifiers::ALT)),
+            ActionValue::Bool(false)
+        );
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(input), ActionValue::Bool(true));
+        assert_eq!(reader.value(input), ActionValue::Bool(false));
     }
 
     fn init_world<'w, 's>() -> (World, SystemState<InputReader<'w, 's>>) {
