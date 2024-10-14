@@ -34,8 +34,8 @@ pub(super) struct InputReader<'w, 's> {
 }
 
 impl InputReader<'_, '_> {
-    /// Resets all consumed values.
-    pub(super) fn reset(&mut self) {
+    /// Resets all consumed values and reads mouse events.
+    pub(super) fn update_state(&mut self) {
         self.consumed.reset();
 
         #[cfg(feature = "egui_priority")]
