@@ -61,7 +61,10 @@ pub mod prelude {
         input_context::{
             context_instance::{ActionMap, ContextInstance, GamepadStick, InputMap},
             input_action::{Accumulation, ActionEvent, ActionEventKind, InputAction},
-            input_condition::*,
+            input_condition::{
+                blocked_by::*, chord::*, down::*, hold::*, hold_and_release::*, pressed::*,
+                primitives::*, pulse::*, released::*, tap::*, ConditionKind, InputCondition,
+            },
             input_modifier::{
                 dead_zone::*, exponential_curve::*, negate::*, scalar::*, scale_by_delta::*,
                 smooth::*, smooth_delta::*, swizzle_axis::*, InputModifier,
