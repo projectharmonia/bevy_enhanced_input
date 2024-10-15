@@ -58,11 +58,7 @@ impl Negate {
 
 impl Default for Negate {
     fn default() -> Self {
-        Self {
-            x: true,
-            y: true,
-            z: true,
-        }
+        Self::all(true)
     }
 }
 
@@ -74,5 +70,32 @@ impl InputModifier for Negate {
         let negated = value.as_axis3d() * Vec3::new(x, y, z);
 
         ActionValue::Axis3D(negated).convert(value.dim())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn negation() {
+        let world = World::new();
+
+        assert_eq!(
+            Negate::default().apply(&world, 0.0, Vec3::ONE.into()),
+            ActionValue::Axis3D(Vec3::NEG_ONE)
+        );
+        assert_eq!(
+            Negate::x(true).apply(&world, 0.0, Vec3::ONE.into()),
+            ActionValue::Axis3D(Vec3::new(-1.0, 1.0, 1.0))
+        );
+        assert_eq!(
+            Negate::y(true).apply(&world, 0.0, Vec3::ONE.into()),
+            ActionValue::Axis3D(Vec3::new(1.0, -1.0, 1.0))
+        );
+        assert_eq!(
+            Negate::z(true).apply(&world, 0.0, Vec3::ONE.into()),
+            ActionValue::Axis3D(Vec3::new(1.0, 1.0, -1.0))
+        );
     }
 }
