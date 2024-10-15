@@ -52,12 +52,13 @@ Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it p
 */
 
 pub mod action_value;
+pub mod input;
 pub mod input_context;
-pub mod input_reader;
 
 pub mod prelude {
     pub use super::{
         action_value::{ActionValue, ActionValueDim},
+        input::{GamepadDevice, Input, Modifiers},
         input_context::{
             context_instance::{ActionMap, ContextInstance, GamepadStick, InputMap},
             input_action::{Accumulation, ActionEvent, ActionEventKind, InputAction},
@@ -71,7 +72,6 @@ pub mod prelude {
             },
             ContextAppExt, ContextMode, InputContext,
         },
-        input_reader::{GamepadDevice, Input, Modifiers},
         EnhancedInputPlugin,
     };
     pub use bevy_enhanced_input_macros::InputAction;
@@ -79,8 +79,8 @@ pub mod prelude {
 
 use bevy::{ecs::system::SystemState, input::InputSystem, prelude::*};
 
+use input::InputReader;
 use input_context::ContextInstances;
-use input_reader::InputReader;
 #[allow(unused_imports, reason = "used in the docs")]
 use prelude::*;
 

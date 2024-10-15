@@ -1,7 +1,7 @@
 use bevy::{input::ButtonState, prelude::*};
 use serde::{Deserialize, Serialize};
 
-/// Value for [`Input`](crate::input_reader::Input).
+/// Value for [`Input`](crate::input::Input).
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
 pub enum ActionValue {
     Bool(bool),
