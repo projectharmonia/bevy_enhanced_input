@@ -45,3 +45,93 @@ impl InputModifier for SwizzleAxis {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn yxz() {
+        let world = World::new();
+
+        let mut swizzle = SwizzleAxis::YXZ;
+        assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
+            Vec2::new(1.0, 0.0).into(),
+        );
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
+            Vec3::new(1.0, 0.0, 2.0).into(),
+        );
+    }
+
+    #[test]
+    fn zyx() {
+        let world = World::new();
+
+        let mut swizzle = SwizzleAxis::ZYX;
+        assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
+            Vec2::new(0.0, 1.0).into(),
+        );
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
+            Vec3::new(2.0, 1.0, 0.0).into(),
+        );
+    }
+
+    #[test]
+    fn xzy() {
+        let world = World::new();
+
+        let mut swizzle = SwizzleAxis::XZY;
+        assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
+            Vec2::new(0.0, 0.0).into(),
+        );
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
+            Vec3::new(0.0, 2.0, 1.0).into(),
+        );
+    }
+
+    #[test]
+    fn yzx() {
+        let world = World::new();
+
+        let mut swizzle = SwizzleAxis::YZX;
+        assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
+            Vec2::new(1.0, 0.0).into(),
+        );
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
+            Vec3::new(1.0, 2.0, 0.0).into(),
+        );
+    }
+
+    #[test]
+    fn zxy() {
+        let world = World::new();
+
+        let mut swizzle = SwizzleAxis::ZXY;
+        assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
+            Vec2::new(0.0, 0.0).into(),
+        );
+        assert_eq!(
+            swizzle.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
+            Vec3::new(2.0, 0.0, 1.0).into(),
+        );
+    }
+}
