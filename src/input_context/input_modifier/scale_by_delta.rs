@@ -21,3 +21,29 @@ impl InputModifier for ScaleByDelta {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scaling() {
+        let world = World::new();
+
+        for delta in [0.0, 0.5, 1.0] {
+            assert_eq!(ScaleByDelta.apply(&world, delta, true.into()), true.into());
+            assert_eq!(
+                ScaleByDelta.apply(&world, delta, 0.5.into()),
+                (0.5 * delta).into()
+            );
+            assert_eq!(
+                ScaleByDelta.apply(&world, delta, Vec2::ONE.into()),
+                (Vec2::ONE * delta).into()
+            );
+            assert_eq!(
+                ScaleByDelta.apply(&world, delta, Vec3::ONE.into()),
+                (Vec3::ONE * delta).into()
+            );
+        }
+    }
+}
