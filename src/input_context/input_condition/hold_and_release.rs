@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use super::{
-    primitives::{Actuation, HeldTimer},
-    InputCondition,
-};
+use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::input_action::{ActionState, ActionsData},
@@ -19,7 +16,7 @@ pub struct HoldAndRelease {
     pub hold_time: f32,
 
     /// Trigger threshold.
-    pub actuation: Actuation,
+    pub actuation: f32,
 
     held_timer: HeldTimer,
 }
@@ -29,14 +26,14 @@ impl HoldAndRelease {
     pub fn new(hold_time: f32) -> Self {
         Self {
             hold_time,
-            actuation: Default::default(),
+            actuation: DEFAULT_ACTUATION,
             held_timer: Default::default(),
         }
     }
 
     #[must_use]
-    pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
-        self.actuation = actuation.into();
+    pub fn with_actuation(mut self, actuation: f32) -> Self {
+        self.actuation = actuation;
         self
     }
 
@@ -61,7 +58,7 @@ impl InputCondition for HoldAndRelease {
         self.held_timer.update(world, delta);
         let held_duration = self.held_timer.duration();
 
-        if self.actuation.is_actuated(value) {
+        if value.is_actuated(self.actuation) {
             ActionState::Ongoing
         } else {
             self.held_timer.reset();

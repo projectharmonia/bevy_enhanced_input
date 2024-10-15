@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{primitives::Actuation, InputCondition};
+use super::{InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::input_action::{ActionState, ActionsData},
@@ -9,20 +9,26 @@ use crate::{
 /// Like [`super::down::Down`] but returns [`ActionState::Fired`] only once until the next actuation.
 ///
 /// Holding the input will not cause further triggers.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Pressed {
     /// Trigger threshold.
-    pub actuation: Actuation,
+    pub actuation: f32,
     actuated: bool,
 }
 
 impl Pressed {
     #[must_use]
-    pub fn new(actuation: Actuation) -> Self {
+    pub fn new(actuation: f32) -> Self {
         Self {
             actuation,
             actuated: false,
         }
+    }
+}
+
+impl Default for Pressed {
+    fn default() -> Self {
+        Self::new(DEFAULT_ACTUATION)
     }
 }
 
@@ -35,7 +41,7 @@ impl InputCondition for Pressed {
         value: ActionValue,
     ) -> ActionState {
         let previosly_actuated = self.actuated;
-        self.actuated = self.actuation.is_actuated(value);
+        self.actuated = value.is_actuated(self.actuation);
 
         if self.actuated && !previosly_actuated {
             ActionState::Fired

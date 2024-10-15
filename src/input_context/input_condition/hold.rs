@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use super::{
-    primitives::{Actuation, HeldTimer},
-    InputCondition,
-};
+use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::input_action::{ActionState, ActionsData},
@@ -23,7 +20,7 @@ pub struct Hold {
     pub one_shot: bool,
 
     /// Trigger threshold.
-    pub actuation: Actuation,
+    pub actuation: f32,
 
     held_timer: HeldTimer,
 
@@ -36,7 +33,7 @@ impl Hold {
         Self {
             hold_time,
             one_shot: false,
-            actuation: Default::default(),
+            actuation: DEFAULT_ACTUATION,
             held_timer: Default::default(),
             fired: false,
         }
@@ -49,8 +46,8 @@ impl Hold {
     }
 
     #[must_use]
-    pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
-        self.actuation = actuation.into();
+    pub fn with_actuation(mut self, actuation: f32) -> Self {
+        self.actuation = actuation;
         self
     }
 
@@ -69,7 +66,7 @@ impl InputCondition for Hold {
         delta: f32,
         value: ActionValue,
     ) -> ActionState {
-        let actuated = self.actuation.is_actuated(value);
+        let actuated = value.is_actuated(self.actuation);
         if actuated {
             self.held_timer.update(world, delta);
         } else {

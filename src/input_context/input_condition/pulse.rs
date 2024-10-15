@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use super::{
-    primitives::{Actuation, HeldTimer},
-    InputCondition,
-};
+use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::input_action::{ActionState, ActionsData},
@@ -27,7 +24,7 @@ pub struct Pulse {
     pub trigger_on_start: bool,
 
     /// Trigger threshold.
-    pub actuation: Actuation,
+    pub actuation: f32,
 
     held_timer: HeldTimer,
 
@@ -42,7 +39,7 @@ impl Pulse {
             trigger_limit: 0,
             trigger_on_start: true,
             trigger_count: 0,
-            actuation: Default::default(),
+            actuation: DEFAULT_ACTUATION,
             held_timer: Default::default(),
         }
     }
@@ -60,8 +57,8 @@ impl Pulse {
     }
 
     #[must_use]
-    pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
-        self.actuation = actuation.into();
+    pub fn with_actuation(mut self, actuation: f32) -> Self {
+        self.actuation = actuation;
         self
     }
 
@@ -80,7 +77,7 @@ impl InputCondition for Pulse {
         delta: f32,
         value: ActionValue,
     ) -> ActionState {
-        if self.actuation.is_actuated(value) {
+        if value.is_actuated(self.actuation) {
             self.held_timer.update(world, delta);
 
             if self.trigger_limit == 0 || self.trigger_count < self.trigger_limit {

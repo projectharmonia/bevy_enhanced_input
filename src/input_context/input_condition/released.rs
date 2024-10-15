@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{primitives::Actuation, InputCondition};
+use super::{InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::input_action::{ActionState, ActionsData},
@@ -8,20 +8,26 @@ use crate::{
 
 /// Returns [`ActionState::Ongoing`]` when the input exceeds the actuation threshold and
 /// [`ActionState::Fired`] once when the input drops back below the actuation threshold.
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Released {
     /// Trigger threshold.
-    pub actuation: Actuation,
+    pub actuation: f32,
     actuated: bool,
 }
 
 impl Released {
     #[must_use]
-    pub fn new(actuation: Actuation) -> Self {
+    pub fn new(actuation: f32) -> Self {
         Self {
             actuation,
             actuated: false,
         }
+    }
+}
+
+impl Default for Released {
+    fn default() -> Self {
+        Self::new(DEFAULT_ACTUATION)
     }
 }
 
@@ -34,7 +40,7 @@ impl InputCondition for Released {
         value: ActionValue,
     ) -> ActionState {
         let previosly_actuated = self.actuated;
-        self.actuated = self.actuation.is_actuated(value);
+        self.actuated = value.is_actuated(self.actuation);
 
         if self.actuated {
             // Ongoing on hold.

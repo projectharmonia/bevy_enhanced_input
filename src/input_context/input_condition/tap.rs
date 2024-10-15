@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use super::{
-    primitives::{Actuation, HeldTimer},
-    InputCondition,
-};
+use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::input_action::{ActionState, ActionsData},
@@ -19,7 +16,7 @@ pub struct Tap {
     pub release_time: f32,
 
     /// Trigger threshold.
-    pub actuation: Actuation,
+    pub actuation: f32,
 
     held_timer: HeldTimer,
     actuated: bool,
@@ -30,15 +27,15 @@ impl Tap {
     pub fn new(release_time: f32) -> Self {
         Self {
             release_time,
-            actuation: Default::default(),
+            actuation: DEFAULT_ACTUATION,
             held_timer: Default::default(),
             actuated: false,
         }
     }
 
     #[must_use]
-    pub fn with_actuation(mut self, actuation: impl Into<Actuation>) -> Self {
-        self.actuation = actuation.into();
+    pub fn with_actuation(mut self, actuation: f32) -> Self {
+        self.actuation = actuation;
         self
     }
 
@@ -59,7 +56,7 @@ impl InputCondition for Tap {
     ) -> ActionState {
         let last_actuated = self.actuated;
         let last_held_duration = self.held_timer.duration();
-        self.actuated = self.actuation.is_actuated(value);
+        self.actuated = value.is_actuated(self.actuation);
         if self.actuated {
             self.held_timer.update(world, delta);
         } else {

@@ -1,10 +1,10 @@
 pub mod blocked_by;
 pub mod chord;
 pub mod down;
+pub mod held_timer;
 pub mod hold;
 pub mod hold_and_release;
 pub mod pressed;
-pub mod primitives;
 pub mod pulse;
 pub mod released;
 pub mod tap;
@@ -15,6 +15,8 @@ use bevy::prelude::*;
 
 use super::input_action::{ActionState, ActionsData};
 use crate::action_value::ActionValue;
+
+pub const DEFAULT_ACTUATION: f32 = 0.5;
 
 /// Defines how input activates.
 ///

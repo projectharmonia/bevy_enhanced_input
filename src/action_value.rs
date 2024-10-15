@@ -44,6 +44,24 @@ impl ActionValue {
         }
     }
 
+    /// Returns `true` if the value in sufficiently large.
+    pub fn is_actuated(self, actuation: f32) -> bool {
+        let value = match self {
+            ActionValue::Bool(value) => {
+                if value {
+                    1.0
+                } else {
+                    0.0
+                }
+            }
+            ActionValue::Axis1D(value) => value * value,
+            ActionValue::Axis2D(value) => value.length_squared(),
+            ActionValue::Axis3D(value) => value.length_squared(),
+        };
+
+        value >= actuation * actuation
+    }
+
     /// Returns the value as a boolean.
     ///
     /// If the value is not [`ActionValue::Bool`],
