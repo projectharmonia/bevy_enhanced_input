@@ -12,9 +12,9 @@ use crate::{
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
 /// each [`Self::interval`] seconds.
 ///
-/// Note: [`ActionEventKind::Completed`](super::input_action::ActionEventKind::Completed) only fires
+/// Note: [`ActionEventKind::Completed`](crate::input_context::input_action::ActionEventKind::Completed) only fires
 /// when the repeat limit is reached or when input is released immediately after being triggered.
-/// Otherwise, [`ActionEventKind::Canceled`](super::input_action::ActionEventKind::Canceled) is fired when input is released.
+/// Otherwise, [`ActionEventKind::Canceled`](crate::input_context::input_action::ActionEventKind::Canceled) is fired when input is released.
 #[derive(Debug)]
 pub struct Pulse {
     /// Time in seconds between each triggering while input is held.

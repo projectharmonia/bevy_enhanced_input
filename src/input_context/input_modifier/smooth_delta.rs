@@ -3,7 +3,7 @@ use interpolation::Ease;
 pub use interpolation::EaseFunction;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, ActionValueDim};
+use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Normalized smooth delta
 ///

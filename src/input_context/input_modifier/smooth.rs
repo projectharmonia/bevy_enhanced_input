@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, ActionValueDim};
+use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Smooth inputs out over multiple frames.
 ///

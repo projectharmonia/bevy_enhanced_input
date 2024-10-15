@@ -229,7 +229,7 @@ pub enum ActionState {
     None,
     /// Condition has started triggering, but has not yet finished.
     ///
-    /// For example, [`Hold`](super::input_condition::Hold) condition
+    /// For example, [`Hold`](super::input_condition::hold::Hold) condition
     /// requires its state to be maintained over several frames.
     Ongoing,
     /// The condition has been met.
@@ -301,7 +301,7 @@ impl<A: InputAction> ActionEvent<A> {
 pub enum ActionEventKind {
     /// Triggers every frame when an action state is [`ActionState::Fired`].
     ///
-    /// For example, with the [`Released`](super::input_condition::Released) condition,
+    /// For example, with the [`Released`](super::input_condition::released::Released) condition,
     /// this event is triggered when the user releases the key.
     Fired {
         /// Time that this action was in [`ActionState::Fired`] state.
@@ -314,13 +314,13 @@ pub enum ActionEventKind {
     /// Triggers when an action switches its state from [`ActionState::None`]
     /// to [`ActionState::Fired`] or [`ActionState::Ongoing`].
     ///
-    /// For example, with the [`Tap`](super::input_condition::Tap) condition, this event is triggered
+    /// For example, with the [`Tap`](super::input_condition::tap::Tap) condition, this event is triggered
     /// only on the first press.
     Started,
 
     /// Triggers every frame when an action state is [`ActionState::Ongoing`].
     ///
-    /// For example, with the [`HoldAndRelease`](super::input_condition::HoldAndRelease) condition,
+    /// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
     /// this event is triggered while the user is holding down the button before the specified duration is reached.
     Ongoing {
         /// Time that this action was in [`ActionState::Ongoing`] state.
@@ -329,7 +329,7 @@ pub enum ActionEventKind {
 
     /// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`],
     ///
-    /// For example, with the [`Hold`](super::input_condition::Hold) condition,
+    /// For example, with the [`Hold`](super::input_condition::hold::Hold) condition,
     /// this event is triggered when the user releases the key.
     Completed {
         /// Time that this action was in [`ActionState::Fired`] state.
@@ -341,7 +341,7 @@ pub enum ActionEventKind {
 
     /// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`],
     ///
-    /// For example, with the [`HoldAndRelease`](super::input_condition::HoldAndRelease) condition,
+    /// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
     /// this event is triggered if the user releases the button before the condition is triggered.
     Canceled {
         /// Time that this action was in [`ActionState::Ongoing`] state.

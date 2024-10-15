@@ -49,7 +49,7 @@ pub enum ConditionKind {
     /// resulting state.
     ///
     /// If no explicit conditions are provided, the action will be set to [`ActionState::Fired`] on
-    /// any non-zero value, functioning similarly to a [`Down`] condition with a zero actuation threshold.
+    /// any non-zero value, functioning similarly to a [`Down`](down::Down) condition with a zero actuation threshold.
     Explicit,
 
     /// If any implicit condition fails to return [`ActionState::Fired`],
