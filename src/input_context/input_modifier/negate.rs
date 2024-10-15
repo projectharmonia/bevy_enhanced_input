@@ -83,19 +83,19 @@ mod tests {
 
         assert_eq!(
             Negate::default().apply(&world, 0.0, Vec3::ONE.into()),
-            ActionValue::Axis3D(Vec3::NEG_ONE)
+            Vec3::NEG_ONE.into(),
         );
         assert_eq!(
             Negate::x(true).apply(&world, 0.0, Vec3::ONE.into()),
-            ActionValue::Axis3D(Vec3::new(-1.0, 1.0, 1.0))
+            Vec3::new(-1.0, 1.0, 1.0).into(),
         );
         assert_eq!(
             Negate::y(true).apply(&world, 0.0, Vec3::ONE.into()),
-            ActionValue::Axis3D(Vec3::new(1.0, -1.0, 1.0))
+            Vec3::new(1.0, -1.0, 1.0).into(),
         );
         assert_eq!(
             Negate::z(true).apply(&world, 0.0, Vec3::ONE.into()),
-            ActionValue::Axis3D(Vec3::new(1.0, 1.0, -1.0))
+            Vec3::new(1.0, 1.0, -1.0).into(),
         );
     }
 }
