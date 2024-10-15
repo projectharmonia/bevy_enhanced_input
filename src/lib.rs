@@ -62,7 +62,10 @@ pub mod prelude {
             context_instance::{ActionMap, ContextInstance, GamepadStick, InputMap},
             input_action::{Accumulation, ActionEvent, ActionEventKind, InputAction},
             input_condition::*,
-            input_modifier::*,
+            input_modifier::{
+                dead_zone::*, exponential_curve::*, negate::*, scalar::*, scale_by_delta::*,
+                smooth::*, smooth_delta::*, swizzle_axis::*, InputModifier,
+            },
             ContextAppExt, ContextMode, InputContext,
         },
         input_reader::{GamepadDevice, Input, Modifiers},

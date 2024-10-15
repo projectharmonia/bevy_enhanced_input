@@ -5,13 +5,12 @@ use bevy::{prelude::*, utils::Entry};
 use super::{
     input_action::{Accumulation, ActionData, ActionsData, InputAction},
     input_condition::InputCondition,
-    input_modifier::InputModifier,
+    input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis, InputModifier},
     trigger_tracker::TriggerTracker,
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
     input_reader::{GamepadDevice, Input, InputReader},
-    prelude::{Negate, SwizzleAxis},
 };
 
 /// Instance for [`InputContext`](super::InputContext).
