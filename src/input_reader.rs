@@ -462,6 +462,13 @@ mod tests {
         let mut reader = state.get(&world);
         assert_eq!(reader.value(key_code), ActionValue::Bool(true));
         assert_eq!(reader.value(KeyCode::Escape), ActionValue::Bool(false));
+        assert_eq!(
+            reader.value(Input::Keyboard {
+                key_code,
+                modifiers: Modifiers::ALT
+            }),
+            ActionValue::Bool(false)
+        );
 
         reader.set_consume_input(true);
         assert_eq!(reader.value(key_code), ActionValue::Bool(true));
@@ -480,6 +487,13 @@ mod tests {
         let mut reader = state.get(&world);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(reader.value(MouseButton::Right), ActionValue::Bool(false));
+        assert_eq!(
+            reader.value(Input::MouseButton {
+                button,
+                modifiers: Modifiers::CONTROL
+            }),
+            ActionValue::Bool(false)
+        );
 
         reader.set_consume_input(true);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
@@ -497,6 +511,10 @@ mod tests {
         let mut reader = state.get(&world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::SHIFT)),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
 
         reader.set_consume_input(true);
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
@@ -519,6 +537,10 @@ mod tests {
         let mut reader = state.get(&world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::SUPER)),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
 
         reader.set_consume_input(true);
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
@@ -602,8 +624,8 @@ mod tests {
         let key_code = KeyCode::Space;
         let modifier = KeyCode::ControlLeft;
         let mut key_codes = world.resource_mut::<ButtonInput<KeyCode>>();
-        key_codes.press(key_code);
         key_codes.press(modifier);
+        key_codes.press(key_code);
 
         let input = Input::Keyboard {
             key_code,
@@ -611,10 +633,7 @@ mod tests {
         };
         let mut reader = state.get(&world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
-        assert_eq!(
-            reader.value(input.without_modifiers()),
-            ActionValue::Bool(true)
-        );
+        assert_eq!(reader.value(key_code), ActionValue::Bool(true));
         assert_eq!(
             reader.value(input.with_modifiers(Modifiers::ALT)),
             ActionValue::Bool(false)
@@ -627,6 +646,157 @@ mod tests {
         reader.set_consume_input(true);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
         assert_eq!(reader.value(input), ActionValue::Bool(false));
+
+        // Try another key, but with the same modifier that was consumed.
+        let other_key_code = KeyCode::Enter;
+        world
+            .resource_mut::<ButtonInput<KeyCode>>()
+            .press(other_key_code);
+        let other_input = Input::Keyboard {
+            key_code: other_key_code,
+            modifiers: modifier.into(),
+        };
+        let mut reader = state.get(&world);
+        assert_eq!(reader.value(other_input), ActionValue::Bool(false));
+        assert_eq!(reader.value(other_key_code), ActionValue::Bool(true));
+    }
+
+    #[test]
+    fn mouse_button_with_modifier() {
+        let (mut world, mut state) = init_world();
+
+        let button = MouseButton::Left;
+        let modifier = KeyCode::AltLeft;
+        world.resource_mut::<ButtonInput<KeyCode>>().press(modifier);
+        world
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .press(button);
+
+        let input = Input::MouseButton {
+            button,
+            modifiers: modifier.into(),
+        };
+        let mut reader = state.get(&world);
+        assert_eq!(reader.value(input), ActionValue::Bool(true));
+        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::CONTROL)),
+            ActionValue::Bool(false)
+        );
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::CONTROL | Modifiers::ALT)),
+            ActionValue::Bool(false)
+        );
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(input), ActionValue::Bool(true));
+        assert_eq!(reader.value(input), ActionValue::Bool(false));
+    }
+
+    #[test]
+    fn mouse_motion_with_modifier() {
+        let (mut world, mut state) = init_world();
+
+        let value = Vec2::ONE;
+        let modifier = KeyCode::ShiftLeft;
+        world.resource_mut::<ButtonInput<KeyCode>>().press(modifier);
+        world.send_event(MouseMotion { delta: value });
+
+        let input = Input::MouseMotion {
+            modifiers: modifier.into(),
+        };
+        let mut reader = state.get(&world);
+        reader.update_state();
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(
+            reader.value(input.without_modifiers()),
+            ActionValue::Axis2D(value)
+        );
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::SUPER)),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::SHIFT | Modifiers::SUPER)),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+    }
+
+    #[test]
+    fn mouse_wheel_with_modifier() {
+        let (mut world, mut state) = init_world();
+
+        let value = Vec2::ONE;
+        let modifier = KeyCode::SuperLeft;
+        world.resource_mut::<ButtonInput<KeyCode>>().press(modifier);
+        world.send_event(MouseWheel {
+            x: value.x,
+            y: value.y,
+            unit: MouseScrollUnit::Line,
+            window: Entity::PLACEHOLDER,
+        });
+
+        let input = Input::MouseWheel {
+            modifiers: modifier.into(),
+        };
+        let mut reader = state.get(&world);
+        reader.update_state();
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(
+            reader.value(input.without_modifiers()),
+            ActionValue::Axis2D(value)
+        );
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::SHIFT)),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
+        assert_eq!(
+            reader.value(input.with_modifiers(Modifiers::SHIFT | Modifiers::SUPER)),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+    }
+
+    #[test]
+    fn ui_input() {
+        let (mut world, mut state) = init_world();
+
+        let key_code = KeyCode::Space;
+        let button = MouseButton::Left;
+        world.resource_mut::<ButtonInput<KeyCode>>().press(key_code);
+        world
+            .resource_mut::<ButtonInput<MouseButton>>()
+            .press(button);
+        world.send_event(MouseMotion { delta: Vec2::ONE });
+        world.send_event(MouseWheel {
+            x: 1.0,
+            y: 1.0,
+            unit: MouseScrollUnit::Line,
+            window: Entity::PLACEHOLDER,
+        });
+
+        let mut reader = state.get(&world);
+        reader.update_state();
+        reader.consumed.ui_wants_keyboard = true;
+        reader.consumed.ui_wants_mouse = true;
+
+        assert_eq!(reader.value(key_code), ActionValue::Bool(false));
+        assert_eq!(reader.value(button), ActionValue::Bool(false));
+        assert_eq!(
+            reader.value(Input::mouse_motion()),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
+        assert_eq!(
+            reader.value(Input::mouse_wheel()),
+            ActionValue::Axis2D(Vec2::ZERO)
+        );
     }
 
     fn init_world<'w, 's>() -> (World, SystemState<InputReader<'w, 's>>) {
