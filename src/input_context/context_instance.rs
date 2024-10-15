@@ -10,7 +10,7 @@ use super::{
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
-    input::{GamepadDevice, Input, InputReader},
+    input::{input_reader::InputReader, GamepadDevice, Input},
 };
 
 /// Instance for [`InputContext`](super::InputContext).

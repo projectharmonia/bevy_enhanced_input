@@ -79,7 +79,7 @@ pub mod prelude {
 
 use bevy::{ecs::system::SystemState, input::InputSystem, prelude::*};
 
-use input::InputReader;
+use input::input_reader::InputReader;
 use input_context::ContextInstances;
 #[allow(unused_imports, reason = "used in the docs")]
 use prelude::*;

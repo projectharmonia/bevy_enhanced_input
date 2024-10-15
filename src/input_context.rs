@@ -12,7 +12,7 @@ use std::{
 
 use bevy::prelude::*;
 
-use crate::input::InputReader;
+use crate::input::input_reader::InputReader;
 use context_instance::ContextInstance;
 
 /// An extension trait for [`App`] to register contexts.
