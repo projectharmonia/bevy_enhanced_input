@@ -275,9 +275,8 @@ struct ReaderParams {
 mod tests {
     use bevy::{ecs::system::SystemState, input::mouse::MouseScrollUnit};
 
-    use crate::Input;
-
     use super::*;
+    use crate::Input;
 
     #[test]
     fn key_code() {
