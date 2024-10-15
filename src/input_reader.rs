@@ -560,6 +560,42 @@ mod tests {
     }
 
     #[test]
+    fn gamepad_axis() {
+        let (mut world, mut state) = init_world();
+
+        let value = 1.0;
+        let axis = GamepadAxisType::LeftStickX;
+        let gamepad = Gamepad::new(0);
+        world.resource_mut::<Axis<GamepadAxis>>().set(
+            GamepadAxis {
+                gamepad,
+                axis_type: axis,
+            },
+            value,
+        );
+
+        let mut reader = state.get(&world);
+        reader.set_gamepad(gamepad);
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(
+            reader.value(GamepadAxisType::LeftStickY),
+            ActionValue::Axis1D(0.0)
+        );
+
+        reader.set_gamepad(Gamepad::new(1));
+        assert_eq!(
+            reader.value(axis),
+            ActionValue::Axis1D(0.0),
+            "should read only from `{gamepad:?}`"
+        );
+
+        reader.set_gamepad(gamepad);
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
+    }
+
+    #[test]
     fn key_code_with_modifier() {
         let (mut world, mut state) = init_world();
 
