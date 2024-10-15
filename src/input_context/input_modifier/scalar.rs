@@ -45,7 +45,7 @@ mod tests {
 
         let mut scalar = Scalar::new(Vec3::ONE * 2.0);
         assert_eq!(scalar.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(scalar.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(scalar.apply(&world, 0.0, 1.0.into()), 2.0.into());
         assert_eq!(
             scalar.apply(&world, 0.0, Vec2::ONE.into()),
             Vec2::new(2.0, 2.0).into()
