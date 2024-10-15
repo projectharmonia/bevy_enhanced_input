@@ -16,6 +16,12 @@ pub struct Scalar {
     pub scalar: Vec3,
 }
 
+impl Scalar {
+    pub fn new(scalar: Vec3) -> Self {
+        Self { scalar }
+    }
+}
+
 impl InputModifier for Scalar {
     fn apply(&mut self, _world: &World, _delta: f32, value: ActionValue) -> ActionValue {
         match value {
@@ -26,5 +32,27 @@ impl InputModifier for Scalar {
             ActionValue::Axis2D(value) => (value * self.scalar.xy()).into(),
             ActionValue::Axis3D(value) => (value * self.scalar).into(),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn scaling() {
+        let world = World::new();
+
+        let mut scalar = Scalar::new(Vec3::ONE * 2.0);
+        assert_eq!(scalar.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(scalar.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            scalar.apply(&world, 0.0, Vec2::ONE.into()),
+            Vec2::new(2.0, 2.0).into()
+        );
+        assert_eq!(
+            scalar.apply(&world, 0.0, Vec3::ONE.into()),
+            Vec3::new(2.0, 2.0, 2.0).into()
+        );
     }
 }
