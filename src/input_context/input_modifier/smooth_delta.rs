@@ -13,11 +13,9 @@ use crate::action_value::{ActionValue, ActionValueDim};
 #[derive(Debug)]
 pub struct SmoothDelta {
     /// Defines how value will be smoothed.
-    pub smoothing_method: SmoothingMethod,
+    pub kind: SmoothKind,
 
-    /// Speed or alpha.
-    ///
-    /// If the speed given is 0, then jump to the target.
+    /// Multiplier for delta time.
     pub speed: f32,
 
     old_value: Vec3,
@@ -27,9 +25,9 @@ pub struct SmoothDelta {
 
 impl SmoothDelta {
     #[must_use]
-    pub fn new(smoothing_method: SmoothingMethod, speed: f32) -> Self {
+    pub fn new(kind: impl Into<SmoothKind>, speed: f32) -> Self {
         Self {
-            smoothing_method,
+            kind: kind.into(),
             speed,
             old_value: Default::default(),
             value_delta: Default::default(),
@@ -45,16 +43,16 @@ impl InputModifier for SmoothDelta {
         }
 
         let value = value.as_axis3d();
-        let target_value_delta = (self.old_value - value).normalize_or_zero();
+        let target_value_delta = (value - self.old_value).normalize_or_zero();
         self.old_value = value;
 
-        let normalized_delta = delta / self.speed;
-        self.value_delta = match self.smoothing_method {
-            SmoothingMethod::EaseFunction(ease_function) => {
-                let ease_delta = normalized_delta.calc(ease_function);
-                self.value_delta.lerp(target_value_delta, ease_delta)
+        let alpha = (delta * self.speed).min(1.0);
+        self.value_delta = match self.kind {
+            SmoothKind::EaseFunction(ease_function) => {
+                let ease_alpha = alpha.calc(ease_function);
+                self.value_delta.lerp(target_value_delta, ease_alpha)
             }
-            SmoothingMethod::Linear => self.value_delta.lerp(target_value_delta, normalized_delta),
+            SmoothKind::Linear => self.value_delta.lerp(target_value_delta, alpha),
         };
 
         ActionValue::Axis3D(self.value_delta).convert(dim)
@@ -63,11 +61,44 @@ impl InputModifier for SmoothDelta {
 
 /// Behavior options for [`SmoothDelta`].
 ///
-/// Describe how eased value should be computed.
+/// Describes how eased value should be computed.
 #[derive(Clone, Copy, Debug)]
-pub enum SmoothingMethod {
-    /// Follow [`EaseFunction`].
+pub enum SmoothKind {
+    /// Follows [`EaseFunction`].
     EaseFunction(EaseFunction),
     /// Linear interpolation, with no function.
     Linear,
+}
+
+impl From<EaseFunction> for SmoothKind {
+    fn from(value: EaseFunction) -> Self {
+        Self::EaseFunction(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn linear() {
+        let world = World::new();
+
+        let mut smooth = SmoothDelta::new(SmoothKind::Linear, 1.0);
+        let delta = 0.1;
+        assert_eq!(smooth.apply(&world, delta, true.into()), true.into());
+        assert_eq!(smooth.apply(&world, delta, 0.5.into()), 0.1.into());
+        assert_eq!(smooth.apply(&world, delta, 1.0.into()), 0.19.into());
+    }
+
+    #[test]
+    fn ease_function() {
+        let world = World::new();
+
+        let mut smooth = SmoothDelta::new(EaseFunction::QuadraticIn, 1.0);
+        let delta = 0.2;
+        assert_eq!(smooth.apply(&world, delta, true.into()), true.into());
+        assert_eq!(smooth.apply(&world, delta, 0.5.into()), 0.040000003.into());
+        assert_eq!(smooth.apply(&world, delta, 1.0.into()), 0.0784.into());
+    }
 }
