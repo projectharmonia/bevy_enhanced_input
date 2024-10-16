@@ -36,3 +36,20 @@ impl HeldTimer {
         self.duration
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn relative() {
+        let mut time = Time::<Virtual>::default();
+        time.set_relative_speed(0.5);
+        let mut world = World::new();
+        world.insert_resource(time);
+
+        let mut timer = HeldTimer::relative_to_speed(true);
+        timer.update(&world, 1.0);
+        assert_eq!(timer.duration(), 0.5);
+    }
+}
