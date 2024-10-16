@@ -41,3 +41,24 @@ impl InputCondition for Down {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn down() {
+        let world = World::new();
+        let actions_data = ActionsData::default();
+
+        let mut condition = Down::new(1.0);
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            ActionState::None,
+        );
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Fired,
+        );
+    }
+}
