@@ -19,6 +19,24 @@ pub struct DeadZone {
 }
 
 impl DeadZone {
+    pub fn new(kind: DeadZoneKind) -> Self {
+        Self {
+            kind,
+            lower_threshold: 0.2,
+            upper_threshold: 1.0,
+        }
+    }
+
+    pub fn with_lower_threshold(mut self, lower_threshold: f32) -> Self {
+        self.lower_threshold = lower_threshold;
+        self
+    }
+
+    pub fn with_upper_threshold(mut self, upper_threshold: f32) -> Self {
+        self.upper_threshold = upper_threshold;
+        self
+    }
+
     fn dead_zone(self, axis_value: f32) -> f32 {
         // Translate and scale the input to the +/- 1 range after removing the dead zone.
         let lower_bound = (axis_value.abs() - self.lower_threshold).max(0.0);
@@ -29,11 +47,7 @@ impl DeadZone {
 
 impl Default for DeadZone {
     fn default() -> Self {
-        Self {
-            kind: Default::default(),
-            lower_threshold: 0.2,
-            upper_threshold: 1.0,
-        }
+        Self::new(Default::default())
     }
 }
 
@@ -72,14 +86,99 @@ impl InputModifier for DeadZone {
 /// Dead zone behavior.
 #[derive(Default, Clone, Copy, Debug)]
 pub enum DeadZoneKind {
-    // Apply dead zone logic to all axes simultaneously.
-    //
-    // This gives smooth input (circular/spherical coverage). On a 1d axis input this works identically to [`Self::Axial`].
+    /// Apply dead zone logic to all axes simultaneously.
+    ///
+    /// This gives smooth input (circular/spherical coverage).
+    /// For [`ActionValue::Axis1D`] this works identically to [`Self::Axial`].
     #[default]
     Radial,
 
-    // Apply dead zone to axes individually.
-    //
-    // This will result in input being chamfered at the corners for 2d/3d axis inputs.
+    /// Apply dead zone to axes individually.
+    ///
+    /// This will result in input being chamfered at the corners
+    /// for [`ActionValue::Axis2D`]/[`ActionValue::Axis2D`].
     Axial,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn radial() {
+        let world = World::new();
+
+        let mut dead_zone = DeadZone::new(DeadZoneKind::Radial);
+
+        assert_eq!(dead_zone.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 0.5.into()), 0.375.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 0.2.into()), 0.0.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 2.0.into()), 1.0.into());
+
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec2::ONE * 0.5).into()),
+            (Vec2::ONE * 0.4482233).into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, Vec2::ONE.into()),
+            (Vec2::ONE * 0.70710677).into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec2::ONE * 0.2).into()),
+            (Vec2::ONE * 0.07322331).into()
+        );
+
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec3::ONE * 0.5).into()),
+            (Vec3::ONE * 0.48066244).into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, Vec3::ONE.into()),
+            (Vec3::ONE * 0.57735026).into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec3::ONE * 0.2).into()),
+            (Vec3::ONE * 0.105662435).into()
+        );
+    }
+
+    #[test]
+    fn axial() {
+        let world = World::new();
+
+        let mut dead_zone = DeadZone::new(DeadZoneKind::Axial);
+
+        assert_eq!(dead_zone.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 0.5.into()), 0.375.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 0.2.into()), 0.0.into());
+        assert_eq!(dead_zone.apply(&world, 0.0, 2.0.into()), 1.0.into());
+
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec2::ONE * 0.5).into()),
+            (Vec2::ONE * 0.375).into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, Vec2::ONE.into()),
+            Vec2::ONE.into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec2::ONE * 0.2).into()),
+            Vec2::ZERO.into()
+        );
+
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec3::ONE * 0.5).into()),
+            (Vec3::ONE * 0.375).into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, Vec3::ONE.into()),
+            Vec3::ONE.into()
+        );
+        assert_eq!(
+            dead_zone.apply(&world, 0.0, (Vec3::ONE * 0.2).into()),
+            Vec3::ZERO.into()
+        );
+    }
 }
