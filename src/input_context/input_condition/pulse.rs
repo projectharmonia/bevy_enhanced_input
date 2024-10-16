@@ -88,7 +88,7 @@ impl InputCondition for Pulse {
                 };
 
                 // If the repeat count limit has not been reached.
-                if self.held_timer.duration() > self.interval * trigger_count as f32 {
+                if self.held_timer.duration() >= self.interval * trigger_count as f32 {
                     // Trigger when held duration exceeds the interval threshold.
                     self.trigger_count += 1;
                     ActionState::Fired
@@ -104,5 +104,66 @@ impl InputCondition for Pulse {
             self.trigger_count = 0;
             ActionState::None
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn tap() {
+        let world = World::new();
+        let actions_data = ActionsData::default();
+
+        let mut condition = Pulse::new(1.0);
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Fired,
+        );
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.5, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.5, 1.0.into()),
+            ActionState::Fired,
+        );
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            ActionState::None,
+        );
+    }
+
+    #[test]
+    fn not_trigger_on_start() {
+        let world = World::new();
+        let actions_data = ActionsData::default();
+
+        let mut condition = Pulse::new(1.0).trigger_on_start(false);
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Ongoing,
+        );
+    }
+
+    #[test]
+    fn trigger_limit() {
+        let world = World::new();
+        let actions_data = ActionsData::default();
+
+        let mut condition = Pulse::new(1.0).with_trigger_limit(1);
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Fired,
+        );
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::None,
+        );
     }
 }
