@@ -60,13 +60,13 @@ mod tests {
         let world = World::new();
         let actions_data = ActionsData::default();
 
-        let mut pressed = Pressed::default();
+        let mut condition = Pressed::default();
         assert_eq!(
-            pressed.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            condition.evaluate(&world, &actions_data, 0.0, 0.0.into()),
             ActionState::None,
         );
         assert_eq!(
-            pressed.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
             ActionState::Fired,
         );
     }

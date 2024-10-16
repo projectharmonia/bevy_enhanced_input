@@ -44,16 +44,16 @@ mod tests {
     fn exp() {
         let world = World::new();
 
-        let mut curve = ExponentialCurve::new(Vec3::ONE * 2.0);
-        assert_eq!(curve.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(curve.apply(&world, 0.0, (-0.5).into()), (-0.25).into());
-        assert_eq!(curve.apply(&world, 0.0, 0.5.into()), 0.25.into());
+        let mut modifier = ExponentialCurve::new(Vec3::ONE * 2.0);
+        assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&world, 0.0, (-0.5).into()), (-0.25).into());
+        assert_eq!(modifier.apply(&world, 0.0, 0.5.into()), 0.25.into());
         assert_eq!(
-            curve.apply(&world, 0.0, (Vec2::ONE * 2.0).into()),
+            modifier.apply(&world, 0.0, (Vec2::ONE * 2.0).into()),
             (Vec2::ONE * 4.0).into()
         );
         assert_eq!(
-            curve.apply(&world, 0.0, (Vec3::ONE * 2.0).into()),
+            modifier.apply(&world, 0.0, (Vec3::ONE * 2.0).into()),
             (Vec3::ONE * 4.0).into()
         );
     }

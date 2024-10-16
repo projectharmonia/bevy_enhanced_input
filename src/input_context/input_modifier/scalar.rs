@@ -42,15 +42,15 @@ mod tests {
     fn scaling() {
         let world = World::new();
 
-        let mut scalar = Scalar::new(Vec3::ONE * 2.0);
-        assert_eq!(scalar.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(scalar.apply(&world, 0.0, 1.0.into()), 2.0.into());
+        let mut modifier = Scalar::new(Vec3::ONE * 2.0);
+        assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 2.0.into());
         assert_eq!(
-            scalar.apply(&world, 0.0, Vec2::ONE.into()),
+            modifier.apply(&world, 0.0, Vec2::ONE.into()),
             Vec2::new(2.0, 2.0).into()
         );
         assert_eq!(
-            scalar.apply(&world, 0.0, Vec3::ONE.into()),
+            modifier.apply(&world, 0.0, Vec3::ONE.into()),
             Vec3::new(2.0, 2.0, 2.0).into()
         );
     }

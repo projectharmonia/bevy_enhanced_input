@@ -84,21 +84,24 @@ mod tests {
     fn linear() {
         let world = World::new();
 
-        let mut smooth = SmoothDelta::new(SmoothKind::Linear, 1.0);
+        let mut modifier = SmoothDelta::new(SmoothKind::Linear, 1.0);
         let delta = 0.1;
-        assert_eq!(smooth.apply(&world, delta, true.into()), true.into());
-        assert_eq!(smooth.apply(&world, delta, 0.5.into()), 0.1.into());
-        assert_eq!(smooth.apply(&world, delta, 1.0.into()), 0.19.into());
+        assert_eq!(modifier.apply(&world, delta, true.into()), true.into());
+        assert_eq!(modifier.apply(&world, delta, 0.5.into()), 0.1.into());
+        assert_eq!(modifier.apply(&world, delta, 1.0.into()), 0.19.into());
     }
 
     #[test]
     fn ease_function() {
         let world = World::new();
 
-        let mut smooth = SmoothDelta::new(EaseFunction::QuadraticIn, 1.0);
+        let mut modifier = SmoothDelta::new(EaseFunction::QuadraticIn, 1.0);
         let delta = 0.2;
-        assert_eq!(smooth.apply(&world, delta, true.into()), true.into());
-        assert_eq!(smooth.apply(&world, delta, 0.5.into()), 0.040000003.into());
-        assert_eq!(smooth.apply(&world, delta, 1.0.into()), 0.0784.into());
+        assert_eq!(modifier.apply(&world, delta, true.into()), true.into());
+        assert_eq!(
+            modifier.apply(&world, delta, 0.5.into()),
+            0.040000003.into()
+        );
+        assert_eq!(modifier.apply(&world, delta, 1.0.into()), 0.0784.into());
     }
 }

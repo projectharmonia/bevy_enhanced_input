@@ -99,25 +99,25 @@ mod tests {
         let world = World::new();
         let actions_data = ActionsData::default();
 
-        let mut hold = Hold::new(1.0);
+        let mut condition = Hold::new(1.0);
         assert_eq!(
-            hold.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            hold.evaluate(&world, &actions_data, 1.0, 1.0.into()),
+            condition.evaluate(&world, &actions_data, 1.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            hold.evaluate(&world, &actions_data, 1.0, 1.0.into()),
+            condition.evaluate(&world, &actions_data, 1.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            hold.evaluate(&world, &actions_data, 1.0, 0.0.into()),
+            condition.evaluate(&world, &actions_data, 1.0, 0.0.into()),
             ActionState::None,
         );
         assert_eq!(
-            hold.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
     }

@@ -111,37 +111,37 @@ mod tests {
     fn radial() {
         let world = World::new();
 
-        let mut dead_zone = DeadZone::new(DeadZoneKind::Radial);
+        let mut modifier = DeadZone::new(DeadZoneKind::Radial);
 
-        assert_eq!(dead_zone.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(dead_zone.apply(&world, 0.0, 1.0.into()), 1.0.into());
-        assert_eq!(dead_zone.apply(&world, 0.0, 0.5.into()), 0.375.into());
-        assert_eq!(dead_zone.apply(&world, 0.0, 0.2.into()), 0.0.into());
-        assert_eq!(dead_zone.apply(&world, 0.0, 2.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&world, 0.0, 0.5.into()), 0.375.into());
+        assert_eq!(modifier.apply(&world, 0.0, 0.2.into()), 0.0.into());
+        assert_eq!(modifier.apply(&world, 0.0, 2.0.into()), 1.0.into());
 
         assert_eq!(
-            dead_zone.apply(&world, 0.0, (Vec2::ONE * 0.5).into()),
+            modifier.apply(&world, 0.0, (Vec2::ONE * 0.5).into()),
             (Vec2::ONE * 0.4482233).into()
         );
         assert_eq!(
-            dead_zone.apply(&world, 0.0, Vec2::ONE.into()),
+            modifier.apply(&world, 0.0, Vec2::ONE.into()),
             (Vec2::ONE * 0.70710677).into()
         );
         assert_eq!(
-            dead_zone.apply(&world, 0.0, (Vec2::ONE * 0.2).into()),
+            modifier.apply(&world, 0.0, (Vec2::ONE * 0.2).into()),
             (Vec2::ONE * 0.07322331).into()
         );
 
         assert_eq!(
-            dead_zone.apply(&world, 0.0, (Vec3::ONE * 0.5).into()),
+            modifier.apply(&world, 0.0, (Vec3::ONE * 0.5).into()),
             (Vec3::ONE * 0.48066244).into()
         );
         assert_eq!(
-            dead_zone.apply(&world, 0.0, Vec3::ONE.into()),
+            modifier.apply(&world, 0.0, Vec3::ONE.into()),
             (Vec3::ONE * 0.57735026).into()
         );
         assert_eq!(
-            dead_zone.apply(&world, 0.0, (Vec3::ONE * 0.2).into()),
+            modifier.apply(&world, 0.0, (Vec3::ONE * 0.2).into()),
             (Vec3::ONE * 0.105662435).into()
         );
     }
