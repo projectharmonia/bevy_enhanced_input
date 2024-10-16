@@ -3,7 +3,6 @@ pub mod exponential_curve;
 pub mod negate;
 pub mod scalar;
 pub mod scale_by_delta;
-pub mod smooth;
 pub mod smooth_delta;
 pub mod swizzle_axis;
 
