@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::action_value::ActionValue;
+use crate::{action_value::ActionValue, ActionValueDim};
 
 /// Response curve exponential.
 ///
@@ -15,41 +15,45 @@ pub struct ExponentialCurve {
 }
 
 impl ExponentialCurve {
-    fn curve(value: f32, exponent: f32) -> f32 {
-        if value != 1.0 {
-            value.signum() * value.abs().powf(exponent)
-        } else {
-            value
-        }
-    }
-}
-
-impl Default for ExponentialCurve {
-    fn default() -> Self {
-        Self {
-            exponent: Vec3::ONE,
-        }
+    pub fn new(exponent: Vec3) -> Self {
+        Self { exponent }
     }
 }
 
 impl InputModifier for ExponentialCurve {
     fn apply(&mut self, _world: &World, _delta: f32, value: ActionValue) -> ActionValue {
-        match value {
-            ActionValue::Bool(_) => {
-                super::ignore_incompatible!(value);
-            }
-            ActionValue::Axis1D(value) => Self::curve(value, self.exponent.x).into(),
-            ActionValue::Axis2D(mut value) => {
-                value.x = Self::curve(value.x, self.exponent.x);
-                value.y = Self::curve(value.y, self.exponent.y);
-                value.into()
-            }
-            ActionValue::Axis3D(mut value) => {
-                value.x = Self::curve(value.x, self.exponent.x);
-                value.y = Self::curve(value.y, self.exponent.y);
-                value.y = Self::curve(value.z, self.exponent.z);
-                value.into()
-            }
+        let dim = value.dim();
+        if dim == ActionValueDim::Bool {
+            super::ignore_incompatible!(value);
         }
+
+        let mut value = value.as_axis3d();
+        value.x = value.x.signum() * value.x.abs().powf(self.exponent.x);
+        value.y = value.y.signum() * value.y.abs().powf(self.exponent.y);
+        value.z = value.z.signum() * value.z.abs().powf(self.exponent.z);
+        ActionValue::Axis3D(value).convert(dim)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exp() {
+        let world = World::new();
+
+        let mut curve = ExponentialCurve::new(Vec3::ONE * 2.0);
+        assert_eq!(curve.apply(&world, 0.0, true.into()), true.into());
+        assert_eq!(curve.apply(&world, 0.0, (-0.5).into()), (-0.25).into());
+        assert_eq!(curve.apply(&world, 0.0, 0.5.into()), 0.25.into());
+        assert_eq!(
+            curve.apply(&world, 0.0, (Vec2::ONE * 2.0).into()),
+            (Vec2::ONE * 4.0).into()
+        );
+        assert_eq!(
+            curve.apply(&world, 0.0, (Vec3::ONE * 2.0).into()),
+            (Vec3::ONE * 4.0).into()
+        );
     }
 }
