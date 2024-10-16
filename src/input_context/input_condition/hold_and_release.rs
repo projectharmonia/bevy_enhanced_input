@@ -63,11 +63,40 @@ impl InputCondition for HoldAndRelease {
         } else {
             self.held_timer.reset();
             // Trigger if we've passed the threshold and released.
-            if held_duration > self.hold_time {
+            if held_duration >= self.hold_time {
                 ActionState::Fired
             } else {
                 ActionState::None
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hold_and_release() {
+        let world = World::new();
+        let actions_data = ActionsData::default();
+
+        let mut modifier = HoldAndRelease::new(1.0);
+        assert_eq!(
+            modifier.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            modifier.evaluate(&world, &actions_data, 1.0, 0.0.into()),
+            ActionState::Fired,
+        );
+        assert_eq!(
+            modifier.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            modifier.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            ActionState::None,
+        );
     }
 }
