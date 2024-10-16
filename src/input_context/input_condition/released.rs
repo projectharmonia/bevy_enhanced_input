@@ -53,3 +53,28 @@ impl InputCondition for Released {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn released() {
+        let world = World::new();
+        let actions_data = ActionsData::default();
+
+        let mut released = Released::default();
+        assert_eq!(
+            released.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            ActionState::None,
+        );
+        assert_eq!(
+            released.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            released.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            ActionState::Fired,
+        );
+    }
+}
