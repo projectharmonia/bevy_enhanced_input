@@ -17,6 +17,7 @@ pub struct Scalar {
 }
 
 impl Scalar {
+    #[must_use]
     pub fn new(scalar: Vec3) -> Self {
         Self { scalar }
     }

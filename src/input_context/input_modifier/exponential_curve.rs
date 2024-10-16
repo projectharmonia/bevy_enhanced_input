@@ -15,6 +15,7 @@ pub struct ExponentialCurve {
 }
 
 impl ExponentialCurve {
+    #[must_use]
     pub fn new(exponent: Vec3) -> Self {
         Self { exponent }
     }

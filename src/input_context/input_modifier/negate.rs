@@ -20,6 +20,7 @@ pub struct Negate {
 
 impl Negate {
     /// Returns [`Self`] with invertion for all axes set to `invert`
+    #[must_use]
     pub fn all(invert: bool) -> Self {
         Self {
             x: invert,
@@ -29,6 +30,7 @@ impl Negate {
     }
 
     /// Returns [`Self`] with invertion for x set to `invert`
+    #[must_use]
     pub fn x(invert: bool) -> Self {
         Self {
             x: invert,
@@ -38,6 +40,7 @@ impl Negate {
     }
 
     /// Returns [`Self`] with invertion for y set to `invert`
+    #[must_use]
     pub fn y(invert: bool) -> Self {
         Self {
             x: false,
@@ -47,6 +50,7 @@ impl Negate {
     }
 
     /// Returns [`Self`] with invertion for z set to `invert`
+    #[must_use]
     pub fn z(invert: bool) -> Self {
         Self {
             x: false,
