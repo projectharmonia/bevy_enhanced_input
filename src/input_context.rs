@@ -193,7 +193,7 @@ impl ContextInstances {
         }
     }
 
-    fn index<C: InputContext>(&mut self) -> Option<usize> {
+    fn index<C: InputContext>(&self) -> Option<usize> {
         self.0
             .iter()
             .position(|group| group.type_id() == TypeId::of::<C>())
