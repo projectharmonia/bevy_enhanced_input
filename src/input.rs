@@ -25,7 +25,7 @@ impl Modifiers {
     /// Returns an iterator over the key codes corresponding to the set modifier bits.
     ///
     /// Each item contains left and right key codes.
-    pub fn iter_key_codes(self) -> impl Iterator<Item = [KeyCode; 2]> {
+    pub fn iter_keys(self) -> impl Iterator<Item = [KeyCode; 2]> {
         self.iter_names().map(|(_, modifier)| match modifier {
             Modifiers::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
             Modifiers::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
@@ -57,10 +57,7 @@ impl From<KeyCode> for Modifiers {
 pub enum Input {
     /// Keyboard button, will be captured as
     /// [`ActionValue::Bool`](crate::action_value::ActionValue).
-    Keyboard {
-        key_code: KeyCode,
-        modifiers: Modifiers,
-    },
+    Keyboard { key: KeyCode, modifiers: Modifiers },
     /// Mouse button, will be captured as
     /// [`ActionValue::Bool`](crate::action_value::ActionValue).
     MouseButton {
@@ -116,10 +113,7 @@ impl Input {
     #[must_use]
     pub const fn with_modifiers(self, modifiers: Modifiers) -> Self {
         match self {
-            Input::Keyboard { key_code, .. } => Self::Keyboard {
-                key_code,
-                modifiers,
-            },
+            Input::Keyboard { key, .. } => Self::Keyboard { key, modifiers },
             Input::MouseButton { button, .. } => Self::MouseButton { button, modifiers },
             Input::MouseMotion { .. } => Self::MouseMotion { modifiers },
             Input::MouseWheel { .. } => Self::MouseWheel { modifiers },
@@ -131,9 +125,9 @@ impl Input {
 }
 
 impl From<KeyCode> for Input {
-    fn from(key_code: KeyCode) -> Self {
+    fn from(key: KeyCode) -> Self {
         Self::Keyboard {
-            key_code,
+            key,
             modifiers: Default::default(),
         }
     }

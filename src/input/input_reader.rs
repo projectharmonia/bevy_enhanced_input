@@ -15,7 +15,7 @@ use crate::action_value::ActionValue;
 /// Reads input from multiple sources.
 #[derive(SystemParam)]
 pub(crate) struct InputReader<'w, 's> {
-    key_codes: Res<'w, ButtonInput<KeyCode>>,
+    keys: Res<'w, ButtonInput<KeyCode>>,
     mouse_buttons: Res<'w, ButtonInput<MouseButton>>,
     mouse_motion_events: EventReader<'w, 's, MouseMotion>,
     mouse_wheel_events: EventReader<'w, 's, MouseWheel>,
@@ -92,17 +92,14 @@ impl InputReader<'_, '_> {
     /// See also [`Self::set_consume_input`] and [`Self::set_gamepad`].
     pub(crate) fn value(&mut self, input: impl Into<Input>) -> ActionValue {
         match input.into() {
-            Input::Keyboard {
-                key_code,
-                modifiers,
-            } => {
+            Input::Keyboard { key, modifiers } => {
                 let pressed = !self.consumed.ui_wants_keyboard
-                    && self.key_codes.pressed(key_code)
-                    && !self.consumed.key_codes.contains(&key_code)
+                    && self.keys.pressed(key)
+                    && !self.consumed.keys.contains(&key)
                     && self.modifiers_pressed(modifiers);
 
                 if pressed && self.params.consume_input {
-                    self.consumed.key_codes.insert(key_code);
+                    self.consumed.keys.insert(key);
                     self.consumed.modifiers.insert(modifiers);
                 }
 
@@ -217,8 +214,8 @@ impl InputReader<'_, '_> {
             return false;
         }
 
-        for key_codes in modifiers.iter_key_codes() {
-            if !self.key_codes.any_pressed(key_codes) {
+        for modifier_keys in modifiers.iter_keys() {
+            if !self.keys.any_pressed(modifier_keys) {
                 return false;
             }
         }
@@ -234,7 +231,7 @@ impl InputReader<'_, '_> {
 struct ConsumedInput {
     ui_wants_keyboard: bool,
     ui_wants_mouse: bool,
-    key_codes: HashSet<KeyCode>,
+    keys: HashSet<KeyCode>,
     modifiers: Modifiers,
     mouse_buttons: HashSet<MouseButton>,
     gamepad_buttons: HashSet<GamepadInput<GamepadButtonType>>,
@@ -245,7 +242,7 @@ impl ConsumedInput {
     fn reset(&mut self) {
         self.ui_wants_keyboard = false;
         self.ui_wants_mouse = false;
-        self.key_codes.clear();
+        self.keys.clear();
         self.modifiers = Modifiers::empty();
         self.mouse_buttons.clear();
         self.gamepad_buttons.clear();
@@ -279,26 +276,26 @@ mod tests {
     use crate::Input;
 
     #[test]
-    fn key_code() {
+    fn keyboard() {
         let (mut world, mut state) = init_world();
 
-        let key_code = KeyCode::Space;
-        world.resource_mut::<ButtonInput<KeyCode>>().press(key_code);
+        let key = KeyCode::Space;
+        world.resource_mut::<ButtonInput<KeyCode>>().press(key);
 
         let mut reader = state.get(&world);
-        assert_eq!(reader.value(key_code), ActionValue::Bool(true));
+        assert_eq!(reader.value(key), ActionValue::Bool(true));
         assert_eq!(reader.value(KeyCode::Escape), ActionValue::Bool(false));
         assert_eq!(
             reader.value(Input::Keyboard {
-                key_code,
+                key,
                 modifiers: Modifiers::ALT
             }),
             ActionValue::Bool(false)
         );
 
         reader.set_consume_input(true);
-        assert_eq!(reader.value(key_code), ActionValue::Bool(true));
-        assert_eq!(reader.value(key_code), ActionValue::Bool(false));
+        assert_eq!(reader.value(key), ActionValue::Bool(true));
+        assert_eq!(reader.value(key), ActionValue::Bool(false));
     }
 
     #[test]
@@ -444,22 +441,22 @@ mod tests {
     }
 
     #[test]
-    fn key_code_with_modifier() {
+    fn keyboard_with_modifier() {
         let (mut world, mut state) = init_world();
 
-        let key_code = KeyCode::Space;
+        let key = KeyCode::Space;
         let modifier = KeyCode::ControlLeft;
-        let mut key_codes = world.resource_mut::<ButtonInput<KeyCode>>();
-        key_codes.press(modifier);
-        key_codes.press(key_code);
+        let mut keys = world.resource_mut::<ButtonInput<KeyCode>>();
+        keys.press(modifier);
+        keys.press(key);
 
         let input = Input::Keyboard {
-            key_code,
+            key,
             modifiers: modifier.into(),
         };
         let mut reader = state.get(&world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
-        assert_eq!(reader.value(key_code), ActionValue::Bool(true));
+        assert_eq!(reader.value(key), ActionValue::Bool(true));
         assert_eq!(
             reader.value(input.with_modifiers(Modifiers::ALT)),
             ActionValue::Bool(false)
@@ -474,17 +471,17 @@ mod tests {
         assert_eq!(reader.value(input), ActionValue::Bool(false));
 
         // Try another key, but with the same modifier that was consumed.
-        let other_key_code = KeyCode::Enter;
+        let other_key = KeyCode::Enter;
         world
             .resource_mut::<ButtonInput<KeyCode>>()
-            .press(other_key_code);
+            .press(other_key);
         let other_input = Input::Keyboard {
-            key_code: other_key_code,
+            key: other_key,
             modifiers: modifier.into(),
         };
         let mut reader = state.get(&world);
         assert_eq!(reader.value(other_input), ActionValue::Bool(false));
-        assert_eq!(reader.value(other_key_code), ActionValue::Bool(true));
+        assert_eq!(reader.value(other_key), ActionValue::Bool(true));
     }
 
     #[test]
@@ -594,9 +591,9 @@ mod tests {
     fn ui_input() {
         let (mut world, mut state) = init_world();
 
-        let key_code = KeyCode::Space;
+        let key = KeyCode::Space;
         let button = MouseButton::Left;
-        world.resource_mut::<ButtonInput<KeyCode>>().press(key_code);
+        world.resource_mut::<ButtonInput<KeyCode>>().press(key);
         world
             .resource_mut::<ButtonInput<MouseButton>>()
             .press(button);
@@ -613,7 +610,7 @@ mod tests {
         reader.consumed.ui_wants_keyboard = true;
         reader.consumed.ui_wants_mouse = true;
 
-        assert_eq!(reader.value(key_code), ActionValue::Bool(false));
+        assert_eq!(reader.value(key), ActionValue::Bool(false));
         assert_eq!(reader.value(button), ActionValue::Bool(false));
         assert_eq!(
             reader.value(Input::mouse_motion()),
