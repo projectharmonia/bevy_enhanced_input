@@ -121,12 +121,12 @@ impl ActionData {
             match (self.state(), state) {
                 (ActionState::None, ActionState::None) => (),
                 (ActionState::None, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::new(ActionTransition::Started, value),
+                    ActionEvent::<A>::new(ActionTransition::Started, value, state),
                     entity,
                 ),
                 (ActionState::None, ActionState::Fired) => {
                     commands.trigger_targets(
-                        ActionEvent::<A>::new(ActionTransition::Started, value),
+                        ActionEvent::<A>::new(ActionTransition::Started, value, state),
                         entity,
                     );
                     commands.trigger_targets(
@@ -136,6 +136,7 @@ impl ActionData {
                                 elapsed_secs: 0.0,
                             },
                             value,
+                            state,
                         ),
                         entity,
                     );
@@ -146,6 +147,7 @@ impl ActionData {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
+                        state,
                     ),
                     entity,
                 ),
@@ -155,6 +157,7 @@ impl ActionData {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
+                        state,
                     ),
                     entity,
                 ),
@@ -165,6 +168,7 @@ impl ActionData {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
+                        state,
                     ),
                     entity,
                 ),
@@ -175,6 +179,7 @@ impl ActionData {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
+                        state,
                     ),
                     entity,
                 ),
@@ -184,6 +189,7 @@ impl ActionData {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
+                        state,
                     ),
                     entity,
                 ),
@@ -194,6 +200,7 @@ impl ActionData {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
+                        state,
                     ),
                     entity,
                 ),
@@ -266,16 +273,20 @@ pub struct ActionEvent<A: InputAction> {
 
     /// Current action value.
     pub value: ActionValue,
+
+    /// Current action state.
+    pub state: ActionState,
 }
 
 impl<A: InputAction> ActionEvent<A> {
     /// Creates a new event for `A`.
     #[must_use]
-    pub fn new(transition: ActionTransition, value: ActionValue) -> Self {
+    pub fn new(transition: ActionTransition, value: ActionValue, state: ActionState) -> Self {
         Self {
             marker: PhantomData,
             transition,
             value,
+            state,
         }
     }
 }
