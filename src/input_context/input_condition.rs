@@ -27,14 +27,14 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 /// You can define your own conditions based on the world state.
 ///
 /// Conditions can be applied both to inputs and actions.
-/// See [`ActionMap::with_condition`](super::context_instance::ActionMap::with_condition)
+/// See [`ActionBind::with_condition`](super::context_instance::ActionBind::with_condition)
 /// and [`InputMap::with_condition`](super::context_instance::InputMap::with_condition).
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
     fn evaluate(
         &mut self,
         world: &World,
-        actions_data: &ActionsData,
+        actions: &ActionsData,
         delta: f32,
         value: ActionValue,
     ) -> ActionState;

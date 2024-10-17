@@ -55,14 +55,14 @@ impl TriggerTracker {
     pub(super) fn apply_conditions(
         &mut self,
         world: &World,
-        actions_data: &ActionsData,
+        actions: &ActionsData,
         delta: f32,
         conditions: &mut [Box<dyn InputCondition>],
     ) {
         // Note: No early outs permitted!
         // All conditions must be evaluated to update their internal state/delta time.
         for condition in conditions {
-            let state = condition.evaluate(world, actions_data, delta, self.value);
+            let state = condition.evaluate(world, actions, delta, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
             match condition.kind() {
                 ConditionKind::Explicit => {

@@ -62,7 +62,7 @@ impl InputCondition for Hold {
     fn evaluate(
         &mut self,
         world: &World,
-        _actions_data: &ActionsData,
+        _actions: &ActionsData,
         delta: f32,
         value: ActionValue,
     ) -> ActionState {
@@ -97,27 +97,27 @@ mod tests {
     #[test]
     fn hold() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut condition = Hold::new(1.0);
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 1.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 1.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 1.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 1.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 1.0, 0.0.into()),
+            condition.evaluate(&world, &actions, 1.0, 0.0.into()),
             ActionState::None,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
     }
@@ -125,15 +125,15 @@ mod tests {
     #[test]
     fn one_shot() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut hold = Hold::new(1.0).one_shot(true);
         assert_eq!(
-            hold.evaluate(&world, &actions_data, 1.0, 1.0.into()),
+            hold.evaluate(&world, &actions, 1.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            hold.evaluate(&world, &actions_data, 1.0, 1.0.into()),
+            hold.evaluate(&world, &actions, 1.0, 1.0.into()),
             ActionState::None,
         );
     }

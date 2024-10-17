@@ -40,8 +40,8 @@ use crate::{
 #[derive(Default)]
 pub struct ContextInstance {
     gamepad: GamepadDevice,
-    actions: Vec<ActionMap>,
-    actions_data: ActionsData,
+    bindings: Vec<ActionBind>,
+    actions: ActionsData,
 }
 
 impl ContextInstance {
@@ -58,18 +58,18 @@ impl ContextInstance {
     /// Starts binding an action.
     ///
     /// This method can be called multiple times for the same action to extend its mappings.
-    pub fn bind<A: InputAction>(&mut self) -> &mut ActionMap {
+    pub fn bind<A: InputAction>(&mut self) -> &mut ActionBind {
         let type_id = TypeId::of::<A>();
-        match self.actions_data.entry(type_id) {
+        match self.actions.entry(type_id) {
             Entry::Occupied(_entry) => self
-                .actions
+                .bindings
                 .iter_mut()
-                .find(|action_map| action_map.type_id == type_id)
-                .expect("data and actions should have matching type IDs"),
+                .find(|binding| binding.type_id == type_id)
+                .expect("actions and bindings should have matching type IDs"),
             Entry::Vacant(entry) => {
                 entry.insert(ActionData::new::<A>());
-                self.actions.push(ActionMap::new::<A>());
-                self.actions.last_mut().unwrap()
+                self.bindings.push(ActionBind::new::<A>());
+                self.bindings.last_mut().unwrap()
             }
         }
     }
@@ -83,31 +83,27 @@ impl ContextInstance {
         delta: f32,
     ) {
         reader.set_gamepad(self.gamepad);
-        for action_map in &mut self.actions {
-            action_map.update(
-                world,
-                commands,
-                reader,
-                &mut self.actions_data,
-                entities,
-                delta,
-            );
+        for binding in &mut self.bindings {
+            binding.update(world, commands, reader, &mut self.actions, entities, delta);
         }
     }
 
     pub(super) fn trigger_removed(&self, commands: &mut Commands, entities: &[Entity]) {
-        for action_map in &self.actions {
-            let data = self
-                .actions_data
-                .get(&action_map.type_id)
-                .expect("data and actions should have matching type IDs");
-            data.trigger_removed(commands, entities, action_map.dim);
+        for binding in &self.bindings {
+            let action = self
+                .actions
+                .get(&binding.type_id)
+                .expect("actions and bindings should have matching type IDs");
+            action.trigger_removed(commands, entities, binding.dim);
         }
     }
 }
 
-/// [`InputAction`]'s bindings for [`ContextInstance`].
-pub struct ActionMap {
+/// Bindings of [`InputAction`] for [`ContextInstance`].
+///
+/// These bindings are stored separately from [`ActionsData`] to allow a currently
+/// evaluating action to access the state of other actions.
+pub struct ActionBind {
     type_id: TypeId,
     action_name: &'static str,
     consume_input: bool,
@@ -119,7 +115,7 @@ pub struct ActionMap {
     inputs: Vec<InputMap>,
 }
 
-impl ActionMap {
+impl ActionBind {
     #[must_use]
     fn new<A: InputAction>() -> Self {
         Self {
@@ -255,7 +251,7 @@ impl ActionMap {
         world: &World,
         commands: &mut Commands,
         reader: &mut InputReader,
-        actions_data: &mut ActionsData,
+        actions: &mut ActionsData,
         entities: &[Entity],
         delta: f32,
     ) {
@@ -276,23 +272,23 @@ impl ActionMap {
 
             let mut current_tracker = TriggerTracker::new(value);
             current_tracker.apply_modifiers(world, delta, &mut input_map.modifiers);
-            current_tracker.apply_conditions(world, actions_data, delta, &mut input_map.conditions);
+            current_tracker.apply_conditions(world, actions, delta, &mut input_map.conditions);
             tracker.merge(current_tracker, self.accumulation);
         }
 
         tracker.apply_modifiers(world, delta, &mut self.modifiers);
-        tracker.apply_conditions(world, actions_data, delta, &mut self.conditions);
+        tracker.apply_conditions(world, actions, delta, &mut self.conditions);
 
         let (state, value) = tracker.finish();
-        let data = actions_data
+        let action = actions
             .get_mut(&self.type_id)
-            .expect("data and actions should have matching type IDs");
+            .expect("actions and bindings should have matching type IDs");
 
-        data.update(commands, entities, state, value, delta);
+        action.update(commands, entities, state, value, delta);
     }
 }
 
-/// Associated input for [`ActionMap`].
+/// Associated input for [`ActionBind`].
 pub struct InputMap {
     pub input: Input,
     pub modifiers: Vec<Box<dyn InputModifier>>,
@@ -358,7 +354,7 @@ impl From<Input> for InputMap {
 
 /// Represents the side of a gamepad's analog stick.
 ///
-/// See also [`ActionMap::with_stick`].
+/// See also [`ActionBind::with_stick`].
 #[derive(Clone, Copy, Debug)]
 pub enum GamepadStick {
     /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]

@@ -29,13 +29,13 @@ impl<A: InputAction> InputCondition for Chord<A> {
     fn evaluate(
         &mut self,
         _world: &World,
-        actions_data: &ActionsData,
+        actions: &ActionsData,
         _delta: f32,
         _value: ActionValue,
     ) -> ActionState {
-        if let Some(data) = actions_data.action::<A>() {
+        if let Some(action) = actions.action::<A>() {
             // Inherit state from the chorded action.
-            data.state()
+            action.state()
         } else {
             warn_once!(
                 "action `{}` is not present in context",
@@ -62,20 +62,20 @@ mod tests {
     #[test]
     fn chord() {
         let mut world = World::new();
-        let mut data = ActionData::new::<DummyAction>();
-        data.update(
+        let mut action = ActionData::new::<DummyAction>();
+        action.update(
             &mut world.commands(),
             &[],
             ActionState::Fired,
             true.into(),
             0.0,
         );
-        let mut actions_data = ActionsData::default();
-        actions_data.insert(TypeId::of::<DummyAction>(), data);
+        let mut actions = ActionsData::default();
+        actions.insert(TypeId::of::<DummyAction>(), action);
 
         let mut condition = Chord::<DummyAction>::default();
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, true.into()),
+            condition.evaluate(&world, &actions, 0.0, true.into()),
             ActionState::Fired,
         );
     }
@@ -83,11 +83,11 @@ mod tests {
     #[test]
     fn missing_action() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut condition = Chord::<DummyAction>::default();
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, true.into()),
+            condition.evaluate(&world, &actions, 0.0, true.into()),
             ActionState::None,
         );
     }

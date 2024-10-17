@@ -48,7 +48,7 @@ impl InputCondition for HoldAndRelease {
     fn evaluate(
         &mut self,
         world: &World,
-        _actions_data: &ActionsData,
+        _actions: &ActionsData,
         delta: f32,
         value: ActionValue,
     ) -> ActionState {
@@ -79,23 +79,23 @@ mod tests {
     #[test]
     fn hold_and_release() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut modifier = HoldAndRelease::new(1.0);
         assert_eq!(
-            modifier.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            modifier.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            modifier.evaluate(&world, &actions_data, 1.0, 0.0.into()),
+            modifier.evaluate(&world, &actions, 1.0, 0.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            modifier.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            modifier.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            modifier.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            modifier.evaluate(&world, &actions, 0.0, 0.0.into()),
             ActionState::None,
         );
     }

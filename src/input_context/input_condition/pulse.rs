@@ -73,7 +73,7 @@ impl InputCondition for Pulse {
     fn evaluate(
         &mut self,
         world: &World,
-        _actions_data: &ActionsData,
+        _actions: &ActionsData,
         delta: f32,
         value: ActionValue,
     ) -> ActionState {
@@ -114,27 +114,27 @@ mod tests {
     #[test]
     fn tap() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut condition = Pulse::new(1.0);
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.5, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.5, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.5, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.5, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 0.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 0.0.into()),
             ActionState::None,
         );
     }
@@ -142,11 +142,11 @@ mod tests {
     #[test]
     fn not_trigger_on_start() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut condition = Pulse::new(1.0).trigger_on_start(false);
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
     }
@@ -154,15 +154,15 @@ mod tests {
     #[test]
     fn trigger_limit() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut condition = Pulse::new(1.0).with_trigger_limit(1);
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, 1.0.into()),
+            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
             ActionState::None,
         );
     }

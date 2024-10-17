@@ -29,12 +29,12 @@ impl<A: InputAction> InputCondition for BlockedBy<A> {
     fn evaluate(
         &mut self,
         _world: &World,
-        actions_data: &ActionsData,
+        actions: &ActionsData,
         _delta: f32,
         _value: ActionValue,
     ) -> ActionState {
-        if let Some(data) = actions_data.action::<A>() {
-            if data.state() == ActionState::Fired {
+        if let Some(action) = actions.action::<A>() {
+            if action.state() == ActionState::Fired {
                 return ActionState::None;
             }
         } else {
@@ -64,20 +64,20 @@ mod tests {
     #[test]
     fn blocked() {
         let mut world = World::new();
-        let mut data = ActionData::new::<DummyAction>();
-        data.update(
+        let mut action = ActionData::new::<DummyAction>();
+        action.update(
             &mut world.commands(),
             &[],
             ActionState::Fired,
             true.into(),
             0.0,
         );
-        let mut actions_data = ActionsData::default();
-        actions_data.insert(TypeId::of::<DummyAction>(), data);
+        let mut actions = ActionsData::default();
+        actions.insert(TypeId::of::<DummyAction>(), action);
 
         let mut condition = BlockedBy::<DummyAction>::default();
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, true.into()),
+            condition.evaluate(&world, &actions, 0.0, true.into()),
             ActionState::None,
         );
     }
@@ -85,11 +85,11 @@ mod tests {
     #[test]
     fn missing_action() {
         let world = World::new();
-        let actions_data = ActionsData::default();
+        let actions = ActionsData::default();
 
         let mut condition = BlockedBy::<DummyAction>::default();
         assert_eq!(
-            condition.evaluate(&world, &actions_data, 0.0, true.into()),
+            condition.evaluate(&world, &actions, 0.0, true.into()),
             ActionState::Fired,
         );
     }

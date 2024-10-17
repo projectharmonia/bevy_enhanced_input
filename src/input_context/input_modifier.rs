@@ -21,7 +21,7 @@ use crate::action_value::ActionValue;
 /// Because you have access to the world when making your own modifier, you can access any game state you want.
 ///
 /// Modifiers can be applied both to inputs and actions.
-/// See [`ActionMap::with_modifier`](super::context_instance::ActionMap::with_modifier)
+/// See [`ActionBind::with_modifier`](super::context_instance::ActionBind::with_modifier)
 /// and [`InputMap::with_modifier`](super::context_instance::InputMap::with_modifier).
 pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
