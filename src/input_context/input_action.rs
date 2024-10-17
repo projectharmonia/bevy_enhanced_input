@@ -291,6 +291,14 @@ impl<A: InputAction> ActionEvent<A> {
     }
 }
 
+impl<A: InputAction> Clone for ActionEvent<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: InputAction> Copy for ActionEvent<A> {}
+
 /// Represents the type of event triggered by updating [`ActionState`].
 ///
 /// Table of transitions:
@@ -308,7 +316,7 @@ impl<A: InputAction> ActionEvent<A> {
 /// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Self::Completed`]                 |
 ///
 /// The meaning of each kind depends on the assigned [`InputCondition`](super::input_condition::InputCondition)s.
-#[derive(Debug, Event)]
+#[derive(Debug, Event, Clone, Copy)]
 pub enum ActionTransition {
     /// Triggers every frame when an action state is [`ActionState::Fired`].
     ///
