@@ -266,7 +266,7 @@ pub enum ActionState {
 #[derive(Debug, Event)]
 pub struct ActionEvent<A: InputAction> {
     /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
+    marker: PhantomData<A>,
 
     /// Type of [`ActionState`] transition.
     pub transition: ActionTransition,
