@@ -67,8 +67,8 @@ pub mod prelude {
                 pressed::*, pulse::*, released::*, tap::*, ConditionKind, InputCondition,
             },
             input_modifier::{
-                dead_zone::*, exponential_curve::*, negate::*, scalar::*, scale_by_delta::*,
-                smooth_delta::*, swizzle_axis::*, InputModifier,
+                dead_zone::*, exponential_curve::*, negate::*, normalize::*, scalar::*,
+                scale_by_delta::*, smooth_delta::*, swizzle_axis::*, InputModifier,
             },
             ContextAppExt, ContextMode, InputContext,
         },
