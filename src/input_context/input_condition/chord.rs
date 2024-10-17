@@ -63,13 +63,7 @@ mod tests {
     fn chord() {
         let mut world = World::new();
         let mut action = ActionData::new::<DummyAction>();
-        action.update(
-            &mut world.commands(),
-            &[],
-            ActionState::Fired,
-            true.into(),
-            0.0,
-        );
+        action.update(&mut world.commands(), &[], ActionState::Fired, true, 0.0);
         let mut actions = ActionsData::default();
         actions.insert(TypeId::of::<DummyAction>(), action);
 

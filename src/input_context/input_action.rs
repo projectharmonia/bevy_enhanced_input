@@ -49,7 +49,7 @@ impl ActionData {
         commands: &mut Commands,
         entities: &[Entity],
         state: ActionState,
-        value: ActionValue,
+        value: impl Into<ActionValue>,
         delta: f32,
     ) {
         // Add time from the previous frame if needed
@@ -65,7 +65,7 @@ impl ActionData {
             }
         }
 
-        (self.trigger_events)(self, commands, entities, state, value);
+        (self.trigger_events)(self, commands, entities, state, value.into());
 
         // Reset time for updated state.
         self.state = state;
