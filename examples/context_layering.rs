@@ -31,7 +31,7 @@ impl GamePlugin {
 
     fn move_character(trigger: Trigger<ActionEvent<Move>>) {
         let event = trigger.event();
-        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
+        if let ActionTransition::Fired { fired_secs, .. } = event.transition {
             info!(
                 "moving with direction `{:?}` for `{fired_secs}` secs",
                 event.value
@@ -41,14 +41,14 @@ impl GamePlugin {
 
     fn jump(trigger: Trigger<ActionEvent<Jump>>) {
         let event = trigger.event();
-        if event.kind.is_started() {
+        if event.transition.is_started() {
             info!("jumping in the air");
         }
     }
 
     fn enter_water(trigger: Trigger<ActionEvent<EnterWater>>, mut commands: Commands) {
         let event = trigger.event();
-        if event.kind.is_started() {
+        if event.transition.is_started() {
             info!("entering water");
             commands.entity(trigger.entity()).insert(Swimming);
         }
@@ -56,14 +56,14 @@ impl GamePlugin {
 
     fn dive(trigger: Trigger<ActionEvent<Dive>>) {
         let event = trigger.event();
-        if event.kind.is_started() {
+        if event.transition.is_started() {
             info!("diving");
         }
     }
 
     fn exit_water(trigger: Trigger<ActionEvent<ExitWater>>, mut commands: Commands) {
         let event = trigger.event();
-        if event.kind.is_fired() {
+        if event.transition.is_fired() {
             info!("exiting water");
             commands.entity(trigger.entity()).remove::<Swimming>();
         }

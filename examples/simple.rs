@@ -28,7 +28,7 @@ impl GamePlugin {
 
     fn move_character(trigger: Trigger<ActionEvent<Move>>) {
         let event = trigger.event();
-        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
+        if let ActionTransition::Fired { fired_secs, .. } = event.transition {
             info!(
                 "moving with direction `{:?}` for `{fired_secs}` secs",
                 event.value
@@ -40,7 +40,7 @@ impl GamePlugin {
         // If you are not interested in action value, we provide
         // methods to quickly check action kind on the event.
         let event = trigger.event();
-        if event.kind.is_started() {
+        if event.transition.is_started() {
             info!("jumping in the air");
         }
     }

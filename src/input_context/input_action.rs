@@ -121,17 +121,17 @@ impl ActionData {
             match (self.state(), state) {
                 (ActionState::None, ActionState::None) => (),
                 (ActionState::None, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::new(ActionEventKind::Started, value),
+                    ActionEvent::<A>::new(ActionTransition::Started, value),
                     entity,
                 ),
                 (ActionState::None, ActionState::Fired) => {
                     commands.trigger_targets(
-                        ActionEvent::<A>::new(ActionEventKind::Started, value),
+                        ActionEvent::<A>::new(ActionTransition::Started, value),
                         entity,
                     );
                     commands.trigger_targets(
                         ActionEvent::<A>::new(
-                            ActionEventKind::Fired {
+                            ActionTransition::Fired {
                                 fired_secs: 0.0,
                                 elapsed_secs: 0.0,
                             },
@@ -142,7 +142,7 @@ impl ActionData {
                 }
                 (ActionState::Ongoing, ActionState::None) => commands.trigger_targets(
                     ActionEvent::<A>::new(
-                        ActionEventKind::Canceled {
+                        ActionTransition::Canceled {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
@@ -151,7 +151,7 @@ impl ActionData {
                 ),
                 (ActionState::Ongoing, ActionState::Ongoing) => commands.trigger_targets(
                     ActionEvent::<A>::new(
-                        ActionEventKind::Ongoing {
+                        ActionTransition::Ongoing {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
@@ -160,7 +160,7 @@ impl ActionData {
                 ),
                 (ActionState::Ongoing, ActionState::Fired) => commands.trigger_targets(
                     ActionEvent::<A>::new(
-                        ActionEventKind::Fired {
+                        ActionTransition::Fired {
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -170,7 +170,7 @@ impl ActionData {
                 ),
                 (ActionState::Fired, ActionState::None) => commands.trigger_targets(
                     ActionEvent::<A>::new(
-                        ActionEventKind::Completed {
+                        ActionTransition::Completed {
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -180,7 +180,7 @@ impl ActionData {
                 ),
                 (ActionState::Fired, ActionState::Ongoing) => commands.trigger_targets(
                     ActionEvent::<A>::new(
-                        ActionEventKind::Ongoing {
+                        ActionTransition::Ongoing {
                             elapsed_secs: self.elapsed_secs,
                         },
                         value,
@@ -189,7 +189,7 @@ impl ActionData {
                 ),
                 (ActionState::Fired, ActionState::Fired) => commands.trigger_targets(
                     ActionEvent::<A>::new(
-                        ActionEventKind::Fired {
+                        ActionTransition::Fired {
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -243,12 +243,12 @@ pub enum ActionState {
 /// # use bevy_enhanced_input::prelude::*;
 /// fn move_character(trigger: Trigger<ActionEvent<Move>>) {
 ///    let event = trigger.event();
-///    if let ActionEventKind::Fired { fired_secs, elapsed_secs } = event.kind {
+///    if let ActionTransition::Fired { fired_secs, elapsed_secs } = event.transition {
 ///        // ..
 ///    }
 ///
 ///    // You cal also use `is_*` helpers.
-///    if event.kind.is_fired() {
+///    if event.transition.is_fired() {
 ///        // ..
 ///    }
 /// }
@@ -261,8 +261,8 @@ pub struct ActionEvent<A: InputAction> {
     /// Action for which the event triggers.
     pub marker: PhantomData<A>,
 
-    /// Type of [`ActionState`] event.
-    pub kind: ActionEventKind,
+    /// Type of [`ActionState`] transition.
+    pub transition: ActionTransition,
 
     /// Current action value.
     pub value: ActionValue,
@@ -271,10 +271,10 @@ pub struct ActionEvent<A: InputAction> {
 impl<A: InputAction> ActionEvent<A> {
     /// Creates a new event for `A`.
     #[must_use]
-    pub fn new(kind: ActionEventKind, value: ActionValue) -> Self {
+    pub fn new(transition: ActionTransition, value: ActionValue) -> Self {
         Self {
             marker: PhantomData,
-            kind,
+            transition,
             value,
         }
     }
@@ -298,7 +298,7 @@ impl<A: InputAction> ActionEvent<A> {
 ///
 /// The meaning of each kind depends on the assigned [`InputCondition`](super::input_condition::InputCondition)s.
 #[derive(Debug, Event)]
-pub enum ActionEventKind {
+pub enum ActionTransition {
     /// Triggers every frame when an action state is [`ActionState::Fired`].
     ///
     /// For example, with the [`Released`](super::input_condition::released::Released) condition,
@@ -349,35 +349,35 @@ pub enum ActionEventKind {
     },
 }
 
-impl ActionEventKind {
-    /// Returns `true` if the value is [`ActionEventKind::Fired`].
+impl ActionTransition {
+    /// Returns `true` if the value is [`ActionTransition::Fired`].
     #[must_use]
     pub fn is_fired(&self) -> bool {
-        matches!(self, ActionEventKind::Fired { .. })
+        matches!(self, ActionTransition::Fired { .. })
     }
 
-    /// Returns `true` if the value is [`ActionEventKind::Started`].
+    /// Returns `true` if the value is [`ActionTransition::Started`].
     #[must_use]
     pub fn is_started(&self) -> bool {
-        matches!(self, ActionEventKind::Started { .. })
+        matches!(self, ActionTransition::Started { .. })
     }
 
-    /// Returns `true` if the value is [`ActionEventKind::Ongoing`].
+    /// Returns `true` if the value is [`ActionTransition::Ongoing`].
     #[must_use]
     pub fn is_ongoing(&self) -> bool {
-        matches!(self, ActionEventKind::Ongoing { .. })
+        matches!(self, ActionTransition::Ongoing { .. })
     }
 
-    /// Returns `true` if the value is [`ActionEventKind::Completed`].
+    /// Returns `true` if the value is [`ActionTransition::Completed`].
     #[must_use]
     pub fn is_completed(&self) -> bool {
-        matches!(self, ActionEventKind::Completed { .. })
+        matches!(self, ActionTransition::Completed { .. })
     }
 
-    /// Returns `true` if the value is [`ActionEventKind::Canceled`].
+    /// Returns `true` if the value is [`ActionTransition::Canceled`].
     #[must_use]
     pub fn is_canceled(&self) -> bool {
-        matches!(self, ActionEventKind::Canceled { .. })
+        matches!(self, ActionTransition::Canceled { .. })
     }
 }
 

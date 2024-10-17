@@ -32,7 +32,7 @@ impl GamePlugin {
     fn move_character(trigger: Trigger<ActionEvent<Move>>) {
         let event = trigger.event();
         let entity = trigger.entity();
-        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
+        if let ActionTransition::Fired { fired_secs, .. } = event.transition {
             info!(
                 "entity `{entity}` moving with direction `{:?}` for `{fired_secs}` secs",
                 event.value
@@ -43,7 +43,7 @@ impl GamePlugin {
     fn jump(trigger: Trigger<ActionEvent<Jump>>) {
         let event = trigger.event();
         let entity = trigger.entity();
-        if event.kind.is_started() {
+        if event.transition.is_started() {
             info!("entity `{entity}` jumping in the air");
         }
     }
