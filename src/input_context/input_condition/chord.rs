@@ -14,7 +14,7 @@ use crate::{
 #[derive(Debug)]
 pub struct Chord<A: InputAction> {
     /// Required action.
-    pub marker: PhantomData<A>,
+    marker: PhantomData<A>,
 }
 
 impl<A: InputAction> Default for Chord<A> {
@@ -48,4 +48,51 @@ impl<A: InputAction> InputCondition for Chord<A> {
     fn kind(&self) -> ConditionKind {
         ConditionKind::Implicit
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use any::TypeId;
+
+    use bevy_enhanced_input_macros::InputAction;
+
+    use super::*;
+    use crate::{input_context::input_action::ActionData, ActionValueDim};
+
+    #[test]
+    fn chord() {
+        let mut world = World::new();
+        let mut data = ActionData::new::<DummyAction>();
+        data.update(
+            &mut world.commands(),
+            &[],
+            ActionState::Fired,
+            true.into(),
+            0.0,
+        );
+        let mut actions_data = ActionsData::default();
+        actions_data.insert(TypeId::of::<DummyAction>(), data);
+
+        let mut condition = Chord::<DummyAction>::default();
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, true.into()),
+            ActionState::Fired,
+        );
+    }
+
+    #[test]
+    fn missing_action() {
+        let world = World::new();
+        let actions_data = ActionsData::default();
+
+        let mut condition = Chord::<DummyAction>::default();
+        assert_eq!(
+            condition.evaluate(&world, &actions_data, 0.0, true.into()),
+            ActionState::None,
+        );
+    }
+
+    #[derive(Debug, InputAction)]
+    #[input_action(dim = Bool)]
+    struct DummyAction;
 }
