@@ -10,7 +10,7 @@ pub struct ActionsData(HashMap<TypeId, ActionData>);
 
 impl ActionsData {
     /// Returns associated state for action `A`.
-    pub fn get_action<A: InputAction>(&self) -> Option<&ActionData> {
+    pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
         self.get(&TypeId::of::<A>())
     }
 }

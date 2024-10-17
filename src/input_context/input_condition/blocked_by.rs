@@ -33,7 +33,7 @@ impl<A: InputAction> InputCondition for BlockedBy<A> {
         _delta: f32,
         _value: ActionValue,
     ) -> ActionState {
-        if let Some(data) = actions_data.get_action::<A>() {
+        if let Some(data) = actions_data.action::<A>() {
             if data.state() == ActionState::Fired {
                 return ActionState::None;
             }
