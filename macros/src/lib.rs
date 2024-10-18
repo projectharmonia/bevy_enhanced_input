@@ -10,7 +10,7 @@ struct InputActionOpts {
     #[darling(default)]
     accumulation: Option<Ident>,
     #[darling(default)]
-    consume_input: bool,
+    consume_input: Option<bool>,
 }
 
 #[proc_macro_derive(InputAction, attributes(input_action))]
@@ -33,9 +33,9 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
     } else {
         Default::default()
     };
-    let consume_input = if opts.consume_input {
+    let consume_input = if let Some(consume) = opts.consume_input {
         quote! {
-            const CONSUME_INPUT: bool = true;
+            const CONSUME_INPUT: bool = #consume;
         }
     } else {
         Default::default()
