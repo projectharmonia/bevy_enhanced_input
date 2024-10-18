@@ -48,7 +48,7 @@ impl<A: InputAction> InputCondition for BlockedBy<A> {
     }
 
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Implicit
+        ConditionKind::Required
     }
 }
 

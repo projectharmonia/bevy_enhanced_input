@@ -41,22 +41,23 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 
     /// Returns how the condition is combined with others.
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Explicit
+        ConditionKind::Regular
     }
 }
 
 /// Determines how a condition contributes to the final [`ActionState`].
 pub enum ConditionKind {
-    /// The most significant [`ActionState`] from all explicit conditions will be the
+    /// The most significant [`ActionState`] from all regular conditions will be the
     /// resulting state.
     ///
-    /// If no explicit conditions are provided, the action will be set to [`ActionState::Fired`] on
+    /// If no regular conditions are provided, the action will be set to [`ActionState::Fired`] on
     /// any non-zero value, functioning similarly to a [`Down`](down::Down) condition with a zero actuation threshold.
-    Explicit,
+    Regular,
 
-    /// If any implicit condition fails to return [`ActionState::Fired`],
-    /// it will override all results from explicit actions with [`ActionState::None`].
+    /// If any required condition fails to return [`ActionState::Fired`],
+    /// it will override all results from regular actions with [`ActionState::None`].
+    /// Doesn't contribute to the action state on its own.
     ///
     /// Useful if you want to force fail for an action or an input.
-    Implicit,
+    Required,
 }

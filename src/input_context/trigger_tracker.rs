@@ -16,7 +16,7 @@ pub(super) struct TriggerTracker {
     value: ActionValue,
     state: ActionState,
     blocked: bool,
-    found_explicit: bool,
+    found_regular: bool,
 }
 
 impl TriggerTracker {
@@ -26,7 +26,7 @@ impl TriggerTracker {
             value,
             state: Default::default(),
             blocked: false,
-            found_explicit: false,
+            found_regular: false,
         }
     }
 
@@ -65,14 +65,14 @@ impl TriggerTracker {
             let state = condition.evaluate(world, actions, delta, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
             match condition.kind() {
-                ConditionKind::Explicit => {
-                    self.found_explicit = true;
+                ConditionKind::Regular => {
+                    self.found_regular = true;
                     if state > self.state {
                         // Retain the most interesting.
                         self.state = state;
                     }
                 }
-                ConditionKind::Implicit => {
+                ConditionKind::Required => {
                     if state != ActionState::Fired {
                         self.blocked = true;
                     }
@@ -89,8 +89,8 @@ impl TriggerTracker {
             return;
         }
 
-        if other.found_explicit {
-            self.found_explicit = true;
+        if other.found_regular {
+            self.found_regular = true;
         }
 
         match self.state.cmp(&other.state) {
@@ -121,7 +121,7 @@ impl TriggerTracker {
     pub(super) fn finish(mut self) -> (ActionState, ActionValue) {
         if self.blocked {
             self.state = ActionState::None
-        } else if !self.found_explicit && self.value.as_bool() {
+        } else if !self.found_regular && self.value.as_bool() {
             self.state = ActionState::Fired;
         }
 
