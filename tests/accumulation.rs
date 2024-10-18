@@ -14,10 +14,10 @@ fn max_abs() {
         EnhancedInputPlugin,
         ActionRecorderPlugin,
     ))
-    .add_input_context::<DummyContext>()
+    .add_input_context::<MaxAbsContext>()
     .record_action::<MaxAbs>();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(MaxAbsContext).id();
 
     app.update();
 
@@ -42,34 +42,42 @@ fn cumulative() {
         EnhancedInputPlugin,
         ActionRecorderPlugin,
     ))
-    .add_input_context::<DummyContext>()
+    .add_input_context::<CumulativeContext>()
     .record_action::<Cumulative>();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(CumulativeContext).id();
 
     app.update();
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-    keys.press(KeyCode::ArrowUp);
-    keys.press(KeyCode::ArrowDown);
+    keys.press(KeyCode::KeyW);
+    keys.press(KeyCode::KeyS);
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<Cumulative>(entity).unwrap();
-    assert!(events.is_empty(), "up and down should cancel each other");
+    assert!(events.is_empty(), "W and S should cancel each other");
 }
 
 #[derive(Debug, Component)]
-struct DummyContext;
+struct MaxAbsContext;
 
-impl InputContext for DummyContext {
+impl InputContext for MaxAbsContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
-
         ctx.bind::<MaxAbs>().with_wasd();
-        ctx.bind::<Cumulative>().with_arrows();
+        ctx
+    }
+}
 
+#[derive(Debug, Component)]
+struct CumulativeContext;
+
+impl InputContext for CumulativeContext {
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut ctx = ContextInstance::default();
+        ctx.bind::<Cumulative>().with_arrows();
         ctx
     }
 }
