@@ -28,11 +28,13 @@ fn passthrough() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    assert_eq!(recorded.last::<Consume>(entity).state, ActionState::Fired);
-    assert!(
-        recorded.is_empty::<Passthrough>(entity),
-        "action should be consumed"
-    );
+
+    let events = recorded.get::<Consume>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<Passthrough>(entity).unwrap();
+    assert!(events.is_empty(), "action should be consumed");
 }
 
 #[test]
@@ -59,11 +61,14 @@ fn consume() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    assert_eq!(recorded.last::<Consume>(entity).state, ActionState::Fired);
-    assert_eq!(
-        recorded.last::<Passthrough>(entity).state,
-        ActionState::Fired
-    );
+
+    let events = recorded.get::<Consume>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<Passthrough>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
 }
 
 /// A key used by both [`Consume`] and [`Passthrough`] actions.

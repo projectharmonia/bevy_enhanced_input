@@ -27,7 +27,9 @@ fn max_abs() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    assert_eq!(recorded.last::<MaxAbsMove>(entity).value, Vec2::Y.into());
+    let events = recorded.get::<MaxAbsMove>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, Vec2::Y.into());
 }
 
 #[test]
@@ -53,10 +55,8 @@ fn cumulative() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    assert!(
-        recorded.is_empty::<CumulativeMove>(entity),
-        "up and down should cancel each other"
-    );
+    let events = recorded.get::<CumulativeMove>(entity).unwrap();
+    assert!(events.is_empty(), "up and down should cancel each other");
 }
 
 #[derive(Debug, Component)]

@@ -1,6 +1,6 @@
 //! Assert action events in tests.
 
-use std::any::{self, TypeId};
+use std::any::TypeId;
 
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 use bevy_enhanced_input::{prelude::*, EnhancedInputSystem};
@@ -48,49 +48,13 @@ impl RecordedActions {
         events.push(event.into());
     }
 
-    #[allow(dead_code)]
-    pub fn assert_array<A: InputAction, const SIZE: usize>(
-        &self,
-        entity: Entity,
-    ) -> [UntypedActionEvent; SIZE] {
-        let events = self.get::<A>(entity);
-        events.try_into().unwrap_or_else(|_| {
-            panic!(
-                "expected {SIZE} events of type `{}`, but got {}",
-                any::type_name::<A>(),
-                events.len()
-            );
-        })
-    }
-
-    #[allow(dead_code)]
-    pub fn is_empty<A: InputAction>(&self, entity: Entity) -> bool {
-        self.get::<A>(entity).is_empty()
-    }
-
-    #[allow(dead_code)]
-    pub fn last<A: InputAction>(&self, entity: Entity) -> &UntypedActionEvent {
-        self.get::<A>(entity).last().unwrap_or_else(|| {
-            panic!(
-                "expected at least one action event of type `{}`",
-                any::type_name::<A>()
-            )
-        })
-    }
-
-    #[allow(dead_code)]
-    fn get<A: InputAction>(&self, entity: Entity) -> &[UntypedActionEvent] {
-        let event_group = self.0.get(&TypeId::of::<A>()).unwrap_or_else(|| {
-            panic!(
-                "action event of type `{}` is not registered",
-                any::type_name::<A>()
-            )
-        });
+    pub fn get<A: InputAction>(&self, entity: Entity) -> Option<&[UntypedActionEvent]> {
+        let event_group = self.0.get(&TypeId::of::<A>())?;
 
         event_group
             .get(&entity)
             .map(|events| &events[..])
-            .unwrap_or(&[])
+            .or(Some(&[]))
     }
 
     fn register<A: InputAction>(&mut self) {

@@ -29,17 +29,25 @@ fn exclusive() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    assert_eq!(recorded.last::<Consume>(entity1).state, ActionState::Fired);
-    assert_eq!(
-        recorded.last::<Passthrough>(entity1).state,
-        ActionState::Fired
-    );
+
+    let events = recorded.get::<Consume>(entity1).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<Passthrough>(entity1).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<Consume>(entity2).unwrap();
     assert!(
-        recorded.is_empty::<Consume>(entity2),
+        events.is_empty(),
         "only first entity with the same mappings that consume inputs should receive them"
     );
+
+    let events = recorded.get::<Passthrough>(entity2).unwrap();
+    let event = events.last().unwrap();
     assert_eq!(
-        recorded.last::<Passthrough>(entity2).state,
+        event.state,
         ActionState::Fired,
         "actions that doesn't consume inputs should still fire"
     );
@@ -70,16 +78,22 @@ fn shared() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    assert_eq!(recorded.last::<Consume>(entity1).state, ActionState::Fired);
-    assert_eq!(
-        recorded.last::<Passthrough>(entity1).state,
-        ActionState::Fired
-    );
-    assert_eq!(recorded.last::<Consume>(entity2).state, ActionState::Fired);
-    assert_eq!(
-        recorded.last::<Passthrough>(entity2).state,
-        ActionState::Fired
-    );
+
+    let events = recorded.get::<Consume>(entity1).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<Passthrough>(entity1).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<Consume>(entity2).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<Passthrough>(entity2).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
 }
 
 #[derive(Debug, Component)]

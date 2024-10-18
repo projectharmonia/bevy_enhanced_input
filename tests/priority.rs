@@ -31,20 +31,25 @@ fn prioritization() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    assert_eq!(
-        recorded.last::<FirstConsume>(entity).state,
-        ActionState::Fired
-    );
+
+    let events = recorded.get::<FirstConsume>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<SecondConsume>(entity).unwrap();
     assert!(
-        recorded.is_empty::<SecondConsume>(entity),
+        events.is_empty(),
         "action should be consumed by context with a higher priority"
     );
+
+    let events = recorded.get::<FirstPassthrough>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<SecondPassthrough>(entity).unwrap();
+    let event = events.last().unwrap();
     assert_eq!(
-        recorded.last::<FirstPassthrough>(entity).state,
-        ActionState::Fired,
-    );
-    assert_eq!(
-        recorded.last::<SecondPassthrough>(entity).state,
+        event.state,
         ActionState::Fired,
         "actions that doesn't consume inputs should still be triggered"
     );
