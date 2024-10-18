@@ -70,7 +70,7 @@ pub mod prelude {
                 dead_zone::*, exponential_curve::*, negate::*, normalize::*, scalar::*,
                 scale_by_delta::*, smooth_delta::*, swizzle_axis::*, InputModifier,
             },
-            ContextAppExt, ContextMode, InputContext,
+            ContextAppExt, ContextMode, InputContext, RebuildInputContexts,
         },
         EnhancedInputPlugin,
     };
