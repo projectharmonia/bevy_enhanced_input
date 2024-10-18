@@ -120,10 +120,20 @@ impl ActionData {
         for &entity in entities {
             match (self.state(), state) {
                 (ActionState::None, ActionState::None) => (),
-                (ActionState::None, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::new(ActionTransition::Started, value, state),
-                    entity,
-                ),
+                (ActionState::None, ActionState::Ongoing) => {
+                    commands.trigger_targets(
+                        ActionEvent::<A>::new(ActionTransition::Started, value, state),
+                        entity,
+                    );
+                    commands.trigger_targets(
+                        ActionEvent::<A>::new(
+                            ActionTransition::Ongoing { elapsed_secs: 0.0 },
+                            value,
+                            state,
+                        ),
+                        entity,
+                    );
+                }
                 (ActionState::None, ActionState::Fired) => {
                     commands.trigger_targets(
                         ActionEvent::<A>::new(ActionTransition::Started, value, state),
@@ -303,17 +313,17 @@ impl<A: InputAction> Copy for ActionEvent<A> {}
 ///
 /// Table of transitions:
 ///
-/// | Last state                  | New state                | Events                              |
-/// | --------------------------- | ------------------------ | ----------------------------------- |
-/// | [`ActionState::None`]       | [`ActionState::None`]    | No events                           |
-/// | [`ActionState::None`]       | [`ActionState::Ongoing`] | [`Self::Started`]                   |
-/// | [`ActionState::None`]       | [`ActionState::Fired`]   | [`Self::Started`] + [`Self::Fired`] |
-/// | [`ActionState::Ongoing`]    | [`ActionState::None`]    | [`Self::Canceled`]                  |
-/// | [`ActionState::Ongoing`]    | [`ActionState::Ongoing`] | [`Self::Ongoing`]                   |
-/// | [`ActionState::Ongoing`]    | [`ActionState::Fired`]   | [`Self::Fired`]                     |
-/// | [`ActionState::Fired`]      | [`ActionState::Fired`]   | [`Self::Fired`]                     |
-/// | [`ActionState::Fired`]      | [`ActionState::Ongoing`] | [`Self::Ongoing`]                   |
-/// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Self::Completed`]                 |
+/// | Last state                  | New state                | Events                                |
+/// | --------------------------- | ------------------------ | ------------------------------------- |
+/// | [`ActionState::None`]       | [`ActionState::None`]    | No events                             |
+/// | [`ActionState::None`]       | [`ActionState::Ongoing`] | [`Self::Started`] + [`Self::Ongoing`] |
+/// | [`ActionState::None`]       | [`ActionState::Fired`]   | [`Self::Started`] + [`Self::Fired`]   |
+/// | [`ActionState::Ongoing`]    | [`ActionState::None`]    | [`Self::Canceled`]                    |
+/// | [`ActionState::Ongoing`]    | [`ActionState::Ongoing`] | [`Self::Ongoing`]                     |
+/// | [`ActionState::Ongoing`]    | [`ActionState::Fired`]   | [`Self::Fired`]                       |
+/// | [`ActionState::Fired`]      | [`ActionState::Fired`]   | [`Self::Fired`]                       |
+/// | [`ActionState::Fired`]      | [`ActionState::Ongoing`] | [`Self::Ongoing`]                     |
+/// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Self::Completed`]                   |
 ///
 /// The meaning of each kind depends on the assigned [`InputCondition`](super::input_condition::InputCondition)s.
 #[derive(Debug, Event, Clone, Copy)]
