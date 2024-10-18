@@ -73,7 +73,7 @@ fn consume() {
 }
 
 /// A key used by both [`Consume`] and [`Passthrough`] actions.
-const KEY: KeyCode = KeyCode::Space;
+const KEY: KeyCode = KeyCode::KeyA;
 
 #[derive(Debug, Component)]
 struct PassthroughThenConsume;

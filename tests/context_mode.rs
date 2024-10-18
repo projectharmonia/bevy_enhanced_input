@@ -130,7 +130,7 @@ impl InputContext for Shared {
 struct Consume;
 
 impl Consume {
-    const KEY: KeyCode = KeyCode::Space;
+    const KEY: KeyCode = KeyCode::KeyA;
 }
 
 #[derive(Debug, InputAction)]
@@ -138,5 +138,5 @@ impl Consume {
 struct Passthrough;
 
 impl Passthrough {
-    const KEY: KeyCode = KeyCode::KeyE;
+    const KEY: KeyCode = KeyCode::KeyB;
 }

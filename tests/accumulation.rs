@@ -14,10 +14,10 @@ fn max_abs() {
         EnhancedInputPlugin,
         ActionRecorderPlugin,
     ))
-    .add_input_context::<Moving>()
-    .record_action::<MaxAbsMove>();
+    .add_input_context::<DummyContext>()
+    .record_action::<MaxAbs>();
 
-    let entity = app.world_mut().spawn(Moving).id();
+    let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
@@ -28,7 +28,7 @@ fn max_abs() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<MaxAbsMove>(entity).unwrap();
+    let events = recorded.get::<MaxAbs>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, Vec2::Y.into());
 }
@@ -42,10 +42,10 @@ fn cumulative() {
         EnhancedInputPlugin,
         ActionRecorderPlugin,
     ))
-    .add_input_context::<Moving>()
-    .record_action::<CumulativeMove>();
+    .add_input_context::<DummyContext>()
+    .record_action::<Cumulative>();
 
-    let entity = app.world_mut().spawn(Moving).id();
+    let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
@@ -56,19 +56,19 @@ fn cumulative() {
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<CumulativeMove>(entity).unwrap();
+    let events = recorded.get::<Cumulative>(entity).unwrap();
     assert!(events.is_empty(), "up and down should cancel each other");
 }
 
 #[derive(Debug, Component)]
-struct Moving;
+struct DummyContext;
 
-impl InputContext for Moving {
+impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<MaxAbsMove>().with_wasd();
-        ctx.bind::<CumulativeMove>().with_arrows();
+        ctx.bind::<MaxAbs>().with_wasd();
+        ctx.bind::<Cumulative>().with_arrows();
 
         ctx
     }
@@ -76,8 +76,8 @@ impl InputContext for Moving {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Axis2D, accumulation = MaxAbs)]
-struct MaxAbsMove;
+struct MaxAbs;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Axis2D, accumulation = Cumulative)]
-struct CumulativeMove;
+struct Cumulative;

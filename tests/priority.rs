@@ -57,10 +57,10 @@ fn prioritization() {
 }
 
 /// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.
-const CONSUME_KEY: KeyCode = KeyCode::Space;
+const CONSUME_KEY: KeyCode = KeyCode::KeyA;
 
 /// A key used by both [`FirstPassthrough`] and [`SecondPassthrough`] actions.
-const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyE;
+const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyB;
 
 #[derive(Debug, Component)]
 struct First;
