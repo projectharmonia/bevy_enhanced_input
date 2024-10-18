@@ -1,8 +1,9 @@
 mod action_recorder;
 
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
+
+use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
 
 #[test]
 fn prioritization() {
