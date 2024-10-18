@@ -90,7 +90,8 @@ pub struct EnhancedInputPlugin;
 impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ContextInstances>()
-            .add_systems(PreUpdate, Self::update.after(InputSystem));
+            .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem))
+            .add_systems(PreUpdate, Self::update.in_set(EnhancedInputSystem));
     }
 }
 
@@ -108,3 +109,9 @@ impl EnhancedInputPlugin {
         state.apply(world);
     }
 }
+
+/// Label for the system that updates input context instances.
+///
+/// Runs in [`PreUpdate`].
+#[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
+pub struct EnhancedInputSystem;
