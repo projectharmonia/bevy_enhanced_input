@@ -86,6 +86,13 @@ fn ongoing_fired_completed() {
     assert!(event1.transition.is_started());
     assert!(event2.transition.is_ongoing());
 
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+    let events = recorded.get::<ReleaseAction>(entity).unwrap();
+    let [event] = events.try_into().unwrap();
+    assert!(event.transition.is_ongoing());
+
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .release(ReleaseAction::KEY);
