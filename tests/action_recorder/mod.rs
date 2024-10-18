@@ -57,8 +57,8 @@ impl RecordedActions {
         events.try_into().unwrap_or_else(|_| {
             panic!(
                 "expected {SIZE} events of type `{}`, but got {}",
-                events.len(),
-                any::type_name::<A>()
+                any::type_name::<A>(),
+                events.len()
             );
         })
     }
