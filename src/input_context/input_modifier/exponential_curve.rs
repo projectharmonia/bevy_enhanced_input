@@ -19,6 +19,12 @@ impl ExponentialCurve {
     pub fn new(exponent: Vec3) -> Self {
         Self { exponent }
     }
+
+    /// Creates a new exponential curve with all axes set to `value`
+    #[must_use]
+    pub fn splat(value: f32) -> Self {
+        Self::new(Vec3::splat(value))
+    }
 }
 
 impl InputModifier for ExponentialCurve {
@@ -44,7 +50,7 @@ mod tests {
     fn exp() {
         let world = World::new();
 
-        let mut modifier = ExponentialCurve::new(Vec3::ONE * 2.0);
+        let mut modifier = ExponentialCurve::splat(2.0);
         assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
         assert_eq!(modifier.apply(&world, 0.0, (-0.5).into()), (-0.25).into());
         assert_eq!(modifier.apply(&world, 0.0, 0.5.into()), 0.25.into());
