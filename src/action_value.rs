@@ -166,3 +166,53 @@ impl From<(f32, f32, f32)> for ActionValue {
         ActionValue::Axis3D(value.into())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bool_conversion() {
+        let value = ActionValue::Bool(true);
+        assert_eq!(value.convert(ActionValueDim::Bool), true.into());
+        assert_eq!(value.convert(ActionValueDim::Axis1D), 1.0.into());
+        assert_eq!(value.convert(ActionValueDim::Axis2D), (1.0, 0.0).into());
+        assert_eq!(
+            value.convert(ActionValueDim::Axis3D),
+            (1.0, 0.0, 0.0).into()
+        );
+    }
+
+    #[test]
+    fn axis1d_conversion() {
+        let value = ActionValue::Axis1D(1.0);
+        assert_eq!(value.convert(ActionValueDim::Bool), true.into());
+        assert_eq!(value.convert(ActionValueDim::Axis1D), 1.0.into());
+        assert_eq!(value.convert(ActionValueDim::Axis2D), (1.0, 0.0).into());
+        assert_eq!(
+            value.convert(ActionValueDim::Axis3D),
+            (1.0, 0.0, 0.0).into()
+        );
+    }
+
+    #[test]
+    fn axis2d_conversion() {
+        let value = ActionValue::Axis2D(Vec2::ONE);
+        assert_eq!(value.convert(ActionValueDim::Bool), true.into());
+        assert_eq!(value.convert(ActionValueDim::Axis1D), 1.0.into());
+        assert_eq!(value.convert(ActionValueDim::Axis2D), Vec2::ONE.into());
+        assert_eq!(
+            value.convert(ActionValueDim::Axis3D),
+            (1.0, 1.0, 0.0).into()
+        );
+    }
+
+    #[test]
+    fn axis3d_conversion() {
+        let value = ActionValue::Axis3D(Vec3::ONE);
+        assert_eq!(value.convert(ActionValueDim::Bool), true.into());
+        assert_eq!(value.convert(ActionValueDim::Axis1D), 1.0.into());
+        assert_eq!(value.convert(ActionValueDim::Axis2D), Vec2::ONE.into());
+        assert_eq!(value.convert(ActionValueDim::Axis3D), Vec3::ONE.into());
+    }
+}
