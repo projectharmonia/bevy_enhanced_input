@@ -110,112 +110,63 @@ impl ActionData {
         state: ActionState,
         value: ActionValue,
     ) {
-        trace!(
-            "changing state from `{:?}` to `{state:?}` with `{value:?}`",
-            self.state
-        );
+        if let Some((started, transition)) = self.transitions(state) {
+            // Trigger an event for each entity separately
+            // since it's cheaper to copy the event than to clone the entities.
+            for &entity in entities {
+                if started {
+                    let event = ActionEvent::<A>::new(ActionTransition::Started, value, state);
+                    debug!("triggering `{event:?}` for `{entity}`");
+                    commands.trigger_targets(event, entity);
+                }
 
-        // Trigger an event for each entity separately
-        // since it's cheaper to copy the event than to clone the entities.
-        for &entity in entities {
-            match (self.state, state) {
-                (ActionState::None, ActionState::None) => (),
-                (ActionState::None, ActionState::Ongoing) => {
-                    commands.trigger_targets(
-                        ActionEvent::<A>::new(ActionTransition::Started, value, state),
-                        entity,
-                    );
-                    commands.trigger_targets(
-                        ActionEvent::<A>::new(
-                            ActionTransition::Ongoing { elapsed_secs: 0.0 },
-                            value,
-                            state,
-                        ),
-                        entity,
-                    );
-                }
-                (ActionState::None, ActionState::Fired) => {
-                    commands.trigger_targets(
-                        ActionEvent::<A>::new(ActionTransition::Started, value, state),
-                        entity,
-                    );
-                    commands.trigger_targets(
-                        ActionEvent::<A>::new(
-                            ActionTransition::Fired {
-                                fired_secs: 0.0,
-                                elapsed_secs: 0.0,
-                            },
-                            value,
-                            state,
-                        ),
-                        entity,
-                    );
-                }
-                (ActionState::Ongoing, ActionState::None) => commands.trigger_targets(
-                    ActionEvent::<A>::new(
-                        ActionTransition::Canceled {
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                        value,
-                        state,
-                    ),
-                    entity,
-                ),
-                (ActionState::Ongoing, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::new(
-                        ActionTransition::Ongoing {
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                        value,
-                        state,
-                    ),
-                    entity,
-                ),
-                (ActionState::Ongoing, ActionState::Fired) => commands.trigger_targets(
-                    ActionEvent::<A>::new(
-                        ActionTransition::Fired {
-                            fired_secs: self.fired_secs,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                        value,
-                        state,
-                    ),
-                    entity,
-                ),
-                (ActionState::Fired, ActionState::None) => commands.trigger_targets(
-                    ActionEvent::<A>::new(
-                        ActionTransition::Completed {
-                            fired_secs: self.fired_secs,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                        value,
-                        state,
-                    ),
-                    entity,
-                ),
-                (ActionState::Fired, ActionState::Ongoing) => commands.trigger_targets(
-                    ActionEvent::<A>::new(
-                        ActionTransition::Ongoing {
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                        value,
-                        state,
-                    ),
-                    entity,
-                ),
-                (ActionState::Fired, ActionState::Fired) => commands.trigger_targets(
-                    ActionEvent::<A>::new(
-                        ActionTransition::Fired {
-                            fired_secs: self.fired_secs,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                        value,
-                        state,
-                    ),
-                    entity,
-                ),
+                let event = ActionEvent::<A>::new(transition, value, state);
+                debug!("triggering `{event:?}` for `{entity}`");
+                commands.trigger_targets(event, entity);
             }
         }
+    }
+
+    fn transitions(&self, state: ActionState) -> Option<(bool, ActionTransition)> {
+        let mut started = false; // Indicates whether `ActionTransition::Started` should also be emitted.
+
+        let transition = match (self.state, state) {
+            (ActionState::None, ActionState::None) => return None,
+            (ActionState::None, ActionState::Ongoing) => {
+                started = true;
+                ActionTransition::Ongoing { elapsed_secs: 0.0 }
+            }
+            (ActionState::None, ActionState::Fired) => {
+                started = true;
+                ActionTransition::Fired {
+                    fired_secs: 0.0,
+                    elapsed_secs: 0.0,
+                }
+            }
+            (ActionState::Ongoing, ActionState::None) => ActionTransition::Canceled {
+                elapsed_secs: self.elapsed_secs,
+            },
+            (ActionState::Ongoing, ActionState::Ongoing) => ActionTransition::Ongoing {
+                elapsed_secs: self.elapsed_secs,
+            },
+            (ActionState::Ongoing, ActionState::Fired) => ActionTransition::Fired {
+                fired_secs: self.fired_secs,
+                elapsed_secs: self.elapsed_secs,
+            },
+            (ActionState::Fired, ActionState::None) => ActionTransition::Completed {
+                fired_secs: self.fired_secs,
+                elapsed_secs: self.elapsed_secs,
+            },
+            (ActionState::Fired, ActionState::Ongoing) => ActionTransition::Ongoing {
+                elapsed_secs: self.elapsed_secs,
+            },
+            (ActionState::Fired, ActionState::Fired) => ActionTransition::Fired {
+                fired_secs: self.fired_secs,
+                elapsed_secs: self.elapsed_secs,
+            },
+        };
+
+        Some((started, transition))
     }
 
     /// Returns the current state.
