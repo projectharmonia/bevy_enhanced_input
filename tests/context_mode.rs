@@ -98,7 +98,7 @@ fn shared() {
 }
 
 #[test]
-fn removal() {
+fn context_removal() {
     let mut app = App::new();
     app.add_plugins((
         MinimalPlugins,
@@ -140,7 +140,7 @@ fn removal() {
 }
 
 #[test]
-fn rebuild() {
+fn context_rebuild() {
     let mut app = App::new();
     app.add_plugins((
         MinimalPlugins,
