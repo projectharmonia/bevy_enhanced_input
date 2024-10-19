@@ -183,10 +183,12 @@ impl InputReader<'_, '_> {
 
                 let value = match self.params.gamepad {
                     GamepadDevice::Any => self.gamepads.iter().find_map(|gamepad| {
-                        self.gamepad_axis.get_unclamped(GamepadAxis {
-                            gamepad,
-                            axis_type: axis,
-                        })
+                        self.gamepad_axis
+                            .get_unclamped(GamepadAxis {
+                                gamepad,
+                                axis_type: axis,
+                            })
+                            .filter(|&value| value != 0.0)
                     }),
                     GamepadDevice::Id(gamepad) => self.gamepad_axis.get_unclamped(GamepadAxis {
                         gamepad,
@@ -380,31 +382,37 @@ mod tests {
     fn gamepad_button() {
         let (mut world, mut state) = init_world();
 
+        let gamepad = connect_dummy_gamepad(&mut world);
+        let other_gamepad = connect_dummy_gamepad(&mut world);
+
         let button = GamepadButtonType::South;
-        let gamepad = Gamepad::new(0);
         world
             .resource_mut::<ButtonInput<GamepadButton>>()
             .press(GamepadButton {
                 gamepad,
                 button_type: button,
             });
+        let other_button = GamepadButtonType::East;
+        world
+            .resource_mut::<ButtonInput<GamepadButton>>()
+            .press(GamepadButton {
+                gamepad: other_gamepad,
+                button_type: other_button,
+            });
 
         let mut reader = state.get(&world);
         reader.set_gamepad(gamepad);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(
+            reader.value(other_button),
+            ActionValue::Bool(false),
+            "should read only from `{gamepad:?}`"
+        );
+        assert_eq!(
             reader.value(GamepadButtonType::North),
             ActionValue::Bool(false)
         );
 
-        reader.set_gamepad(Gamepad::new(1));
-        assert_eq!(
-            reader.value(button),
-            ActionValue::Bool(false),
-            "should read only from `{gamepad:?}`"
-        );
-
-        reader.set_gamepad(gamepad);
         reader.set_consume_input(true);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(reader.value(button), ActionValue::Bool(false));
@@ -414,17 +422,24 @@ mod tests {
     fn any_gamepad_button() {
         let (mut world, mut state) = init_world();
 
-        let button = GamepadButtonType::South;
         let gamepad = connect_dummy_gamepad(&mut world);
-        world
-            .resource_mut::<ButtonInput<GamepadButton>>()
-            .press(GamepadButton {
-                gamepad,
-                button_type: button,
-            });
+        let other_gamepad = connect_dummy_gamepad(&mut world);
+
+        let button = GamepadButtonType::South;
+        let mut buttons = world.resource_mut::<ButtonInput<GamepadButton>>();
+        buttons.press(GamepadButton {
+            gamepad,
+            button_type: button,
+        });
+        let other_button = GamepadButtonType::East;
+        buttons.press(GamepadButton {
+            gamepad: other_gamepad,
+            button_type: other_button,
+        });
 
         let mut reader = state.get(&world);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(reader.value(other_button), ActionValue::Bool(true),);
         assert_eq!(
             reader.value(GamepadButtonType::North),
             ActionValue::Bool(false)
@@ -433,41 +448,51 @@ mod tests {
         reader.set_consume_input(true);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(reader.value(button), ActionValue::Bool(false));
+        assert_eq!(reader.value(other_button), ActionValue::Bool(true));
+        assert_eq!(reader.value(other_button), ActionValue::Bool(false));
     }
 
     #[test]
     fn gamepad_axis() {
         let (mut world, mut state) = init_world();
 
+        let gamepad = connect_dummy_gamepad(&mut world);
+        let other_gamepad = connect_dummy_gamepad(&mut world);
+
         let value = 1.0;
         let axis = GamepadAxisType::LeftStickX;
-        let gamepad = Gamepad::new(0);
-        world.resource_mut::<Axis<GamepadAxis>>().set(
+        let mut axes = world.resource_mut::<Axis<GamepadAxis>>();
+        axes.set(
             GamepadAxis {
                 gamepad,
                 axis_type: axis,
             },
             value,
         );
+        let other_axis = GamepadAxisType::LeftStickY;
+        axes.set(
+            GamepadAxis {
+                gamepad: other_gamepad,
+                axis_type: other_axis,
+            },
+            value,
+        );
 
         let mut reader = state.get(&world);
         reader.set_gamepad(gamepad);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
         assert_eq!(
-            reader.value(GamepadAxisType::LeftStickY),
-            ActionValue::Axis1D(0.0)
-        );
-
-        reader.set_gamepad(Gamepad::new(1));
-        assert_eq!(
-            reader.value(axis),
+            reader.value(other_axis),
             ActionValue::Axis1D(0.0),
             "should read only from `{gamepad:?}`"
         );
+        assert_eq!(
+            reader.value(GamepadAxisType::RightStickX),
+            ActionValue::Axis1D(0.0)
+        );
 
-        reader.set_gamepad(gamepad);
         reader.set_consume_input(true);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
         assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
     }
 
@@ -475,27 +500,41 @@ mod tests {
     fn any_gamepad_axis() {
         let (mut world, mut state) = init_world();
 
+        let gamepad = connect_dummy_gamepad(&mut world);
+        let other_gamepad = connect_dummy_gamepad(&mut world);
+
         let value = 1.0;
         let axis = GamepadAxisType::LeftStickX;
-        let gamepad = connect_dummy_gamepad(&mut world);
-        world.resource_mut::<Axis<GamepadAxis>>().set(
+        let mut axes = world.resource_mut::<Axis<GamepadAxis>>();
+        axes.set(
             GamepadAxis {
                 gamepad,
                 axis_type: axis,
             },
             value,
         );
+        let other_axis = GamepadAxisType::LeftStickY;
+        axes.set(
+            GamepadAxis {
+                gamepad: other_gamepad,
+                axis_type: other_axis,
+            },
+            value,
+        );
 
         let mut reader = state.get(&world);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
+        assert_eq!(reader.value(other_axis), ActionValue::Axis1D(1.0));
         assert_eq!(
-            reader.value(GamepadAxisType::LeftStickY),
+            reader.value(GamepadAxisType::RightStickX),
             ActionValue::Axis1D(0.0)
         );
 
         reader.set_consume_input(true);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
         assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(other_axis), ActionValue::Axis1D(1.0));
+        assert_eq!(reader.value(other_axis), ActionValue::Axis1D(0.0));
     }
 
     #[test]
@@ -690,6 +729,10 @@ mod tests {
         world.init_resource::<Axis<GamepadAxis>>();
         world.init_resource::<Gamepads>();
 
+        // Not used by reader, but necessary to run `connect_dummy_gamepad`.
+        world.init_resource::<Axis<GamepadButton>>();
+        world.init_resource::<Events<GamepadConnectionEvent>>();
+
         let state = SystemState::<InputReader>::new(&mut world);
 
         (world, state)
@@ -698,11 +741,10 @@ mod tests {
     /// To populate [`Gamepads`] resource.
     #[must_use]
     fn connect_dummy_gamepad(world: &mut World) -> Gamepad {
-        let gameapds = world.resource::<Gamepads>();
-        let next_id = gameapds.iter().count();
+        let gamepads = world.resource::<Gamepads>();
+        let next_id = gamepads.iter().count();
         let gamepad = Gamepad::new(next_id);
 
-        world.init_resource::<Events<GamepadConnectionEvent>>();
         world.send_event(GamepadConnectionEvent {
             gamepad,
             connection: GamepadConnection::Connected(GamepadInfo {
@@ -710,7 +752,6 @@ mod tests {
             }),
         });
 
-        world.init_resource::<Axis<GamepadButton>>();
         world.run_system_once(gamepad::gamepad_connection_system);
 
         gamepad
