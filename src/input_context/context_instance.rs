@@ -382,3 +382,25 @@ impl GamepadStick {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use bevy_enhanced_input_macros::InputAction;
+
+    use super::*;
+
+    #[test]
+    fn bind() {
+        let mut ctx = ContextInstance::default();
+        ctx.bind::<DummyAction>().with(KeyCode::KeyA);
+        ctx.bind::<DummyAction>().with(KeyCode::KeyB);
+        assert_eq!(ctx.bindings.len(), 1);
+
+        let action = ctx.bindings.first().unwrap();
+        assert_eq!(action.bindings.len(), 2);
+    }
+
+    #[derive(Debug, InputAction)]
+    #[input_action(dim = Bool)]
+    struct DummyAction;
+}
