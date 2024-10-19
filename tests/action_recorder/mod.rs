@@ -72,7 +72,7 @@ impl RecordedActions {
 #[derive(Clone, Copy)]
 #[allow(dead_code)]
 pub struct UntypedActionEvent {
-    pub transition: ActionTransition,
+    pub kind: ActionEventKind,
     pub value: ActionValue,
     pub state: ActionState,
 }
@@ -80,7 +80,7 @@ pub struct UntypedActionEvent {
 impl<A: InputAction> From<ActionEvent<A>> for UntypedActionEvent {
     fn from(value: ActionEvent<A>) -> Self {
         Self {
-            transition: value.transition,
+            kind: value.kind,
             value: value.value,
             state: value.state,
         }

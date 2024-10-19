@@ -28,7 +28,7 @@ impl GamePlugin {
 
     fn move_character(trigger: Trigger<ActionEvent<Move>>, players: Query<&PlayerIndex>) {
         let event = trigger.event();
-        if let ActionTransition::Fired { fired_secs, .. } = event.transition {
+        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
             let index = **players.get(trigger.entity()).unwrap();
             info!(
                 "player {index} moving with direction `{:?}` for `{fired_secs}` secs",
@@ -39,7 +39,7 @@ impl GamePlugin {
 
     fn jump(trigger: Trigger<ActionEvent<Jump>>, players: Query<&PlayerIndex>) {
         let event = trigger.event();
-        if event.transition.is_started() {
+        if event.kind.is_started() {
             let index = **players.get(trigger.entity()).unwrap();
             info!("player {index} jumping in the air");
         }

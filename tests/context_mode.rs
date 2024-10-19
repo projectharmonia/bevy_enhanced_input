@@ -132,11 +132,11 @@ fn context_removal() {
 
     let events = recorded.get::<ExclusiveConsume>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_completed());
+    assert!(event.kind.is_completed());
 
     let events = recorded.get::<SharedConsume>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_completed());
+    assert!(event.kind.is_completed());
 }
 
 #[test]
@@ -171,11 +171,11 @@ fn context_rebuild() {
 
     let events = recorded.get::<ExclusiveConsume>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_completed());
+    assert!(event.kind.is_completed());
 
     let events = recorded.get::<SharedConsume>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_completed());
+    assert!(event.kind.is_completed());
 }
 
 #[derive(Debug, Component)]

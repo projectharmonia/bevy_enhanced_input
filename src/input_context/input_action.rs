@@ -110,57 +110,57 @@ impl ActionData {
         state: ActionState,
         value: ActionValue,
     ) {
-        if let Some((started, transition)) = self.transitions(state) {
+        if let Some((started, kind)) = self.transition_events(state) {
             // Trigger an event for each entity separately
             // since it's cheaper to copy the event than to clone the entities.
             for &entity in entities {
                 if started {
-                    let event = ActionEvent::<A>::new(ActionTransition::Started, value, state);
+                    let event = ActionEvent::<A>::new(ActionEventKind::Started, value, state);
                     debug!("triggering `{event:?}` for `{entity}`");
                     commands.trigger_targets(event, entity);
                 }
 
-                let event = ActionEvent::<A>::new(transition, value, state);
+                let event = ActionEvent::<A>::new(kind, value, state);
                 debug!("triggering `{event:?}` for `{entity}`");
                 commands.trigger_targets(event, entity);
             }
         }
     }
 
-    fn transitions(&self, state: ActionState) -> Option<(bool, ActionTransition)> {
-        let mut started = false; // Indicates whether `ActionTransition::Started` should also be emitted.
+    fn transition_events(&self, state: ActionState) -> Option<(bool, ActionEventKind)> {
+        let mut started = false; // Indicates whether `ActionEventKind::Started` should also be emitted.
 
         let transition = match (self.state, state) {
             (ActionState::None, ActionState::None) => return None,
             (ActionState::None, ActionState::Ongoing) => {
                 started = true;
-                ActionTransition::Ongoing { elapsed_secs: 0.0 }
+                ActionEventKind::Ongoing { elapsed_secs: 0.0 }
             }
             (ActionState::None, ActionState::Fired) => {
                 started = true;
-                ActionTransition::Fired {
+                ActionEventKind::Fired {
                     fired_secs: 0.0,
                     elapsed_secs: 0.0,
                 }
             }
-            (ActionState::Ongoing, ActionState::None) => ActionTransition::Canceled {
+            (ActionState::Ongoing, ActionState::None) => ActionEventKind::Canceled {
                 elapsed_secs: self.elapsed_secs,
             },
-            (ActionState::Ongoing, ActionState::Ongoing) => ActionTransition::Ongoing {
+            (ActionState::Ongoing, ActionState::Ongoing) => ActionEventKind::Ongoing {
                 elapsed_secs: self.elapsed_secs,
             },
-            (ActionState::Ongoing, ActionState::Fired) => ActionTransition::Fired {
+            (ActionState::Ongoing, ActionState::Fired) => ActionEventKind::Fired {
                 fired_secs: self.fired_secs,
                 elapsed_secs: self.elapsed_secs,
             },
-            (ActionState::Fired, ActionState::None) => ActionTransition::Completed {
+            (ActionState::Fired, ActionState::None) => ActionEventKind::Completed {
                 fired_secs: self.fired_secs,
                 elapsed_secs: self.elapsed_secs,
             },
-            (ActionState::Fired, ActionState::Ongoing) => ActionTransition::Ongoing {
+            (ActionState::Fired, ActionState::Ongoing) => ActionEventKind::Ongoing {
                 elapsed_secs: self.elapsed_secs,
             },
-            (ActionState::Fired, ActionState::Fired) => ActionTransition::Fired {
+            (ActionState::Fired, ActionState::Fired) => ActionEventKind::Fired {
                 fired_secs: self.fired_secs,
                 elapsed_secs: self.elapsed_secs,
             },
@@ -204,19 +204,19 @@ pub enum ActionState {
     Fired,
 }
 
-/// Trigger when action `A` updates [`ActionState`].
+/// Trigger emitted for transitions between [`ActionState`]s for action `A`.
 ///
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// fn move_character(trigger: Trigger<ActionEvent<Move>>) {
 ///    let event = trigger.event();
-///    if let ActionTransition::Fired { fired_secs, elapsed_secs } = event.transition {
+///    if let ActionEventKind::Fired { fired_secs, elapsed_secs } = event.kind {
 ///        // ..
 ///    }
 ///
 ///    // You cal also use `is_*` helpers.
-///    if event.transition.is_fired() {
+///    if event.kind.is_fired() {
 ///        // ..
 ///    }
 /// }
@@ -230,7 +230,7 @@ pub struct ActionEvent<A: InputAction> {
     marker: PhantomData<A>,
 
     /// Type of [`ActionState`] transition.
-    pub transition: ActionTransition,
+    pub kind: ActionEventKind,
 
     /// Current action value.
     pub value: ActionValue,
@@ -242,10 +242,10 @@ pub struct ActionEvent<A: InputAction> {
 impl<A: InputAction> ActionEvent<A> {
     /// Creates a new event for `A`.
     #[must_use]
-    pub fn new(transition: ActionTransition, value: ActionValue, state: ActionState) -> Self {
+    pub fn new(kind: ActionEventKind, value: ActionValue, state: ActionState) -> Self {
         Self {
             marker: PhantomData,
-            transition,
+            kind,
             value,
             state,
         }
@@ -262,7 +262,7 @@ impl<A: InputAction> Copy for ActionEvent<A> {}
 
 /// Represents the type of event triggered by updating [`ActionState`].
 ///
-/// Table of transitions:
+/// Table of state transitions:
 ///
 /// | Last state                  | New state                | Events                                |
 /// | --------------------------- | ------------------------ | ------------------------------------- |
@@ -278,7 +278,7 @@ impl<A: InputAction> Copy for ActionEvent<A> {}
 ///
 /// The meaning of each kind depends on the assigned [`InputCondition`](super::input_condition::InputCondition)s.
 #[derive(Debug, Event, Clone, Copy)]
-pub enum ActionTransition {
+pub enum ActionEventKind {
     /// Triggers every frame when an action state is [`ActionState::Fired`].
     ///
     /// For example, with the [`Released`](super::input_condition::released::Released) condition,
@@ -329,35 +329,35 @@ pub enum ActionTransition {
     },
 }
 
-impl ActionTransition {
-    /// Returns `true` if the value is [`ActionTransition::Fired`].
+impl ActionEventKind {
+    /// Returns `true` if the value is [`ActionEventKind::Fired`].
     #[must_use]
     pub fn is_fired(&self) -> bool {
-        matches!(self, ActionTransition::Fired { .. })
+        matches!(self, ActionEventKind::Fired { .. })
     }
 
-    /// Returns `true` if the value is [`ActionTransition::Started`].
+    /// Returns `true` if the value is [`ActionEventKind::Started`].
     #[must_use]
     pub fn is_started(&self) -> bool {
-        matches!(self, ActionTransition::Started { .. })
+        matches!(self, ActionEventKind::Started { .. })
     }
 
-    /// Returns `true` if the value is [`ActionTransition::Ongoing`].
+    /// Returns `true` if the value is [`ActionEventKind::Ongoing`].
     #[must_use]
     pub fn is_ongoing(&self) -> bool {
-        matches!(self, ActionTransition::Ongoing { .. })
+        matches!(self, ActionEventKind::Ongoing { .. })
     }
 
-    /// Returns `true` if the value is [`ActionTransition::Completed`].
+    /// Returns `true` if the value is [`ActionEventKind::Completed`].
     #[must_use]
     pub fn is_completed(&self) -> bool {
-        matches!(self, ActionTransition::Completed { .. })
+        matches!(self, ActionEventKind::Completed { .. })
     }
 
-    /// Returns `true` if the value is [`ActionTransition::Canceled`].
+    /// Returns `true` if the value is [`ActionEventKind::Canceled`].
     #[must_use]
     pub fn is_canceled(&self) -> bool {
-        matches!(self, ActionTransition::Canceled { .. })
+        matches!(self, ActionEventKind::Canceled { .. })
     }
 }
 

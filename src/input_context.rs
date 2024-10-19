@@ -255,7 +255,7 @@ impl InstanceGroup {
 /// Inserting this component associates [`ContextInstance`] for this
 /// entity in a resource.
 ///
-/// Removing deactivates [`ContextInstance`] for the entity end trigger
+/// Removing deactivates [`ContextInstance`] for the entity and trigger
 /// transitions for all actions to [`ActionState::None`](input_action::ActionState::None).
 ///
 /// Each context should be registered using [`ContextAppExt::add_input_context`].

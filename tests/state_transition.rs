@@ -30,15 +30,15 @@ fn fired_completed() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<PressAction>(entity).unwrap();
     let [event1, event2] = events.try_into().unwrap();
-    assert!(event1.transition.is_started());
-    assert!(event2.transition.is_fired());
+    assert!(event1.kind.is_started());
+    assert!(event2.kind.is_fired());
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<PressAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_fired());
+    assert!(event.kind.is_fired());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -49,7 +49,7 @@ fn fired_completed() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<PressAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_completed());
+    assert!(event.kind.is_completed());
 
     app.update();
 
@@ -83,15 +83,15 @@ fn ongoing_fired_completed() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<ReleaseAction>(entity).unwrap();
     let [event1, event2] = events.try_into().unwrap();
-    assert!(event1.transition.is_started());
-    assert!(event2.transition.is_ongoing());
+    assert!(event1.kind.is_started());
+    assert!(event2.kind.is_ongoing());
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<ReleaseAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_ongoing());
+    assert!(event.kind.is_ongoing());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -102,14 +102,14 @@ fn ongoing_fired_completed() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<ReleaseAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_fired());
+    assert!(event.kind.is_fired());
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<ReleaseAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_completed());
+    assert!(event.kind.is_completed());
 
     app.update();
 
@@ -143,8 +143,8 @@ fn ongoing_cancelled() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<HoldAction>(entity).unwrap();
     let [event1, event2] = events.try_into().unwrap();
-    assert!(event1.transition.is_started());
-    assert!(event2.transition.is_ongoing());
+    assert!(event1.kind.is_started());
+    assert!(event2.kind.is_ongoing());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -155,7 +155,7 @@ fn ongoing_cancelled() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<HoldAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_canceled());
+    assert!(event.kind.is_canceled());
 
     app.update();
 
@@ -189,15 +189,15 @@ fn fired_ongoing_cancelled() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<PulseAction>(entity).unwrap();
     let [event1, event2] = events.try_into().unwrap();
-    assert!(event1.transition.is_started());
-    assert!(event2.transition.is_fired());
+    assert!(event1.kind.is_started());
+    assert!(event2.kind.is_fired());
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<PulseAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_ongoing());
+    assert!(event.kind.is_ongoing());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -208,7 +208,7 @@ fn fired_ongoing_cancelled() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<PulseAction>(entity).unwrap();
     let [event] = events.try_into().unwrap();
-    assert!(event.transition.is_canceled());
+    assert!(event.kind.is_canceled());
 
     app.update();
 
