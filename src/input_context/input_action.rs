@@ -406,22 +406,22 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     const CONSUME_INPUT: bool = true;
 
     /// Associated accumulation behavior.
-    const ACCUMULATION: Accumulation = Accumulation::MaxAbs;
+    const ACCUMULATION: Accumulation = Accumulation::Cumulative;
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the same [`ActionState`].
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
-    /// Take the value from the mapping with the highest absolute value.
-    ///
-    /// For example, given values of 0.5 and -1.5, the input action's value would be -1.5.
-    #[default]
-    MaxAbs,
-
     /// Cumulatively add the key values for each mapping.
     ///
     /// For example, given values of 0.5 and -0.3, the input action's value would be 0.2.
     ///
     /// Usually used for things like WASD movement, when you want pressing W and S to cancel each other out.
+    #[default]
     Cumulative,
+
+    /// Take the value from the mapping with the highest absolute value.
+    ///
+    /// For example, given values of 0.5 and -1.5, the input action's value would be -1.5.
+    MaxAbs,
 }

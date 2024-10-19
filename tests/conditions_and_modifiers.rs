@@ -52,7 +52,7 @@ fn input_level() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<InputLevel>(entity).unwrap();
     let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::Y * 2.0).into());
+    assert_eq!(event.value, Vec2::Y.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -117,7 +117,7 @@ fn action_level() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<ActionLevel>(entity).unwrap();
     let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::NEG_Y * 2.0).into());
+    assert_eq!(event.value, (Vec2::NEG_Y * 4.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -182,7 +182,7 @@ fn both_levels() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<BothLevels>(entity).unwrap();
     let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::Y * 2.0).into());
+    assert_eq!(event.value, Vec2::Y.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
