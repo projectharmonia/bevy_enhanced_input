@@ -17,15 +17,15 @@ pub struct Scalar {
 }
 
 impl Scalar {
-    #[must_use]
-    pub fn new(scalar: Vec3) -> Self {
-        Self { scalar }
-    }
-
     /// Creates a new scalar with all axes set to `value`.
     #[must_use]
     pub fn splat(value: f32) -> Self {
         Self::new(Vec3::splat(value))
+    }
+
+    #[must_use]
+    pub fn new(scalar: Vec3) -> Self {
+        Self { scalar }
     }
 }
 
