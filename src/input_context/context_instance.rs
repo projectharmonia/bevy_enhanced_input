@@ -165,6 +165,8 @@ impl ActionBind {
     ///
     /// This is a convenience "preset" that uses [`SwizzleAxis`] and [`Negate`] to
     /// bind the keys to cardinal directions.
+    ///
+    /// The order of arguments follows the common "WASD" mapping.
     pub fn with_axis2d<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
         self.with(InputBind::new(up).with_modifier(SwizzleAxis::YXZ))
             .with(InputBind::new(left).with_modifier(Negate::default()))
