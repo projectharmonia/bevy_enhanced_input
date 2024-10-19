@@ -105,15 +105,15 @@ impl InputContext for Swimming {
     const PRIORITY: usize = 1; // Set higher priority to execute its actions first.
 
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut map = ContextInstance::default();
+        let mut ctx = ContextInstance::default();
 
         // `Player` has lower priority, so `Dive` and `ExitWater` consume inputs first,
         // preventing `Jump` and `EnterWater` from being triggered.
         // The consuming behavior can be configured in the `InputAction` trait.
-        map.bind::<Dive>().with(KeyCode::Space);
-        map.bind::<ExitWater>().with(KeyCode::Enter);
+        ctx.bind::<Dive>().with(KeyCode::Space);
+        ctx.bind::<ExitWater>().with(KeyCode::Enter);
 
-        map
+        ctx
     }
 }
 
