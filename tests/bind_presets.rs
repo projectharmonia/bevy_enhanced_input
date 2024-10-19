@@ -1,0 +1,206 @@
+mod action_recorder;
+
+use bevy::{
+    input::{
+        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo},
+        InputPlugin,
+    },
+    prelude::*,
+};
+use bevy_enhanced_input::prelude::*;
+
+use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
+
+#[test]
+fn wasd_and_arrows() {
+    let mut app = App::new();
+    app.add_plugins((
+        MinimalPlugins,
+        InputPlugin,
+        EnhancedInputPlugin,
+        ActionRecorderPlugin,
+    ))
+    .add_input_context::<DummyContext>()
+    .record_action::<DummyAction>();
+
+    let entity = app.world_mut().spawn(DummyContext).id();
+
+    app.update();
+
+    for (key, dir) in [
+        (KeyCode::KeyW, UP),
+        (KeyCode::KeyA, LEFT),
+        (KeyCode::KeyS, DOWN),
+        (KeyCode::KeyD, RIGHT),
+        (KeyCode::ArrowUp, UP),
+        (KeyCode::ArrowLeft, LEFT),
+        (KeyCode::ArrowDown, DOWN),
+        (KeyCode::ArrowRight, RIGHT),
+    ] {
+        app.world_mut()
+            .resource_mut::<ButtonInput<KeyCode>>()
+            .press(key);
+
+        app.update();
+
+        let recorded = app.world().resource::<RecordedActions>();
+        let events = recorded.get::<DummyAction>(entity).unwrap();
+        let event = events.last().unwrap();
+        assert_eq!(
+            event.value,
+            dir.into(),
+            "`{key:?}` should result in `{dir}`"
+        );
+
+        app.world_mut()
+            .resource_mut::<ButtonInput<KeyCode>>()
+            .release(key);
+
+        app.update();
+    }
+}
+
+#[test]
+fn dpad() {
+    let mut app = App::new();
+    app.add_plugins((
+        MinimalPlugins,
+        InputPlugin,
+        EnhancedInputPlugin,
+        ActionRecorderPlugin,
+    ))
+    .add_input_context::<DummyContext>()
+    .record_action::<DummyAction>();
+
+    let gamepad = Gamepad::new(0);
+    app.world_mut().send_event(GamepadConnectionEvent {
+        gamepad,
+        connection: GamepadConnection::Connected(GamepadInfo {
+            name: "Dummy".to_string(),
+        }),
+    });
+
+    let entity = app.world_mut().spawn(DummyContext).id();
+
+    app.update();
+
+    for (button, dir) in [
+        (GamepadButtonType::DPadUp, UP),
+        (GamepadButtonType::DPadLeft, LEFT),
+        (GamepadButtonType::DPadDown, DOWN),
+        (GamepadButtonType::DPadRight, RIGHT),
+    ] {
+        let button = GamepadButton {
+            gamepad,
+            button_type: button,
+        };
+
+        app.world_mut()
+            .resource_mut::<ButtonInput<GamepadButton>>()
+            .press(button);
+
+        app.update();
+
+        let recorded = app.world().resource::<RecordedActions>();
+        let events = recorded.get::<DummyAction>(entity).unwrap();
+        let event = events.last().unwrap();
+        assert_eq!(
+            event.value,
+            dir.into(),
+            "`{button:?}` should result in `{dir}`"
+        );
+
+        app.world_mut()
+            .resource_mut::<ButtonInput<GamepadButton>>()
+            .release(button);
+
+        app.update();
+    }
+}
+
+#[test]
+fn sticks() {
+    let mut app = App::new();
+    app.add_plugins((
+        MinimalPlugins,
+        InputPlugin,
+        EnhancedInputPlugin,
+        ActionRecorderPlugin,
+    ))
+    .add_input_context::<DummyContext>()
+    .record_action::<DummyAction>();
+
+    let gamepad = Gamepad::new(0);
+    app.world_mut().send_event(GamepadConnectionEvent {
+        gamepad,
+        connection: GamepadConnection::Connected(GamepadInfo {
+            name: "Dummy".to_string(),
+        }),
+    });
+
+    let entity = app.world_mut().spawn(DummyContext).id();
+
+    app.update();
+
+    for (axis, dirs) in [
+        (GamepadAxisType::LeftStickX, [LEFT, RIGHT]),
+        (GamepadAxisType::RightStickX, [LEFT, RIGHT]),
+        (GamepadAxisType::LeftStickY, [DOWN, UP]),
+        (GamepadAxisType::RightStickY, [DOWN, UP]),
+    ] {
+        let axis = GamepadAxis {
+            gamepad,
+            axis_type: axis,
+        };
+
+        for (dir, value) in dirs.into_iter().zip([-1.0, 1.0]) {
+            app.world_mut()
+                .resource_mut::<Axis<GamepadAxis>>()
+                .set(axis, value);
+
+            app.update();
+
+            let recorded = app.world().resource::<RecordedActions>();
+            let events = recorded.get::<DummyAction>(entity).unwrap();
+            let event = events.last().unwrap();
+            assert_eq!(
+                event.value,
+                dir.into(),
+                "`{axis:?}` should result in `{dir}`"
+            );
+
+            app.world_mut()
+                .resource_mut::<Axis<GamepadAxis>>()
+                .set(axis, 0.0);
+
+            app.update();
+        }
+    }
+}
+
+const UP: Vec2 = Vec2::new(0.0, 1.0);
+const LEFT: Vec2 = Vec2::new(-1.0, 0.0);
+const DOWN: Vec2 = Vec2::new(0.0, -1.0);
+const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
+
+#[derive(Debug, Component)]
+struct DummyContext;
+
+impl InputContext for DummyContext {
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut ctx = ContextInstance::default();
+
+        ctx.bind::<DummyAction>()
+            .with_wasd()
+            .with_arrows()
+            .with_dpad()
+            .with_stick(GamepadStick::Left)
+            .with_stick(GamepadStick::Right);
+
+        ctx
+    }
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Axis2D, consume_input = true)]
+struct DummyAction;
