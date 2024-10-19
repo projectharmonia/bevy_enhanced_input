@@ -112,7 +112,7 @@ pub struct ActionBind {
 
     modifiers: Vec<Box<dyn InputModifier>>,
     conditions: Vec<Box<dyn InputCondition>>,
-    inputs: Vec<InputMap>,
+    bindings: Vec<InputBind>,
 }
 
 impl ActionBind {
@@ -126,7 +126,7 @@ impl ActionBind {
             accumulation: A::ACCUMULATION,
             modifiers: Default::default(),
             conditions: Default::default(),
-            inputs: Default::default(),
+            bindings: Default::default(),
         }
     }
 
@@ -166,20 +166,20 @@ impl ActionBind {
     /// This is a convenience "preset" that uses [`SwizzleAxis`] and [`Negate`] to
     /// bind the keys to cardinal directions.
     pub fn with_axis2d<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
-        self.with(InputMap::new(up).with_modifier(SwizzleAxis::YXZ))
-            .with(InputMap::new(left).with_modifier(Negate::default()))
+        self.with(InputBind::new(up).with_modifier(SwizzleAxis::YXZ))
+            .with(InputBind::new(left).with_modifier(Negate::default()))
             .with(
-                InputMap::new(down)
+                InputBind::new(down)
                     .with_modifier(Negate::default())
                     .with_modifier(SwizzleAxis::YXZ),
             )
-            .with(InputMap::new(right))
+            .with(InputBind::new(right))
     }
 
     /// Maps the given stick as 2-dimentional input.
     pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
         self.with(stick.x())
-            .with(InputMap::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
+            .with(InputBind::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
     }
 
     /// Adds action-level modifier.
@@ -229,20 +229,20 @@ impl ActionBind {
     /// ```
     ///
     /// If you want input with modifiers or conditions,
-    /// you will need to wrap it into [`InputMap`]:
+    /// you will need to wrap it into [`InputBind`]:
     ///
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(InputMap::new(KeyCode::Space).with_condition(Down::default()));
+    ///     .with(InputBind::new(KeyCode::Space).with_condition(Down::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(dim = Bool)]
     /// # struct Jump;
     /// ```
-    pub fn with(&mut self, map: impl Into<InputMap>) -> &mut Self {
-        self.inputs.push(map.into());
+    pub fn with(&mut self, binding: impl Into<InputBind>) -> &mut Self {
+        self.bindings.push(binding.into());
         self
     }
 
@@ -259,20 +259,20 @@ impl ActionBind {
 
         reader.set_consume_input(self.consume_input);
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
-        for input_map in &mut self.inputs {
-            let value = reader.value(input_map.input).convert(self.dim);
-            if input_map.ignored {
+        for binding in &mut self.bindings {
+            let value = reader.value(binding.input).convert(self.dim);
+            if binding.ignored {
                 // Ignore until we read zero for this mapping.
                 if value.as_bool() {
                     continue;
                 } else {
-                    input_map.ignored = false;
+                    binding.ignored = false;
                 }
             }
 
             let mut current_tracker = TriggerTracker::new(value);
-            current_tracker.apply_modifiers(world, delta, &mut input_map.modifiers);
-            current_tracker.apply_conditions(world, actions, delta, &mut input_map.conditions);
+            current_tracker.apply_modifiers(world, delta, &mut binding.modifiers);
+            current_tracker.apply_conditions(world, actions, delta, &mut binding.conditions);
             tracker.merge(current_tracker, self.accumulation);
         }
 
@@ -289,7 +289,7 @@ impl ActionBind {
 }
 
 /// Associated input for [`ActionBind`].
-pub struct InputMap {
+pub struct InputBind {
     pub input: Input,
     pub modifiers: Vec<Box<dyn InputModifier>>,
     pub conditions: Vec<Box<dyn InputCondition>>,
@@ -302,7 +302,7 @@ pub struct InputMap {
     ignored: bool,
 }
 
-impl InputMap {
+impl InputBind {
     /// Creates a new instance without modifiers and conditions.
     pub fn new(input: impl Into<Input>) -> Self {
         Self {
@@ -328,25 +328,25 @@ impl InputMap {
     }
 }
 
-impl From<KeyCode> for InputMap {
+impl From<KeyCode> for InputBind {
     fn from(value: KeyCode) -> Self {
         Self::new(value)
     }
 }
 
-impl From<GamepadButtonType> for InputMap {
+impl From<GamepadButtonType> for InputBind {
     fn from(value: GamepadButtonType) -> Self {
         Self::new(value)
     }
 }
 
-impl From<GamepadAxisType> for InputMap {
+impl From<GamepadAxisType> for InputBind {
     fn from(value: GamepadAxisType) -> Self {
         Self::new(value)
     }
 }
 
-impl From<Input> for InputMap {
+impl From<Input> for InputBind {
     fn from(input: Input) -> Self {
         Self::new(input)
     }
