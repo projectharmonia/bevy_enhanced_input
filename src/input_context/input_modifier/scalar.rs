@@ -21,6 +21,12 @@ impl Scalar {
     pub fn new(scalar: Vec3) -> Self {
         Self { scalar }
     }
+
+    /// Creates a new scalar with all axes set to `value`.
+    #[must_use]
+    pub fn splat(value: f32) -> Self {
+        Self::new(Vec3::splat(value))
+    }
 }
 
 impl InputModifier for Scalar {
@@ -42,7 +48,7 @@ mod tests {
     fn scaling() {
         let world = World::new();
 
-        let mut modifier = Scalar::new(Vec3::ONE * 2.0);
+        let mut modifier = Scalar::splat(2.0);
         assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
         assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 2.0.into());
         assert_eq!(
