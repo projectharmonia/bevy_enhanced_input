@@ -463,7 +463,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
 pub enum Accumulation {
     /// Take the value from the mapping with the highest absolute value.
     ///
-    /// For example, given values of 0.5 and -1.5, the input action's value would be -1.0.
+    /// For example, given values of 0.5 and -1.5, the input action's value would be -1.5.
     #[default]
     MaxAbs,
 
