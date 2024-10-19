@@ -72,9 +72,6 @@ fn consume() {
     assert_eq!(event.state, ActionState::Fired);
 }
 
-/// A key used by both [`Consume`] and [`Passthrough`] actions.
-const KEY: KeyCode = KeyCode::KeyA;
-
 #[derive(Debug, Component)]
 struct PassthroughThenConsume;
 
@@ -102,6 +99,9 @@ impl InputContext for ConsumeThenPassthrough {
         ctx
     }
 }
+
+/// A key used by both [`Consume`] and [`Passthrough`] actions.
+const KEY: KeyCode = KeyCode::KeyA;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool, consume_input = true)]

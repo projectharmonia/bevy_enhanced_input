@@ -56,12 +56,6 @@ fn prioritization() {
     );
 }
 
-/// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.
-const CONSUME_KEY: KeyCode = KeyCode::KeyA;
-
-/// A key used by both [`FirstPassthrough`] and [`SecondPassthrough`] actions.
-const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyB;
-
 #[derive(Debug, Component)]
 struct First;
 
@@ -87,6 +81,12 @@ impl InputContext for Second {
         ctx
     }
 }
+
+/// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.
+const CONSUME_KEY: KeyCode = KeyCode::KeyA;
+
+/// A key used by both [`FirstPassthrough`] and [`SecondPassthrough`] actions.
+const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyB;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool, consume_input = true)]
