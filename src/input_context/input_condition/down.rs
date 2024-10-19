@@ -7,7 +7,7 @@ use crate::{
 };
 
 /// Returns [`ActionState::Fired`] when the input exceeds the actuation threshold.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Down {
     /// Trigger threshold.
     pub actuation: f32,

@@ -8,7 +8,7 @@ use crate::action_value::ActionValue;
 /// Useful to map a 1D input onto the Y axis of a 2D action.
 ///
 /// Can't be applied to [`ActionValue::Bool`] and [`ActionValue::Axis1D`].
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub enum SwizzleAxis {
     /// Swap X and Y axis. Useful for binding 1D inputs to the Y axis for 2D actions.
     YXZ,

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 /// Helper for building triggers that have firing conditions governed by elapsed time.
-#[derive(Default, Debug)]
+#[derive(Clone, Copy, Default, Debug)]
 pub struct HeldTimer {
     /// If set to `true`, [`Time::relative_speed`] will be applied to the held duration.
     ///

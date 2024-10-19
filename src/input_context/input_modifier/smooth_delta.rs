@@ -10,7 +10,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// Produces a smoothed normalized delta of the current(new) and last(old) input value.
 ///
 /// Can't be applied to [`ActionValue::Bool`].
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct SmoothDelta {
     /// Defines how value will be smoothed.
     pub kind: SmoothKind,

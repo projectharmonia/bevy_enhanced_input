@@ -12,7 +12,7 @@ use crate::{
 /// Note: [`ActionTransition::Completed`](crate::input_context::input_action::ActionTransition::Completed) only fires
 /// when the repeat limit is reached or when input is released immediately after being triggered.
 /// Otherwise, [`ActionTransition::Canceled`](crate::input_context::input_action::ActionTransition::Canceled) is fired when input is released.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Pulse {
     /// Time in seconds between each triggering while input is held.
     pub interval: f32,

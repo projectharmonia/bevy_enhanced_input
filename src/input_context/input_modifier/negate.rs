@@ -6,7 +6,7 @@ use crate::action_value::ActionValue;
 /// Inverts value per axis.
 ///
 /// By default, all axes are inverted.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Negate {
     /// Wheter to inverse the X axis.
     pub x: bool,

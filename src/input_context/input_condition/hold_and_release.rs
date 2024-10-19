@@ -10,7 +10,7 @@ use crate::{
 /// when the input is released after having been actuated for [`Self::hold_time`] seconds.
 ///
 /// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct HoldAndRelease {
     // How long does the input have to be held to cause trigger.
     pub hold_time: f32,

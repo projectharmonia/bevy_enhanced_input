@@ -9,7 +9,7 @@ use crate::{
 /// Like [`super::down::Down`] but returns [`ActionState::Fired`] only once until the next actuation.
 ///
 /// Holding the input will not cause further triggers.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Pressed {
     /// Trigger threshold.
     pub actuation: f32,

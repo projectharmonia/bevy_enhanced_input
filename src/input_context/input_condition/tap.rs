@@ -10,7 +10,7 @@ use crate::{
 /// when the input is released within the [`Self::release_time`] seconds.
 ///
 /// Returns [`ActionState::None`] when the input is actuated more than [`Self::release_time`] seconds.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Tap {
     /// Time window within which the action must be released to register as a tap.
     pub release_time: f32,

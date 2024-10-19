@@ -25,6 +25,14 @@ impl<A: InputAction> Default for Chord<A> {
     }
 }
 
+impl<A: InputAction> Clone for Chord<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: InputAction> Copy for Chord<A> {}
+
 impl<A: InputAction> InputCondition for Chord<A> {
     fn evaluate(
         &mut self,

@@ -25,6 +25,14 @@ impl<A: InputAction> Default for BlockedBy<A> {
     }
 }
 
+impl<A: InputAction> Clone for BlockedBy<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: InputAction> Copy for BlockedBy<A> {}
+
 impl<A: InputAction> InputCondition for BlockedBy<A> {
     fn evaluate(
         &mut self,

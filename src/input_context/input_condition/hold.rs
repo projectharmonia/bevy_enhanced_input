@@ -11,7 +11,7 @@ use crate::{
 ///
 /// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
 /// May optionally fire once, or repeatedly fire.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Hold {
     // How long does the input have to be held to cause trigger.
     pub hold_time: f32,

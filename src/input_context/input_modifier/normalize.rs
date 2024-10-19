@@ -4,7 +4,7 @@ use super::InputModifier;
 use crate::{action_value::ActionValue, ActionValueDim};
 
 /// Normalizes input if possible or returns zero.
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Normalize;
 
 impl InputModifier for Normalize {
