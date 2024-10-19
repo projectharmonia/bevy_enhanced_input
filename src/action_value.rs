@@ -154,3 +154,15 @@ impl From<Vec3> for ActionValue {
         ActionValue::Axis3D(value)
     }
 }
+
+impl From<(f32, f32)> for ActionValue {
+    fn from(value: (f32, f32)) -> Self {
+        ActionValue::Axis2D(value.into())
+    }
+}
+
+impl From<(f32, f32, f32)> for ActionValue {
+    fn from(value: (f32, f32, f32)) -> Self {
+        ActionValue::Axis3D(value.into())
+    }
+}

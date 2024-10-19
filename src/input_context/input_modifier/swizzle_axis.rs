@@ -30,10 +30,10 @@ impl InputModifier for SwizzleAxis {
             }
             ActionValue::Axis2D(value) => match self {
                 SwizzleAxis::YXZ => value.yx().into(),
-                SwizzleAxis::ZYX => Vec2::new(0.0, value.y).into(),
-                SwizzleAxis::XZY => Vec2::new(value.x, 0.0).into(),
-                SwizzleAxis::YZX => Vec2::new(value.y, 0.0).into(),
-                SwizzleAxis::ZXY => Vec2::new(0.0, value.x).into(),
+                SwizzleAxis::ZYX => (0.0, value.y).into(),
+                SwizzleAxis::XZY => (value.x, 0.0).into(),
+                SwizzleAxis::YZX => (value.y, 0.0).into(),
+                SwizzleAxis::ZXY => (0.0, value.x).into(),
             },
             ActionValue::Axis3D(value) => match self {
                 SwizzleAxis::YXZ => value.yxz().into(),
@@ -58,12 +58,12 @@ mod tests {
         assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
         assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            swizzle.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
-            Vec2::new(1.0, 0.0).into(),
+            swizzle.apply(&world, 0.0, (0.0, 1.0).into()),
+            (1.0, 0.0).into(),
         );
         assert_eq!(
-            swizzle.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
-            Vec3::new(1.0, 0.0, 2.0).into(),
+            swizzle.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            (1.0, 0.0, 2.0).into(),
         );
     }
 
@@ -75,12 +75,12 @@ mod tests {
         assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
         assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            swizzle.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
-            Vec2::new(0.0, 1.0).into(),
+            swizzle.apply(&world, 0.0, (0.0, 1.0).into()),
+            (0.0, 1.0).into(),
         );
         assert_eq!(
-            swizzle.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
-            Vec3::new(2.0, 1.0, 0.0).into(),
+            swizzle.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            (2.0, 1.0, 0.0).into(),
         );
     }
 
@@ -92,12 +92,12 @@ mod tests {
         assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
         assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
-            Vec2::new(0.0, 0.0).into(),
+            modifier.apply(&world, 0.0, (0.0, 1.0).into()),
+            (0.0, 0.0).into(),
         );
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
-            Vec3::new(0.0, 2.0, 1.0).into(),
+            modifier.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            (0.0, 2.0, 1.0).into(),
         );
     }
 
@@ -109,12 +109,12 @@ mod tests {
         assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
         assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
-            Vec2::new(1.0, 0.0).into(),
+            modifier.apply(&world, 0.0, (0.0, 1.0).into()),
+            (1.0, 0.0).into(),
         );
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
-            Vec3::new(1.0, 2.0, 0.0).into(),
+            modifier.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            (1.0, 2.0, 0.0).into(),
         );
     }
 
@@ -126,12 +126,12 @@ mod tests {
         assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
         assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec2::new(0.0, 1.0).into()),
-            Vec2::new(0.0, 0.0).into(),
+            modifier.apply(&world, 0.0, (0.0, 1.0).into()),
+            (0.0, 0.0).into(),
         );
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec3::new(0.0, 1.0, 2.0).into()),
-            Vec3::new(2.0, 0.0, 1.0).into(),
+            modifier.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            (2.0, 0.0, 1.0).into(),
         );
     }
 }

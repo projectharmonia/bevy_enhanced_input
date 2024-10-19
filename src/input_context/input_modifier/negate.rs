@@ -91,15 +91,15 @@ mod tests {
         );
         assert_eq!(
             Negate::x(true).apply(&world, 0.0, Vec3::ONE.into()),
-            Vec3::new(-1.0, 1.0, 1.0).into(),
+            (-1.0, 1.0, 1.0).into(),
         );
         assert_eq!(
             Negate::y(true).apply(&world, 0.0, Vec3::ONE.into()),
-            Vec3::new(1.0, -1.0, 1.0).into(),
+            (1.0, -1.0, 1.0).into(),
         );
         assert_eq!(
             Negate::z(true).apply(&world, 0.0, Vec3::ONE.into()),
-            Vec3::new(1.0, 1.0, -1.0).into(),
+            (1.0, 1.0, -1.0).into(),
         );
     }
 }

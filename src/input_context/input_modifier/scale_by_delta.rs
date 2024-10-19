@@ -33,11 +33,11 @@ mod tests {
         assert_eq!(ScaleByDelta.apply(&world, delta, 0.5.into()), 0.25.into());
         assert_eq!(
             ScaleByDelta.apply(&world, delta, Vec2::ONE.into()),
-            Vec2::new(0.5, 0.5).into()
+            (0.5, 0.5).into()
         );
         assert_eq!(
             ScaleByDelta.apply(&world, delta, Vec3::ONE.into()),
-            Vec3::new(0.5, 0.5, 0.5).into()
+            (0.5, 0.5, 0.5).into()
         );
     }
 }

@@ -108,7 +108,7 @@ fn axis2d() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<Axis2D>(entity).unwrap();
     let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::new(1.0, 0.0).into());
+    assert_eq!(event.value, (1.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -147,7 +147,7 @@ fn axis3d() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<Axis3D>(entity).unwrap();
     let event = events.last().unwrap();
-    assert_eq!(event.value, Vec3::new(1.0, 0.0, 0.0).into());
+    assert_eq!(event.value, (1.0, 0.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
