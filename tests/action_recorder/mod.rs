@@ -5,7 +5,7 @@ use std::any::TypeId;
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
 use bevy_enhanced_input::{prelude::*, EnhancedInputSystem};
 
-pub trait AppTriggeredExt {
+pub(super) trait AppTriggeredExt {
     /// Observes for [`ActionEvent`] and stores them inside [`RecordedActions`].
     fn record_action<A: InputAction>(&mut self) -> &mut Self;
 }
@@ -23,7 +23,7 @@ fn read<A: InputAction>(trigger: Trigger<ActionEvent<A>>, mut triggered: ResMut<
     triggered.insert::<A>(trigger.entity(), *trigger.event());
 }
 
-pub struct ActionRecorderPlugin;
+pub(super) struct ActionRecorderPlugin;
 
 impl Plugin for ActionRecorderPlugin {
     fn build(&self, app: &mut App) {
@@ -39,7 +39,7 @@ impl ActionRecorderPlugin {
 }
 
 #[derive(Default, Resource)]
-pub struct RecordedActions(HashMap<TypeId, EntityHashMap<Vec<UntypedActionEvent>>>);
+pub(super) struct RecordedActions(HashMap<TypeId, EntityHashMap<Vec<UntypedActionEvent>>>);
 
 impl RecordedActions {
     fn insert<A: InputAction>(&mut self, entity: Entity, event: ActionEvent<A>) {
@@ -48,7 +48,7 @@ impl RecordedActions {
         events.push(event.into());
     }
 
-    pub fn get<A: InputAction>(&self, entity: Entity) -> Option<&[UntypedActionEvent]> {
+    pub(super) fn get<A: InputAction>(&self, entity: Entity) -> Option<&[UntypedActionEvent]> {
         let event_group = self.0.get(&TypeId::of::<A>())?;
 
         event_group
