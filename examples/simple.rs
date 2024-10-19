@@ -1,11 +1,21 @@
 //! Simple setup with a single context.
 
+mod player_box;
+
+use std::f32::consts::FRAC_PI_4;
+
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
+use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin};
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, EnhancedInputPlugin, GamePlugin))
+        .add_plugins((
+            DefaultPlugins,
+            EnhancedInputPlugin,
+            PlayerBoxPlugin,
+            GamePlugin,
+        ))
         .run();
 }
 
@@ -13,60 +23,61 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<Player>() // All contexts should be registered inside the app.
+        app.add_input_context::<PlayerBox>() // All input contexts should be registered inside the app.
             .add_systems(Startup, Self::spawn)
             .observe(Self::move_character)
-            .observe(Self::jump);
+            .observe(Self::rotate);
     }
 }
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
-        // To associate an entity with actions, insert the context.
-        commands.spawn(Player);
+        commands.spawn(Camera2dBundle::default());
+
+        // Spawn an entity with a component that implements `InputContext`.
+        commands.spawn(PlayerBoxBundle::default());
     }
 
-    fn move_character(trigger: Trigger<ActionEvent<Move>>) {
+    fn move_character(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if let ActionTransition::Fired { fired_secs, .. } = event.transition {
-            info!(
-                "moving with direction `{:?}` for `{fired_secs}` secs",
-                event.value
-            );
+        if event.transition.is_fired() {
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            // The value has already been preprocessed by defined modifiers.
+            transform.translation += event.value.as_axis3d();
         }
     }
 
-    fn jump(trigger: Trigger<ActionEvent<Jump>>) {
-        // If you are not interested in action value, we provide
-        // methods to quickly check action kind on the event.
+    fn rotate(trigger: Trigger<ActionEvent<Rotate>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         if event.transition.is_started() {
-            info!("jumping in the air");
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            transform.rotate_z(FRAC_PI_4);
         }
     }
 }
 
-#[derive(Component)]
-struct Player;
-
 // To define mappings for actions, implement the context trait.
-// Multiple inputs can be assigned to a single action,
-// and the action will respond to any of them.
-impl InputContext for Player {
+// You can implement it for your character component directly, as
+// shown in this example, if you don't plan to switch contexts.
+impl InputContext for PlayerBox {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        // Create a context and start defining bindings.
+        // Multiple inputs can be assigned to a single action,
+        // and the action will respond to any of them.
         let mut ctx = ContextInstance::default();
 
         // Mappings like WASD or sticks are very common,
         // so we provide built-ins to assign all keys/axes at once.
-        // We don't assign any conditions. In this case the action will
+        // We don't assign any conditions and in this case the action will
         // be triggered with any non-zero value.
         ctx.bind::<Move>()
             .with_wasd()
-            .with_stick(GamepadStick::Left);
+            .with_stick(GamepadStick::Left)
+            .with_modifier(Normalize) // Normilize to ensure consistent speed, otherwise diagonal movement will be faster.
+            .with_modifier(ScaleByDelta) // Multiply by delta to make movement independent of framerate.
+            .with_modifier(Scalar::splat(400.0)); // Additionally multiply by a constant to achieve the desired speed.
 
-        // If you don't need keyboard modifiers, you can pass
-        // buttons directly, thanks to the `From` impl.
-        ctx.bind::<Jump>()
+        ctx.bind::<Rotate>()
             .with(KeyCode::Space)
             .with(GamepadButtonType::South);
 
@@ -74,12 +85,13 @@ impl InputContext for Player {
     }
 }
 
-// All actions should implement `InputAction` trait.
+// All actions should implement the `InputAction` trait.
 // It can be done manually, but we provide a derive for convenience.
+// The only necessary parameter is `dim`, which defines the output type.
 #[derive(Debug, InputAction)]
 #[input_action(dim = Axis2D)]
 struct Move;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct Jump;
+struct Rotate;
