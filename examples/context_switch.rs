@@ -1,11 +1,22 @@
 //! One context completely replaces another.
 
-use bevy::prelude::*;
+mod player_box;
+
+use std::f32::consts::FRAC_PI_4;
+
+use bevy::{color::palettes::tailwind::FUCHSIA_400, prelude::*};
 use bevy_enhanced_input::prelude::*;
+
+use player_box::{PlayerBoxBundle, PlayerBoxPlugin, PlayerColor, DEFAULT_SPEED};
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, EnhancedInputPlugin, GamePlugin))
+        .add_plugins((
+            DefaultPlugins,
+            EnhancedInputPlugin,
+            PlayerBoxPlugin,
+            GamePlugin,
+        ))
         .run();
 }
 
@@ -16,9 +27,8 @@ impl Plugin for GamePlugin {
         app.add_input_context::<OnFoot>()
             .add_input_context::<InCar>()
             .add_systems(Startup, Self::spawn)
-            .observe(Self::move_character)
-            .observe(Self::jump)
-            .observe(Self::brake)
+            .observe(Self::apply_movement)
+            .observe(Self::rotate)
             .observe(Self::enter_car)
             .observe(Self::exit_car);
     }
@@ -26,30 +36,37 @@ impl Plugin for GamePlugin {
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
-        commands.spawn(OnFoot);
+        commands.spawn(Camera2dBundle::default());
+        commands.spawn((PlayerBoxBundle::default(), OnFoot));
     }
 
-    fn move_character(trigger: Trigger<ActionEvent<Move>>) {
+    fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
-            info!(
-                "moving with direction `{:?}` for `{fired_secs}` secs",
-                event.value
-            );
+        if event.kind.is_fired() {
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            transform.translation += event.value.as_axis3d();
         }
     }
 
-    fn jump(trigger: Trigger<ActionEvent<Jump>>) {
+    fn rotate(trigger: Trigger<ActionEvent<Rotate>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         if event.kind.is_started() {
-            info!("jumping in the air");
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            transform.rotate_z(FRAC_PI_4);
         }
     }
 
-    fn enter_car(trigger: Trigger<ActionEvent<EnterCar>>, mut commands: Commands) {
+    fn enter_car(
+        trigger: Trigger<ActionEvent<EnterCar>>,
+        mut commands: Commands,
+        mut players: Query<&mut PlayerColor>,
+    ) {
         let event = trigger.event();
         if event.kind.is_started() {
-            info!("entering car");
+            // Change color for visibility.
+            let mut color = players.get_mut(trigger.entity()).unwrap();
+            color.0 = FUCHSIA_400.into();
+
             commands
                 .entity(trigger.entity())
                 .remove::<OnFoot>()
@@ -57,17 +74,16 @@ impl GamePlugin {
         }
     }
 
-    fn brake(trigger: Trigger<ActionEvent<Brake>>) {
-        let event = trigger.event();
-        if event.kind.is_fired() {
-            info!("holding brake");
-        }
-    }
-
-    fn exit_car(trigger: Trigger<ActionEvent<ExitCar>>, mut commands: Commands) {
+    fn exit_car(
+        trigger: Trigger<ActionEvent<ExitCar>>,
+        mut commands: Commands,
+        mut players: Query<&mut PlayerColor>,
+    ) {
         let event = trigger.event();
         if event.kind.is_started() {
-            info!("exiting car");
+            let mut color = players.get_mut(trigger.entity()).unwrap();
+            color.0 = Default::default();
+
             commands
                 .entity(trigger.entity())
                 .remove::<InCar>()
@@ -83,8 +99,13 @@ impl InputContext for OnFoot {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut instance = ContextInstance::default();
 
-        instance.bind::<Move>().with_wasd();
-        instance.bind::<Jump>().with(KeyCode::Space);
+        instance
+            .bind::<Move>()
+            .with_wasd()
+            .with_modifier(Normalize)
+            .with_modifier(ScaleByDelta)
+            .with_modifier(Scalar::splat(DEFAULT_SPEED));
+        instance.bind::<Rotate>().with(KeyCode::Space);
         instance.bind::<EnterCar>().with(KeyCode::Enter);
 
         instance
@@ -97,7 +118,7 @@ struct Move;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct Jump;
+struct Rotate;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
@@ -110,9 +131,12 @@ impl InputContext for InCar {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Move>().with_wasd();
+        ctx.bind::<Move>()
+            .with_wasd()
+            .with_modifier(Normalize)
+            .with_modifier(ScaleByDelta)
+            .with_modifier(Scalar::splat(DEFAULT_SPEED + 200.0)); // Make car faster. It's possible to get the value from a component by writing a custom modifier.
         ctx.bind::<ExitCar>().with(KeyCode::Enter);
-        ctx.bind::<Brake>().with(KeyCode::Space);
 
         ctx
     }
@@ -121,7 +145,3 @@ impl InputContext for InCar {
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
 struct ExitCar;
-
-#[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
-struct Brake;

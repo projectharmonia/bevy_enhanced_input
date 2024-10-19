@@ -6,7 +6,8 @@ use std::f32::consts::FRAC_PI_4;
 
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
-use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin};
+
+use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, DEFAULT_SPEED};
 
 fn main() {
     App::new()
@@ -25,7 +26,7 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>() // All input contexts should be registered inside the app.
             .add_systems(Startup, Self::spawn)
-            .observe(Self::move_character)
+            .observe(Self::apply_movement)
             .observe(Self::rotate);
     }
 }
@@ -38,7 +39,7 @@ impl GamePlugin {
         commands.spawn(PlayerBoxBundle::default());
     }
 
-    fn move_character(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
+    fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         if event.kind.is_fired() {
             let mut transform = players.get_mut(trigger.entity()).unwrap();
@@ -75,7 +76,7 @@ impl InputContext for PlayerBox {
             .with_stick(GamepadStick::Left)
             .with_modifier(Normalize) // Normilize to ensure consistent speed, otherwise diagonal movement will be faster.
             .with_modifier(ScaleByDelta) // Multiply by delta to make movement independent of framerate.
-            .with_modifier(Scalar::splat(400.0)); // Additionally multiply by a constant to achieve the desired speed.
+            .with_modifier(Scalar::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.
 
         ctx.bind::<Rotate>()
             .with(KeyCode::Space)

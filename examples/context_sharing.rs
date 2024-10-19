@@ -2,12 +2,23 @@
 //! This could be used for games where you control multiple characters at the same time,
 //! such as Binary Land for NES.
 
+mod player_box;
+
+use std::f32::consts::FRAC_PI_4;
+
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
 
+use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, DEFAULT_SPEED};
+
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, EnhancedInputPlugin, GamePlugin))
+        .add_plugins((
+            DefaultPlugins,
+            EnhancedInputPlugin,
+            PlayerBoxPlugin,
+            GamePlugin,
+        ))
         .run();
 }
 
@@ -15,44 +26,46 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<Player>()
+        app.add_input_context::<PlayerBox>()
             .add_systems(Startup, Self::spawn)
-            .observe(Self::move_character)
-            .observe(Self::jump);
+            .observe(Self::apply_movement)
+            .observe(Self::rotate);
     }
 }
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
+        commands.spawn(Camera2dBundle::default());
+
         // Spawn two entities with the same context.
-        commands.spawn(Player);
-        commands.spawn(Player);
+        commands.spawn(PlayerBoxBundle {
+            transform: Transform::from_translation(Vec3::X * 50.0),
+            ..Default::default()
+        });
+        commands.spawn(PlayerBoxBundle {
+            transform: Transform::from_translation(-Vec3::X * 50.0),
+            ..Default::default()
+        });
     }
 
-    fn move_character(trigger: Trigger<ActionEvent<Move>>) {
+    fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        let entity = trigger.entity();
-        if let ActionEventKind::Fired { fired_secs, .. } = event.kind {
-            info!(
-                "entity `{entity}` moving with direction `{:?}` for `{fired_secs}` secs",
-                event.value
-            );
+        if event.kind.is_fired() {
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            transform.translation += event.value.as_axis3d();
         }
     }
 
-    fn jump(trigger: Trigger<ActionEvent<Jump>>) {
+    fn rotate(trigger: Trigger<ActionEvent<Rotate>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        let entity = trigger.entity();
         if event.kind.is_started() {
-            info!("entity `{entity}` jumping in the air");
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            transform.rotate_z(FRAC_PI_4);
         }
     }
 }
 
-#[derive(Component)]
-struct Player;
-
-impl InputContext for Player {
+impl InputContext for PlayerBox {
     // By default all context instances are processed individually.
     // This means if multiple entities spawned with the same mappings,
     // actions from the first processed context may consume inputs.
@@ -63,8 +76,13 @@ impl InputContext for Player {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Move>().with_wasd();
-        ctx.bind::<Jump>().with(KeyCode::Space);
+        ctx.bind::<Move>()
+            .with_wasd()
+            .with_modifier(Normalize)
+            .with_modifier(ScaleByDelta)
+            .with_modifier(Scalar::splat(DEFAULT_SPEED));
+
+        ctx.bind::<Rotate>().with(KeyCode::Space);
 
         ctx
     }
@@ -76,4 +94,4 @@ struct Move;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct Jump;
+struct Rotate;

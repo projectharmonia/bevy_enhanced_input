@@ -11,21 +11,29 @@ impl Plugin for PlayerBoxPlugin {
 }
 
 impl PlayerBoxPlugin {
-    fn update_position(mut gizmos: Gizmos, players: Query<(&Transform, &PlayerColor)>) {
-        for (transform, color) in &players {
-            gizmos.rect(
-                transform.translation,
-                transform.rotation,
-                Vec2::ONE * 50.0,
-                color.0,
-            );
+    fn update_position(
+        mut gizmos: Gizmos,
+        players: Query<(&Visibility, &Transform, &PlayerColor)>,
+    ) {
+        for (visibility, transform, color) in &players {
+            if visibility != Visibility::Hidden {
+                gizmos.rect(
+                    transform.translation,
+                    transform.rotation,
+                    Vec2::ONE * 50.0,
+                    color.0,
+                );
+            }
         }
     }
 }
 
+pub(super) const DEFAULT_SPEED: f32 = 400.0;
+
 #[derive(Bundle, Default)]
 pub(super) struct PlayerBoxBundle {
     pub(super) color: PlayerColor,
+    pub(super) visibility: Visibility,
     pub(super) player: PlayerBox,
     pub(super) transform: Transform,
 }
@@ -34,4 +42,4 @@ pub(super) struct PlayerBoxBundle {
 pub(super) struct PlayerBox;
 
 #[derive(Component, Default)]
-pub(super) struct PlayerColor(Color);
+pub(super) struct PlayerColor(pub(super) Color);
