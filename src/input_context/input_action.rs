@@ -118,7 +118,7 @@ impl ActionData {
         // Trigger an event for each entity separately
         // since it's cheaper to copy the event than to clone the entities.
         for &entity in entities {
-            match (self.state(), state) {
+            match (self.state, state) {
                 (ActionState::None, ActionState::None) => (),
                 (ActionState::None, ActionState::Ongoing) => {
                     commands.trigger_targets(
