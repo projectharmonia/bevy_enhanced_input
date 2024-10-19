@@ -270,7 +270,13 @@ struct ReaderParams {
 
 #[cfg(test)]
 mod tests {
-    use bevy::{ecs::system::SystemState, input::mouse::MouseScrollUnit};
+    use bevy::{
+        ecs::system::{RunSystemOnce, SystemState},
+        input::{
+            gamepad::{self, GamepadConnection, GamepadConnectionEvent, GamepadInfo},
+            mouse::MouseScrollUnit,
+        },
+    };
 
     use super::*;
     use crate::Input;
@@ -405,6 +411,31 @@ mod tests {
     }
 
     #[test]
+    fn any_gamepad_button() {
+        let (mut world, mut state) = init_world();
+
+        let button = GamepadButtonType::South;
+        let gamepad = connect_dummy_gamepad(&mut world);
+        world
+            .resource_mut::<ButtonInput<GamepadButton>>()
+            .press(GamepadButton {
+                gamepad,
+                button_type: button,
+            });
+
+        let mut reader = state.get(&world);
+        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(
+            reader.value(GamepadButtonType::North),
+            ActionValue::Bool(false)
+        );
+
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(reader.value(button), ActionValue::Bool(false));
+    }
+
+    #[test]
     fn gamepad_axis() {
         let (mut world, mut state) = init_world();
 
@@ -435,6 +466,33 @@ mod tests {
         );
 
         reader.set_gamepad(gamepad);
+        reader.set_consume_input(true);
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
+    }
+
+    #[test]
+    fn any_gamepad_axis() {
+        let (mut world, mut state) = init_world();
+
+        let value = 1.0;
+        let axis = GamepadAxisType::LeftStickX;
+        let gamepad = connect_dummy_gamepad(&mut world);
+        world.resource_mut::<Axis<GamepadAxis>>().set(
+            GamepadAxis {
+                gamepad,
+                axis_type: axis,
+            },
+            value,
+        );
+
+        let mut reader = state.get(&world);
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
+        assert_eq!(
+            reader.value(GamepadAxisType::LeftStickY),
+            ActionValue::Axis1D(0.0)
+        );
+
         reader.set_consume_input(true);
         assert_eq!(reader.value(axis), ActionValue::Axis1D(value));
         assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
@@ -635,5 +693,26 @@ mod tests {
         let state = SystemState::<InputReader>::new(&mut world);
 
         (world, state)
+    }
+
+    /// To populate [`Gamepads`] resource.
+    #[must_use]
+    fn connect_dummy_gamepad(world: &mut World) -> Gamepad {
+        let gameapds = world.resource::<Gamepads>();
+        let next_id = gameapds.iter().count();
+        let gamepad = Gamepad::new(next_id);
+
+        world.init_resource::<Events<GamepadConnectionEvent>>();
+        world.send_event(GamepadConnectionEvent {
+            gamepad,
+            connection: GamepadConnection::Connected(GamepadInfo {
+                name: "Dummy".to_string(),
+            }),
+        });
+
+        world.init_resource::<Axis<GamepadButton>>();
+        world.run_system_once(gamepad::gamepad_connection_system);
+
+        gamepad
     }
 }
