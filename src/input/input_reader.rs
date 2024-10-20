@@ -439,7 +439,7 @@ mod tests {
 
         let mut reader = state.get(&world);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
-        assert_eq!(reader.value(other_button), ActionValue::Bool(true),);
+        assert_eq!(reader.value(other_button), ActionValue::Bool(true));
         assert_eq!(
             reader.value(GamepadButtonType::North),
             ActionValue::Bool(false)
