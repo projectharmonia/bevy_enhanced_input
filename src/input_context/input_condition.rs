@@ -45,7 +45,6 @@ pub enum ConditionKind {
     /// If no regular conditions are provided, the action will be set to [`ActionState::Fired`] on
     /// any non-zero value, functioning similarly to a [`Down`](down::Down) condition with a zero actuation threshold.
     Regular,
-
     /// If any required condition fails to return [`ActionState::Fired`],
     /// it will override all results from regular actions with [`ActionState::None`].
     /// Doesn't contribute to the action state on its own.

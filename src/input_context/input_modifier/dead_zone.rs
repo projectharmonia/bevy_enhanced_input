@@ -95,7 +95,6 @@ pub enum DeadZoneKind {
     /// For [`ActionValue::Axis1D`] this works identically to [`Self::Axial`].
     #[default]
     Radial,
-
     /// Apply dead zone to axes individually.
     ///
     /// This will result in input being chamfered at the corners

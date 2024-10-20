@@ -168,7 +168,6 @@ pub enum GamepadDevice {
     /// [`ActionValue`]: crate::action_value::ActionValue
     #[default]
     Any,
-
     /// Matches input from specific gamepad.
     Id(Gamepad),
 }

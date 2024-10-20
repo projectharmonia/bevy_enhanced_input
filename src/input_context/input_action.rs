@@ -323,14 +323,12 @@ pub enum ActionEventKind {
         /// Total time this action has been in both [`ActionState::Ongoing`] and [`ActionState::Fired`].
         elapsed_secs: f32,
     },
-
     /// Triggers when an action switches its state from [`ActionState::None`]
     /// to [`ActionState::Fired`] or [`ActionState::Ongoing`].
     ///
     /// For example, with the [`Tap`](super::input_condition::tap::Tap) condition, this event is triggered
     /// only on the first press.
     Started,
-
     /// Triggers every frame when an action state is [`ActionState::Ongoing`].
     ///
     /// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
@@ -339,7 +337,6 @@ pub enum ActionEventKind {
         /// Time that this action was in [`ActionState::Ongoing`] state.
         elapsed_secs: f32,
     },
-
     /// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`],
     ///
     /// For example, with the [`Hold`](super::input_condition::hold::Hold) condition,
@@ -351,7 +348,6 @@ pub enum ActionEventKind {
         /// Total time this action has been in both [`ActionState::Ongoing`] and [`ActionState::Fired`].
         elapsed_secs: f32,
     },
-
     /// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`],
     ///
     /// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
@@ -452,7 +448,6 @@ pub enum Accumulation {
     /// Usually used for things like WASD movement, when you want pressing W and S to cancel each other out.
     #[default]
     Cumulative,
-
     /// Take the value from the mapping with the highest absolute value.
     ///
     /// For example, given values of 0.5 and -1.5, the input action's value would be -1.5.

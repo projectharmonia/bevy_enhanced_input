@@ -332,7 +332,6 @@ pub enum ContextMode {
     /// Useful for local multiplayer scenarios where each player has different input mappings.
     #[default]
     Exclusive,
-
     /// Share a single context instance among all entities.
     ///
     /// The context will be created once for the first insertion reused for all other entities
