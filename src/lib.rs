@@ -74,7 +74,7 @@ pub mod prelude {
             },
             ContextAppExt, ContextMode, InputContext, RebuildInputContexts,
         },
-        EnhancedInputPlugin,
+        EnhancedInputPlugin, EnhancedInputSystem,
     };
     pub use bevy_enhanced_input_macros::InputAction;
 }

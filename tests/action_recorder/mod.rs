@@ -3,7 +3,7 @@
 use std::any::TypeId;
 
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
-use bevy_enhanced_input::{prelude::*, EnhancedInputSystem};
+use bevy_enhanced_input::prelude::*;
 
 pub(super) trait AppTriggeredExt {
     /// Observes for [`ActionEvent`] and stores them inside [`RecordedActions`].
