@@ -3,7 +3,7 @@
 use std::any::TypeId;
 
 use bevy::{ecs::entity::EntityHashMap, prelude::*, utils::HashMap};
-use bevy_enhanced_input::prelude::*;
+use bevy_enhanced_input::{input_context::input_action::UntypedActionEvent, prelude::*};
 
 pub(super) trait AppTriggeredExt {
     /// Observes for [`ActionEvent`] and stores them inside [`RecordedActions`].
@@ -64,25 +64,6 @@ impl RecordedActions {
     fn clear(&mut self) {
         for event_group in self.0.values_mut() {
             event_group.clear();
-        }
-    }
-}
-
-/// Untyped version of [`ActionEvent`].
-#[derive(Clone, Copy)]
-#[allow(dead_code)]
-pub struct UntypedActionEvent {
-    pub kind: ActionEventKind,
-    pub value: ActionValue,
-    pub state: ActionState,
-}
-
-impl<A: InputAction> From<ActionEvent<A>> for UntypedActionEvent {
-    fn from(value: ActionEvent<A>) -> Self {
-        Self {
-            kind: value.kind,
-            value: value.value,
-            state: value.state,
         }
     }
 }
