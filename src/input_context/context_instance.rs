@@ -295,7 +295,8 @@ impl ActionBind {
     }
 }
 
-/// Data for [`InputCondition`]s and [`InputModifier`]s during action evaluation.
+/// Read-only data for [`InputCondition`]s and [`InputModifier`]s during action evaluation.
+#[non_exhaustive]
 pub struct ActionContext<'a> {
     /// Current world.
     pub world: &'a World,
