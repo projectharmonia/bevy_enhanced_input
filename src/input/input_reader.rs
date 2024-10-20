@@ -37,11 +37,6 @@ impl InputReader<'_, '_> {
     pub(crate) fn update_state(&mut self) {
         self.consumed.reset();
 
-        #[cfg(feature = "egui_priority")]
-        if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
-            self.consumed.ui_wants_keyboard = true;
-        }
-
         #[cfg(feature = "ui_priority")]
         if self
             .interactions
@@ -49,6 +44,11 @@ impl InputReader<'_, '_> {
             .any(|&interaction| interaction != Interaction::None)
         {
             self.consumed.ui_wants_mouse = true;
+        }
+
+        #[cfg(feature = "egui_priority")]
+        if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
+            self.consumed.ui_wants_keyboard = true;
         }
 
         #[cfg(feature = "egui_priority")]
