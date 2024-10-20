@@ -52,11 +52,7 @@ impl InputReader<'_, '_> {
         }
 
         #[cfg(feature = "egui_priority")]
-        if self
-            .egui
-            .iter()
-            .any(|ctx| ctx.get().is_pointer_over_area() || ctx.get().wants_pointer_input())
-        {
+        if self.egui.iter().any(|ctx| ctx.get().wants_pointer_input()) {
             self.consumed.ui_wants_mouse = true;
         }
 
