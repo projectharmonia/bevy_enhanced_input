@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
+use super::{ignore_incompatible, InputModifier};
 use crate::{action_value::ActionValue, input_context::context_instance::ActionContext};
 
 /// Input values within the range [Self::lower_threshold] -> [Self::upper_threshold] will be remapped from 0 -> 1.
@@ -58,7 +58,7 @@ impl InputModifier for DeadZone {
     fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
         match value {
             ActionValue::Bool(_) => {
-                super::ignore_incompatible!(value);
+                ignore_incompatible!(value);
             }
             ActionValue::Axis1D(value) => self.dead_zone(value).into(),
             ActionValue::Axis2D(mut value) => match self.kind {

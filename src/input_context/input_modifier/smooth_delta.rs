@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use interpolation::Ease;
 pub use interpolation::EaseFunction;
 
-use super::InputModifier;
+use super::{ignore_incompatible, InputModifier};
 use crate::{
     action_value::{ActionValue, ActionValueDim},
     input_context::context_instance::ActionContext,
@@ -42,7 +42,7 @@ impl InputModifier for SmoothDelta {
     fn apply(&mut self, _ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool {
-            super::ignore_incompatible!(value);
+            ignore_incompatible!(value);
         }
 
         let value = value.as_axis3d();

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
+use super::{ignore_incompatible, InputModifier};
 use crate::{
     action_value::{ActionValue, ActionValueDim},
     input_context::context_instance::ActionContext,
@@ -14,7 +14,7 @@ impl InputModifier for Normalize {
     fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool || dim == ActionValueDim::Axis1D {
-            super::ignore_incompatible!(value);
+            ignore_incompatible!(value);
         }
 
         let normalized = value.as_axis3d().normalize_or_zero();

@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
+use super::{ignore_incompatible, InputModifier};
 use crate::{
     action_value::{ActionValue, ActionValueDim},
     input_context::context_instance::ActionContext,
@@ -36,7 +36,7 @@ impl InputModifier for Scalar {
     fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool {
-            super::ignore_incompatible!(value);
+            ignore_incompatible!(value);
         }
 
         ActionValue::Axis3D(value.as_axis3d() * self.scalar).convert(dim)

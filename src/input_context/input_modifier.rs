@@ -31,7 +31,8 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
 
 /// Simple helper to emit a warning if a dimension is not compatible with a modifier.
 ///
-/// We use a macro to make [`warn_once`] work independently.
+/// We use a macro to make [`warn_once`](bevy::log::warn_once) print independently.
+#[macro_export]
 macro_rules! ignore_incompatible {
     ($value:expr) => {
         warn_once!(
@@ -43,4 +44,4 @@ macro_rules! ignore_incompatible {
     };
 }
 
-use ignore_incompatible;
+pub use ignore_incompatible;

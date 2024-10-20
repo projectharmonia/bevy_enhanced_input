@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
+use super::{ignore_incompatible, InputModifier};
 use crate::{action_value::ActionValue, input_context::context_instance::ActionContext};
 
 /// Swizzle axis components of an input value.
@@ -32,7 +32,7 @@ impl InputModifier for SwizzleAxis {
     fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
         match value {
             ActionValue::Bool(_) | ActionValue::Axis1D(_) => {
-                super::ignore_incompatible!(value);
+                ignore_incompatible!(value);
             }
             ActionValue::Axis2D(value) => match self {
                 SwizzleAxis::YXZ => value.yx().into(),
