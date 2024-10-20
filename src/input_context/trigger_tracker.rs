@@ -38,7 +38,7 @@ impl TriggerTracker {
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
         for modifier in modifiers {
-            let new_value = modifier.apply(&ctx, delta, self.value);
+            let new_value = modifier.apply(ctx, delta, self.value);
             debug_assert_eq!(
                 new_value.dim(),
                 self.value.dim(),
@@ -62,7 +62,7 @@ impl TriggerTracker {
         // Note: No early outs permitted!
         // All conditions must be evaluated to update their internal state/delta time.
         for condition in conditions {
-            let state = condition.evaluate(&ctx, delta, self.value);
+            let state = condition.evaluate(ctx, delta, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
             match condition.kind() {
                 ConditionKind::Regular => {
