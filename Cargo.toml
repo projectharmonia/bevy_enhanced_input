@@ -9,7 +9,7 @@ repository = "https://github.com/projectharmonia/bevy_enhanced_input"
 keywords = ["bevy", "input"]
 categories = ["game-development"]
 license = "MIT OR Apache-2.0"
-include = ["/src", "/tests", "/LICENSE*"]
+include = ["/src", "/tests", "/examples", "/LICENSE*"]
 
 [dependencies]
 bevy_enhanced_input_macros = { path = "macros", version = "0.1" }
