@@ -60,7 +60,9 @@ pub mod prelude {
         action_value::{ActionValue, ActionValueDim},
         input::{GamepadDevice, Input, Modifiers},
         input_context::{
-            context_instance::{ActionBind, ContextInstance, GamepadStick, InputBind},
+            context_instance::{
+                ActionBind, ActionContext, ContextInstance, GamepadStick, InputBind,
+            },
             input_action::{Accumulation, ActionEvent, ActionEventKind, ActionState, InputAction},
             input_condition::{
                 blocked_by::*, chord::*, down::*, held_timer::*, hold::*, hold_and_release::*,

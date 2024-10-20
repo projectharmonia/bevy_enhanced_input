@@ -9,8 +9,7 @@ pub mod swizzle_axis;
 
 use std::fmt::Debug;
 
-use bevy::prelude::*;
-
+use super::context_instance::ActionContext;
 use crate::action_value::ActionValue;
 
 /// Pre-processors that alter the raw input values.
@@ -27,7 +26,7 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
     ///
     /// Called each frame.
-    fn apply(&mut self, world: &World, delta: f32, value: ActionValue) -> ActionValue;
+    fn apply(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionValue;
 }
 
 /// Simple helper to emit a warning if a dimension is not compatible with a modifier.

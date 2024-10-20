@@ -3,7 +3,8 @@ use std::cmp::Ordering;
 use bevy::prelude::*;
 
 use super::{
-    input_action::{Accumulation, ActionState, ActionsData},
+    context_instance::ActionContext,
+    input_action::{Accumulation, ActionState},
     input_condition::{ConditionKind, InputCondition},
     input_modifier::InputModifier,
 };
@@ -32,12 +33,12 @@ impl TriggerTracker {
 
     pub(super) fn apply_modifiers(
         &mut self,
-        world: &World,
+        ctx: &ActionContext,
         delta: f32,
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
         for modifier in modifiers {
-            let new_value = modifier.apply(world, delta, self.value);
+            let new_value = modifier.apply(&ctx, delta, self.value);
             debug_assert_eq!(
                 new_value.dim(),
                 self.value.dim(),
@@ -54,15 +55,14 @@ impl TriggerTracker {
 
     pub(super) fn apply_conditions(
         &mut self,
-        world: &World,
-        actions: &ActionsData,
+        ctx: &ActionContext,
         delta: f32,
         conditions: &mut [Box<dyn InputCondition>],
     ) {
         // Note: No early outs permitted!
         // All conditions must be evaluated to update their internal state/delta time.
         for condition in conditions {
-            let state = condition.evaluate(world, actions, delta, self.value);
+            let state = condition.evaluate(&ctx, delta, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
             match condition.kind() {
                 ConditionKind::Regular => {

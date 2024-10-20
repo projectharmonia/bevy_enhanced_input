@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, ActionValueDim};
+use crate::{
+    action_value::{ActionValue, ActionValueDim},
+    input_context::context_instance::ActionContext,
+};
 
 /// Scales input by a set factor per axis.
 ///
@@ -30,7 +33,7 @@ impl Scalar {
 }
 
 impl InputModifier for Scalar {
-    fn apply(&mut self, _world: &World, _delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool {
             super::ignore_incompatible!(value);
@@ -43,20 +46,25 @@ impl InputModifier for Scalar {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn scaling() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut modifier = Scalar::splat(2.0);
-        assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 2.0.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 2.0.into());
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec2::ONE.into()),
+            modifier.apply(&ctx, 0.0, Vec2::ONE.into()),
             (2.0, 2.0).into()
         );
         assert_eq!(
-            modifier.apply(&world, 0.0, Vec3::ONE.into()),
+            modifier.apply(&ctx, 0.0, Vec3::ONE.into()),
             (2.0, 2.0, 2.0).into()
         );
     }

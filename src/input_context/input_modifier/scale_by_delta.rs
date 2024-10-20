@@ -1,7 +1,10 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, ActionValueDim};
+use crate::{
+    action_value::{ActionValue, ActionValueDim},
+    input_context::context_instance::ActionContext,
+};
 
 /// Multiplies the input value by delta time for this frame.
 ///
@@ -10,7 +13,7 @@ use crate::{action_value::ActionValue, ActionValueDim};
 pub struct ScaleByDelta;
 
 impl InputModifier for ScaleByDelta {
-    fn apply(&mut self, _world: &World, delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, _ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool {
             super::ignore_incompatible!(value);
@@ -23,20 +26,25 @@ impl InputModifier for ScaleByDelta {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn scaling() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let delta = 0.5;
-        assert_eq!(ScaleByDelta.apply(&world, delta, true.into()), true.into());
-        assert_eq!(ScaleByDelta.apply(&world, delta, 0.5.into()), 0.25.into());
+        assert_eq!(ScaleByDelta.apply(&ctx, delta, true.into()), true.into());
+        assert_eq!(ScaleByDelta.apply(&ctx, delta, 0.5.into()), 0.25.into());
         assert_eq!(
-            ScaleByDelta.apply(&world, delta, Vec2::ONE.into()),
+            ScaleByDelta.apply(&ctx, delta, Vec2::ONE.into()),
             (0.5, 0.5).into()
         );
         assert_eq!(
-            ScaleByDelta.apply(&world, delta, Vec3::ONE.into()),
+            ScaleByDelta.apply(&ctx, delta, Vec3::ONE.into()),
             (0.5, 0.5, 0.5).into()
         );
     }

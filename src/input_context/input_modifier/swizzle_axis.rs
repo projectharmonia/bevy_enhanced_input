@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::action_value::ActionValue;
+use crate::{action_value::ActionValue, input_context::context_instance::ActionContext};
 
 /// Swizzle axis components of an input value.
 ///
@@ -23,7 +23,7 @@ pub enum SwizzleAxis {
 }
 
 impl InputModifier for SwizzleAxis {
-    fn apply(&mut self, _world: &World, _delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
         match value {
             ActionValue::Bool(_) | ActionValue::Axis1D(_) => {
                 super::ignore_incompatible!(value);
@@ -49,88 +49,109 @@ impl InputModifier for SwizzleAxis {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn yxz() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut swizzle = SwizzleAxis::YXZ;
-        assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(swizzle.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(swizzle.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            swizzle.apply(&world, 0.0, (0.0, 1.0).into()),
+            swizzle.apply(&ctx, 0.0, (0.0, 1.0).into()),
             (1.0, 0.0).into(),
         );
         assert_eq!(
-            swizzle.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            swizzle.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
             (1.0, 0.0, 2.0).into(),
         );
     }
 
     #[test]
     fn zyx() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut swizzle = SwizzleAxis::ZYX;
-        assert_eq!(swizzle.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(swizzle.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(swizzle.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(swizzle.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            swizzle.apply(&world, 0.0, (0.0, 1.0).into()),
+            swizzle.apply(&ctx, 0.0, (0.0, 1.0).into()),
             (0.0, 1.0).into(),
         );
         assert_eq!(
-            swizzle.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            swizzle.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
             (2.0, 1.0, 0.0).into(),
         );
     }
 
     #[test]
     fn xzy() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut modifier = SwizzleAxis::XZY;
-        assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&world, 0.0, (0.0, 1.0).into()),
+            modifier.apply(&ctx, 0.0, (0.0, 1.0).into()),
             (0.0, 0.0).into(),
         );
         assert_eq!(
-            modifier.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
             (0.0, 2.0, 1.0).into(),
         );
     }
 
     #[test]
     fn yzx() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut modifier = SwizzleAxis::YZX;
-        assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&world, 0.0, (0.0, 1.0).into()),
+            modifier.apply(&ctx, 0.0, (0.0, 1.0).into()),
             (1.0, 0.0).into(),
         );
         assert_eq!(
-            modifier.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
             (1.0, 2.0, 0.0).into(),
         );
     }
 
     #[test]
     fn zxy() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut modifier = SwizzleAxis::ZXY;
-        assert_eq!(modifier.apply(&world, 0.0, true.into()), true.into());
-        assert_eq!(modifier.apply(&world, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&world, 0.0, (0.0, 1.0).into()),
+            modifier.apply(&ctx, 0.0, (0.0, 1.0).into()),
             (0.0, 0.0).into(),
         );
         assert_eq!(
-            modifier.apply(&world, 0.0, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
             (2.0, 0.0, 1.0).into(),
         );
     }

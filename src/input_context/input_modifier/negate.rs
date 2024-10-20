@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::action_value::ActionValue;
+use crate::{action_value::ActionValue, input_context::context_instance::ActionContext};
 
 /// Inverts value per axis.
 ///
@@ -67,7 +67,7 @@ impl Default for Negate {
 }
 
 impl InputModifier for Negate {
-    fn apply(&mut self, _world: &World, _delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
         let x = if self.x { -1.0 } else { 1.0 };
         let y = if self.y { -1.0 } else { 1.0 };
         let z = if self.z { -1.0 } else { 1.0 };
@@ -80,25 +80,30 @@ impl InputModifier for Negate {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn negation() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         assert_eq!(
-            Negate::default().apply(&world, 0.0, Vec3::ONE.into()),
+            Negate::default().apply(&ctx, 0.0, Vec3::ONE.into()),
             Vec3::NEG_ONE.into(),
         );
         assert_eq!(
-            Negate::x(true).apply(&world, 0.0, Vec3::ONE.into()),
+            Negate::x(true).apply(&ctx, 0.0, Vec3::ONE.into()),
             (-1.0, 1.0, 1.0).into(),
         );
         assert_eq!(
-            Negate::y(true).apply(&world, 0.0, Vec3::ONE.into()),
+            Negate::y(true).apply(&ctx, 0.0, Vec3::ONE.into()),
             (1.0, -1.0, 1.0).into(),
         );
         assert_eq!(
-            Negate::z(true).apply(&world, 0.0, Vec3::ONE.into()),
+            Negate::z(true).apply(&ctx, 0.0, Vec3::ONE.into()),
             (1.0, 1.0, -1.0).into(),
         );
     }

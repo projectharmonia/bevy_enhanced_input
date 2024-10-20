@@ -1,9 +1,7 @@
-use bevy::prelude::*;
-
 use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::input_action::{ActionState, ActionsData},
+    input_context::{context_instance::ActionContext, input_action::ActionState},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
@@ -45,17 +43,11 @@ impl HoldAndRelease {
 }
 
 impl InputCondition for HoldAndRelease {
-    fn evaluate(
-        &mut self,
-        world: &World,
-        _actions: &ActionsData,
-        delta: f32,
-        value: ActionValue,
-    ) -> ActionState {
+    fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState {
         // Evaluate the updated held duration prior to checking for actuation.
         // This stops us failing to trigger if the input is released on the
         // threshold frame due to held duration being 0.
-        self.held_timer.update(world, delta);
+        self.held_timer.update(ctx.world, delta);
         let held_duration = self.held_timer.duration();
 
         if value.is_actuated(self.actuation) {
@@ -74,29 +66,29 @@ impl InputCondition for HoldAndRelease {
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
+
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn hold_and_release() {
-        let world = World::new();
-        let actions = ActionsData::default();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut modifier = HoldAndRelease::new(1.0);
         assert_eq!(
-            modifier.evaluate(&world, &actions, 0.0, 1.0.into()),
+            modifier.evaluate(&ctx, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
+        assert_eq!(modifier.evaluate(&ctx, 1.0, 0.0.into()), ActionState::Fired);
         assert_eq!(
-            modifier.evaluate(&world, &actions, 1.0, 0.0.into()),
-            ActionState::Fired,
-        );
-        assert_eq!(
-            modifier.evaluate(&world, &actions, 0.0, 1.0.into()),
+            modifier.evaluate(&ctx, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
-        assert_eq!(
-            modifier.evaluate(&world, &actions, 0.0, 0.0.into()),
-            ActionState::None,
-        );
+        assert_eq!(modifier.evaluate(&ctx, 0.0, 0.0.into()), ActionState::None);
     }
 }

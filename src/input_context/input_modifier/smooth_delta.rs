@@ -3,7 +3,10 @@ use interpolation::Ease;
 pub use interpolation::EaseFunction;
 
 use super::InputModifier;
-use crate::action_value::{ActionValue, ActionValueDim};
+use crate::{
+    action_value::{ActionValue, ActionValueDim},
+    input_context::context_instance::ActionContext,
+};
 
 /// Normalized smooth delta
 ///
@@ -36,7 +39,7 @@ impl SmoothDelta {
 }
 
 impl InputModifier for SmoothDelta {
-    fn apply(&mut self, _world: &World, delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, _ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool {
             super::ignore_incompatible!(value);
@@ -79,29 +82,35 @@ impl From<EaseFunction> for SmoothKind {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn linear() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut modifier = SmoothDelta::new(SmoothKind::Linear, 1.0);
         let delta = 0.1;
-        assert_eq!(modifier.apply(&world, delta, true.into()), true.into());
-        assert_eq!(modifier.apply(&world, delta, 0.5.into()), 0.1.into());
-        assert_eq!(modifier.apply(&world, delta, 1.0.into()), 0.19.into());
+        assert_eq!(modifier.apply(&ctx, delta, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, delta, 0.5.into()), 0.1.into());
+        assert_eq!(modifier.apply(&ctx, delta, 1.0.into()), 0.19.into());
     }
 
     #[test]
     fn ease_function() {
-        let world = World::new();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut modifier = SmoothDelta::new(EaseFunction::QuadraticIn, 1.0);
         let delta = 0.2;
-        assert_eq!(modifier.apply(&world, delta, true.into()), true.into());
-        assert_eq!(
-            modifier.apply(&world, delta, 0.5.into()),
-            0.040000003.into()
-        );
-        assert_eq!(modifier.apply(&world, delta, 1.0.into()), 0.0784.into());
+        assert_eq!(modifier.apply(&ctx, delta, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, delta, 0.5.into()), 0.040000003.into());
+        assert_eq!(modifier.apply(&ctx, delta, 1.0.into()), 0.0784.into());
     }
 }

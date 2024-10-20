@@ -5,7 +5,10 @@ use bevy::prelude::*;
 use super::{ConditionKind, InputCondition};
 use crate::{
     action_value::ActionValue,
-    input_context::input_action::{ActionState, ActionsData, InputAction},
+    input_context::{
+        context_instance::ActionContext,
+        input_action::{ActionState, InputAction},
+    },
 };
 
 /// Requires another action to not be triggered within the same context.
@@ -34,14 +37,8 @@ impl<A: InputAction> Clone for BlockedBy<A> {
 impl<A: InputAction> Copy for BlockedBy<A> {}
 
 impl<A: InputAction> InputCondition for BlockedBy<A> {
-    fn evaluate(
-        &mut self,
-        _world: &World,
-        actions: &ActionsData,
-        _delta: f32,
-        _value: ActionValue,
-    ) -> ActionState {
-        if let Some(action) = actions.action::<A>() {
+    fn evaluate(&mut self, ctx: &ActionContext, _delta: f32, _value: ActionValue) -> ActionState {
+        if let Some(action) = ctx.actions.action::<A>() {
             if action.state() == ActionState::Fired {
                 return ActionState::None;
             }
@@ -67,7 +64,10 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::{input_context::input_action::ActionData, ActionValueDim};
+    use crate::{
+        input_context::input_action::{ActionData, ActionsData},
+        ActionValueDim,
+    };
 
     #[test]
     fn blocked() {
@@ -76,22 +76,30 @@ mod tests {
         action.update(&mut world.commands(), &[], ActionState::Fired, true, 0.0);
         let mut actions = ActionsData::default();
         actions.insert(TypeId::of::<DummyAction>(), action);
+        let ctx = ActionContext {
+            world: &world,
+            actions: &actions,
+            entities: &[],
+        };
 
         let mut condition = BlockedBy::<DummyAction>::default();
         assert_eq!(
-            condition.evaluate(&world, &actions, 0.0, true.into()),
+            condition.evaluate(&ctx, 0.0, true.into()),
             ActionState::None,
         );
     }
 
     #[test]
     fn missing_action() {
-        let world = World::new();
-        let actions = ActionsData::default();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut condition = BlockedBy::<DummyAction>::default();
         assert_eq!(
-            condition.evaluate(&world, &actions, 0.0, true.into()),
+            condition.evaluate(&ctx, 0.0, true.into()),
             ActionState::Fired,
         );
     }

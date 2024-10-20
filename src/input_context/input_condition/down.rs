@@ -1,9 +1,7 @@
-use bevy::prelude::*;
-
 use super::{InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::input_action::{ActionState, ActionsData},
+    input_context::{context_instance::ActionContext, input_action::ActionState},
 };
 
 /// Returns [`ActionState::Fired`] when the input exceeds the actuation threshold.
@@ -27,13 +25,7 @@ impl Default for Down {
 }
 
 impl InputCondition for Down {
-    fn evaluate(
-        &mut self,
-        _world: &World,
-        _actions: &ActionsData,
-        _delta: f32,
-        value: ActionValue,
-    ) -> ActionState {
+    fn evaluate(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionState {
         if value.is_actuated(self.actuation) {
             ActionState::Fired
         } else {
@@ -44,20 +36,23 @@ impl InputCondition for Down {
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
+
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn down() {
-        let world = World::new();
-        let actions = ActionsData::default();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut condition = Down::new(1.0);
+        assert_eq!(condition.evaluate(&ctx, 0.0, 0.0.into()), ActionState::None);
         assert_eq!(
-            condition.evaluate(&world, &actions, 0.0, 0.0.into()),
-            ActionState::None,
-        );
-        assert_eq!(
-            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
+            condition.evaluate(&ctx, 0.0, 1.0.into()),
             ActionState::Fired,
         );
     }

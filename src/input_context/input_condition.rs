@@ -11,9 +11,7 @@ pub mod tap;
 
 use std::fmt::Debug;
 
-use bevy::prelude::*;
-
-use super::input_action::{ActionState, ActionsData};
+use super::{context_instance::ActionContext, input_action::ActionState};
 use crate::action_value::ActionValue;
 
 pub const DEFAULT_ACTUATION: f32 = 0.5;
@@ -31,13 +29,7 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 /// and [`InputBind::with_condition`](super::context_instance::InputBind::with_condition).
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
-    fn evaluate(
-        &mut self,
-        world: &World,
-        actions: &ActionsData,
-        delta: f32,
-        value: ActionValue,
-    ) -> ActionState;
+    fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState;
 
     /// Returns how the condition is combined with others.
     fn kind(&self) -> ConditionKind {

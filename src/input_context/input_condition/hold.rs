@@ -1,9 +1,7 @@
-use bevy::prelude::*;
-
 use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::input_action::{ActionState, ActionsData},
+    input_context::{context_instance::ActionContext, input_action::ActionState},
 };
 
 /// Returns [`ActionState::Ongoing`] when the input becomes actuated and
@@ -59,16 +57,10 @@ impl Hold {
 }
 
 impl InputCondition for Hold {
-    fn evaluate(
-        &mut self,
-        world: &World,
-        _actions: &ActionsData,
-        delta: f32,
-        value: ActionValue,
-    ) -> ActionState {
+    fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState {
         let actuated = value.is_actuated(self.actuation);
         if actuated {
-            self.held_timer.update(world, delta);
+            self.held_timer.update(ctx.world, delta);
         } else {
             self.held_timer.reset();
         }
@@ -92,49 +84,49 @@ impl InputCondition for Hold {
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
+
     use super::*;
+    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn hold() {
-        let world = World::new();
-        let actions = ActionsData::default();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut condition = Hold::new(1.0);
         assert_eq!(
-            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
+            condition.evaluate(&ctx, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions, 1.0, 1.0.into()),
+            condition.evaluate(&ctx, 1.0, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&world, &actions, 1.0, 1.0.into()),
+            condition.evaluate(&ctx, 1.0, 1.0.into()),
             ActionState::Fired,
         );
+        assert_eq!(condition.evaluate(&ctx, 1.0, 0.0.into()), ActionState::None);
         assert_eq!(
-            condition.evaluate(&world, &actions, 1.0, 0.0.into()),
-            ActionState::None,
-        );
-        assert_eq!(
-            condition.evaluate(&world, &actions, 0.0, 1.0.into()),
+            condition.evaluate(&ctx, 0.0, 1.0.into()),
             ActionState::Ongoing,
         );
     }
 
     #[test]
     fn one_shot() {
-        let world = World::new();
-        let actions = ActionsData::default();
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
 
         let mut hold = Hold::new(1.0).one_shot(true);
-        assert_eq!(
-            hold.evaluate(&world, &actions, 1.0, 1.0.into()),
-            ActionState::Fired,
-        );
-        assert_eq!(
-            hold.evaluate(&world, &actions, 1.0, 1.0.into()),
-            ActionState::None,
-        );
+        assert_eq!(hold.evaluate(&ctx, 1.0, 1.0.into()), ActionState::Fired);
+        assert_eq!(hold.evaluate(&ctx, 1.0, 1.0.into()), ActionState::None);
     }
 }

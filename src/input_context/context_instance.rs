@@ -258,6 +258,11 @@ impl ActionBind {
         delta: f32,
     ) {
         trace!("updating action `{}`", self.action_name);
+        let ctx = ActionContext {
+            world,
+            entities,
+            actions,
+        };
 
         reader.set_consume_input(self.consume_input);
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
@@ -273,13 +278,13 @@ impl ActionBind {
             }
 
             let mut current_tracker = TriggerTracker::new(value);
-            current_tracker.apply_modifiers(world, delta, &mut binding.modifiers);
-            current_tracker.apply_conditions(world, actions, delta, &mut binding.conditions);
+            current_tracker.apply_modifiers(&ctx, delta, &mut binding.modifiers);
+            current_tracker.apply_conditions(&ctx, delta, &mut binding.conditions);
             tracker.merge(current_tracker, self.accumulation);
         }
 
-        tracker.apply_modifiers(world, delta, &mut self.modifiers);
-        tracker.apply_conditions(world, actions, delta, &mut self.conditions);
+        tracker.apply_modifiers(&ctx, delta, &mut self.modifiers);
+        tracker.apply_conditions(&ctx, delta, &mut self.conditions);
 
         let (state, value) = tracker.finish();
         let action = actions
@@ -288,6 +293,22 @@ impl ActionBind {
 
         action.update(commands, entities, state, value, delta);
     }
+}
+
+/// Data for [`InputCondition`]s and [`InputModifier`]s during action evaluation.
+pub struct ActionContext<'a> {
+    /// Current world.
+    pub world: &'a World,
+
+    /// The state of other actions within the currently evaluating context.
+    pub actions: &'a ActionsData,
+
+    /// The entities for which the action is being evaluated.
+    ///
+    /// This can be either a single entity when [`InputContext::MODE`](super::InputContext::MODE) is
+    /// set to [`ContextMode::Exclusive`](super::ContextMode::Exclusive),
+    /// or multiple entities when using [`ContextMode::Shared`](super::ContextMode::Shared).
+    pub entities: &'a [Entity],
 }
 
 /// Associated input for [`ActionBind`].
