@@ -36,6 +36,14 @@ We provide a [`prelude`] module, which exports most of the typically used traits
 
 For more details, see the documentation on relevant types. You can also find examples in the repository.
 
+# Input and UI
+
+Currently, Bevy does not have a focus management API. However, to prevent actions from being triggered
+while interacting with the UI, we implement temporary workarounds enabled by specific cargo features:
+
+* If the `ui_priority` feature is enabled, we check if any [`Interaction`] component is not [`Interaction::None`] and discard all mouse inputs.
+* If the `egui_priority` feature is enabled, we check if any egui context requires keyboard or mouse input and discard those inputs accordingly.
+
 # Troubleshooting
 
 If you face any issue, try to enable logging to see what is going on.
