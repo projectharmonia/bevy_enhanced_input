@@ -20,6 +20,12 @@ pub enum SwizzleAxis {
     YZX,
     /// Reorder all axes, Z first.
     ZXY,
+    /// Use X for all axes.
+    XXX,
+    /// Use Y for all axes.
+    YYY,
+    /// Use Z for all axes.
+    ZZZ,
 }
 
 impl InputModifier for SwizzleAxis {
@@ -34,6 +40,9 @@ impl InputModifier for SwizzleAxis {
                 SwizzleAxis::XZY => (value.x, 0.0).into(),
                 SwizzleAxis::YZX => (value.y, 0.0).into(),
                 SwizzleAxis::ZXY => (0.0, value.x).into(),
+                SwizzleAxis::XXX => value.xx().into(),
+                SwizzleAxis::YYY => value.yy().into(),
+                SwizzleAxis::ZZZ => Vec2::ZERO.into(),
             },
             ActionValue::Axis3D(value) => match self {
                 SwizzleAxis::YXZ => value.yxz().into(),
@@ -41,6 +50,9 @@ impl InputModifier for SwizzleAxis {
                 SwizzleAxis::XZY => value.xzy().into(),
                 SwizzleAxis::YZX => value.yzx().into(),
                 SwizzleAxis::ZXY => value.zxy().into(),
+                SwizzleAxis::XXX => value.xxx().into(),
+                SwizzleAxis::YYY => value.yyy().into(),
+                SwizzleAxis::ZZZ => value.zzz().into(),
             },
         }
     }
@@ -153,6 +165,69 @@ mod tests {
         assert_eq!(
             modifier.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
             (2.0, 0.0, 1.0).into(),
+        );
+    }
+
+    #[test]
+    fn xxx() {
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
+
+        let mut modifier = SwizzleAxis::XXX;
+        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            modifier.apply(&ctx, 0.0, (0.0, 1.0).into()),
+            (0.0, 0.0).into(),
+        );
+        assert_eq!(
+            modifier.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
+            (0.0, 0.0, 0.0).into(),
+        );
+    }
+
+    #[test]
+    fn yyy() {
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
+
+        let mut modifier = SwizzleAxis::YYY;
+        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            modifier.apply(&ctx, 0.0, (0.0, 1.0).into()),
+            (1.0, 1.0).into(),
+        );
+        assert_eq!(
+            modifier.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
+            (1.0, 1.0, 1.0).into(),
+        );
+    }
+
+    #[test]
+    fn zzz() {
+        let ctx = ActionContext {
+            world: &World::new(),
+            actions: &ActionsData::default(),
+            entities: &[],
+        };
+
+        let mut modifier = SwizzleAxis::ZZZ;
+        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
+        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
+        assert_eq!(
+            modifier.apply(&ctx, 0.0, (0.0, 1.0).into()),
+            (0.0, 0.0).into(),
+        );
+        assert_eq!(
+            modifier.apply(&ctx, 0.0, (0.0, 1.0, 2.0).into()),
+            (2.0, 2.0, 2.0).into(),
         );
     }
 }
