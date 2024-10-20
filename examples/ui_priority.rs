@@ -1,0 +1,128 @@
+//! Inputs consumed by UI and not propagated to actions.
+//! In order to run this example pass `--features egui_priority,bevy_egui/render,bevy_egui/default_fonts,bevy/default_font` to cargo.
+
+mod player_box;
+
+use bevy::{color::palettes::tailwind::NEUTRAL_900, prelude::*};
+use bevy_egui::{egui::Window, EguiContexts, EguiPlugin};
+use bevy_enhanced_input::prelude::*;
+
+use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, DEFAULT_SPEED};
+
+fn main() {
+    App::new()
+        .add_plugins((
+            DefaultPlugins,
+            EguiPlugin,
+            EnhancedInputPlugin,
+            PlayerBoxPlugin,
+            GamePlugin,
+        ))
+        .run();
+}
+
+struct GamePlugin;
+
+impl Plugin for GamePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_input_context::<PlayerBox>()
+            .add_systems(Startup, Self::spawn)
+            .add_systems(Update, Self::draw_egui)
+            .observe(Self::apply_movement)
+            .observe(Self::zoom);
+    }
+}
+
+impl GamePlugin {
+    fn spawn(mut commands: Commands) {
+        commands.spawn(Camera2dBundle::default());
+        commands.spawn(PlayerBoxBundle::default());
+
+        // Setup simple node with text using Bevy UI.
+        commands
+            .spawn(NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    align_items: AlignItems::Start,
+                    justify_content: JustifyContent::End,
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .with_children(|parent| {
+                parent
+                    .spawn(NodeBundle {
+                        style: Style {
+                            margin: UiRect::all(Val::Px(15.0)),
+                            padding: UiRect::all(Val::Px(15.0)),
+                            ..Default::default()
+                        },
+                        background_color: NEUTRAL_900.into(),
+                        ..Default::default()
+                    })
+                    .with_children(|parent| {
+                        parent.spawn((
+                            Interaction::default(), // All UI nodes with `Interaction` component will intercept all mouse input.
+                            TextBundle::from_section(
+                                "Bevy UI",
+                                TextStyle {
+                                    font_size: 30.0,
+                                    color: Color::WHITE,
+                                    ..default()
+                                },
+                            ),
+                        ));
+                    });
+            });
+    }
+
+    fn draw_egui(mut text_edit: Local<String>, mut contexts: EguiContexts) {
+        Window::new("Egui").show(contexts.ctx_mut(), |ui| {
+            ui.label("Type text:");
+            ui.text_edit_singleline(&mut *text_edit);
+        });
+    }
+
+    fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
+        let event = trigger.event();
+        if event.kind.is_fired() {
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            transform.translation += event.value.as_axis3d();
+        }
+    }
+
+    fn zoom(trigger: Trigger<ActionEvent<Scale>>, mut players: Query<&mut Transform>) {
+        let event = trigger.event();
+        if event.kind.is_fired() {
+            let mut transform = players.get_mut(trigger.entity()).unwrap();
+            transform.scale += event.value.as_axis3d();
+        }
+    }
+}
+
+impl InputContext for PlayerBox {
+    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+        let mut ctx = ContextInstance::default();
+
+        ctx.bind::<Move>()
+            .with_wasd()
+            .with_modifier(Normalize)
+            .with_modifier(ScaleByDelta)
+            .with_modifier(Scalar::splat(DEFAULT_SPEED));
+        ctx.bind::<Scale>()
+            .with(Input::mouse_wheel())
+            .with_modifier(SwizzleAxis::YYY)
+            .with_modifier(Scalar::splat(3.0));
+
+        ctx
+    }
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Axis2D)]
+struct Move;
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Axis3D)]
+struct Scale;

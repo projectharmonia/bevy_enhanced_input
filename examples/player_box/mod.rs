@@ -20,7 +20,7 @@ impl PlayerBoxPlugin {
                 gizmos.rect(
                     transform.translation,
                     transform.rotation,
-                    Vec2::ONE * 50.0,
+                    transform.scale.xy(),
                     color.0,
                 );
             }
@@ -30,12 +30,23 @@ impl PlayerBoxPlugin {
 
 pub(super) const DEFAULT_SPEED: f32 = 400.0;
 
-#[derive(Bundle, Default)]
+#[derive(Bundle)]
 pub(super) struct PlayerBoxBundle {
     pub(super) color: PlayerColor,
     pub(super) visibility: Visibility,
     pub(super) player: PlayerBox,
     pub(super) transform: Transform,
+}
+
+impl Default for PlayerBoxBundle {
+    fn default() -> Self {
+        Self {
+            color: Default::default(),
+            visibility: Default::default(),
+            player: Default::default(),
+            transform: Transform::from_scale(Vec3::splat(50.0)),
+        }
+    }
 }
 
 #[derive(Component, Default)]

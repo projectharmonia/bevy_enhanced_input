@@ -37,5 +37,15 @@ ui_priority = ['bevy/bevy_ui']
 # Prioritizes 'egui' over actions when processing inputs.
 egui_priority = ['dep:bevy_egui']
 
+[[example]]
+name = "ui_priority"
+required-features = [
+  "ui_priority",
+  "egui_priority",
+  "bevy_egui/render",
+  "bevy_egui/default_fonts",
+  "bevy/default_font",
+]
+
 [workspace]
 members = ["macros"]
