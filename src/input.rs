@@ -53,28 +53,31 @@ impl From<KeyCode> for Modifiers {
 
 /// Inputs that can be associated with an
 /// [`InputAction`](super::input_context::input_action::InputAction).
+///
+/// If the action's dimension differs from the captured input, it will be converted
+/// using [`ActionValue::convert`](crate::action_value::ActionValue::convert).
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Input {
     /// Keyboard button, will be captured as
-    /// [`ActionValue::Bool`](crate::action_value::ActionValue).
+    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
     Keyboard { key: KeyCode, modifiers: Modifiers },
     /// Mouse button, will be captured as
-    /// [`ActionValue::Bool`](crate::action_value::ActionValue).
+    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
     MouseButton {
         button: MouseButton,
         modifiers: Modifiers,
     },
     /// Mouse movement, will be captured as
-    /// [`ActionValue::Axis2D`](crate::action_value::ActionValue).
+    /// [`ActionValue::Axis2D`](crate::action_value::ActionValue::Axis2D).
     MouseMotion { modifiers: Modifiers },
     /// Mouse wheel, will be captured as
-    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue).
+    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
     MouseWheel { modifiers: Modifiers },
     /// Gamepad button, will be captured as
-    /// [`ActionValue::Bool`](crate::action_value::ActionValue).
+    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
     GamepadButton { button: GamepadButtonType },
     /// Gamepad stick axis, will be captured as
-    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue).
+    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
     GamepadAxis { axis: GamepadAxisType },
 }
 
