@@ -15,7 +15,7 @@ include = ["/src", "/tests", "/examples", "/LICENSE*"]
 bevy_enhanced_input_macros = { path = "macros", version = "0.1" }
 bevy = { version = "0.14", default-features = false, features = ["serialize"] }
 bevy_egui = { version = "0.30", default-features = false, features = [
-  "immutable_ctx", # Required to get read-only access in our exclusive system.
+  "immutable_ctx", # Required for get read-only access in our exclusive system.
 ], optional = true }
 serde = "1.0"
 bitflags = { version = "2.6", features = ["serde"] }
