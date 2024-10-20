@@ -12,16 +12,44 @@ use std::fmt::Debug;
 use super::context_instance::ActionContext;
 use crate::action_value::ActionValue;
 
-/// Pre-processors that alter the raw input values.
+/// Pre-processor that alter the raw input values.
 ///
 /// Input modifiers are useful for applying sensitivity settings, smoothing input over multiple frames,
 /// or changing how input behaves based on the state of the player.
 ///
-/// Because you have access to the world when making your own modifier, you can access any game state you want.
+/// Modifiers should preserve the original value dimention.
 ///
-/// Modifiers can be applied both to inputs and actions.
+/// Can be applied both to inputs and actions.
 /// See [`ActionBind::with_modifier`](super::context_instance::ActionBind::with_modifier)
 /// and [`InputBind::with_modifier`](super::context_instance::InputBind::with_modifier).
+///
+/// You can create game-specific modifiers:
+///
+/// ```
+/// # use bevy::prelude::*;
+/// use bevy_enhanced_input::{ignore_incompatible, prelude::*};
+///
+/// /// Input modifier that applies sensitivity from [`Settings`].
+/// #[derive(Debug, Clone, Copy)]
+/// struct Sensetivity;
+///
+/// impl InputModifier for Sensetivity {
+///     fn apply(&mut self, ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
+///         let dim = value.dim();
+///         if dim == ActionValueDim::Bool {
+///             ignore_incompatible!(value);
+///         }
+///
+///         let settings = ctx.world.resource::<Settings>();
+///         ActionValue::Axis3D(value.as_axis3d() * settings.sensitivity).convert(dim)
+///     }
+/// }
+///
+/// #[derive(Resource)]
+/// struct Settings {
+///     sensitivity: f32,
+/// }
+/// ```
 pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
     ///
