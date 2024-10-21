@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Use Use `trace!` instead of `debug!` for triggered events.
+
 ## [0.1.0] - 2024-10-20
 
 Initial release.

@@ -116,12 +116,12 @@ impl ActionData {
             for &entity in entities {
                 if started {
                     let event = ActionEvent::<A>::new(ActionEventKind::Started, value, state);
-                    debug!("triggering `{event:?}` for `{entity}`");
+                    trace!("triggering `{event:?}` for `{entity}`");
                     commands.trigger_targets(event, entity);
                 }
 
                 let event = ActionEvent::<A>::new(kind, value, state);
-                debug!("triggering `{event:?}` for `{entity}`");
+                trace!("triggering `{event:?}` for `{entity}`");
                 commands.trigger_targets(event, entity);
             }
         }
