@@ -1,4 +1,4 @@
-use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
+use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::{context_instance::ActionContext, input_action::ActionState},
@@ -20,7 +20,7 @@ pub struct Hold {
     /// Trigger threshold.
     pub actuation: f32,
 
-    held_timer: HeldTimer,
+    timer: ConditionTimer,
 
     fired: bool,
 }
@@ -32,7 +32,7 @@ impl Hold {
             hold_time,
             one_shot: false,
             actuation: DEFAULT_ACTUATION,
-            held_timer: Default::default(),
+            timer: Default::default(),
             fired: false,
         }
     }
@@ -49,9 +49,10 @@ impl Hold {
         self
     }
 
+    /// Enables or disables time dilation.
     #[must_use]
-    pub fn with_held_timer(mut self, held_timer: HeldTimer) -> Self {
-        self.held_timer = held_timer;
+    pub fn relative_speed(mut self, relative: bool) -> Self {
+        self.timer.relative_speed = relative;
         self
     }
 }
@@ -60,13 +61,13 @@ impl InputCondition for Hold {
     fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState {
         let actuated = value.is_actuated(self.actuation);
         if actuated {
-            self.held_timer.update(ctx.world, delta);
+            self.timer.update(ctx.world, delta);
         } else {
-            self.held_timer.reset();
+            self.timer.reset();
         }
 
         let is_first_trigger = !self.fired;
-        self.fired = self.held_timer.duration() >= self.hold_time;
+        self.fired = self.timer.duration() >= self.hold_time;
 
         if self.fired {
             if is_first_trigger || !self.one_shot {

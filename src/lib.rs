@@ -73,7 +73,7 @@ pub mod prelude {
             },
             input_action::{Accumulation, ActionEvent, ActionEventKind, ActionState, InputAction},
             input_condition::{
-                blocked_by::*, chord::*, down::*, held_timer::*, hold::*, hold_and_release::*,
+                blocked_by::*, chord::*, condition_timer::*, down::*, hold::*, hold_and_release::*,
                 pressed::*, pulse::*, released::*, tap::*, ConditionKind, InputCondition,
             },
             input_modifier::{

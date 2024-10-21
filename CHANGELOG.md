@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replace `with_held_timer` with `relative_speed` that just accepts a boolean.
+- Rename `HeldTimer` into `ConditionTimer`.
 - Use Use `trace!` instead of `debug!` for triggered events.
 
 ## [0.1.0] - 2024-10-20

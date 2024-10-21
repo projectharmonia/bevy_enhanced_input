@@ -1,4 +1,4 @@
-use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
+use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::{context_instance::ActionContext, input_action::ActionState},
@@ -16,7 +16,7 @@ pub struct Tap {
     /// Trigger threshold.
     pub actuation: f32,
 
-    held_timer: HeldTimer,
+    timer: ConditionTimer,
     actuated: bool,
 }
 
@@ -26,7 +26,7 @@ impl Tap {
         Self {
             release_time,
             actuation: DEFAULT_ACTUATION,
-            held_timer: Default::default(),
+            timer: Default::default(),
             actuated: false,
         }
     }
@@ -37,9 +37,10 @@ impl Tap {
         self
     }
 
+    /// Enables or disables time dilation.
     #[must_use]
-    pub fn with_held_timer(mut self, held_timer: HeldTimer) -> Self {
-        self.held_timer = held_timer;
+    pub fn relative_speed(mut self, relative: bool) -> Self {
+        self.timer.relative_speed = relative;
         self
     }
 }
@@ -47,18 +48,18 @@ impl Tap {
 impl InputCondition for Tap {
     fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState {
         let last_actuated = self.actuated;
-        let last_held_duration = self.held_timer.duration();
+        let last_held_duration = self.timer.duration();
         self.actuated = value.is_actuated(self.actuation);
         if self.actuated {
-            self.held_timer.update(ctx.world, delta);
+            self.timer.update(ctx.world, delta);
         } else {
-            self.held_timer.reset();
+            self.timer.reset();
         }
 
         if last_actuated && !self.actuated && last_held_duration <= self.release_time {
             // Only trigger if pressed then released quickly enough.
             ActionState::Fired
-        } else if self.held_timer.duration() >= self.release_time {
+        } else if self.timer.duration() >= self.release_time {
             // Once we pass the threshold halt all triggering until released.
             ActionState::None
         } else if self.actuated {

@@ -1,7 +1,7 @@
 pub mod blocked_by;
 pub mod chord;
+pub mod condition_timer;
 pub mod down;
-pub mod held_timer;
 pub mod hold;
 pub mod hold_and_release;
 pub mod pressed;

@@ -1,4 +1,4 @@
-use super::{held_timer::HeldTimer, InputCondition, DEFAULT_ACTUATION};
+use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
     input_context::{context_instance::ActionContext, input_action::ActionState},
@@ -16,7 +16,7 @@ pub struct HoldAndRelease {
     /// Trigger threshold.
     pub actuation: f32,
 
-    held_timer: HeldTimer,
+    timer: ConditionTimer,
 }
 
 impl HoldAndRelease {
@@ -25,7 +25,7 @@ impl HoldAndRelease {
         Self {
             hold_time,
             actuation: DEFAULT_ACTUATION,
-            held_timer: Default::default(),
+            timer: Default::default(),
         }
     }
 
@@ -35,9 +35,10 @@ impl HoldAndRelease {
         self
     }
 
+    /// Enables or disables time dilation.
     #[must_use]
-    pub fn with_held_timer(mut self, held_timer: HeldTimer) -> Self {
-        self.held_timer = held_timer;
+    pub fn relative_speed(mut self, relative: bool) -> Self {
+        self.timer.relative_speed = relative;
         self
     }
 }
@@ -47,13 +48,13 @@ impl InputCondition for HoldAndRelease {
         // Evaluate the updated held duration prior to checking for actuation.
         // This stops us failing to trigger if the input is released on the
         // threshold frame due to held duration being 0.
-        self.held_timer.update(ctx.world, delta);
-        let held_duration = self.held_timer.duration();
+        self.timer.update(ctx.world, delta);
+        let held_duration = self.timer.duration();
 
         if value.is_actuated(self.actuation) {
             ActionState::Ongoing
         } else {
-            self.held_timer.reset();
+            self.timer.reset();
             // Trigger if we've passed the threshold and released.
             if held_duration >= self.hold_time {
                 ActionState::Fired
