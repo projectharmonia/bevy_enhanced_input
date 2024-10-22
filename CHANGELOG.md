@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Logging for binding.
+
 ### Changed
 
 - Replace `with_held_timer` with `relative_speed` that just accepts a boolean.

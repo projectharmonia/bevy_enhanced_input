@@ -186,12 +186,14 @@ impl ActionBind {
 
     /// Adds action-level modifier.
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
+        debug!("adding `{modifier:?}` to `{}`", self.action_name);
         self.modifiers.push(Box::new(modifier));
         self
     }
 
     /// Adds action-level condition.
     pub fn with_condition(&mut self, condition: impl InputCondition) -> &mut Self {
+        debug!("adding `{condition:?}` to `{}`", self.action_name);
         self.conditions.push(Box::new(condition));
         self
     }
@@ -244,7 +246,9 @@ impl ActionBind {
     /// # struct Jump;
     /// ```
     pub fn with(&mut self, binding: impl Into<InputBind>) -> &mut Self {
-        self.bindings.push(binding.into());
+        let binding = binding.into();
+        debug!("adding `{binding:?}` to `{}`", self.action_name);
+        self.bindings.push(binding);
         self
     }
 
@@ -313,6 +317,7 @@ pub struct ActionContext<'a> {
 }
 
 /// Associated input for [`ActionBind`].
+#[derive(Debug)]
 pub struct InputBind {
     pub input: Input,
     pub modifiers: Vec<Box<dyn InputModifier>>,
