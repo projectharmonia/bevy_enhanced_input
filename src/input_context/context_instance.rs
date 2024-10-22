@@ -175,7 +175,7 @@ impl ActionBind {
                     .with_modifier(Negate::default())
                     .with_modifier(SwizzleAxis::YXZ),
             )
-            .with(InputBind::new(right))
+            .with(right)
     }
 
     /// Maps the given stick as 2-dimentional input.
@@ -352,26 +352,8 @@ impl InputBind {
     }
 }
 
-impl From<KeyCode> for InputBind {
-    fn from(value: KeyCode) -> Self {
-        Self::new(value)
-    }
-}
-
-impl From<GamepadButtonType> for InputBind {
-    fn from(value: GamepadButtonType) -> Self {
-        Self::new(value)
-    }
-}
-
-impl From<GamepadAxisType> for InputBind {
-    fn from(value: GamepadAxisType) -> Self {
-        Self::new(value)
-    }
-}
-
-impl From<Input> for InputBind {
-    fn from(input: Input) -> Self {
+impl<I: Into<Input>> From<I> for InputBind {
+    fn from(input: I) -> Self {
         Self::new(input)
     }
 }
