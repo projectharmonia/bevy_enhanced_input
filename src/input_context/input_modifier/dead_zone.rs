@@ -14,7 +14,7 @@ pub struct DeadZone {
     /// Threshold below which input is ignored.
     pub lower_threshold: f32,
 
-    /// Threshold below which input is ignored.
+    /// Threshold above which input is clamped to 1.
     pub upper_threshold: f32,
 }
 
