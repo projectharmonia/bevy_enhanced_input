@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 
-use super::{ignore_incompatible, InputModifier};
+use super::InputModifier;
 use crate::action_value::ActionValue;
 
 /// Input values within the range [Self::lower_threshold] -> [Self::upper_threshold] will be remapped from 0 -> 1.
 /// Values outside this range will be clamped.
 ///
-/// Can't be applied to [`ActionValue::Bool`].
+/// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
 pub struct DeadZone {
     pub kind: DeadZoneKind,
@@ -57,8 +57,9 @@ impl Default for DeadZone {
 impl InputModifier for DeadZone {
     fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
         match value {
-            ActionValue::Bool(_) => {
-                ignore_incompatible!(value);
+            ActionValue::Bool(value) => {
+                let value = if value { 1.0 } else { 0.0 };
+                self.dead_zone(value).into()
             }
             ActionValue::Axis1D(value) => self.dead_zone(value).into(),
             ActionValue::Axis2D(mut value) => match self.kind {
@@ -92,7 +93,8 @@ pub enum DeadZoneKind {
     /// Apply dead zone logic to all axes simultaneously.
     ///
     /// This gives smooth input (circular/spherical coverage).
-    /// For [`ActionValue::Axis1D`] this works identically to [`Self::Axial`].
+    /// For [`ActionValue::Axis1D`] and [`ActionValue::Bool`]
+    /// this works identically to [`Self::Axial`].
     #[default]
     Radial,
     /// Apply dead zone to axes individually.
@@ -111,7 +113,9 @@ mod tests {
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&time, 0.5.into()), 0.375.into());
         assert_eq!(modifier.apply(&time, 0.2.into()), 0.0.into());
@@ -149,7 +153,9 @@ mod tests {
         let mut modifier = DeadZone::new(DeadZoneKind::Axial);
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&time, 0.5.into()), 0.375.into());
         assert_eq!(modifier.apply(&time, 0.2.into()), 0.0.into());

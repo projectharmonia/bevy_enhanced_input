@@ -6,6 +6,8 @@ use crate::action_value::ActionValue;
 /// Inverts value per axis.
 ///
 /// By default, all axes are inverted.
+///
+/// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
 pub struct Negate {
     /// Wheter to inverse the X axis.
@@ -68,12 +70,40 @@ impl Default for Negate {
 
 impl InputModifier for Negate {
     fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
-        let x = if self.x { -1.0 } else { 1.0 };
-        let y = if self.y { -1.0 } else { 1.0 };
-        let z = if self.z { -1.0 } else { 1.0 };
-        let negated = value.as_axis3d() * Vec3::new(x, y, z);
-
-        ActionValue::Axis3D(negated).convert(value.dim())
+        match value {
+            ActionValue::Bool(value) => {
+                let value = if value { 1.0 } else { 0.0 };
+                self.apply(_time, value.into())
+            }
+            ActionValue::Axis1D(value) => {
+                if self.x {
+                    (-value).into()
+                } else {
+                    value.into()
+                }
+            }
+            ActionValue::Axis2D(mut value) => {
+                if self.x {
+                    value.x = -value.x;
+                }
+                if self.y {
+                    value.y = -value.y;
+                }
+                value.into()
+            }
+            ActionValue::Axis3D(mut value) => {
+                if self.x {
+                    value.x = -value.x;
+                }
+                if self.y {
+                    value.y = -value.y;
+                }
+                if self.z {
+                    value.z = -value.z;
+                }
+                value.into()
+            }
+        }
     }
 }
 
@@ -82,24 +112,65 @@ mod tests {
     use super::*;
 
     #[test]
-    fn negation() {
+    fn x() {
+        let mut modifier = Negate::x(true);
         let time = Time::default();
 
+        assert_eq!(modifier.apply(&time, true.into()), (-1.0).into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), (-0.5).into());
+        assert_eq!(modifier.apply(&time, Vec2::ONE.into()), (-1.0, 1.0).into());
         assert_eq!(
-            Negate::default().apply(&time, Vec3::ONE.into()),
-            Vec3::NEG_ONE.into(),
-        );
-        assert_eq!(
-            Negate::x(true).apply(&time, Vec3::ONE.into()),
+            modifier.apply(&time, Vec3::ONE.into()),
             (-1.0, 1.0, 1.0).into(),
         );
+    }
+
+    #[test]
+    fn y() {
+        let mut modifier = Negate::y(true);
+        let time = Time::default();
+
+        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), 0.5.into());
+        assert_eq!(modifier.apply(&time, Vec2::ONE.into()), (1.0, -1.0).into());
         assert_eq!(
-            Negate::y(true).apply(&time, Vec3::ONE.into()),
+            modifier.apply(&time, Vec3::ONE.into()),
             (1.0, -1.0, 1.0).into(),
         );
+    }
+
+    #[test]
+    fn z() {
+        let mut modifier = Negate::z(true);
+        let time = Time::default();
+
+        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), 0.5.into());
+        assert_eq!(modifier.apply(&time, Vec2::ONE.into()), Vec2::ONE.into());
         assert_eq!(
-            Negate::z(true).apply(&time, Vec3::ONE.into()),
+            modifier.apply(&time, Vec3::ONE.into()),
             (1.0, 1.0, -1.0).into(),
+        );
+    }
+
+    #[test]
+    fn all() {
+        let mut modifier = Negate::default();
+        let time = Time::default();
+
+        assert_eq!(modifier.apply(&time, true.into()), (-1.0).into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), (-0.5).into());
+        assert_eq!(
+            modifier.apply(&time, Vec2::ONE.into()),
+            Vec2::NEG_ONE.into(),
+        );
+        assert_eq!(
+            modifier.apply(&time, Vec3::ONE.into()),
+            Vec3::NEG_ONE.into(),
         );
     }
 }

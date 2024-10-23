@@ -37,11 +37,6 @@ impl TriggerTracker {
     ) {
         for modifier in modifiers {
             let new_value = modifier.apply(time, self.value);
-            debug_assert_eq!(
-                new_value.dim(),
-                self.value.dim(),
-                "modifiers should preserve action dimentions"
-            );
             trace!(
                 "`{modifier:?}` changes `{:?}` to `{new_value:?}`",
                 self.value
@@ -94,7 +89,7 @@ impl TriggerTracker {
         match self.state.cmp(&other.state) {
             Ordering::Less => {
                 self.state = other.state;
-                self.value = other.value;
+                self.value = other.value.convert(self.value.dim());
             }
             Ordering::Equal => {
                 let accumulated = match accumulation {

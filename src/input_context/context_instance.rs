@@ -28,6 +28,7 @@ use crate::{
 ///    1.1. Apply input-level [`InputModifier`]s.
 ///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
 /// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
+///    The value will also be converted using [`ActionValue::convert`] into [`InputAction::DIM`].
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
@@ -264,7 +265,7 @@ impl ActionBind {
         reader.set_consume_input(self.consume_input);
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for binding in &mut self.bindings {
-            let value = reader.value(binding.input).convert(self.dim);
+            let value = reader.value(binding.input);
             if binding.ignored {
                 // Ignore until we read zero for this mapping.
                 if value.as_bool() {

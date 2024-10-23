@@ -1,13 +1,18 @@
 use bevy::prelude::*;
 
-use super::{ignore_incompatible, InputModifier};
+use super::InputModifier;
 use crate::action_value::ActionValue;
 
 /// Swizzle axis components of an input value.
 ///
-/// Useful to map a 1D input onto the Y axis of a 2D action.
+/// Useful for things like mapping a 1D input onto the Y axis of a 2D action.
 ///
-/// Can't be applied to [`ActionValue::Bool`] and [`ActionValue::Axis1D`].
+/// It tries to preserve the original dimension. However, if an axis from the original
+/// is promoted to a higher dimension, the value's type changes. Missing axes will be replaced with zero.
+///
+/// For example, [`ActionValue::Bool`] will remain unchanged for [`Self::XZY`] or [`Self::XXX`] (X in the
+/// first place). But for variants like [`Self::YXZ`] (where X becomes the second component), it will be
+/// converted into [`ActionValue::Axis2D`] with Y set to the value.
 #[derive(Clone, Copy, Debug)]
 pub enum SwizzleAxis {
     /// Swap X and Y axis. Useful for binding 1D inputs to the Y axis for 2D actions.
@@ -31,9 +36,16 @@ pub enum SwizzleAxis {
 impl InputModifier for SwizzleAxis {
     fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
         match value {
-            ActionValue::Bool(_) | ActionValue::Axis1D(_) => {
-                ignore_incompatible!(value);
+            ActionValue::Bool(value) => {
+                let value = if value { 1.0 } else { 0.0 };
+                self.apply(_time, value.into())
             }
+            ActionValue::Axis1D(value) => match self {
+                SwizzleAxis::YXZ | SwizzleAxis::ZXY => (Vec2::Y * value).into(),
+                SwizzleAxis::ZYX | SwizzleAxis::YZX => (Vec3::Z * value).into(),
+                SwizzleAxis::XZY | SwizzleAxis::XXX => value.into(),
+                SwizzleAxis::YYY | SwizzleAxis::ZZZ => 0.0.into(),
+            },
             ActionValue::Axis2D(value) => match self {
                 SwizzleAxis::YXZ => value.yx().into(),
                 SwizzleAxis::ZYX => (0.0, value.y).into(),
@@ -64,28 +76,30 @@ mod tests {
 
     #[test]
     fn yxz() {
-        let mut swizzle = SwizzleAxis::YXZ;
+        let mut modifier = SwizzleAxis::YXZ;
         let time = Time::default();
 
-        assert_eq!(swizzle.apply(&time, true.into()), true.into());
-        assert_eq!(swizzle.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(swizzle.apply(&time, (0.0, 1.0).into()), (1.0, 0.0).into());
+        assert_eq!(modifier.apply(&time, true.into()), Vec2::Y.into());
+        assert_eq!(modifier.apply(&time, false.into()), Vec2::ZERO.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), Vec2::Y.into());
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 0.0).into());
         assert_eq!(
-            swizzle.apply(&time, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (1.0, 0.0, 2.0).into(),
         );
     }
 
     #[test]
     fn zyx() {
-        let mut swizzle = SwizzleAxis::ZYX;
+        let mut modifier = SwizzleAxis::ZYX;
         let time = Time::default();
 
-        assert_eq!(swizzle.apply(&time, true.into()), true.into());
-        assert_eq!(swizzle.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(swizzle.apply(&time, (0.0, 1.0).into()), (0.0, 1.0).into());
+        assert_eq!(modifier.apply(&time, true.into()), Vec3::Z.into());
+        assert_eq!(modifier.apply(&time, false.into()), Vec3::ZERO.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), Vec3::Z.into());
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 1.0).into());
         assert_eq!(
-            swizzle.apply(&time, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (2.0, 1.0, 0.0).into(),
         );
     }
@@ -95,7 +109,8 @@ mod tests {
         let mut modifier = SwizzleAxis::XZY;
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
@@ -109,8 +124,9 @@ mod tests {
         let mut modifier = SwizzleAxis::YZX;
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, true.into()), Vec3::Z.into());
+        assert_eq!(modifier.apply(&time, false.into()), Vec3::ZERO.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), Vec3::Z.into());
         assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
@@ -123,8 +139,9 @@ mod tests {
         let mut modifier = SwizzleAxis::ZXY;
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, true.into()), Vec2::Y.into());
+        assert_eq!(modifier.apply(&time, false.into()), Vec2::ZERO.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), Vec2::Y.into());
         assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
@@ -137,7 +154,8 @@ mod tests {
         let mut modifier = SwizzleAxis::XXX;
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
@@ -151,8 +169,9 @@ mod tests {
         let mut modifier = SwizzleAxis::YYY;
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, true.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), 0.0.into());
         assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 1.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
@@ -165,8 +184,9 @@ mod tests {
         let mut modifier = SwizzleAxis::ZZZ;
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, true.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), 0.0.into());
         assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),

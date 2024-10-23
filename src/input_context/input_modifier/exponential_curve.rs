@@ -1,17 +1,17 @@
 use bevy::prelude::*;
 
-use super::{ignore_incompatible, InputModifier};
-use crate::action_value::{ActionValue, ActionValueDim};
+use super::InputModifier;
+use crate::action_value::ActionValue;
 
 /// Response curve exponential.
 ///
 /// Apply a simple exponential response curve to input values, per axis.
 ///
-/// Can't be applied to [`ActionValue::Bool`].
+/// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
 pub struct ExponentialCurve {
     /// Curve exponent.
-    pub exponent: Vec3,
+    pub exp: Vec3,
 }
 
 impl ExponentialCurve {
@@ -22,24 +22,36 @@ impl ExponentialCurve {
     }
 
     #[must_use]
-    pub fn new(exponent: Vec3) -> Self {
-        Self { exponent }
+    pub fn new(exp: Vec3) -> Self {
+        Self { exp }
     }
 }
 
 impl InputModifier for ExponentialCurve {
     fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
-        let dim = value.dim();
-        if dim == ActionValueDim::Bool {
-            ignore_incompatible!(value);
+        match value {
+            ActionValue::Bool(value) => {
+                let value = if value { 1.0 } else { 0.0 };
+                apply_exp(value, self.exp.x).into()
+            }
+            ActionValue::Axis1D(value) => apply_exp(value, self.exp.x).into(),
+            ActionValue::Axis2D(mut value) => {
+                value.x = apply_exp(value.x, self.exp.x);
+                value.y = apply_exp(value.y, self.exp.y);
+                value.into()
+            }
+            ActionValue::Axis3D(mut value) => {
+                value.x = apply_exp(value.x, self.exp.x);
+                value.y = apply_exp(value.y, self.exp.y);
+                value.z = apply_exp(value.z, self.exp.z);
+                value.into()
+            }
         }
-
-        let mut value = value.as_axis3d();
-        value.x = value.x.signum() * value.x.abs().powf(self.exponent.x);
-        value.y = value.y.signum() * value.y.abs().powf(self.exponent.y);
-        value.z = value.z.signum() * value.z.abs().powf(self.exponent.z);
-        ActionValue::Axis3D(value).convert(dim)
     }
+}
+
+fn apply_exp(value: f32, exp: f32) -> f32 {
+    value.abs().powf(exp).copysign(value)
 }
 
 #[cfg(test)]
@@ -51,7 +63,8 @@ mod tests {
         let time = Time::default();
         let mut modifier = ExponentialCurve::splat(2.0);
 
-        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
         assert_eq!(modifier.apply(&time, (-0.5).into()), (-0.25).into());
         assert_eq!(modifier.apply(&time, 0.5.into()), 0.25.into());
         assert_eq!(
