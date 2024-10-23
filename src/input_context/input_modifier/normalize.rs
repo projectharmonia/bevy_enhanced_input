@@ -29,7 +29,7 @@ mod tests {
 
         assert_eq!(Normalize.apply(&time, true.into()), true.into());
         assert_eq!(Normalize.apply(&time, 0.5.into()), 0.5.into());
-        assert_eq!(Normalize.apply(&time, Vec2::ZERO.into()), Vec2::ZERO.into(),);
+        assert_eq!(Normalize.apply(&time, Vec2::ZERO.into()), Vec2::ZERO.into());
         assert_eq!(
             Normalize.apply(&time, Vec2::ONE.into()),
             Vec2::ONE.normalize_or_zero().into(),

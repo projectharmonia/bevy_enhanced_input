@@ -69,7 +69,7 @@ mod tests {
 
         assert_eq!(swizzle.apply(&time, true.into()), true.into());
         assert_eq!(swizzle.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(swizzle.apply(&time, (0.0, 1.0).into()), (1.0, 0.0).into(),);
+        assert_eq!(swizzle.apply(&time, (0.0, 1.0).into()), (1.0, 0.0).into());
         assert_eq!(
             swizzle.apply(&time, (0.0, 1.0, 2.0).into()),
             (1.0, 0.0, 2.0).into(),
@@ -83,7 +83,7 @@ mod tests {
 
         assert_eq!(swizzle.apply(&time, true.into()), true.into());
         assert_eq!(swizzle.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(swizzle.apply(&time, (0.0, 1.0).into()), (0.0, 1.0).into(),);
+        assert_eq!(swizzle.apply(&time, (0.0, 1.0).into()), (0.0, 1.0).into());
         assert_eq!(
             swizzle.apply(&time, (0.0, 1.0, 2.0).into()),
             (2.0, 1.0, 0.0).into(),
@@ -97,7 +97,7 @@ mod tests {
 
         assert_eq!(modifier.apply(&time, true.into()), true.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into(),);
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (0.0, 2.0, 1.0).into(),
@@ -111,7 +111,7 @@ mod tests {
 
         assert_eq!(modifier.apply(&time, true.into()), true.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 0.0).into(),);
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (1.0, 2.0, 0.0).into(),
@@ -125,7 +125,7 @@ mod tests {
 
         assert_eq!(modifier.apply(&time, true.into()), true.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into(),);
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (2.0, 0.0, 1.0).into(),
@@ -139,7 +139,7 @@ mod tests {
 
         assert_eq!(modifier.apply(&time, true.into()), true.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into(),);
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (0.0, 0.0, 0.0).into(),
@@ -153,7 +153,7 @@ mod tests {
 
         assert_eq!(modifier.apply(&time, true.into()), true.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 1.0).into(),);
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 1.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (1.0, 1.0, 1.0).into(),
@@ -167,7 +167,7 @@ mod tests {
 
         assert_eq!(modifier.apply(&time, true.into()), true.into());
         assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into(),);
+        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (2.0, 2.0, 2.0).into(),
