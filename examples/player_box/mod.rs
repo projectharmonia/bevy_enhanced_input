@@ -17,10 +17,11 @@ impl PlayerBoxPlugin {
     ) {
         for (visibility, transform, color) in &players {
             if visibility != Visibility::Hidden {
+                const DEFAULT_SCALE: Vec2 = Vec2::splat(50.0);
                 gizmos.rect(
                     transform.translation,
                     transform.rotation,
-                    transform.scale.xy(),
+                    DEFAULT_SCALE + transform.scale.xy(),
                     color.0,
                 );
             }
@@ -30,23 +31,12 @@ impl PlayerBoxPlugin {
 
 pub(super) const DEFAULT_SPEED: f32 = 400.0;
 
-#[derive(Bundle)]
+#[derive(Bundle, Default)]
 pub(super) struct PlayerBoxBundle {
     pub(super) color: PlayerColor,
     pub(super) visibility: Visibility,
     pub(super) player: PlayerBox,
     pub(super) transform: Transform,
-}
-
-impl Default for PlayerBoxBundle {
-    fn default() -> Self {
-        Self {
-            color: Default::default(),
-            visibility: Default::default(),
-            player: Default::default(),
-            transform: Transform::from_scale(Vec3::splat(50.0)),
-        }
-    }
 }
 
 #[derive(Component, Default)]
