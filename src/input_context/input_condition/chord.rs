@@ -5,10 +5,7 @@ use bevy::prelude::*;
 use super::{ConditionKind, InputCondition};
 use crate::{
     action_value::ActionValue,
-    input_context::{
-        context_instance::ActionContext,
-        input_action::{ActionState, InputAction},
-    },
+    input_context::input_action::{ActionState, ActionsData, InputAction},
 };
 
 /// Requires action `A` to be triggered within the same context.
@@ -37,8 +34,13 @@ impl<A: InputAction> Clone for Chord<A> {
 impl<A: InputAction> Copy for Chord<A> {}
 
 impl<A: InputAction> InputCondition for Chord<A> {
-    fn evaluate(&mut self, ctx: &ActionContext, _delta: f32, _value: ActionValue) -> ActionState {
-        if let Some(action) = ctx.actions.action::<A>() {
+    fn evaluate(
+        &mut self,
+        actions: &ActionsData,
+        _time: &Time<Virtual>,
+        _value: ActionValue,
+    ) -> ActionState {
+        if let Some(action) = actions.action::<A>() {
             // Inherit state from the chorded action.
             action.state()
         } else {
@@ -69,35 +71,28 @@ mod tests {
 
     #[test]
     fn chord() {
-        let mut world = World::new();
+        let mut condition = Chord::<DummyAction>::default();
         let mut action = ActionData::new::<DummyAction>();
-        action.update(&mut world.commands(), &[], ActionState::Fired, true, 0.0);
+        let mut world = World::new();
+        let time = Time::default();
+        action.update(&mut world.commands(), &time, &[], ActionState::Fired, true);
         let mut actions = ActionsData::default();
         actions.insert(TypeId::of::<DummyAction>(), action);
-        let ctx = ActionContext {
-            world: &world,
-            actions: &actions,
-            entities: &[],
-        };
 
-        let mut condition = Chord::<DummyAction>::default();
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, true.into()),
+            condition.evaluate(&actions, &time, true.into()),
             ActionState::Fired,
         );
     }
 
     #[test]
     fn missing_action() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut condition = Chord::<DummyAction>::default();
+        let actions = ActionsData::default();
+        let time = Time::default();
+
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, true.into()),
+            condition.evaluate(&actions, &time, true.into()),
             ActionState::None,
         );
     }

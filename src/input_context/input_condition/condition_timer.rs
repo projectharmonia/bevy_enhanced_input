@@ -12,13 +12,16 @@ pub struct ConditionTimer {
 }
 
 impl ConditionTimer {
-    pub fn update(&mut self, world: &World, mut delta: f32) {
-        if self.relative_speed {
-            let time = world.resource::<Time<Virtual>>();
-            delta *= time.relative_speed()
-        }
+    pub fn update(&mut self, time: &Time<Virtual>) {
+        // Time<Virtual> returns already scaled results.
+        // Unscale if configured.
+        let scale = if self.relative_speed {
+            1.0
+        } else {
+            time.relative_speed()
+        };
 
-        self.duration += delta;
+        self.duration += time.delta_seconds() / scale;
     }
 
     pub fn reset(&mut self) {
@@ -32,20 +35,32 @@ impl ConditionTimer {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
+
+    #[test]
+    fn absolute() {
+        let mut time = Time::<Virtual>::default();
+        time.set_relative_speed(0.5);
+        time.advance_by(Duration::from_millis(200 / 2)); // Advance needs to be scaled manually.
+
+        let mut timer = ConditionTimer::default();
+        timer.update(&time);
+        assert_eq!(timer.duration(), 0.2);
+    }
 
     #[test]
     fn relative() {
         let mut time = Time::<Virtual>::default();
         time.set_relative_speed(0.5);
-        let mut world = World::new();
-        world.insert_resource(time);
+        time.advance_by(Duration::from_millis(200 / 2)); // Advance needs to be scaled manually.
 
         let mut timer = ConditionTimer {
             relative_speed: true,
             ..Default::default()
         };
-        timer.update(&world, 1.0);
-        assert_eq!(timer.duration(), 0.5);
+        timer.update(&time);
+        assert_eq!(timer.duration(), 0.1);
     }
 }

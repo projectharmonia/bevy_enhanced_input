@@ -14,7 +14,7 @@ Dynamic and contextual input mappings for Bevy, inspired by [Unreal Engine Enhan
 * Control how actions accumulate input from sources and consume it.
 * Layer multiple contexts on a single entity, controlled by priority.
 * Apply modifiers to inputs, such as dead zones, inversion, scaling, etc., or create custom modifiers by implementing a trait.
-* Assign conditions for how and when an action is triggered, like "hold", "tap", "chord", etc. You can also create custom conditions, such as "on the ground".
+* Assign conditions for how and when an action is triggered, like "hold", "tap", "chord", etc. You can also create custom conditions by implementing a trait.
 * React on actions with observers.
 
 ## Getting Started

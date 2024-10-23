@@ -76,15 +76,14 @@ impl ContextInstance {
 
     pub(super) fn update(
         &mut self,
-        world: &World,
         commands: &mut Commands,
         reader: &mut InputReader,
+        time: &Time<Virtual>,
         entities: &[Entity],
-        delta: f32,
     ) {
         reader.set_gamepad(self.gamepad);
         for binding in &mut self.bindings {
-            binding.update(world, commands, reader, &mut self.actions, entities, delta);
+            binding.update(commands, reader, &mut self.actions, time, entities);
         }
     }
 
@@ -254,19 +253,13 @@ impl ActionBind {
 
     fn update(
         &mut self,
-        world: &World,
         commands: &mut Commands,
         reader: &mut InputReader,
         actions: &mut ActionsData,
+        time: &Time<Virtual>,
         entities: &[Entity],
-        delta: f32,
     ) {
         trace!("updating action `{}`", self.action_name);
-        let ctx = ActionContext {
-            world,
-            entities,
-            actions,
-        };
 
         reader.set_consume_input(self.consume_input);
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
@@ -282,38 +275,21 @@ impl ActionBind {
             }
 
             let mut current_tracker = TriggerTracker::new(value);
-            current_tracker.apply_modifiers(&ctx, delta, &mut binding.modifiers);
-            current_tracker.apply_conditions(&ctx, delta, &mut binding.conditions);
+            current_tracker.apply_modifiers(time, &mut binding.modifiers);
+            current_tracker.apply_conditions(actions, time, &mut binding.conditions);
             tracker.merge(current_tracker, self.accumulation);
         }
 
-        tracker.apply_modifiers(&ctx, delta, &mut self.modifiers);
-        tracker.apply_conditions(&ctx, delta, &mut self.conditions);
+        tracker.apply_modifiers(time, &mut self.modifiers);
+        tracker.apply_conditions(actions, time, &mut self.conditions);
 
         let (state, value) = tracker.finish();
         let action = actions
             .get_mut(&self.type_id)
             .expect("actions and bindings should have matching type IDs");
 
-        action.update(commands, entities, state, value, delta);
+        action.update(commands, time, entities, state, value);
     }
-}
-
-/// Read-only data for [`InputCondition`]s and [`InputModifier`]s during action evaluation.
-#[non_exhaustive]
-pub struct ActionContext<'a> {
-    /// Current world.
-    pub world: &'a World,
-
-    /// The state of other actions within the currently evaluating context.
-    pub actions: &'a ActionsData,
-
-    /// The entities for which the action is being evaluated.
-    ///
-    /// This can be either a single entity when [`InputContext::MODE`](super::InputContext::MODE) is
-    /// set to [`ContextMode::Exclusive`](super::ContextMode::Exclusive),
-    /// or multiple entities when using [`ContextMode::Shared`](super::ContextMode::Shared).
-    pub entities: &'a [Entity],
 }
 
 /// Associated input for [`ActionBind`].

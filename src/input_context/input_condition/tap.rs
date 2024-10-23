@@ -1,7 +1,9 @@
+use bevy::prelude::*;
+
 use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::{context_instance::ActionContext, input_action::ActionState},
+    input_context::input_action::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
@@ -46,12 +48,17 @@ impl Tap {
 }
 
 impl InputCondition for Tap {
-    fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState {
+    fn evaluate(
+        &mut self,
+        _actions: &ActionsData,
+        time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionState {
         let last_actuated = self.actuated;
         let last_held_duration = self.timer.duration();
         self.actuated = value.is_actuated(self.actuation);
         if self.actuated {
-            self.timer.update(ctx.world, delta);
+            self.timer.update(time);
         } else {
             self.timer.reset();
         }
@@ -72,29 +79,37 @@ impl InputCondition for Tap {
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
+    use std::time::Duration;
 
     use super::*;
-    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn tap() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut condition = Tap::new(1.0);
+        let actions = ActionsData::default();
+        let mut time = Time::default();
+
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Ongoing,
         );
+
+        time.advance_by(Duration::from_secs(1));
         assert_eq!(
-            condition.evaluate(&ctx, 1.0, 0.0.into()),
+            condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Fired,
         );
-        assert_eq!(condition.evaluate(&ctx, 0.0, 0.0.into()), ActionState::None);
-        assert_eq!(condition.evaluate(&ctx, 2.0, 1.0.into()), ActionState::None);
+
+        time.advance_by(Duration::ZERO);
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::None
+        );
+
+        time.advance_by(Duration::from_secs(2));
+        assert_eq!(
+            condition.evaluate(&actions, &time, 1.0.into()),
+            ActionState::None
+        );
     }
 }

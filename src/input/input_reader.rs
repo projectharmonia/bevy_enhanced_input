@@ -28,8 +28,10 @@ pub(crate) struct InputReader<'w, 's> {
     mouse_motion: Local<'s, Vec2>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
+    // In egui mutable reference is required to get contexts,
+    // unless `immutable_ctx` feature is enabled.
     #[cfg(feature = "egui_priority")]
-    egui: Query<'w, 's, &'static EguiContext>,
+    egui: Query<'w, 's, &'static mut EguiContext>,
 }
 
 impl InputReader<'_, '_> {
@@ -47,12 +49,20 @@ impl InputReader<'_, '_> {
         }
 
         #[cfg(feature = "egui_priority")]
-        if self.egui.iter().any(|ctx| ctx.get().wants_keyboard_input()) {
+        if self
+            .egui
+            .iter_mut()
+            .any(|mut ctx| ctx.get_mut().wants_keyboard_input())
+        {
             self.consumed.ui_wants_keyboard = true;
         }
 
         #[cfg(feature = "egui_priority")]
-        if self.egui.iter().any(|ctx| ctx.get().wants_pointer_input()) {
+        if self
+            .egui
+            .iter_mut()
+            .any(|mut ctx| ctx.get_mut().wants_pointer_input())
+        {
             self.consumed.ui_wants_mouse = true;
         }
 
@@ -286,7 +296,7 @@ mod tests {
         let key = KeyCode::Space;
         world.resource_mut::<ButtonInput<KeyCode>>().press(key);
 
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(key), ActionValue::Bool(true));
         assert_eq!(reader.value(KeyCode::Escape), ActionValue::Bool(false));
         assert_eq!(
@@ -311,7 +321,7 @@ mod tests {
             .resource_mut::<ButtonInput<MouseButton>>()
             .press(button);
 
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(reader.value(MouseButton::Right), ActionValue::Bool(false));
         assert_eq!(
@@ -335,7 +345,7 @@ mod tests {
         world.send_event(MouseMotion { delta: value });
 
         let input = Input::mouse_motion();
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
@@ -361,7 +371,7 @@ mod tests {
         });
 
         let input = Input::mouse_wheel();
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
@@ -396,7 +406,7 @@ mod tests {
                 button_type: other_button,
             });
 
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         reader.set_gamepad(gamepad);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(
@@ -433,7 +443,7 @@ mod tests {
             button_type: other_button,
         });
 
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(reader.value(other_button), ActionValue::Bool(true));
         assert_eq!(
@@ -474,7 +484,7 @@ mod tests {
             value,
         );
 
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         reader.set_gamepad(gamepad);
         assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
         assert_eq!(
@@ -518,7 +528,7 @@ mod tests {
             value,
         );
 
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
         assert_eq!(reader.value(other_axis), ActionValue::Axis1D(1.0));
         assert_eq!(
@@ -547,7 +557,7 @@ mod tests {
             key,
             modifiers: modifier.into(),
         };
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
         assert_eq!(reader.value(key), ActionValue::Bool(true));
         assert_eq!(
@@ -572,7 +582,7 @@ mod tests {
             key: other_key,
             modifiers: modifier.into(),
         };
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(other_input), ActionValue::Bool(false));
         assert_eq!(reader.value(other_key), ActionValue::Bool(true));
     }
@@ -592,7 +602,7 @@ mod tests {
             button,
             modifiers: modifier.into(),
         };
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(
@@ -621,7 +631,7 @@ mod tests {
         let input = Input::MouseMotion {
             modifiers: modifier.into(),
         };
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
@@ -659,7 +669,7 @@ mod tests {
         let input = Input::MouseWheel {
             modifiers: modifier.into(),
         };
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
@@ -698,7 +708,7 @@ mod tests {
             window: Entity::PLACEHOLDER,
         });
 
-        let mut reader = state.get(&world);
+        let mut reader = state.get_mut(&mut world);
         reader.update_state();
         reader.consumed.ui_wants_keyboard = true;
         reader.consumed.ui_wants_mouse = true;

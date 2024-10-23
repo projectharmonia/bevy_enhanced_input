@@ -174,20 +174,19 @@ impl ContextInstances {
 
     pub(crate) fn update(
         &mut self,
-        world: &World,
         commands: &mut Commands,
         reader: &mut InputReader,
-        delta: f32,
+        time: &Time<Virtual>,
     ) {
         for group in &mut self.0 {
             match group {
                 InstanceGroup::Exclusive { instances, .. } => {
                     for (entity, ctx) in instances {
-                        ctx.update(world, commands, reader, &[*entity], delta);
+                        ctx.update(commands, reader, time, &[*entity]);
                     }
                 }
                 InstanceGroup::Shared { entities, ctx, .. } => {
-                    ctx.update(world, commands, reader, entities, delta);
+                    ctx.update(commands, reader, time, entities);
                 }
             }
         }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::{ignore_incompatible, InputModifier};
-use crate::{action_value::ActionValue, input_context::context_instance::ActionContext};
+use crate::action_value::ActionValue;
 
 /// Input values within the range [Self::lower_threshold] -> [Self::upper_threshold] will be remapped from 0 -> 1.
 /// Values outside this range will be clamped.
@@ -55,7 +55,7 @@ impl Default for DeadZone {
 }
 
 impl InputModifier for DeadZone {
-    fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
         match value {
             ActionValue::Bool(_) => {
                 ignore_incompatible!(value);
@@ -105,90 +105,73 @@ pub enum DeadZoneKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn radial() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
+        let time = Time::default();
 
-        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
-        assert_eq!(modifier.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&ctx, 0.0, 0.5.into()), 0.375.into());
-        assert_eq!(modifier.apply(&ctx, 0.0, 0.2.into()), 0.0.into());
-        assert_eq!(modifier.apply(&ctx, 0.0, 2.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), 0.375.into());
+        assert_eq!(modifier.apply(&time, 0.2.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 2.0.into()), 1.0.into());
 
         assert_eq!(
-            modifier.apply(&ctx, 0.0, (Vec2::ONE * 0.5).into()),
+            modifier.apply(&time, (Vec2::ONE * 0.5).into()),
             (Vec2::ONE * 0.4482233).into()
         );
         assert_eq!(
-            modifier.apply(&ctx, 0.0, Vec2::ONE.into()),
+            modifier.apply(&time, Vec2::ONE.into()),
             (Vec2::ONE * 0.70710677).into()
         );
         assert_eq!(
-            modifier.apply(&ctx, 0.0, (Vec2::ONE * 0.2).into()),
+            modifier.apply(&time, (Vec2::ONE * 0.2).into()),
             (Vec2::ONE * 0.07322331).into()
         );
 
         assert_eq!(
-            modifier.apply(&ctx, 0.0, (Vec3::ONE * 0.5).into()),
+            modifier.apply(&time, (Vec3::ONE * 0.5).into()),
             (Vec3::ONE * 0.48066244).into()
         );
         assert_eq!(
-            modifier.apply(&ctx, 0.0, Vec3::ONE.into()),
+            modifier.apply(&time, Vec3::ONE.into()),
             (Vec3::ONE * 0.57735026).into()
         );
         assert_eq!(
-            modifier.apply(&ctx, 0.0, (Vec3::ONE * 0.2).into()),
+            modifier.apply(&time, (Vec3::ONE * 0.2).into()),
             (Vec3::ONE * 0.105662435).into()
         );
     }
 
     #[test]
     fn axial() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
+        let mut modifier = DeadZone::new(DeadZoneKind::Axial);
+        let time = Time::default();
 
-        let mut dead_zone = DeadZone::new(DeadZoneKind::Axial);
-
-        assert_eq!(dead_zone.apply(&ctx, 0.0, true.into()), true.into());
-        assert_eq!(dead_zone.apply(&ctx, 0.0, 1.0.into()), 1.0.into());
-        assert_eq!(dead_zone.apply(&ctx, 0.0, 0.5.into()), 0.375.into());
-        assert_eq!(dead_zone.apply(&ctx, 0.0, 0.2.into()), 0.0.into());
-        assert_eq!(dead_zone.apply(&ctx, 0.0, 2.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), 0.375.into());
+        assert_eq!(modifier.apply(&time, 0.2.into()), 0.0.into());
+        assert_eq!(modifier.apply(&time, 2.0.into()), 1.0.into());
 
         assert_eq!(
-            dead_zone.apply(&ctx, 0.0, (Vec2::ONE * 0.5).into()),
+            modifier.apply(&time, (Vec2::ONE * 0.5).into()),
             (Vec2::ONE * 0.375).into()
         );
+        assert_eq!(modifier.apply(&time, Vec2::ONE.into()), Vec2::ONE.into());
         assert_eq!(
-            dead_zone.apply(&ctx, 0.0, Vec2::ONE.into()),
-            Vec2::ONE.into()
-        );
-        assert_eq!(
-            dead_zone.apply(&ctx, 0.0, (Vec2::ONE * 0.2).into()),
+            modifier.apply(&time, (Vec2::ONE * 0.2).into()),
             Vec2::ZERO.into()
         );
 
         assert_eq!(
-            dead_zone.apply(&ctx, 0.0, (Vec3::ONE * 0.5).into()),
+            modifier.apply(&time, (Vec3::ONE * 0.5).into()),
             (Vec3::ONE * 0.375).into()
         );
+        assert_eq!(modifier.apply(&time, Vec3::ONE.into()), Vec3::ONE.into());
         assert_eq!(
-            dead_zone.apply(&ctx, 0.0, Vec3::ONE.into()),
-            Vec3::ONE.into()
-        );
-        assert_eq!(
-            dead_zone.apply(&ctx, 0.0, (Vec3::ONE * 0.2).into()),
+            modifier.apply(&time, (Vec3::ONE * 0.2).into()),
             Vec3::ZERO.into()
         );
     }

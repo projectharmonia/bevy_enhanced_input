@@ -1,7 +1,9 @@
+use bevy::prelude::*;
+
 use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::{context_instance::ActionContext, input_action::ActionState},
+    input_context::input_action::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
@@ -69,9 +71,14 @@ impl Pulse {
 }
 
 impl InputCondition for Pulse {
-    fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState {
+    fn evaluate(
+        &mut self,
+        _actions: &ActionsData,
+        time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionState {
         if value.is_actuated(self.actuation) {
-            self.timer.update(ctx.world, delta);
+            self.timer.update(time);
 
             if self.trigger_limit == 0 || self.trigger_count < self.trigger_limit {
                 let trigger_count = if self.trigger_on_start {
@@ -102,67 +109,68 @@ impl InputCondition for Pulse {
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
+    use std::time::Duration;
 
     use super::*;
     use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn tap() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut condition = Pulse::new(1.0);
+        let actions = ActionsData::default();
+        let mut time = Time::default();
+
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Fired,
         );
+
+        time.advance_by(Duration::from_millis(500));
         assert_eq!(
-            condition.evaluate(&ctx, 0.5, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&ctx, 0.5, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Fired,
         );
+
+        time.advance_by(Duration::ZERO);
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Ongoing,
         );
-        assert_eq!(condition.evaluate(&ctx, 0.0, 0.0.into()), ActionState::None);
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::None
+        );
     }
 
     #[test]
     fn not_trigger_on_start() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut condition = Pulse::new(1.0).trigger_on_start(false);
+        let actions = ActionsData::default();
+        let time = Time::default();
+
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Ongoing,
         );
     }
 
     #[test]
     fn trigger_limit() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut condition = Pulse::new(1.0).with_trigger_limit(1);
+        let actions = ActionsData::default();
+        let time = Time::default();
+
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Fired,
         );
-        assert_eq!(condition.evaluate(&ctx, 0.0, 1.0.into()), ActionState::None);
+        assert_eq!(
+            condition.evaluate(&actions, &time, 1.0.into()),
+            ActionState::None
+        );
     }
 }

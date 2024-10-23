@@ -47,21 +47,21 @@ impl ActionData {
     pub fn update(
         &mut self,
         commands: &mut Commands,
+        time: &Time<Virtual>,
         entities: &[Entity],
         state: ActionState,
         value: impl Into<ActionValue>,
-        delta: f32,
     ) {
         // Add time from the previous frame if needed
         // before triggering events.
         match self.state {
             ActionState::None => (),
             ActionState::Ongoing => {
-                self.elapsed_secs += delta;
+                self.elapsed_secs += time.delta_seconds();
             }
             ActionState::Fired => {
-                self.elapsed_secs += delta;
-                self.fired_secs += delta;
+                self.elapsed_secs += time.delta_seconds();
+                self.fired_secs += time.delta_seconds();
             }
         }
 

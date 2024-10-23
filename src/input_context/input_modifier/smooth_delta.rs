@@ -3,10 +3,7 @@ use interpolation::Ease;
 pub use interpolation::EaseFunction;
 
 use super::{ignore_incompatible, InputModifier};
-use crate::{
-    action_value::{ActionValue, ActionValueDim},
-    input_context::context_instance::ActionContext,
-};
+use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Normalized smooth delta
 ///
@@ -39,7 +36,7 @@ impl SmoothDelta {
 }
 
 impl InputModifier for SmoothDelta {
-    fn apply(&mut self, _ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, time: &Time<Virtual>, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool {
             ignore_incompatible!(value);
@@ -49,7 +46,7 @@ impl InputModifier for SmoothDelta {
         let target_value_delta = (value - self.old_value).normalize_or_zero();
         self.old_value = value;
 
-        let alpha = (delta * self.speed).min(1.0);
+        let alpha = (time.delta_seconds() * self.speed).min(1.0);
         self.value_delta = match self.kind {
             SmoothKind::EaseFunction(ease_function) => {
                 let ease_alpha = alpha.calc(ease_function);
@@ -81,36 +78,29 @@ impl From<EaseFunction> for SmoothKind {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
-    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn linear() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut modifier = SmoothDelta::new(SmoothKind::Linear, 1.0);
-        let delta = 0.1;
-        assert_eq!(modifier.apply(&ctx, delta, true.into()), true.into());
-        assert_eq!(modifier.apply(&ctx, delta, 0.5.into()), 0.1.into());
-        assert_eq!(modifier.apply(&ctx, delta, 1.0.into()), 0.19.into());
+        let mut time = Time::default();
+        time.advance_by(Duration::from_millis(100));
+
+        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), 0.1.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), 0.19.into());
     }
 
     #[test]
     fn ease_function() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut modifier = SmoothDelta::new(EaseFunction::QuadraticIn, 1.0);
-        let delta = 0.2;
-        assert_eq!(modifier.apply(&ctx, delta, true.into()), true.into());
-        assert_eq!(modifier.apply(&ctx, delta, 0.5.into()), 0.040000003.into());
-        assert_eq!(modifier.apply(&ctx, delta, 1.0.into()), 0.0784.into());
+        let mut time = Time::default();
+        time.advance_by(Duration::from_millis(200));
+
+        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), 0.040000003.into());
+        assert_eq!(modifier.apply(&time, 1.0.into()), 0.0784.into());
     }
 }

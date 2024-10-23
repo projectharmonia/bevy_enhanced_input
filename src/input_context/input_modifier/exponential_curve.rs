@@ -1,10 +1,7 @@
 use bevy::prelude::*;
 
 use super::{ignore_incompatible, InputModifier};
-use crate::{
-    action_value::{ActionValue, ActionValueDim},
-    input_context::context_instance::ActionContext,
-};
+use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Response curve exponential.
 ///
@@ -31,7 +28,7 @@ impl ExponentialCurve {
 }
 
 impl InputModifier for ExponentialCurve {
-    fn apply(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionValue {
+    fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
         let dim = value.dim();
         if dim == ActionValueDim::Bool {
             ignore_incompatible!(value);
@@ -48,26 +45,21 @@ impl InputModifier for ExponentialCurve {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn exp() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
+        let time = Time::default();
         let mut modifier = ExponentialCurve::splat(2.0);
-        assert_eq!(modifier.apply(&ctx, 0.0, true.into()), true.into());
-        assert_eq!(modifier.apply(&ctx, 0.0, (-0.5).into()), (-0.25).into());
-        assert_eq!(modifier.apply(&ctx, 0.0, 0.5.into()), 0.25.into());
+
+        assert_eq!(modifier.apply(&time, true.into()), true.into());
+        assert_eq!(modifier.apply(&time, (-0.5).into()), (-0.25).into());
+        assert_eq!(modifier.apply(&time, 0.5.into()), 0.25.into());
         assert_eq!(
-            modifier.apply(&ctx, 0.0, (Vec2::ONE * 2.0).into()),
+            modifier.apply(&time, (Vec2::ONE * 2.0).into()),
             (Vec2::ONE * 4.0).into()
         );
         assert_eq!(
-            modifier.apply(&ctx, 0.0, (Vec3::ONE * 2.0).into()),
+            modifier.apply(&time, (Vec3::ONE * 2.0).into()),
             (Vec3::ONE * 4.0).into()
         );
     }

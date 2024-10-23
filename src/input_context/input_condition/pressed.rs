@@ -1,7 +1,9 @@
+use bevy::prelude::*;
+
 use super::{InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::{context_instance::ActionContext, input_action::ActionState},
+    input_context::input_action::{ActionState, ActionsData},
 };
 
 /// Like [`super::down::Down`] but returns [`ActionState::Fired`] only once until the next actuation.
@@ -31,7 +33,12 @@ impl Default for Pressed {
 }
 
 impl InputCondition for Pressed {
-    fn evaluate(&mut self, _ctx: &ActionContext, _delta: f32, value: ActionValue) -> ActionState {
+    fn evaluate(
+        &mut self,
+        _actions: &ActionsData,
+        _time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionState {
         let previosly_actuated = self.actuated;
         self.actuated = value.is_actuated(self.actuation);
 
@@ -45,23 +52,21 @@ impl InputCondition for Pressed {
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
-
     use super::*;
     use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn pressed() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
-
         let mut condition = Pressed::default();
-        assert_eq!(condition.evaluate(&ctx, 0.0, 0.0.into()), ActionState::None);
+        let actions = ActionsData::default();
+        let time = Time::default();
+
         assert_eq!(
-            condition.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::None
+        );
+        assert_eq!(
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Fired,
         );
     }

@@ -21,7 +21,7 @@ Instead of reacting to raw input data like "Released" or "Pressed", the crate pr
 like [`DeadZone`], [`Negate`], etc., but you can add your own by implementing [`InputModifier`].
 
 [`Conditions`](input_context::input_condition) define how an action activates. We also provide built-in conditions, such as [`Pressed`],
-[`Released`], [`Hold`], etc. You can also add your game-specific conditions like `CanJump` by implementing [`InputCondition`].
+[`Released`], [`Hold`], etc. You can also add your own by implementing [`InputCondition`].
 
 # Quick start
 
@@ -68,9 +68,7 @@ pub mod prelude {
         action_value::{ActionValue, ActionValueDim},
         input::{GamepadDevice, Input, Modifiers},
         input_context::{
-            context_instance::{
-                ActionBind, ActionContext, ContextInstance, GamepadStick, InputBind,
-            },
+            context_instance::{ActionBind, ContextInstance, GamepadStick, InputBind},
             input_action::{Accumulation, ActionEvent, ActionEventKind, ActionState, InputAction},
             input_condition::{
                 blocked_by::*, chord::*, condition_timer::*, down::*, hold::*, hold_and_release::*,
@@ -87,7 +85,7 @@ pub mod prelude {
     pub use bevy_enhanced_input_macros::InputAction;
 }
 
-use bevy::{ecs::system::SystemState, input::InputSystem, prelude::*};
+use bevy::{input::InputSystem, prelude::*};
 
 use input::input_reader::InputReader;
 use input_context::ContextInstances;
@@ -106,17 +104,14 @@ impl Plugin for EnhancedInputPlugin {
 }
 
 impl EnhancedInputPlugin {
-    fn update(world: &mut World, state: &mut SystemState<(Commands, InputReader, Res<Time>)>) {
-        world.resource_scope(|world, mut contexts: Mut<ContextInstances>| {
-            let (mut commands, mut reader, time) = state.get(world);
-            reader.update_state();
-
-            let delta = time.delta_seconds();
-
-            contexts.update(world, &mut commands, &mut reader, delta);
-        });
-
-        state.apply(world);
+    fn update(
+        mut commands: Commands,
+        mut reader: InputReader,
+        time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
+        mut instances: ResMut<ContextInstances>,
+    ) {
+        reader.update_state();
+        instances.update(&mut commands, &mut reader, &time);
     }
 }
 

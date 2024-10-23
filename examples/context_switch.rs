@@ -135,7 +135,7 @@ impl InputContext for InCar {
             .with_wasd()
             .with_modifier(Normalize)
             .with_modifier(ScaleByDelta)
-            .with_modifier(Scalar::splat(DEFAULT_SPEED + 200.0)); // Make car faster. It's possible to get the value from a component by writing a custom modifier.
+            .with_modifier(Scalar::splat(DEFAULT_SPEED + 200.0)); // Make car faster.
         ctx.bind::<ExitCar>().with(KeyCode::Enter);
 
         ctx

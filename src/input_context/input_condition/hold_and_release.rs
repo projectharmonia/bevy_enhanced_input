@@ -1,7 +1,9 @@
+use bevy::prelude::*;
+
 use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::{context_instance::ActionContext, input_action::ActionState},
+    input_context::input_action::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
@@ -44,11 +46,16 @@ impl HoldAndRelease {
 }
 
 impl InputCondition for HoldAndRelease {
-    fn evaluate(&mut self, ctx: &ActionContext, delta: f32, value: ActionValue) -> ActionState {
+    fn evaluate(
+        &mut self,
+        _actions: &ActionsData,
+        time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionState {
         // Evaluate the updated held duration prior to checking for actuation.
         // This stops us failing to trigger if the input is released on the
         // threshold frame due to held duration being 0.
-        self.timer.update(ctx.world, delta);
+        self.timer.update(time);
         let held_duration = self.timer.duration();
 
         if value.is_actuated(self.actuation) {
@@ -67,29 +74,36 @@ impl InputCondition for HoldAndRelease {
 
 #[cfg(test)]
 mod tests {
-    use bevy::prelude::*;
+    use std::time::Duration;
 
     use super::*;
     use crate::input_context::input_action::ActionsData;
 
     #[test]
     fn hold_and_release() {
-        let ctx = ActionContext {
-            world: &World::new(),
-            actions: &ActionsData::default(),
-            entities: &[],
-        };
+        let mut condition = HoldAndRelease::new(1.0);
+        let actions = ActionsData::default();
+        let mut time = Time::default();
 
-        let mut modifier = HoldAndRelease::new(1.0);
         assert_eq!(
-            modifier.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Ongoing,
         );
-        assert_eq!(modifier.evaluate(&ctx, 1.0, 0.0.into()), ActionState::Fired);
+
+        time.advance_by(Duration::from_secs(1));
         assert_eq!(
-            modifier.evaluate(&ctx, 0.0, 1.0.into()),
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::Fired
+        );
+
+        time.advance_by(Duration::ZERO);
+        assert_eq!(
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::Ongoing,
         );
-        assert_eq!(modifier.evaluate(&ctx, 0.0, 0.0.into()), ActionState::None);
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::None
+        );
     }
 }
