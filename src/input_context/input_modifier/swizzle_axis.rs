@@ -10,8 +10,8 @@ use crate::action_value::ActionValue;
 /// It tries to preserve the original dimension. However, if an axis from the original
 /// is promoted to a higher dimension, the value's type changes. Missing axes will be replaced with zero.
 ///
-/// For example, [`ActionValue::Bool`] will remain unchanged for [`Self::XZY`] or [`Self::XXX`] (X in the
-/// first place). But for variants like [`Self::YXZ`] (where X becomes the second component), it will be
+/// For example, [`ActionValue::Bool`] will remain unchanged for [`Self::XZY`] (X in the first place).
+/// But for variants like [`Self::YXZ`] (where X becomes the second component), it will be
 /// converted into [`ActionValue::Axis2D`] with Y set to the value.
 #[derive(Clone, Copy, Debug)]
 pub enum SwizzleAxis {
@@ -25,12 +25,6 @@ pub enum SwizzleAxis {
     YZX,
     /// Reorder all axes, Z first.
     ZXY,
-    /// Use X for all axes.
-    XXX,
-    /// Use Y for all axes.
-    YYY,
-    /// Use Z for all axes.
-    ZZZ,
 }
 
 impl InputModifier for SwizzleAxis {
@@ -43,8 +37,7 @@ impl InputModifier for SwizzleAxis {
             ActionValue::Axis1D(value) => match self {
                 SwizzleAxis::YXZ | SwizzleAxis::ZXY => (Vec2::Y * value).into(),
                 SwizzleAxis::ZYX | SwizzleAxis::YZX => (Vec3::Z * value).into(),
-                SwizzleAxis::XZY | SwizzleAxis::XXX => value.into(),
-                SwizzleAxis::YYY | SwizzleAxis::ZZZ => 0.0.into(),
+                SwizzleAxis::XZY => value.into(),
             },
             ActionValue::Axis2D(value) => match self {
                 SwizzleAxis::YXZ => value.yx().into(),
@@ -52,9 +45,6 @@ impl InputModifier for SwizzleAxis {
                 SwizzleAxis::XZY => (value.x, 0.0).into(),
                 SwizzleAxis::YZX => (value.y, 0.0).into(),
                 SwizzleAxis::ZXY => (0.0, value.x).into(),
-                SwizzleAxis::XXX => value.xx().into(),
-                SwizzleAxis::YYY => value.yy().into(),
-                SwizzleAxis::ZZZ => Vec2::ZERO.into(),
             },
             ActionValue::Axis3D(value) => match self {
                 SwizzleAxis::YXZ => value.yxz().into(),
@@ -62,9 +52,6 @@ impl InputModifier for SwizzleAxis {
                 SwizzleAxis::XZY => value.xzy().into(),
                 SwizzleAxis::YZX => value.yzx().into(),
                 SwizzleAxis::ZXY => value.zxy().into(),
-                SwizzleAxis::XXX => value.xxx().into(),
-                SwizzleAxis::YYY => value.yyy().into(),
-                SwizzleAxis::ZZZ => value.zzz().into(),
             },
         }
     }
@@ -146,51 +133,6 @@ mod tests {
         assert_eq!(
             modifier.apply(&time, (0.0, 1.0, 2.0).into()),
             (2.0, 0.0, 1.0).into(),
-        );
-    }
-
-    #[test]
-    fn xxx() {
-        let mut modifier = SwizzleAxis::XXX;
-        let time = Time::default();
-
-        assert_eq!(modifier.apply(&time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
-        assert_eq!(
-            modifier.apply(&time, (0.0, 1.0, 2.0).into()),
-            (0.0, 0.0, 0.0).into(),
-        );
-    }
-
-    #[test]
-    fn yyy() {
-        let mut modifier = SwizzleAxis::YYY;
-        let time = Time::default();
-
-        assert_eq!(modifier.apply(&time, true.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (1.0, 1.0).into());
-        assert_eq!(
-            modifier.apply(&time, (0.0, 1.0, 2.0).into()),
-            (1.0, 1.0, 1.0).into(),
-        );
-    }
-
-    #[test]
-    fn zzz() {
-        let mut modifier = SwizzleAxis::ZZZ;
-        let time = Time::default();
-
-        assert_eq!(modifier.apply(&time, true.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, (0.0, 1.0).into()), (0.0, 0.0).into());
-        assert_eq!(
-            modifier.apply(&time, (0.0, 1.0, 2.0).into()),
-            (2.0, 2.0, 2.0).into(),
         );
     }
 }

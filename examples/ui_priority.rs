@@ -96,7 +96,7 @@ impl GamePlugin {
         let event = trigger.event();
         if event.kind.is_fired() {
             let mut transform = players.get_mut(trigger.entity()).unwrap();
-            transform.scale += event.value.as_axis3d();
+            transform.scale += Vec3::splat(event.value.as_axis1d());
         }
     }
 }
@@ -111,8 +111,7 @@ impl InputContext for PlayerBox {
             .with_modifier(ScaleByDelta)
             .with_modifier(Scalar::splat(DEFAULT_SPEED));
         ctx.bind::<Scale>()
-            .with(Input::mouse_wheel())
-            .with_modifier(SwizzleAxis::YYY)
+            .with(InputBind::new(Input::mouse_wheel()).with_modifier(SwizzleAxis::YXZ))
             .with_modifier(Scalar::splat(3.0));
 
         ctx
@@ -124,5 +123,5 @@ impl InputContext for PlayerBox {
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis3D)]
+#[input_action(dim = Axis1D)]
 struct Scale;
