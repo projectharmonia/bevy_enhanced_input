@@ -132,16 +132,21 @@ impl ActionBind {
 
     /// Maps WASD keys as 2-dimentional input.
     ///
-    /// See also [`Self::with_axis2d`].
+    /// In Bevy's 3D space, the -Z axis points forward and the +Z axis points
+    /// toward the camera. To map movement correctly in 3D space, you will
+    /// need to invert Y and apply it to Z translation inside your observer.
+    ///
+    /// Shorthand for [`Self::with_xy_axis`].
     pub fn with_wasd(&mut self) -> &mut Self {
-        self.with_axis2d(KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD)
+        self.with_xy_axis(KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD)
     }
 
     /// Maps keyboard arrow keys as 2-dimentional input.
     ///
-    /// See also [`Self::with_axis2d`].
+    /// Shorthand for [`Self::with_xy_axis`].
+    /// See also [`Self::with_wasd`].
     pub fn with_arrows(&mut self) -> &mut Self {
-        self.with_axis2d(
+        self.with_xy_axis(
             KeyCode::ArrowUp,
             KeyCode::ArrowLeft,
             KeyCode::ArrowDown,
@@ -151,9 +156,10 @@ impl ActionBind {
 
     /// Maps D-pad as 2-dimentional input.
     ///
-    /// See also [`Self::with_axis2d`].
+    /// Shorthand for [`Self::with_xy_axis`].
+    /// See also [`Self::with_wasd`].
     pub fn with_dpad(&mut self) -> &mut Self {
-        self.with_axis2d(
+        self.with_xy_axis(
             GamepadButtonType::DPadUp,
             GamepadButtonType::DPadLeft,
             GamepadButtonType::DPadDown,
@@ -161,13 +167,13 @@ impl ActionBind {
         )
     }
 
-    /// Maps 4 keys as 2-dimentional input.
+    /// Maps 4 buttons as 2-dimentional input.
     ///
     /// This is a convenience "preset" that uses [`SwizzleAxis`] and [`Negate`] to
-    /// bind the keys to cardinal directions.
+    /// bind the buttons to X and Y axes.
     ///
     /// The order of arguments follows the common "WASD" mapping.
-    pub fn with_axis2d<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
+    pub fn with_xy_axis<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
         self.with(InputBind::new(up).with_modifier(SwizzleAxis::YXZ))
             .with(InputBind::new(left).with_modifier(Negate::default()))
             .with(
