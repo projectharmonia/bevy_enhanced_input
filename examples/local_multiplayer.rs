@@ -117,7 +117,7 @@ impl InputContext for PlayerBox {
         ctx.bind::<Move>()
             .with_modifier(Normalize)
             .with_modifier(DeltaLerp::default())
-            .with_modifier(Scalar::splat(DEFAULT_SPEED));
+            .with_modifier(Scale::splat(DEFAULT_SPEED));
 
         ctx
     }

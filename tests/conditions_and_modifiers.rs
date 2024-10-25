@@ -212,7 +212,7 @@ impl InputContext for DummyContext {
         let block_by = BlockBy::<Blocker>::default();
         let swizzle_axis = SwizzleAxis::YXZ;
         let negate = Negate::default();
-        let scalar = Scalar::splat(2.0);
+        let scale = Scale::splat(2.0);
 
         ctx.bind::<Blocker>().with(Blocker::KEY);
         ctx.bind::<InputLevel>()
@@ -222,7 +222,7 @@ impl InputContext for DummyContext {
                     .with_condition(down)
                     .with_condition(release)
                     .with_modifier(swizzle_axis)
-                    .with_modifier(scalar),
+                    .with_modifier(scale),
             )
             .with(
                 InputBind::new(InputLevel::KEY2)
@@ -240,12 +240,12 @@ impl InputContext for DummyContext {
             .with_condition(block_by)
             .with_modifier(swizzle_axis)
             .with_modifier(negate)
-            .with_modifier(scalar);
+            .with_modifier(scale);
         ctx.bind::<BothLevels>()
             .with(
                 InputBind::new(BothLevels::KEY1)
                     .with_condition(down)
-                    .with_modifier(scalar),
+                    .with_modifier(scale),
             )
             .with(
                 InputBind::new(BothLevels::KEY2)

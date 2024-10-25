@@ -4,7 +4,7 @@ pub mod delta_scale;
 pub mod exponential_curve;
 pub mod negate;
 pub mod normalize;
-pub mod scalar;
+pub mod scale;
 pub mod swizzle_axis;
 
 use std::fmt::Debug;

@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `Released` into `Release`.
 - Rename `Pressed` into `Press`.
 - Rename `BlockedBy` into `BlockBy`.
+- Rename `Scalar` into `Scale`.
 - Replace `SmoothDelta` with `LerpDelta` that does only linear interpolation. Using easing functions for inputs doesn't make much sense.
 - Modifiers are now allowed to change passed value dimensions.
 - All built-in modifiers now handle values of any dimention.

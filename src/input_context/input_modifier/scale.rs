@@ -3,42 +3,40 @@ use bevy::prelude::*;
 use super::InputModifier;
 use crate::action_value::ActionValue;
 
-/// Scales input by a set factor per axis.
+/// Scales input independently along each axis by a specified factor.
 ///
-/// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
+/// [`ActionValue::Bool`] will be converted into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
-pub struct Scalar {
-    /// The scalar that will be applied to the input value.
+pub struct Scale {
+    /// The factor applied to the input value.
     ///
-    /// For example, with the scalar set to `Vec3::new(2.0, 2.0, 2.0)`, each input axis will be multiplied by 2.0.
-    ///
-    /// Does nothing for boolean values.
-    pub scalar: Vec3,
+    /// For example, if the factor is set to `Vec3::new(2.0, 2.0, 2.0)`, each input axis will be multiplied by 2.0.
+    pub factor: Vec3,
 }
 
-impl Scalar {
-    /// Creates a new scalar with all axes set to `value`.
+impl Scale {
+    /// Creates a new instance with all axes set to `value`.
     #[must_use]
     pub fn splat(value: f32) -> Self {
         Self::new(Vec3::splat(value))
     }
 
     #[must_use]
-    pub fn new(scalar: Vec3) -> Self {
-        Self { scalar }
+    pub fn new(factor: Vec3) -> Self {
+        Self { factor }
     }
 }
 
-impl InputModifier for Scalar {
+impl InputModifier for Scale {
     fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
         match value {
             ActionValue::Bool(value) => {
                 let value = if value { 1.0 } else { 0.0 };
-                (value * self.scalar.x).into()
+                (value * self.factor.x).into()
             }
-            ActionValue::Axis1D(value) => (value * self.scalar.x).into(),
-            ActionValue::Axis2D(value) => (value * self.scalar.xy()).into(),
-            ActionValue::Axis3D(value) => (value * self.scalar).into(),
+            ActionValue::Axis1D(value) => (value * self.factor.x).into(),
+            ActionValue::Axis2D(value) => (value * self.factor.xy()).into(),
+            ActionValue::Axis3D(value) => (value * self.factor).into(),
         }
     }
 }
@@ -49,7 +47,7 @@ mod tests {
 
     #[test]
     fn scaling() {
-        let mut modifier = Scalar::splat(2.0);
+        let mut modifier = Scale::splat(2.0);
         let time = Time::default();
 
         assert_eq!(modifier.apply(&time, true.into()), 2.0.into());

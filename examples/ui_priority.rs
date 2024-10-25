@@ -109,10 +109,10 @@ impl InputContext for PlayerBox {
             .with_wasd()
             .with_modifier(Normalize)
             .with_modifier(DeltaLerp::default())
-            .with_modifier(Scalar::splat(DEFAULT_SPEED));
+            .with_modifier(Scale::splat(DEFAULT_SPEED));
         ctx.bind::<Scale>()
             .with(InputBind::new(Input::mouse_wheel()).with_modifier(SwizzleAxis::YXZ))
-            .with_modifier(Scalar::splat(3.0));
+            .with_modifier(Scale::splat(3.0));
 
         ctx
     }
