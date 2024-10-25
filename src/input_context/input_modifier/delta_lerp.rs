@@ -1,46 +1,38 @@
 use bevy::prelude::*;
-use interpolation::Ease;
-pub use interpolation::EaseFunction;
 
 use super::InputModifier;
 use crate::action_value::ActionValue;
 
-/// Normalized smooth delta
-///
-/// Produces a smoothed normalized delta of the current(new) and last(old) input value.
+/// Produces a smoothed value of the current and previous input value.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
-pub struct SmoothDelta {
-    /// Defines how value will be smoothed.
-    pub kind: SmoothKind,
-
+pub struct DeltaLerp {
     /// Multiplier for delta time, determines the rate of smoothing.
     ///
     /// By default set to 8.0, an ad-hoc value that usually produces nice results.
-    /// See also [`Self::with_speed`].
     pub speed: f32,
 
     prev_value: Vec3,
 }
 
-impl SmoothDelta {
+impl DeltaLerp {
     #[must_use]
-    pub fn new(kind: impl Into<SmoothKind>) -> Self {
+    pub fn new(speed: f32) -> Self {
         Self {
-            kind: kind.into(),
-            speed: 8.0,
+            speed,
             prev_value: Default::default(),
         }
     }
+}
 
-    pub fn with_speed(mut self, speed: f32) -> Self {
-        self.speed = speed;
-        self
+impl Default for DeltaLerp {
+    fn default() -> Self {
+        Self::new(8.0)
     }
 }
 
-impl InputModifier for SmoothDelta {
+impl InputModifier for DeltaLerp {
     fn apply(&mut self, time: &Time<Virtual>, value: ActionValue) -> ActionValue {
         if let ActionValue::Bool(value) = value {
             let value = if value { 1.0 } else { 0.0 };
@@ -55,33 +47,10 @@ impl InputModifier for SmoothDelta {
         }
 
         let alpha = time.delta_seconds() * self.speed;
-        let smoothed = match self.kind {
-            SmoothKind::EaseFunction(ease_function) => {
-                let ease_alpha = alpha.calc(ease_function);
-                self.prev_value.lerp(target_value, ease_alpha)
-            }
-            SmoothKind::Linear => self.prev_value.lerp(target_value, alpha),
-        };
+        let smoothed = self.prev_value.lerp(target_value, alpha);
         self.prev_value = smoothed;
 
         ActionValue::Axis3D(smoothed).convert(value.dim())
-    }
-}
-
-/// Behavior options for [`SmoothDelta`].
-///
-/// Describes how eased value should be computed.
-#[derive(Clone, Copy, Debug)]
-pub enum SmoothKind {
-    /// Follows [`EaseFunction`].
-    EaseFunction(EaseFunction),
-    /// Linear interpolation, with no function.
-    Linear,
-}
-
-impl From<EaseFunction> for SmoothKind {
-    fn from(value: EaseFunction) -> Self {
-        Self::EaseFunction(value)
     }
 }
 
@@ -93,7 +62,7 @@ mod tests {
 
     #[test]
     fn linear() {
-        let mut modifier = SmoothDelta::new(SmoothKind::Linear).with_speed(1.0);
+        let mut modifier = DeltaLerp::new(1.0); // Use 1.0 for simpler calculations.
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
@@ -102,18 +71,8 @@ mod tests {
     }
 
     #[test]
-    fn ease_function() {
-        let mut modifier = SmoothDelta::new(EaseFunction::QuadraticIn).with_speed(1.0);
-        let mut time = Time::default();
-        time.advance_by(Duration::from_millis(200));
-
-        assert_eq!(modifier.apply(&time, 0.5.into()), 0.020000001.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 0.059200004.into());
-    }
-
-    #[test]
     fn bool_as_axis1d() {
-        let mut modifier = SmoothDelta::new(SmoothKind::Linear).with_speed(1.0);
+        let mut modifier = DeltaLerp::new(1.0);
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
@@ -123,7 +82,7 @@ mod tests {
 
     #[test]
     fn snapping() {
-        let mut modifier = SmoothDelta::new(SmoothKind::Linear).with_speed(1.0);
+        let mut modifier = DeltaLerp::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 

@@ -103,7 +103,7 @@ impl InputContext for OnFoot {
             .bind::<Move>()
             .with_wasd()
             .with_modifier(Normalize)
-            .with_modifier(SmoothDelta::new(SmoothKind::Linear))
+            .with_modifier(DeltaLerp::default())
             .with_modifier(Scalar::splat(DEFAULT_SPEED));
         instance.bind::<Rotate>().with(KeyCode::Space);
         instance.bind::<EnterCar>().with(KeyCode::Enter);
@@ -134,7 +134,7 @@ impl InputContext for InCar {
         ctx.bind::<Move>()
             .with_wasd()
             .with_modifier(Normalize)
-            .with_modifier(SmoothDelta::new(SmoothKind::Linear))
+            .with_modifier(DeltaLerp::default())
             .with_modifier(Scalar::splat(DEFAULT_SPEED + 200.0)); // Make car faster.
         ctx.bind::<ExitCar>().with(KeyCode::Enter);
 

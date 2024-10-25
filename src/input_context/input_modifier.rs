@@ -1,10 +1,10 @@
 pub mod dead_zone;
+pub mod delta_lerp;
 pub mod exponential_curve;
 pub mod negate;
 pub mod normalize;
 pub mod scalar;
 pub mod scale_by_delta;
-pub mod smooth_delta;
 pub mod swizzle_axis;
 
 use std::fmt::Debug;

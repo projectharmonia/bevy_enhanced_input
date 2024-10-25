@@ -116,7 +116,7 @@ impl InputContext for PlayerBox {
         // In our case we cant to add modifiers for all players.
         ctx.bind::<Move>()
             .with_modifier(Normalize)
-            .with_modifier(SmoothDelta::new(SmoothKind::Linear))
+            .with_modifier(DeltaLerp::default())
             .with_modifier(Scalar::splat(DEFAULT_SPEED));
 
         ctx

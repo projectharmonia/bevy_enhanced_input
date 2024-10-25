@@ -75,7 +75,7 @@ impl InputContext for PlayerBox {
             .with_wasd()
             .with_stick(GamepadStick::Left)
             .with_modifier(Normalize) // Normilize to ensure consistent speed, otherwise diagonal movement will be faster.
-            .with_modifier(SmoothDelta::new(SmoothKind::Linear)) // // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `ScaleByDelta`.
+            .with_modifier(DeltaLerp::default()) // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `ScaleByDelta`.
             .with_modifier(Scalar::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.
 
         ctx.bind::<Rotate>()
