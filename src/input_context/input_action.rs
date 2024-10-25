@@ -314,7 +314,7 @@ impl<A: InputAction> From<ActionEvent<A>> for UntypedActionEvent {
 pub enum ActionEventKind {
     /// Triggers every frame when an action state is [`ActionState::Fired`].
     ///
-    /// For example, with the [`Released`](super::input_condition::released::Released) condition,
+    /// For example, with the [`Release`](super::input_condition::release::Release) condition,
     /// this event is triggered when the user releases the key.
     Fired {
         /// Time that this action was in [`ActionState::Fired`] state.

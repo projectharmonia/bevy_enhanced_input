@@ -62,9 +62,9 @@ impl InputContext for DummyContext {
         ctx.bind::<PulseAction>()
             .with(PulseAction::KEY)
             .with_condition(Pulse::new(1.0));
-        ctx.bind::<ReleasedAction>()
-            .with(ReleasedAction::KEY)
-            .with_condition(Released::default());
+        ctx.bind::<ReleaseAction>()
+            .with(ReleaseAction::KEY)
+            .with_condition(Release::default());
         ctx.bind::<TapAction>()
             .with(TapAction::KEY)
             .with_condition(Tap::new(0.5));
@@ -139,9 +139,9 @@ impl PulseAction {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct ReleasedAction;
+struct ReleaseAction;
 
-impl ReleasedAction {
+impl ReleaseAction {
     const KEY: KeyCode = KeyCode::Digit8;
 }
 

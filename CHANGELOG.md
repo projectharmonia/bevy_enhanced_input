@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Values from `Input` are now converted to the action-level dimension only after applying all input-level modifiers and conditions. This allows things like mapping the Y-axis of `ActionValue::Axis2D` into an action with `ActionValueDim::Axis1D`.
 - Rename `ActionBind::with_axis2d` into `ActionBind::with_xy_axis`.
 - Rename `ScaleByDelta` into `DeltaScale`.
+- Rename `Released` into `Release`.
 - Replace `SmoothDelta` with `LerpDelta` that does only linear interpolation. Using easing functions for inputs doesn't make much sense.
 - Modifiers are now allowed to change passed value dimensions.
 - All built-in modifiers now handle values of any dimention.

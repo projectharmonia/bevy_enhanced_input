@@ -6,7 +6,7 @@ pub mod hold;
 pub mod hold_and_release;
 pub mod pressed;
 pub mod pulse;
-pub mod released;
+pub mod release;
 pub mod tap;
 
 use std::fmt::Debug;

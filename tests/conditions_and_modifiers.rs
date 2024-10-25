@@ -208,7 +208,7 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         let down = Down::default();
-        let released = Released::default();
+        let release = Release::default();
         let blocked_by = BlockedBy::<Blocker>::default();
         let swizzle_axis = SwizzleAxis::YXZ;
         let negate = Negate::default();
@@ -220,7 +220,7 @@ impl InputContext for DummyContext {
                 InputBind::new(InputLevel::KEY1)
                     .with_condition(blocked_by)
                     .with_condition(down)
-                    .with_condition(released)
+                    .with_condition(release)
                     .with_modifier(swizzle_axis)
                     .with_modifier(scalar),
             )
@@ -228,7 +228,7 @@ impl InputContext for DummyContext {
                 InputBind::new(InputLevel::KEY2)
                     .with_condition(blocked_by)
                     .with_condition(down)
-                    .with_condition(released)
+                    .with_condition(release)
                     .with_modifier(swizzle_axis)
                     .with_modifier(negate),
             );
@@ -236,7 +236,7 @@ impl InputContext for DummyContext {
             .with(ActionLevel::KEY1)
             .with(ActionLevel::KEY2)
             .with_condition(down)
-            .with_condition(released)
+            .with_condition(release)
             .with_condition(blocked_by)
             .with_modifier(swizzle_axis)
             .with_modifier(negate)
@@ -252,7 +252,7 @@ impl InputContext for DummyContext {
                     .with_condition(down)
                     .with_modifier(negate),
             )
-            .with_condition(released)
+            .with_condition(release)
             .with_condition(blocked_by)
             .with_modifier(swizzle_axis);
 

@@ -227,7 +227,7 @@ impl InputContext for DummyContext {
         ctx.bind::<PressAction>().with(PressAction::KEY);
         ctx.bind::<ReleaseAction>()
             .with(ReleaseAction::KEY)
-            .with_condition(Released::default());
+            .with_condition(Release::default());
         ctx.bind::<HoldAction>()
             .with(HoldAction::KEY)
             .with_condition(Hold::new(1.0));

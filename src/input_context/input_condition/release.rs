@@ -9,13 +9,13 @@ use crate::{
 /// Returns [`ActionState::Ongoing`]` when the input exceeds the actuation threshold and
 /// [`ActionState::Fired`] once when the input drops back below the actuation threshold.
 #[derive(Clone, Copy, Debug)]
-pub struct Released {
+pub struct Release {
     /// Trigger threshold.
     pub actuation: f32,
     actuated: bool,
 }
 
-impl Released {
+impl Release {
     #[must_use]
     pub fn new(actuation: f32) -> Self {
         Self {
@@ -25,13 +25,13 @@ impl Released {
     }
 }
 
-impl Default for Released {
+impl Default for Release {
     fn default() -> Self {
         Self::new(DEFAULT_ACTUATION)
     }
 }
 
-impl InputCondition for Released {
+impl InputCondition for Release {
     fn evaluate(
         &mut self,
         _actions: &ActionsData,
@@ -58,8 +58,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn released() {
-        let mut condition = Released::default();
+    fn release() {
+        let mut condition = Release::default();
         let actions = ActionsData::default();
         let time = Time::default();
 
