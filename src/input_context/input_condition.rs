@@ -4,7 +4,7 @@ pub mod condition_timer;
 pub mod down;
 pub mod hold;
 pub mod hold_and_release;
-pub mod pressed;
+pub mod press;
 pub mod pulse;
 pub mod release;
 pub mod tap;
