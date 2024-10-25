@@ -1,4 +1,4 @@
-pub mod blocked_by;
+pub mod block_by;
 pub mod chord;
 pub mod condition_timer;
 pub mod down;

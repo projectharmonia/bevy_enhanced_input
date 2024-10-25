@@ -41,9 +41,9 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<DummyAction>().with(DummyAction::KEY);
-        ctx.bind::<BlockedByAction>()
-            .with(BlockedByAction::KEY)
-            .with_condition(BlockedBy::<DummyAction>::default());
+        ctx.bind::<BlockByAction>()
+            .with(BlockByAction::KEY)
+            .with_condition(BlockBy::<DummyAction>::default());
         ctx.bind::<ChordAction>()
             .with(ChordAction::KEY)
             .with_condition(Chord::<DummyAction>::default());
@@ -83,9 +83,9 @@ impl DummyAction {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct BlockedByAction;
+struct BlockByAction;
 
-impl BlockedByAction {
+impl BlockByAction {
     const KEY: KeyCode = KeyCode::Digit1;
 }
 

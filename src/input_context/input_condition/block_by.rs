@@ -12,12 +12,12 @@ use crate::{
 ///
 /// Could be used for chords to avoid triggering required actions.
 #[derive(Debug)]
-pub struct BlockedBy<A: InputAction> {
+pub struct BlockBy<A: InputAction> {
     /// Action that blocks this condition when active.
     marker: PhantomData<A>,
 }
 
-impl<A: InputAction> Default for BlockedBy<A> {
+impl<A: InputAction> Default for BlockBy<A> {
     fn default() -> Self {
         Self {
             marker: PhantomData,
@@ -25,15 +25,15 @@ impl<A: InputAction> Default for BlockedBy<A> {
     }
 }
 
-impl<A: InputAction> Clone for BlockedBy<A> {
+impl<A: InputAction> Clone for BlockBy<A> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<A: InputAction> Copy for BlockedBy<A> {}
+impl<A: InputAction> Copy for BlockBy<A> {}
 
-impl<A: InputAction> InputCondition for BlockedBy<A> {
+impl<A: InputAction> InputCondition for BlockBy<A> {
     fn evaluate(
         &mut self,
         actions: &ActionsData,
@@ -69,8 +69,8 @@ mod tests {
     use crate::{input_context::input_action::ActionData, ActionValueDim};
 
     #[test]
-    fn blocked() {
-        let mut condition = BlockedBy::<DummyAction>::default();
+    fn block() {
+        let mut condition = BlockBy::<DummyAction>::default();
         let mut action = ActionData::new::<DummyAction>();
         let mut world = World::new();
         let time = Time::default();
@@ -86,7 +86,7 @@ mod tests {
 
     #[test]
     fn missing_action() {
-        let mut condition = BlockedBy::<DummyAction>::default();
+        let mut condition = BlockBy::<DummyAction>::default();
         let actions = ActionsData::default();
         let time = Time::default();
 
