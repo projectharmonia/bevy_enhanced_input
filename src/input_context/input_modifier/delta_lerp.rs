@@ -61,7 +61,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn linear() {
+    fn lerp() {
         let mut modifier = DeltaLerp::new(1.0); // Use 1.0 for simpler calculations.
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
