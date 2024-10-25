@@ -15,7 +15,9 @@ pub struct SmoothDelta {
     /// Defines how value will be smoothed.
     pub kind: SmoothKind,
 
-    /// Multiplier for delta time.
+    /// Multiplier for delta time, determines the rate of smoothing.
+    ///
+    /// By default set to 8.0, an ad-hoc value that usually produces nice results.
     pub speed: f32,
 
     prev_value: Vec3,
@@ -23,12 +25,17 @@ pub struct SmoothDelta {
 
 impl SmoothDelta {
     #[must_use]
-    pub fn new(kind: impl Into<SmoothKind>, speed: f32) -> Self {
+    pub fn new(kind: impl Into<SmoothKind>) -> Self {
         Self {
             kind: kind.into(),
-            speed,
+            speed: 8.0,
             prev_value: Default::default(),
         }
+    }
+
+    pub fn with_speed(mut self, speed: f32) -> Self {
+        self.speed = speed;
+        self
     }
 }
 
@@ -85,7 +92,7 @@ mod tests {
 
     #[test]
     fn linear() {
-        let mut modifier = SmoothDelta::new(SmoothKind::Linear, 1.0);
+        let mut modifier = SmoothDelta::new(SmoothKind::Linear).with_speed(1.0);
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
@@ -95,7 +102,7 @@ mod tests {
 
     #[test]
     fn ease_function() {
-        let mut modifier = SmoothDelta::new(EaseFunction::QuadraticIn, 1.0);
+        let mut modifier = SmoothDelta::new(EaseFunction::QuadraticIn).with_speed(1.0);
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(200));
 
@@ -105,7 +112,7 @@ mod tests {
 
     #[test]
     fn bool_as_axis1d() {
-        let mut modifier = SmoothDelta::new(SmoothKind::Linear, 1.0);
+        let mut modifier = SmoothDelta::new(SmoothKind::Linear).with_speed(1.0);
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
@@ -115,7 +122,7 @@ mod tests {
 
     #[test]
     fn snapping() {
-        let mut modifier = SmoothDelta::new(SmoothKind::Linear, 1.0);
+        let mut modifier = SmoothDelta::new(SmoothKind::Linear).with_speed(1.0);
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
