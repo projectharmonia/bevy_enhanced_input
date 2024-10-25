@@ -18,6 +18,7 @@ pub struct SmoothDelta {
     /// Multiplier for delta time, determines the rate of smoothing.
     ///
     /// By default set to 8.0, an ad-hoc value that usually produces nice results.
+    /// See also [`Self::with_speed`].
     pub speed: f32,
 
     prev_value: Vec3,

@@ -29,7 +29,7 @@ impl PlayerBoxPlugin {
     }
 }
 
-pub(super) const DEFAULT_SPEED: f32 = 400.0;
+pub(super) const DEFAULT_SPEED: f32 = 10.0;
 
 #[derive(Bundle, Default)]
 pub(super) struct PlayerBoxBundle {

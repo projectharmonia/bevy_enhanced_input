@@ -108,7 +108,7 @@ impl InputContext for PlayerBox {
         ctx.bind::<Move>()
             .with_wasd()
             .with_modifier(Normalize)
-            .with_modifier(ScaleByDelta)
+            .with_modifier(SmoothDelta::new(SmoothKind::Linear))
             .with_modifier(Scalar::splat(DEFAULT_SPEED));
         ctx.bind::<Rotate>().with(KeyCode::Space);
         ctx.bind::<EnterWater>().with(KeyCode::Enter);
