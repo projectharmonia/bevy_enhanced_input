@@ -12,16 +12,16 @@ pub struct ConditionTimer {
 }
 
 impl ConditionTimer {
-    pub fn update(&mut self, time: &Time<Virtual>) {
+    pub fn update(&mut self, timer: &Time<Virtual>) {
         // Time<Virtual> returns already scaled results.
         // Unscale if configured.
         let scale = if self.relative_speed {
             1.0
         } else {
-            time.relative_speed()
+            timer.relative_speed()
         };
 
-        self.duration += time.delta_seconds() / scale;
+        self.duration += timer.delta_seconds() / scale;
     }
 
     pub fn reset(&mut self) {

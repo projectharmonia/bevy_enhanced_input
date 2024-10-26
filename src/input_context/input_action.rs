@@ -6,7 +6,7 @@ use bitflags::bitflags;
 use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Map for actions to their [`ActionData`].
-#[derive(Deref, Default, DerefMut)]
+#[derive(Default, Deref, DerefMut)]
 pub struct ActionsData(HashMap<TypeId, ActionData>);
 
 impl ActionsData {
