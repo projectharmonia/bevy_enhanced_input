@@ -1,6 +1,7 @@
 use std::{any::TypeId, fmt::Debug, marker::PhantomData};
 
 use bevy::{prelude::*, utils::HashMap};
+use bitflags::bitflags;
 
 use crate::action_value::{ActionValue, ActionValueDim};
 
@@ -25,9 +26,10 @@ impl From<HashMap<TypeId, ActionData>> for ActionsData {
 #[derive(Clone, Copy)]
 pub struct ActionData {
     state: ActionState,
+    events: ActionEvents,
     elapsed_secs: f32,
     fired_secs: f32,
-    trigger_events: fn(&Self, &mut Commands, &[Entity], ActionState, ActionValue),
+    trigger_events: fn(&Self, &mut Commands, &[Entity], ActionState, ActionValue) -> ActionEvents,
 }
 
 impl ActionData {
@@ -37,6 +39,7 @@ impl ActionData {
     pub fn new<A: InputAction>() -> Self {
         Self {
             state: Default::default(),
+            events: Default::default(),
             elapsed_secs: 0.0,
             fired_secs: 0.0,
             trigger_events: Self::trigger::<A>,
@@ -65,10 +68,10 @@ impl ActionData {
             }
         }
 
-        (self.trigger_events)(self, commands, entities, state, value.into());
+        self.events = (self.trigger_events)(self, commands, entities, state, value.into());
+        self.state = state;
 
         // Reset time for updated state.
-        self.state = state;
         match self.state {
             ActionState::None => {
                 self.elapsed_secs = 0.0;
@@ -109,69 +112,48 @@ impl ActionData {
         entities: &[Entity],
         state: ActionState,
         value: ActionValue,
-    ) {
-        if let Some((started, kind)) = self.transition_events(state) {
+    ) -> ActionEvents {
+        let events = ActionEvents::new(self.state, state);
+        for (_, event) in events.iter_names() {
+            let kind = match event {
+                ActionEvents::FIRED => ActionEventKind::Fired {
+                    fired_secs: self.fired_secs,
+                    elapsed_secs: self.elapsed_secs,
+                },
+                ActionEvents::STARTED => ActionEventKind::Started,
+                ActionEvents::ONGOING => ActionEventKind::Ongoing {
+                    elapsed_secs: self.elapsed_secs,
+                },
+                ActionEvents::COMPLETED => ActionEventKind::Completed {
+                    fired_secs: self.fired_secs,
+                    elapsed_secs: self.elapsed_secs,
+                },
+                ActionEvents::CANCELED => ActionEventKind::Canceled {
+                    elapsed_secs: self.elapsed_secs,
+                },
+                _ => unreachable!("iteration should yield only named flags"),
+            };
+
             // Trigger an event for each entity separately
             // since it's cheaper to copy the event than to clone the entities.
             for &entity in entities {
-                if started {
-                    let event = ActionEvent::<A>::new(ActionEventKind::Started, value, state);
-                    trace!("triggering `{event:?}` for `{entity}`");
-                    commands.trigger_targets(event, entity);
-                }
-
                 let event = ActionEvent::<A>::new(kind, value, state);
                 trace!("triggering `{event:?}` for `{entity}`");
                 commands.trigger_targets(event, entity);
             }
         }
-    }
 
-    fn transition_events(&self, state: ActionState) -> Option<(bool, ActionEventKind)> {
-        let mut started = false; // Indicates whether `ActionEventKind::Started` should also be emitted.
-
-        let transition = match (self.state, state) {
-            (ActionState::None, ActionState::None) => return None,
-            (ActionState::None, ActionState::Ongoing) => {
-                started = true;
-                ActionEventKind::Ongoing { elapsed_secs: 0.0 }
-            }
-            (ActionState::None, ActionState::Fired) => {
-                started = true;
-                ActionEventKind::Fired {
-                    fired_secs: 0.0,
-                    elapsed_secs: 0.0,
-                }
-            }
-            (ActionState::Ongoing, ActionState::None) => ActionEventKind::Canceled {
-                elapsed_secs: self.elapsed_secs,
-            },
-            (ActionState::Ongoing, ActionState::Ongoing) => ActionEventKind::Ongoing {
-                elapsed_secs: self.elapsed_secs,
-            },
-            (ActionState::Ongoing, ActionState::Fired) => ActionEventKind::Fired {
-                fired_secs: self.fired_secs,
-                elapsed_secs: self.elapsed_secs,
-            },
-            (ActionState::Fired, ActionState::None) => ActionEventKind::Completed {
-                fired_secs: self.fired_secs,
-                elapsed_secs: self.elapsed_secs,
-            },
-            (ActionState::Fired, ActionState::Ongoing) => ActionEventKind::Ongoing {
-                elapsed_secs: self.elapsed_secs,
-            },
-            (ActionState::Fired, ActionState::Fired) => ActionEventKind::Fired {
-                fired_secs: self.fired_secs,
-                elapsed_secs: self.elapsed_secs,
-            },
-        };
-
-        Some((started, transition))
+        events
     }
 
     /// Returns the current state.
     pub fn state(&self) -> ActionState {
         self.state
+    }
+
+    /// Returns happened event kinds since the last state update.
+    pub fn events(&self) -> ActionEvents {
+        self.events
     }
 
     /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
@@ -293,6 +275,42 @@ impl<A: InputAction> From<ActionEvent<A>> for UntypedActionEvent {
     }
 }
 
+bitflags! {
+    /// [`ActionEventKind`]s triggered for an action.
+    #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct ActionEvents: u8 {
+        /// Corresponds to [`ActionEventKind::Started`].
+        const STARTED = 0b00000001;
+        /// Corresponds to [`ActionEventKind::Fired`].
+        const FIRED = 0b00000010;
+        /// Corresponds to [`ActionEventKind::Ongoing`].
+        const ONGOING = 0b00000100;
+        /// Corresponds to [`ActionEventKind::Completed`].
+        const COMPLETED = 0b00001000;
+        /// Corresponds to [`ActionEventKind::Canceled`].
+        const CANCELED = 0b00010000;
+    }
+}
+
+impl ActionEvents {
+    /// Creates a new instance based on state transition.
+    pub fn new(previous: ActionState, current: ActionState) -> ActionEvents {
+        match (previous, current) {
+            (ActionState::None, ActionState::None) => ActionEvents::empty(),
+            (ActionState::None, ActionState::Ongoing) => {
+                ActionEvents::STARTED | ActionEvents::ONGOING
+            }
+            (ActionState::None, ActionState::Fired) => ActionEvents::STARTED | ActionEvents::FIRED,
+            (ActionState::Ongoing, ActionState::None) => ActionEvents::CANCELED,
+            (ActionState::Ongoing, ActionState::Ongoing) => ActionEvents::ONGOING,
+            (ActionState::Ongoing, ActionState::Fired) => ActionEvents::FIRED,
+            (ActionState::Fired, ActionState::None) => ActionEvents::COMPLETED,
+            (ActionState::Fired, ActionState::Ongoing) => ActionEvents::ONGOING,
+            (ActionState::Fired, ActionState::Fired) => ActionEvents::FIRED,
+        }
+    }
+}
+
 /// Represents the type of event triggered by updating [`ActionState`].
 ///
 /// Table of state transitions:
@@ -325,6 +343,8 @@ pub enum ActionEventKind {
     },
     /// Triggers when an action switches its state from [`ActionState::None`]
     /// to [`ActionState::Fired`] or [`ActionState::Ongoing`].
+    ///
+    /// Fired before [`Self::Fired`] and [`Self::Ongoing`].
     ///
     /// For example, with the [`Tap`](super::input_condition::tap::Tap) condition, this event is triggered
     /// only on the first press.

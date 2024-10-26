@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Logging for binding.
+- `ActionEventKinds` bitmask to store triggered events since the last update. Accessible via `ActionData::event_kinds`.
 
 ### Changed
 
