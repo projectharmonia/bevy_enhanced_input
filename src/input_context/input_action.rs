@@ -14,6 +14,13 @@ impl ActionsData {
     pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
         self.get(&TypeId::of::<A>())
     }
+
+    /// Inserts a state for action `A`.
+    ///
+    /// Returns previosly associated state if present.
+    pub fn insert_action<A: InputAction>(&mut self, action: ActionData) -> Option<ActionData> {
+        self.insert(TypeId::of::<A>(), action)
+    }
 }
 
 impl From<HashMap<TypeId, ActionData>> for ActionsData {

@@ -61,8 +61,6 @@ impl<A: InputAction> InputCondition for BlockBy<A> {
 
 #[cfg(test)]
 mod tests {
-    use any::TypeId;
-
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
@@ -76,7 +74,7 @@ mod tests {
         let time = Time::default();
         action.update(&mut world.commands(), &time, &[], ActionState::Fired, true);
         let mut actions = ActionsData::default();
-        actions.insert(TypeId::of::<DummyAction>(), action);
+        actions.insert_action::<DummyAction>(action);
 
         assert_eq!(
             condition.evaluate(&actions, &time, true.into()),
