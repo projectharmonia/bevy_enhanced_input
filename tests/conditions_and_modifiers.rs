@@ -31,6 +31,19 @@ fn input_level() {
     let events = recorded.get::<InputLevel>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, (Vec2::Y * 2.0).into());
+    assert_eq!(event.state, ActionState::Ongoing);
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(ChordAction::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+    let events = recorded.get::<InputLevel>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, (Vec2::Y * 2.0).into());
+    assert_eq!(event.state, ActionState::Fired);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(InputLevel::KEY1);
@@ -42,6 +55,7 @@ fn input_level() {
     let events = recorded.get::<InputLevel>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, Vec2::NEG_Y.into());
+    assert_eq!(event.state, ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -53,20 +67,22 @@ fn input_level() {
     let events = recorded.get::<InputLevel>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, Vec2::Y.into());
+    assert_eq!(event.state, ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(Blocker::KEY);
+        .press(BlockAction::KEY);
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<InputLevel>(entity).unwrap();
     let event = events.last().unwrap();
+    assert_eq!(event.value, Vec2::Y.into());
     assert_eq!(
         event.state,
         ActionState::None,
-        "if a required condition fails, it should override regular conditions"
+        "if a blocker condition fails, it should override other conditions"
     );
 }
 
@@ -96,6 +112,19 @@ fn action_level() {
     let events = recorded.get::<ActionLevel>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, (Vec2::NEG_Y * 2.0).into());
+    assert_eq!(event.state, ActionState::Ongoing);
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(ChordAction::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+    let events = recorded.get::<ActionLevel>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, (Vec2::NEG_Y * 2.0).into());
+    assert_eq!(event.state, ActionState::Fired);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(ActionLevel::KEY1);
@@ -107,6 +136,7 @@ fn action_level() {
     let events = recorded.get::<ActionLevel>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, (Vec2::NEG_Y * 2.0).into());
+    assert_eq!(event.state, ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -118,20 +148,22 @@ fn action_level() {
     let events = recorded.get::<ActionLevel>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, (Vec2::NEG_Y * 4.0).into());
+    assert_eq!(event.state, ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(Blocker::KEY);
+        .press(BlockAction::KEY);
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<ActionLevel>(entity).unwrap();
     let event = events.last().unwrap();
+    assert_eq!(event.value, (Vec2::NEG_Y * 4.0).into());
     assert_eq!(
         event.state,
         ActionState::None,
-        "if a required condition fails, it should override regular conditions"
+        "if a blocker condition fails, it should override other conditions"
     );
 }
 
@@ -161,6 +193,19 @@ fn both_levels() {
     let events = recorded.get::<BothLevels>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, (Vec2::Y * 2.0).into());
+    assert_eq!(event.state, ActionState::Ongoing);
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(ChordAction::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+    let events = recorded.get::<BothLevels>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, (Vec2::Y * 2.0).into());
+    assert_eq!(event.state, ActionState::Fired);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(BothLevels::KEY1);
@@ -172,6 +217,7 @@ fn both_levels() {
     let events = recorded.get::<BothLevels>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, Vec2::NEG_Y.into());
+    assert_eq!(event.state, ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -183,20 +229,22 @@ fn both_levels() {
     let events = recorded.get::<BothLevels>(entity).unwrap();
     let event = events.last().unwrap();
     assert_eq!(event.value, Vec2::Y.into());
+    assert_eq!(event.state, ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(Blocker::KEY);
+        .press(BlockAction::KEY);
 
     app.update();
 
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<BothLevels>(entity).unwrap();
     let event = events.last().unwrap();
+    assert_eq!(event.value, Vec2::Y.into());
     assert_eq!(
         event.state,
         ActionState::None,
-        "if a required condition fails, it should override regular conditions"
+        "if a blocker condition fails, it should override other conditions"
     );
 }
 
@@ -209,15 +257,18 @@ impl InputContext for DummyContext {
 
         let down = Down::default();
         let release = Release::default();
-        let block_by = BlockBy::<Blocker>::default();
+        let chord = Chord::<ChordAction>::default();
+        let block_by = BlockBy::<BlockAction>::default();
         let swizzle_axis = SwizzleAxis::YXZ;
         let negate = Negate::default();
         let scale = Scale::splat(2.0);
 
-        ctx.bind::<Blocker>().with(Blocker::KEY);
+        ctx.bind::<ChordAction>().with(ChordAction::KEY);
+        ctx.bind::<BlockAction>().with(BlockAction::KEY);
         ctx.bind::<InputLevel>()
             .with(
                 InputBind::new(InputLevel::KEY1)
+                    .with_condition(chord)
                     .with_condition(block_by)
                     .with_condition(down)
                     .with_condition(release)
@@ -226,6 +277,7 @@ impl InputContext for DummyContext {
             )
             .with(
                 InputBind::new(InputLevel::KEY2)
+                    .with_condition(chord)
                     .with_condition(block_by)
                     .with_condition(down)
                     .with_condition(release)
@@ -237,6 +289,7 @@ impl InputContext for DummyContext {
             .with(ActionLevel::KEY2)
             .with_condition(down)
             .with_condition(release)
+            .with_condition(chord)
             .with_condition(block_by)
             .with_modifier(swizzle_axis)
             .with_modifier(negate)
@@ -253,6 +306,7 @@ impl InputContext for DummyContext {
                     .with_modifier(negate),
             )
             .with_condition(release)
+            .with_condition(chord)
             .with_condition(block_by)
             .with_modifier(swizzle_axis);
 
@@ -288,9 +342,17 @@ impl BothLevels {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
-struct Blocker;
+#[input_action(dim = Bool)]
+struct ChordAction;
 
-impl Blocker {
+impl ChordAction {
     const KEY: KeyCode = KeyCode::KeyG;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct BlockAction;
+
+impl BlockAction {
+    const KEY: KeyCode = KeyCode::KeyH;
 }

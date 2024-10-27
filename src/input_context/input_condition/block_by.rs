@@ -55,7 +55,7 @@ impl<A: InputAction> InputCondition for BlockBy<A> {
     }
 
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Required
+        ConditionKind::Blocker
     }
 }
 

@@ -32,6 +32,7 @@ use crate::{
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
+///    The value will also be converted using [`ActionValue::convert`] into [`InputAction::DIM`].
 ///
 /// New instances won't react to currently held inputs until they are released.
 /// This prevents unintended behavior where switching contexts using the same key
@@ -290,10 +291,12 @@ impl ActionBind {
         tracker.apply_modifiers(time, &mut self.modifiers);
         tracker.apply_conditions(actions, time, &mut self.conditions);
 
-        let (state, value) = tracker.finish();
         let action = actions
             .get_mut(&self.type_id)
             .expect("actions and bindings should have matching type IDs");
+
+        let state = tracker.state();
+        let value = tracker.value().convert(self.dim);
 
         action.update(commands, time, entities, state, value);
     }

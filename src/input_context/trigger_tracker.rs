@@ -14,9 +14,12 @@ use crate::action_value::ActionValue;
 /// Could be used to track both input-level state and action-level state.
 pub(super) struct TriggerTracker {
     value: ActionValue,
-    state: ActionState,
+    no_conditions: bool,
+    found_explicit: bool,
+    any_explicit_fired: bool,
+    found_active: bool,
+    all_implicits_fired: bool,
     blocked: bool,
-    found_regular: bool,
 }
 
 impl TriggerTracker {
@@ -24,9 +27,12 @@ impl TriggerTracker {
     pub(super) fn new(value: ActionValue) -> Self {
         Self {
             value,
-            state: Default::default(),
+            no_conditions: true,
+            found_explicit: false,
+            any_explicit_fired: false,
+            found_active: false,
+            all_implicits_fired: true,
             blocked: false,
-            found_regular: false,
         }
     }
 
@@ -57,39 +63,57 @@ impl TriggerTracker {
         for condition in conditions {
             let state = condition.evaluate(actions, time, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
+            self.no_conditions = false;
             match condition.kind() {
-                ConditionKind::Regular => {
-                    self.found_regular = true;
-                    if state > self.state {
-                        // Retain the most interesting.
-                        self.state = state;
-                    }
+                ConditionKind::Explicit => {
+                    self.found_explicit = true;
+                    self.any_explicit_fired |= state == ActionState::Fired;
+                    self.found_active |= state != ActionState::None;
                 }
-                ConditionKind::Required => {
-                    if state != ActionState::Fired {
-                        self.blocked = true;
-                    }
+                ConditionKind::Implicit => {
+                    self.all_implicits_fired &= state == ActionState::Fired;
+                    self.found_active |= state == ActionState::None;
+                }
+                ConditionKind::Blocker => {
+                    self.blocked = state == ActionState::None;
                 }
             }
         }
     }
 
+    pub(super) fn state(&self) -> ActionState {
+        if self.no_conditions {
+            if self.value.as_bool() {
+                return ActionState::Fired;
+            } else {
+                return ActionState::None;
+            }
+        }
+
+        if self.blocked {
+            return ActionState::None;
+        }
+
+        if (!self.found_explicit || self.any_explicit_fired) && self.all_implicits_fired {
+            ActionState::Fired
+        } else if self.found_active {
+            ActionState::Ongoing
+        } else {
+            ActionState::None
+        }
+    }
+
+    pub(super) fn value(&self) -> ActionValue {
+        self.value
+    }
+
     /// Merges input-level tracker into an action-level tracker.
     pub(super) fn merge(&mut self, other: Self, accumulation: Accumulation) {
-        if other.blocked {
-            // Input-level tracker that are blocked by a condition
-            // shouldn't affection action-level trackers.
-            return;
-        }
-
-        if other.found_regular {
-            self.found_regular = true;
-        }
-
-        match self.state.cmp(&other.state) {
+        match self.state().cmp(&other.state()) {
             Ordering::Less => {
-                self.state = other.state;
-                self.value = other.value.convert(self.value.dim());
+                let dim = self.value.dim();
+                *self = other;
+                self.value = self.value.convert(dim);
             }
             Ordering::Equal => {
                 let accumulated = match accumulation {
@@ -105,19 +129,16 @@ impl TriggerTracker {
                     }
                     Accumulation::Cumulative => self.value.as_axis3d() + other.value.as_axis3d(),
                 };
+
                 self.value = ActionValue::Axis3D(accumulated).convert(self.value.dim());
+                self.no_conditions &= other.no_conditions;
+                self.found_explicit |= other.found_explicit;
+                self.any_explicit_fired |= other.any_explicit_fired;
+                self.found_active |= other.found_active;
+                self.all_implicits_fired &= other.all_implicits_fired;
+                self.blocked |= other.blocked;
             }
             Ordering::Greater => (),
         }
-    }
-
-    pub(super) fn finish(mut self) -> (ActionState, ActionValue) {
-        if self.blocked {
-            self.state = ActionState::None
-        } else if !self.found_regular && self.value.as_bool() {
-            self.state = ActionState::Fired;
-        }
-
-        (self.state, self.value)
     }
 }

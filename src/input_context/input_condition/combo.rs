@@ -183,7 +183,7 @@ impl InputCondition for Combo {
     }
 
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Required
+        ConditionKind::Implicit
     }
 }
 

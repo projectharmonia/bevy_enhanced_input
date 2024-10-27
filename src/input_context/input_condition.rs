@@ -41,22 +41,27 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 
     /// Returns how the condition is combined with others.
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Regular
+        ConditionKind::Explicit
     }
 }
 
 /// Determines how a condition contributes to the final [`ActionState`].
+///
+/// If no conditions are provided, the state will be set to [`ActionState::Fired`]
+/// on any non-zero value, functioning similarly to a [`Down`](down::Down) condition
+/// with a zero actuation threshold.
 pub enum ConditionKind {
-    /// The most significant [`ActionState`] from all regular conditions will be the
+    /// The most significant [`ActionState`] from all explicit conditions will be the
     /// resulting state.
+    Explicit,
+    /// Like [`Self::Explicit`], but [`ActionState::Fired`] will be set only if all
+    /// implicit conditions return it.
     ///
-    /// If no regular conditions are provided, the action will be set to [`ActionState::Fired`] on
-    /// any non-zero value, functioning similarly to a [`Down`](down::Down) condition with a zero actuation threshold.
-    Regular,
-    /// If any required condition fails to return [`ActionState::Fired`],
-    /// it will override all results from regular actions with [`ActionState::None`].
-    /// Doesn't contribute to the action state on its own.
+    /// Otherwise, the most significant state will be capped at [`ActionState::Ongoing`].
+    Implicit,
+    /// If any blocking condition fails to return [`ActionState::Fired`],
+    /// it will override the state with [`ActionState::None`].
     ///
-    /// Useful if you want to force fail for an action or an input.
-    Required,
+    /// Doesn't contribute to the state on its own.
+    Blocker,
 }

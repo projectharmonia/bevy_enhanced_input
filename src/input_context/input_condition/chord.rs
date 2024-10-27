@@ -53,7 +53,7 @@ impl<A: InputAction> InputCondition for Chord<A> {
     }
 
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Required
+        ConditionKind::Implicit
     }
 }
 
