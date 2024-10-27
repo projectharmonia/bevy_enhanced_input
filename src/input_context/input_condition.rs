@@ -1,5 +1,6 @@
 pub mod block_by;
 pub mod chord;
+pub mod combo;
 pub mod condition_timer;
 pub mod down;
 pub mod hold;
