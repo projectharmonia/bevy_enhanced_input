@@ -203,12 +203,12 @@ impl ContextInstances {
 enum InstanceGroup {
     Exclusive {
         type_id: TypeId,
-        priority: usize,
+        priority: isize,
         instances: Vec<(Entity, ContextInstance)>,
     },
     Shared {
         type_id: TypeId,
-        priority: usize,
+        priority: isize,
         entities: Vec<Entity>,
         ctx: ContextInstance,
     },
@@ -234,7 +234,7 @@ impl InstanceGroup {
         }
     }
 
-    fn priority(&self) -> usize {
+    fn priority(&self) -> isize {
         match *self {
             InstanceGroup::Exclusive { priority, .. } => priority,
             InstanceGroup::Shared { priority, .. } => priority,
@@ -305,7 +305,7 @@ pub trait InputContext: Component {
     ///
     /// Ordering is global.
     /// Contexts with a higher priority evaluated first.
-    const PRIORITY: usize = 0;
+    const PRIORITY: isize = 0;
 
     /// Creates a new instance for the given entity.
     ///

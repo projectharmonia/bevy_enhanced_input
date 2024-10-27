@@ -134,7 +134,7 @@ struct EnterWater;
 struct Swimming;
 
 impl InputContext for Swimming {
-    const PRIORITY: usize = 1; // Set higher priority to execute its actions first.
+    const PRIORITY: isize = 1; // Set higher priority to execute its actions first.
 
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();

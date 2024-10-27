@@ -60,7 +60,7 @@ fn prioritization() {
 struct First;
 
 impl InputContext for First {
-    const PRIORITY: usize = Second::PRIORITY + 1;
+    const PRIORITY: isize = Second::PRIORITY + 1;
 
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
