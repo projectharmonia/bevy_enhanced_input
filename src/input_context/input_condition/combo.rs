@@ -174,19 +174,7 @@ impl InputCondition for Combo {
             }
         }
 
-        if self.step_index > 0 {
-            return ActionState::Ongoing;
-        }
-
-        // Check state of the first action.
-        let Some(first_action) = actions_data.get(&self.steps[0].type_id) else {
-            warn_once!(
-                "step action `{}` is not present in context",
-                current_step.name
-            );
-            return ActionState::None;
-        };
-        if first_action.state() > ActionState::None {
+        if self.step_index > 0 || current_action.state() > ActionState::None {
             return ActionState::Ongoing;
         }
 
@@ -344,6 +332,19 @@ mod tests {
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
+        );
+    }
+
+    #[test]
+    fn first_step_ongoing() {
+        let mut condition = Combo::default().step::<ActionA>(0.5);
+        let time = Time::default();
+        let mut actions = ActionsData::default();
+        set_action::<ActionA>(&time, &mut actions, ActionState::Ongoing);
+
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::Ongoing
         );
     }
 
