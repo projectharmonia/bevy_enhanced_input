@@ -379,12 +379,14 @@ mod tests {
         let mut condition = Combo::default()
             .step::<ActionA>(0.5)
             .step::<ActionB>(0.5)
-            .step::<ActionC>(0.5);
+            .step::<ActionC>(0.5)
+            .cancel_action::<ActionD>(); // Out of order is relevant only for non-any cancel actions.
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::None);
         set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
         set_action::<ActionC>(&time, &mut actions, ActionState::None);
+        set_action::<ActionD>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
@@ -516,4 +518,8 @@ mod tests {
     #[derive(Debug, InputAction)]
     #[input_action(dim = Bool)]
     struct ActionC;
+
+    #[derive(Debug, InputAction)]
+    #[input_action(dim = Bool)]
+    struct ActionD;
 }
