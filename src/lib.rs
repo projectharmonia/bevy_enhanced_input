@@ -73,8 +73,9 @@ pub mod prelude {
                 Accumulation, ActionEvent, ActionEventKind, ActionEvents, ActionState, InputAction,
             },
             input_condition::{
-                block_by::*, chord::*, condition_timer::*, down::*, hold::*, hold_and_release::*,
-                press::*, pulse::*, release::*, tap::*, ConditionKind, InputCondition,
+                block_by::*, chord::*, combo::*, condition_timer::*, down::*, hold::*,
+                hold_and_release::*, press::*, pulse::*, release::*, tap::*, ConditionKind,
+                InputCondition,
             },
             input_modifier::{
                 dead_zone::*, delta_lerp::*, delta_scale::*, exponential_curve::*, negate::*,
