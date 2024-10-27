@@ -1,6 +1,6 @@
-use std::any::{self, TypeId};
+use std::any::TypeId;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::HashMap};
 
 use super::{condition_timer::ConditionTimer, ConditionKind, InputCondition};
 use crate::{
@@ -24,49 +24,23 @@ pub struct Combo {
     ///
     /// Input actions must be triggered in order (starting at index 0) to count towards the triggering of the combo.
     pub steps: Vec<ComboStep>,
-
-    /// Actions that will cancel the combo if they are completed (according to [`CancelAction::events`]).
-    pub cancel_actions: CancelActions,
 }
 
 impl Combo {
-    /// Like [`Self::step_with`], but uses [`ActionEvents::FIRED`] for events.
-    pub fn step<A: InputAction>(self, trigger_time: f32) -> Self {
-        self.step_with::<A>(trigger_time, ActionEvents::FIRED)
-    }
-
-    /// Adds a step to the combo sequence with a specific time to trigger any of the events.
+    /// Adds an action step to the combo.
     ///
-    /// See also [`Self::step`].
-    pub fn step_with<A: InputAction>(mut self, trigger_time: f32, events: ActionEvents) -> Self {
-        let step = ComboStep::new::<A>(trigger_time, events);
-        self.steps.push(step);
-        self
-    }
-
-    /// Cancel the combo if any other action in the same context (excluding the current step action) triggers any of the events.
-    pub fn any_cancel_action(mut self, events: ActionEvents) -> Self {
-        self.cancel_actions = CancelActions::Any(events);
-        self
-    }
-
-    /// Like [`Self::cancel_action_with`], but uses [`ActionEvents::FIRED`] for events.
-    pub fn cancel_action<A: InputAction>(self) -> Self {
-        self.cancel_action_with::<A>(ActionEvents::FIRED)
-    }
-
-    /// Cancel the combo if action `A` in the same context triggers any of the events.
+    /// If you don't need to configure the step, you can just pass the action directly:
     ///
-    /// See also [`Self::cancel_action`].
-    pub fn cancel_action_with<A: InputAction>(mut self, events: ActionEvents) -> Self {
-        let action = CancelAction::new::<A>(events);
-        match &mut self.cancel_actions {
-            CancelActions::Any(_) => self.cancel_actions = CancelActions::Actions(vec![action]),
-            CancelActions::Actions(cancel_actions) => {
-                cancel_actions.push(CancelAction::new::<A>(events))
-            }
-        }
-
+    /// ```
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut combo = Combo::default();
+    /// combo.with_step(Jump);
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(dim = Bool)]
+    /// # struct Jump;
+    /// ```
+    pub fn with_step(mut self, step: impl Into<ComboStep>) -> Self {
+        self.steps.push(step.into());
         self
     }
 
@@ -76,22 +50,19 @@ impl Combo {
     }
 
     fn cancelled(&self, actions_data: &ActionsData) -> bool {
-        let current_step = self.steps[self.step_index];
-        match &self.cancel_actions {
-            CancelActions::Actions(cancel_actions) => {
-                for cancel_action in cancel_actions {
-                    if cancel_action.type_id == current_step.type_id {
+        let current_step = &self.steps[self.step_index];
+        match &current_step.cancel_actions {
+            CancelActions::List(cancel_actions) => {
+                for &(type_id, events) in cancel_actions {
+                    if type_id == current_step.type_id {
                         continue;
                     }
-                    let Some(action) = actions_data.get(&cancel_action.type_id) else {
-                        warn_once!(
-                            "cancel action `{}` is not present in context",
-                            cancel_action.name,
-                        );
+                    let Some(action) = actions_data.get(&type_id) else {
+                        warn_once!("cancel action is missing in context");
                         continue;
                     };
 
-                    if action.events().intersects(cancel_action.events) {
+                    if action.events().intersects(events) {
                         return true;
                     }
                 }
@@ -102,7 +73,7 @@ impl Combo {
                         continue;
                     }
                     let Some(action) = actions_data.get(&step.type_id) else {
-                        warn_once!("step action `{}` is not present in context", step.name);
+                        warn_once!("step action is missing in context");
                         continue;
                     };
 
@@ -111,10 +82,15 @@ impl Combo {
                     }
                 }
             }
-            CancelActions::Any(events) => {
+            CancelActions::All { events, exceptions } => {
                 for (&type_id, action) in actions_data.iter() {
                     if type_id == current_step.type_id {
                         continue;
+                    }
+                    if let Some(allowed_events) = exceptions.get(&type_id) {
+                        if allowed_events.contains(action.events()) {
+                            continue;
+                        }
                     }
 
                     if action.events().intersects(*events) {
@@ -136,7 +112,7 @@ impl InputCondition for Combo {
         _value: ActionValue,
     ) -> ActionState {
         if self.steps.is_empty() {
-            warn_once!("combo `{}` has no combo steps", any::type_name::<Self>());
+            warn_once!("combo has no combo steps");
             return ActionState::None;
         }
 
@@ -153,12 +129,9 @@ impl InputCondition for Combo {
             }
         }
 
-        let current_step = self.steps[self.step_index];
+        let current_step = &self.steps[self.step_index];
         let Some(current_action) = actions_data.get(&current_step.type_id) else {
-            warn_once!(
-                "step action `{}` is not present in context",
-                current_step.name
-            );
+            warn_once!("current step action is missing in context");
             self.cancel();
             return ActionState::None;
         };
@@ -187,70 +160,150 @@ impl InputCondition for Combo {
     }
 }
 
-/// Actions and events that cancel [`Combo`].
-#[derive(Debug, Clone)]
-pub enum CancelActions {
-    /// Cancel the combo if any action (excluding the current step) triggers any of this events.
-    Any(ActionEvents),
-    /// Cancel the combo if any listed action (excluding the current step) triggers associated events.
-    Actions(Vec<CancelAction>),
-}
-
-impl Default for CancelActions {
-    fn default() -> Self {
-        Self::Any(ActionEvents::FIRED)
-    }
-}
-
 /// Action and events that progress [`Combo`].
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct ComboStep {
     /// Associated action.
     type_id: TypeId,
 
-    /// Action display name.
-    name: &'static str,
-
-    // Action events for the action to complete this step.
+    /// Events for the action to complete this step.
+    ///
+    /// By default set to [`ActionEvents::FIRED`].
     pub events: ActionEvents,
 
     /// Time to trigger [`Self::events`] before the combo is cancelled.
     ///
     /// Starts once the previous step in the combo is completed.
     /// This can be safely ignored for the first action in the combo.
+    ///
+    /// By default set to [`f32::MAX`] which means infinity time.
     pub trigger_time: f32,
+
+    /// Actions that may cancel the combo.
+    pub cancel_actions: CancelActions,
 }
 
 impl ComboStep {
-    pub fn new<A: InputAction>(trigger_time: f32, events: ActionEvents) -> Self {
+    /// Creates a new step for a combo.
+    ///
+    /// See also [`Combo::with_step`].
+    pub fn new<A: InputAction>() -> Self {
         Self {
             type_id: TypeId::of::<A>(),
-            name: any::type_name::<A>(),
-            events,
-            trigger_time,
+            events: ActionEvents::FIRED,
+            trigger_time: f32::MAX,
+            cancel_actions: Default::default(),
         }
+    }
+
+    /// Replaces [`Self::trigger_time`] time with the given value.
+    pub fn with_trigger_time(mut self, trigger_time: f32) -> Self {
+        self.trigger_time = trigger_time;
+        self
+    }
+
+    /// Replaces [`Self::events`] with the given value.
+    pub fn with_events(mut self, events: ActionEvents) -> Self {
+        self.events = events;
+        self
+    }
+
+    /// Cancel the combo if any other action in the same context (excluding the current step action) triggers any of the events.
+    ///
+    /// If [`CancelActions`] were set to [`CancelActions::List`], it will be replaced with [`CancelActions::All`].
+    /// Use [`Self::allow`] and [`Self::allow_with`] to add exceptions.
+    pub fn deny_any(mut self, all_events: ActionEvents) -> Self {
+        match &mut self.cancel_actions {
+            CancelActions::All { events, .. } => *events = all_events,
+            CancelActions::List(_) => {
+                self.cancel_actions = CancelActions::All {
+                    events: all_events,
+                    exceptions: Default::default(),
+                }
+            }
+        }
+
+        self
+    }
+
+    /// Like [`Self::allow_with`], but uses [`ActionEvents::all`] for the events.
+    pub fn allow<A: InputAction>(self) -> Self {
+        self.allow_with::<A>(ActionEvents::all())
+    }
+
+    /// Allow action `A` in the same context to trigger any of the given events without cancelling the combo.
+    ///
+    /// If [`CancelActions`] were set to [`CancelActions::List`], it will be replaced with [`CancelActions::All`].
+    /// See also [`Self::allow`].
+    pub fn allow_with<A: InputAction>(mut self, action_events: ActionEvents) -> Self {
+        let type_id = TypeId::of::<A>();
+        match &mut self.cancel_actions {
+            CancelActions::All { exceptions, .. } => {
+                exceptions.insert(type_id, action_events);
+            }
+            CancelActions::List(_) => {
+                self.cancel_actions = CancelActions::All {
+                    events: ActionEvents::all(),
+                    exceptions: [(type_id, action_events)].into(),
+                }
+            }
+        }
+
+        self
+    }
+
+    /// Like [`Self::deny_with`], but uses [`ActionEvents::all`] for events.
+    ///
+    /// If [`CancelActions`] were set to [`CancelActions::All`], it will be replaced with [`CancelActions::List`].
+    pub fn deny<A: InputAction>(self) -> Self {
+        self.deny_with::<A>(ActionEvents::all())
+    }
+
+    /// Cancel the combo if action `A` in the same context triggers any of the events.
+    ///
+    /// See also [`Self::deny`].
+    pub fn deny_with<A: InputAction>(mut self, events: ActionEvents) -> Self {
+        let type_id = TypeId::of::<A>();
+        match &mut self.cancel_actions {
+            CancelActions::All { .. } => {
+                self.cancel_actions = CancelActions::List(vec![(type_id, events)])
+            }
+            CancelActions::List(cancel_actions) => cancel_actions.push((type_id, events)),
+        }
+
+        self
     }
 }
 
-/// Action and events that cancel [`Combo`].
-#[derive(Debug, Clone, Copy)]
-pub struct CancelAction {
-    /// Associated action.
-    type_id: TypeId,
-
-    /// Action display name.
-    name: &'static str,
-
-    // Action events for this action that will cancel the combo
-    pub events: ActionEvents,
+impl<A: InputAction> From<A> for ComboStep {
+    fn from(_value: A) -> Self {
+        ComboStep::new::<A>()
+    }
 }
 
-impl CancelAction {
-    pub fn new<A: InputAction>(events: ActionEvents) -> Self {
-        Self {
-            type_id: TypeId::of::<A>(),
-            name: any::type_name::<A>(),
-            events,
+/// Actions and events that cancel [`Combo`].
+///
+/// By default set to [`Self::All`] with [`ActionEvents::all`] and no exceptions.
+#[derive(Debug, Clone)]
+pub enum CancelActions {
+    /// Cancel the combo if any action (excluding the action for the current step and exception) trigger the given events.
+    All {
+        /// Events that cancel the action.
+        events: ActionEvents,
+        /// Actions and associated events they allowed to trigger without cancelling the combo.
+        exceptions: HashMap<TypeId, ActionEvents>,
+    },
+    /// Cancel the combo if any listed action (excluding the action for the current step) triggers associated events.
+    ///
+    /// With this variant actions from other steps will also be checked for not triggering their events.
+    List(Vec<(TypeId, ActionEvents)>),
+}
+
+impl Default for CancelActions {
+    fn default() -> Self {
+        Self::All {
+            events: ActionEvents::all(),
+            exceptions: Default::default(),
         }
     }
 }
@@ -281,7 +334,7 @@ mod tests {
 
     #[test]
     fn missing_first_step() {
-        let mut condition = Combo::default().step::<ActionA>(0.5);
+        let mut condition = Combo::default().with_step(ActionA);
         let time = Time::default();
         let actions = ActionsData::default();
 
@@ -292,8 +345,8 @@ mod tests {
     }
 
     #[test]
-    fn missing_other_step() {
-        let mut condition = Combo::default().step::<ActionA>(0.5).step::<ActionB>(0.5);
+    fn missing_next_step() {
+        let mut condition = Combo::default().with_step(ActionA).with_step(ActionB);
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
@@ -313,7 +366,9 @@ mod tests {
 
     #[test]
     fn timeout() {
-        let mut condition = Combo::default().step::<ActionA>(0.5).step::<ActionB>(0.5);
+        let mut condition = Combo::default()
+            .with_step(ActionA)
+            .with_step(ComboStep::new::<ActionB>().with_trigger_time(0.5));
         let mut time = Time::default();
         time.advance_by(Duration::from_secs(1));
         let mut actions = ActionsData::default();
@@ -337,7 +392,7 @@ mod tests {
 
     #[test]
     fn first_step_ongoing() {
-        let mut condition = Combo::default().step::<ActionA>(0.5);
+        let mut condition = Combo::default().with_step(ActionA);
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::Ongoing);
@@ -350,7 +405,7 @@ mod tests {
 
     #[test]
     fn steps() {
-        let mut condition = Combo::default().step::<ActionA>(0.5).step::<ActionB>(0.5);
+        let mut condition = Combo::default().with_step(ActionA).with_step(ActionB);
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
@@ -377,10 +432,9 @@ mod tests {
     #[test]
     fn out_of_order() {
         let mut condition = Combo::default()
-            .step::<ActionA>(0.5)
-            .step::<ActionB>(0.5)
-            .step::<ActionC>(0.5)
-            .cancel_action::<ActionD>(); // Out of order is relevant only for non-any cancel actions.
+            .with_step(ActionA)
+            .with_step(ComboStep::new::<ActionB>().deny::<ActionD>()) // Out of order is relevant only for `CancelActions::List`.
+            .with_step(ActionC);
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::None);
@@ -412,9 +466,8 @@ mod tests {
 
     #[test]
     fn ignore_same_cancel_action() {
-        let mut condition = Combo::default()
-            .step::<ActionA>(0.5)
-            .cancel_action::<ActionA>();
+        let mut condition =
+            Combo::default().with_step(ComboStep::new::<ActionA>().deny::<ActionA>());
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
@@ -426,11 +479,9 @@ mod tests {
     }
 
     #[test]
-    fn missing_cancel_action() {
-        let mut condition = Combo::default()
-            .step::<ActionA>(0.5)
-            .cancel_action::<ActionA>()
-            .cancel_action::<ActionB>();
+    fn missing_deny_action() {
+        let mut condition =
+            Combo::default().with_step(ComboStep::new::<ActionA>().deny::<ActionB>());
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
@@ -442,11 +493,10 @@ mod tests {
     }
 
     #[test]
-    fn cancel_action() {
+    fn deny() {
         let mut condition = Combo::default()
-            .step::<ActionA>(0.5)
-            .step::<ActionB>(0.5)
-            .cancel_action::<ActionC>();
+            .with_step(ActionA)
+            .with_step(ComboStep::new::<ActionB>().deny::<ActionC>());
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
@@ -469,11 +519,10 @@ mod tests {
     }
 
     #[test]
-    fn any_cancel_action() {
+    fn deny_any() {
         let mut condition = Combo::default()
-            .step::<ActionA>(0.5)
-            .step::<ActionB>(0.5)
-            .any_cancel_action(ActionEvents::ONGOING);
+            .with_step(ActionA)
+            .with_step(ComboStep::new::<ActionB>().deny_any(ActionEvents::ONGOING));
         let time = Time::default();
         let mut actions = ActionsData::default();
         set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
@@ -488,6 +537,68 @@ mod tests {
         set_action::<ActionA>(&time, &mut actions, ActionState::None);
         set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
         set_action::<ActionC>(&time, &mut actions, ActionState::Ongoing);
+
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::None
+        );
+    }
+
+    #[test]
+    fn allow() {
+        let mut condition = Combo::default()
+            .with_step(ActionA)
+            .with_step(ComboStep::new::<ActionB>().allow::<ActionC>());
+        let time = Time::default();
+        let mut actions = ActionsData::default();
+        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
+        set_action::<ActionB>(&time, &mut actions, ActionState::None);
+        set_action::<ActionC>(&time, &mut actions, ActionState::None);
+
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::Ongoing
+        );
+
+        set_action::<ActionA>(&time, &mut actions, ActionState::None);
+        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
+        set_action::<ActionC>(&time, &mut actions, ActionState::Fired);
+
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::Fired
+        );
+    }
+
+    #[test]
+    fn allow_and_deny() {
+        let mut condition = Combo::default()
+            .with_step(
+                ComboStep::new::<ActionA>()
+                    .deny::<ActionC>()
+                    .allow::<ActionC>()
+                    .allow::<ActionD>(),
+            )
+            .with_step(
+                ComboStep::new::<ActionB>()
+                    .allow::<ActionC>()
+                    .allow::<ActionD>()
+                    .deny::<ActionC>(),
+            );
+        let time = Time::default();
+        let mut actions = ActionsData::default();
+        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
+        set_action::<ActionB>(&time, &mut actions, ActionState::None);
+        set_action::<ActionC>(&time, &mut actions, ActionState::Fired);
+        set_action::<ActionD>(&time, &mut actions, ActionState::Fired);
+
+        assert_eq!(
+            condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::Ongoing
+        );
+
+        set_action::<ActionA>(&time, &mut actions, ActionState::None);
+        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
