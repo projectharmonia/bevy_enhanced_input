@@ -68,7 +68,7 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<MaxAbs>().with_wasd();
-        // ctx.bind::<Cumulative>().with_arrows();
+        ctx.bind::<Cumulative>().with_arrows();
 
         ctx
     }
