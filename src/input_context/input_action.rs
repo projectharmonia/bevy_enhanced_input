@@ -33,10 +33,9 @@ impl From<HashMap<TypeId, ActionData>> for ActionsData {
 #[derive(Clone, Copy)]
 pub struct ActionData {
     state: ActionState,
-    events: ActionEvents,
     elapsed_secs: f32,
     fired_secs: f32,
-    trigger_events: fn(&Self, &mut Commands, &[Entity], ActionState, ActionValue) -> ActionEvents,
+    trigger_events: fn(&Self, &mut Commands, &[Entity], ActionState, ActionValue),
 }
 
 impl ActionData {
@@ -46,7 +45,6 @@ impl ActionData {
     pub fn new<A: InputAction>() -> Self {
         Self {
             state: Default::default(),
-            events: Default::default(),
             elapsed_secs: 0.0,
             fired_secs: 0.0,
             trigger_events: Self::trigger::<A>,
@@ -75,7 +73,7 @@ impl ActionData {
             }
         }
 
-        self.events = (self.trigger_events)(self, commands, entities, state, value.into());
+        (self.trigger_events)(self, commands, entities, state, value.into());
         self.state = state;
 
         // Reset time for updated state.
@@ -119,7 +117,7 @@ impl ActionData {
         entities: &[Entity],
         state: ActionState,
         value: ActionValue,
-    ) -> ActionEvents {
+    ) {
         let events = ActionEvents::new(self.state, state);
         for (_, event) in events.iter_names() {
             let kind = match event {
@@ -149,18 +147,11 @@ impl ActionData {
                 commands.trigger_targets(event, entity);
             }
         }
-
-        events
     }
 
     /// Returns the current state.
     pub fn state(&self) -> ActionState {
         self.state
-    }
-
-    /// Returns happened event kinds since the last state update.
-    pub fn events(&self) -> ActionEvents {
-        self.events
     }
 
     /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
@@ -285,7 +276,7 @@ impl<A: InputAction> From<ActionEvent<A>> for UntypedActionEvent {
 bitflags! {
     /// [`ActionEventKind`]s triggered for an action.
     #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
-    pub struct ActionEvents: u8 {
+    struct ActionEvents: u8 {
         /// Corresponds to [`ActionEventKind::Started`].
         const STARTED = 0b00000001;
         /// Corresponds to [`ActionEventKind::Fired`].
@@ -301,7 +292,7 @@ bitflags! {
 
 impl ActionEvents {
     /// Creates a new instance based on state transition.
-    pub fn new(previous: ActionState, current: ActionState) -> ActionEvents {
+    fn new(previous: ActionState, current: ActionState) -> ActionEvents {
         match (previous, current) {
             (ActionState::None, ActionState::None) => ActionEvents::empty(),
             (ActionState::None, ActionState::Ongoing) => {
