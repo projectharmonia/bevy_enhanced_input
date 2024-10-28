@@ -40,13 +40,6 @@ impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<DummyAction>().with(DummyAction::KEY);
-        ctx.bind::<BlockByAction>()
-            .with(BlockByAction::KEY)
-            .with_condition(BlockBy::<DummyAction>::default());
-        ctx.bind::<ChordAction>()
-            .with(ChordAction::KEY)
-            .with_condition(Chord::<DummyAction>::default());
         ctx.bind::<DownAction>()
             .with(DownAction::KEY)
             .with_condition(Down::default());
@@ -68,6 +61,15 @@ impl InputContext for DummyContext {
         ctx.bind::<TapAction>()
             .with(TapAction::KEY)
             .with_condition(Tap::new(0.5));
+        ctx.bind::<ChordMember1>().with(ChordMember1::KEY);
+        ctx.bind::<ChordMember2>().with(ChordMember2::KEY);
+        ctx.bind::<ChordAction>()
+            .with_condition(Chord::<ChordMember1>::default())
+            .with_condition(Chord::<ChordMember2>::default());
+        ctx.bind::<BlockerAction>().with(BlockerAction::KEY);
+        ctx.bind::<BlockByAction>()
+            .with(BlockByAction::KEY)
+            .with_condition(BlockBy::<BlockerAction>::default());
 
         ctx
     }
@@ -75,34 +77,10 @@ impl InputContext for DummyContext {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct DummyAction;
-
-impl DummyAction {
-    const KEY: KeyCode = KeyCode::Digit0;
-}
-
-#[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
-struct BlockByAction;
-
-impl BlockByAction {
-    const KEY: KeyCode = KeyCode::Digit1;
-}
-
-#[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
-struct ChordAction;
-
-impl ChordAction {
-    const KEY: KeyCode = KeyCode::Digit2;
-}
-
-#[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
 struct DownAction;
 
 impl DownAction {
-    const KEY: KeyCode = KeyCode::Digit3;
+    const KEY: KeyCode = KeyCode::Digit1;
 }
 
 #[derive(Debug, InputAction)]
@@ -110,7 +88,7 @@ impl DownAction {
 struct HoldAction;
 
 impl HoldAction {
-    const KEY: KeyCode = KeyCode::Digit4;
+    const KEY: KeyCode = KeyCode::Digit2;
 }
 
 #[derive(Debug, InputAction)]
@@ -118,7 +96,7 @@ impl HoldAction {
 struct HoldAndReleaseAction;
 
 impl HoldAndReleaseAction {
-    const KEY: KeyCode = KeyCode::Digit5;
+    const KEY: KeyCode = KeyCode::Digit3;
 }
 
 #[derive(Debug, InputAction)]
@@ -126,7 +104,7 @@ impl HoldAndReleaseAction {
 struct PressAction;
 
 impl PressAction {
-    const KEY: KeyCode = KeyCode::Digit6;
+    const KEY: KeyCode = KeyCode::Digit4;
 }
 
 #[derive(Debug, InputAction)]
@@ -134,7 +112,7 @@ impl PressAction {
 struct PulseAction;
 
 impl PulseAction {
-    const KEY: KeyCode = KeyCode::Digit7;
+    const KEY: KeyCode = KeyCode::Digit5;
 }
 
 #[derive(Debug, InputAction)]
@@ -142,7 +120,7 @@ impl PulseAction {
 struct ReleaseAction;
 
 impl ReleaseAction {
-    const KEY: KeyCode = KeyCode::Digit8;
+    const KEY: KeyCode = KeyCode::Digit6;
 }
 
 #[derive(Debug, InputAction)]
@@ -150,5 +128,41 @@ impl ReleaseAction {
 struct TapAction;
 
 impl TapAction {
+    const KEY: KeyCode = KeyCode::Digit7;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct ChordMember1;
+
+impl ChordMember1 {
+    const KEY: KeyCode = KeyCode::Digit8;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct ChordMember2;
+
+impl ChordMember2 {
     const KEY: KeyCode = KeyCode::Digit9;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct BlockerAction;
+
+impl BlockerAction {
+    const KEY: KeyCode = KeyCode::Digit0;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct ChordAction;
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct BlockByAction;
+
+impl BlockByAction {
+    const KEY: KeyCode = KeyCode::Minus;
 }

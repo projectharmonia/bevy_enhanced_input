@@ -14,10 +14,10 @@ use crate::action_value::ActionValue;
 /// Could be used to track both input-level state and action-level state.
 pub(super) struct TriggerTracker {
     value: ActionValue,
-    no_conditions: bool,
     found_explicit: bool,
     any_explicit_fired: bool,
     found_active: bool,
+    found_implicit: bool,
     all_implicits_fired: bool,
     blocked: bool,
 }
@@ -27,10 +27,10 @@ impl TriggerTracker {
     pub(super) fn new(value: ActionValue) -> Self {
         Self {
             value,
-            no_conditions: true,
             found_explicit: false,
             any_explicit_fired: false,
             found_active: false,
+            found_implicit: false,
             all_implicits_fired: true,
             blocked: false,
         }
@@ -63,7 +63,6 @@ impl TriggerTracker {
         for condition in conditions {
             let state = condition.evaluate(actions, time, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
-            self.no_conditions = false;
             match condition.kind() {
                 ConditionKind::Explicit => {
                     self.found_explicit = true;
@@ -71,8 +70,9 @@ impl TriggerTracker {
                     self.found_active |= state != ActionState::None;
                 }
                 ConditionKind::Implicit => {
+                    self.found_implicit = true;
                     self.all_implicits_fired &= state == ActionState::Fired;
-                    self.found_active |= state == ActionState::None;
+                    self.found_active |= state != ActionState::None;
                 }
                 ConditionKind::Blocker => {
                     self.blocked = state == ActionState::None;
@@ -82,16 +82,16 @@ impl TriggerTracker {
     }
 
     pub(super) fn state(&self) -> ActionState {
-        if self.no_conditions {
+        if self.blocked {
+            return ActionState::None;
+        }
+
+        if !self.found_explicit && !self.found_implicit {
             if self.value.as_bool() {
                 return ActionState::Fired;
             } else {
                 return ActionState::None;
             }
-        }
-
-        if self.blocked {
-            return ActionState::None;
         }
 
         if (!self.found_explicit || self.any_explicit_fired) && self.all_implicits_fired {
@@ -131,10 +131,10 @@ impl TriggerTracker {
                 };
 
                 self.value = ActionValue::Axis3D(accumulated).convert(self.value.dim());
-                self.no_conditions &= other.no_conditions;
                 self.found_explicit |= other.found_explicit;
                 self.any_explicit_fired |= other.any_explicit_fired;
                 self.found_active |= other.found_active;
+                self.found_implicit |= other.found_implicit;
                 self.all_implicits_fired &= other.all_implicits_fired;
                 self.blocked |= other.blocked;
             }

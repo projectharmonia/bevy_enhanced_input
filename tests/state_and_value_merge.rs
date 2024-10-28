@@ -35,7 +35,7 @@ fn input_level() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(ChordAction::KEY);
+        .press(ChordMember::KEY);
 
     app.update();
 
@@ -71,7 +71,7 @@ fn input_level() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(BlockAction::KEY);
+        .press(Blocker::KEY);
 
     app.update();
 
@@ -116,7 +116,7 @@ fn action_level() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(ChordAction::KEY);
+        .press(ChordMember::KEY);
 
     app.update();
 
@@ -152,7 +152,7 @@ fn action_level() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(BlockAction::KEY);
+        .press(Blocker::KEY);
 
     app.update();
 
@@ -197,7 +197,7 @@ fn both_levels() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(ChordAction::KEY);
+        .press(ChordMember::KEY);
 
     app.update();
 
@@ -233,7 +233,7 @@ fn both_levels() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(BlockAction::KEY);
+        .press(Blocker::KEY);
 
     app.update();
 
@@ -257,14 +257,14 @@ impl InputContext for DummyContext {
 
         let down = Down::default();
         let release = Release::default();
-        let chord = Chord::<ChordAction>::default();
-        let block_by = BlockBy::<BlockAction>::default();
+        let chord = Chord::<ChordMember>::default();
+        let block_by = BlockBy::<Blocker>::default();
         let swizzle_axis = SwizzleAxis::YXZ;
         let negate = Negate::default();
         let scale = Scale::splat(2.0);
 
-        ctx.bind::<ChordAction>().with(ChordAction::KEY);
-        ctx.bind::<BlockAction>().with(BlockAction::KEY);
+        ctx.bind::<ChordMember>().with(ChordMember::KEY);
+        ctx.bind::<Blocker>().with(Blocker::KEY);
         ctx.bind::<InputLevel>()
             .with(
                 InputBind::new(InputLevel::KEY1)
@@ -343,16 +343,16 @@ impl BothLevels {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct ChordAction;
+struct ChordMember;
 
-impl ChordAction {
+impl ChordMember {
     const KEY: KeyCode = KeyCode::KeyG;
 }
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct BlockAction;
+struct Blocker;
 
-impl BlockAction {
+impl Blocker {
     const KEY: KeyCode = KeyCode::KeyH;
 }
