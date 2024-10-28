@@ -215,7 +215,7 @@ impl ActionBind {
     /// Adds input mapping.
     ///
     /// The action can be triggered by any input mapping. If multiple input mappings
-    /// return [`ActionState`](super::input_action::ActionState).
+    /// return [`ActionState`].
     ///
     /// Thanks to [`Into`] impls, it can be called directly with buttons/axes:
     ///
