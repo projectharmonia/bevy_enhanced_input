@@ -135,7 +135,7 @@ impl InputContext for InCar {
             .with_wasd()
             .with_modifier(Normalize)
             .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED + 200.0)); // Make car faster.
+            .with_modifier(Scale::splat(DEFAULT_SPEED + 20.0)); // Make car faster.
         ctx.bind::<ExitCar>().with(KeyCode::Enter);
 
         ctx
