@@ -49,6 +49,8 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 /// If no conditions are provided, the state will be set to [`ActionState::Fired`]
 /// on any non-zero value, functioning similarly to a [`Down`](down::Down) condition
 /// with a zero actuation threshold.
+///
+/// For details about how actions are combined, see [`ContextInstance`](super::context_instance::ContextInstance).
 pub enum ConditionKind {
     /// The most significant [`ActionState`] from all explicit conditions will be the
     /// resulting state.
@@ -59,8 +61,13 @@ pub enum ConditionKind {
     /// Otherwise, the most significant state will be capped at [`ActionState::Ongoing`].
     Implicit,
     /// If any blocking condition fails to return [`ActionState::Fired`],
-    /// it will override the state with [`ActionState::None`].
+    /// it will override the state with [`ActionState::None`] or block the events.
     ///
     /// Doesn't contribute to the state on its own.
-    Blocker,
+    Blocker {
+        /// Block only events instead of overriding the state.
+        ///
+        /// Other actions will be able to see the action state in [`ActionsData`].
+        events_only: bool,
+    },
 }

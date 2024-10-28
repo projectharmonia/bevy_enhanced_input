@@ -84,6 +84,16 @@ fn input_level() {
         ActionState::None,
         "if a blocker condition fails, it should override other conditions"
     );
+
+    let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+    keys.release(Blocker::KEY);
+    keys.press(EventsBlocker::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+    let events = recorded.get::<InputLevel>(entity).unwrap();
+    assert!(events.is_empty());
 }
 
 #[test]
@@ -165,6 +175,16 @@ fn action_level() {
         ActionState::None,
         "if a blocker condition fails, it should override other conditions"
     );
+
+    let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+    keys.release(Blocker::KEY);
+    keys.press(EventsBlocker::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+    let events = recorded.get::<ActionLevel>(entity).unwrap();
+    assert!(events.is_empty());
 }
 
 #[test]
@@ -246,6 +266,16 @@ fn both_levels() {
         ActionState::None,
         "if a blocker condition fails, it should override other conditions"
     );
+
+    let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+    keys.release(Blocker::KEY);
+    keys.press(EventsBlocker::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+    let events = recorded.get::<BothLevels>(entity).unwrap();
+    assert!(events.is_empty());
 }
 
 #[derive(Debug, Component)]
@@ -259,17 +289,20 @@ impl InputContext for DummyContext {
         let release = Release::default();
         let chord = Chord::<ChordMember>::default();
         let block_by = BlockBy::<Blocker>::default();
+        let block_events_by = BlockBy::<EventsBlocker>::events_only();
         let swizzle_axis = SwizzleAxis::YXZ;
         let negate = Negate::default();
         let scale = Scale::splat(2.0);
 
         ctx.bind::<ChordMember>().with(ChordMember::KEY);
         ctx.bind::<Blocker>().with(Blocker::KEY);
+        ctx.bind::<EventsBlocker>().with(EventsBlocker::KEY);
         ctx.bind::<InputLevel>()
             .with(
                 InputBind::new(InputLevel::KEY1)
                     .with_condition(chord)
                     .with_condition(block_by)
+                    .with_condition(block_events_by)
                     .with_condition(down)
                     .with_condition(release)
                     .with_modifier(swizzle_axis)
@@ -279,6 +312,7 @@ impl InputContext for DummyContext {
                 InputBind::new(InputLevel::KEY2)
                     .with_condition(chord)
                     .with_condition(block_by)
+                    .with_condition(block_events_by)
                     .with_condition(down)
                     .with_condition(release)
                     .with_modifier(swizzle_axis)
@@ -291,6 +325,7 @@ impl InputContext for DummyContext {
             .with_condition(release)
             .with_condition(chord)
             .with_condition(block_by)
+            .with_condition(block_events_by)
             .with_modifier(swizzle_axis)
             .with_modifier(negate)
             .with_modifier(scale);
@@ -308,6 +343,7 @@ impl InputContext for DummyContext {
             .with_condition(release)
             .with_condition(chord)
             .with_condition(block_by)
+            .with_condition(block_events_by)
             .with_modifier(swizzle_axis);
 
         ctx
@@ -355,4 +391,12 @@ struct Blocker;
 
 impl Blocker {
     const KEY: KeyCode = KeyCode::KeyH;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct EventsBlocker;
+
+impl EventsBlocker {
+    const KEY: KeyCode = KeyCode::KeyI;
 }

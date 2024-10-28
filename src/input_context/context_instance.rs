@@ -306,7 +306,9 @@ impl ActionBind {
         let value = tracker.value().convert(self.dim);
 
         action.update_time(time);
-        action.trigger_events(commands, entities, state, value);
+        if !tracker.events_blocked() {
+            action.trigger_events(commands, entities, state, value);
+        }
         action.set_state(state);
     }
 }

@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Logging for binding.
 - `ActionsData::insert_action`.
+- `BlockBy::events` to block only events. Could be used for chords to avoid triggering required actions.
 
 ### Changed
 

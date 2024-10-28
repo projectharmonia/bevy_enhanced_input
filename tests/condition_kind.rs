@@ -202,6 +202,80 @@ fn blocker() {
     assert_eq!(event.state, ActionState::Fired);
 }
 
+#[test]
+fn events_blocker() {
+    let mut app = App::new();
+    app.add_plugins((
+        MinimalPlugins,
+        InputPlugin,
+        EnhancedInputPlugin,
+        ActionRecorderPlugin,
+    ))
+    .add_input_context::<DummyContext>()
+    .record_action::<ReleaseAction>()
+    .record_action::<EventsBlocker>();
+
+    let entity = app.world_mut().spawn(DummyContext).id();
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+
+    let events = recorded.get::<ReleaseAction>(entity).unwrap();
+    assert!(events.is_empty());
+
+    let events = recorded.get::<EventsBlocker>(entity).unwrap();
+    assert!(events.is_empty());
+
+    let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+    keys.press(ReleaseAction::KEY);
+    keys.press(EventsBlocker::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+
+    let events = recorded.get::<ReleaseAction>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, true.into());
+    assert_eq!(event.state, ActionState::Ongoing);
+
+    let events = recorded.get::<EventsBlocker>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, true.into());
+    assert_eq!(event.state, ActionState::Fired);
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .release(ReleaseAction::KEY);
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+
+    let events = recorded.get::<ReleaseAction>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, false.into());
+    assert_eq!(event.state, ActionState::Fired);
+
+    let events = recorded.get::<EventsBlocker>(entity).unwrap();
+    assert!(events.is_empty());
+
+    app.update();
+
+    let recorded = app.world().resource::<RecordedActions>();
+
+    let events = recorded.get::<ReleaseAction>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, false.into());
+    assert_eq!(event.state, ActionState::None);
+
+    let events = recorded.get::<EventsBlocker>(entity).unwrap();
+    let event = events.last().unwrap();
+    assert_eq!(event.value, true.into());
+    assert_eq!(event.state, ActionState::Fired);
+}
+
 #[derive(Debug, Component)]
 struct DummyContext;
 
@@ -220,6 +294,9 @@ impl InputContext for DummyContext {
         ctx.bind::<Blocker>()
             .with(Blocker::KEY)
             .with_condition(BlockBy::<ReleaseAction>::default());
+        ctx.bind::<EventsBlocker>()
+            .with(EventsBlocker::KEY)
+            .with_condition(BlockBy::<ReleaseAction>::events_only());
 
         ctx
     }
@@ -251,4 +328,12 @@ struct Blocker;
 
 impl Blocker {
     const KEY: KeyCode = KeyCode::KeyD;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
+struct EventsBlocker;
+
+impl EventsBlocker {
+    const KEY: KeyCode = KeyCode::KeyE;
 }

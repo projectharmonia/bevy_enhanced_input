@@ -61,8 +61,12 @@ impl InputContext for DummyContext {
         ctx.bind::<TapAction>()
             .with(TapAction::KEY)
             .with_condition(Tap::new(0.5));
-        ctx.bind::<ChordMember1>().with(ChordMember1::KEY);
-        ctx.bind::<ChordMember2>().with(ChordMember2::KEY);
+        ctx.bind::<ChordMember1>()
+            .with(ChordMember1::KEY)
+            .with_condition(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
+        ctx.bind::<ChordMember2>()
+            .with(ChordMember2::KEY)
+            .with_condition(BlockBy::<ChordAction>::events_only());
         ctx.bind::<ChordAction>()
             .with_condition(Chord::<ChordMember1>::default())
             .with_condition(Chord::<ChordMember2>::default());
