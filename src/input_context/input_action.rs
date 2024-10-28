@@ -1,6 +1,9 @@
 use std::{any::TypeId, fmt::Debug, marker::PhantomData};
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{
+    prelude::*,
+    utils::{Entry, HashMap},
+};
 use bitflags::bitflags;
 
 use crate::action_value::{ActionValue, ActionValueDim};
@@ -13,6 +16,11 @@ impl ActionsData {
     /// Returns associated state for action `A`.
     pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
         self.get(&TypeId::of::<A>())
+    }
+
+    /// Returns associated entry for action `A` in-place manipulation.
+    pub fn action_entry<A: InputAction>(&mut self) -> Entry<TypeId, ActionData> {
+        self.entry(TypeId::of::<A>())
     }
 
     /// Inserts a state for action `A`.

@@ -136,7 +136,7 @@ impl InputCondition for Combo {
             return ActionState::None;
         };
 
-        if current_action.events().intersects(current_step.events) {
+        if current_action.events().contains(current_step.events) {
             self.step_index += 1;
             self.timer.reset();
 
@@ -168,7 +168,7 @@ pub struct ComboStep {
 
     /// Events for the action to complete this step.
     ///
-    /// By default set to [`ActionEvents::FIRED`].
+    /// By default set to [`ActionEvents::COMPLETED`].
     pub events: ActionEvents,
 
     /// Time to trigger [`Self::events`] before the combo is cancelled.
@@ -190,7 +190,7 @@ impl ComboStep {
     pub fn new<A: InputAction>() -> Self {
         Self {
             type_id: TypeId::of::<A>(),
-            events: ActionEvents::FIRED,
+            events: ActionEvents::COMPLETED,
             trigger_time: f32::MAX,
             cancel_actions: Default::default(),
         }
@@ -243,7 +243,7 @@ impl ComboStep {
             }
             CancelActions::List(_) => {
                 self.cancel_actions = CancelActions::All {
-                    events: ActionEvents::all(),
+                    events: ActionEvents::ONGOING | ActionEvents::FIRED,
                     exceptions: [(type_id, action_events)].into(),
                 }
             }
@@ -252,11 +252,11 @@ impl ComboStep {
         self
     }
 
-    /// Like [`Self::deny_with`], but uses [`ActionEvents::all`] for events.
+    /// Like [`Self::deny_with`], but uses [`ActionEvents::ONGOING`] and [`ActionEvents::FIRED`] for events.
     ///
     /// If [`CancelActions`] were set to [`CancelActions::All`], it will be replaced with [`CancelActions::List`].
     pub fn deny<A: InputAction>(self) -> Self {
-        self.deny_with::<A>(ActionEvents::all())
+        self.deny_with::<A>(ActionEvents::ONGOING | ActionEvents::FIRED)
     }
 
     /// Cancel the combo if action `A` in the same context triggers any of the events.
@@ -283,7 +283,7 @@ impl<A: InputAction> From<A> for ComboStep {
 
 /// Actions and events that cancel [`Combo`].
 ///
-/// By default set to [`Self::All`] with [`ActionEvents::all`] and no exceptions.
+/// By default set to [`Self::All`] with [`ActionEvents::ONGOING`] and [`ActionEvents::FIRED`] and no exceptions.
 #[derive(Debug, Clone)]
 pub enum CancelActions {
     /// Cancel the combo if any action (excluding the action for the current step and exception) trigger the given events.
@@ -302,7 +302,7 @@ pub enum CancelActions {
 impl Default for CancelActions {
     fn default() -> Self {
         Self::All {
-            events: ActionEvents::all(),
+            events: ActionEvents::ONGOING | ActionEvents::FIRED,
             exceptions: Default::default(),
         }
     }
@@ -333,8 +333,8 @@ mod tests {
     }
 
     #[test]
-    fn missing_first_step() {
-        let mut condition = Combo::default().with_step(ActionA);
+    fn missing_step() {
+        let mut condition = Combo::default().with_step(ActionA).with_step(ActionB);
         let time = Time::default();
         let actions = ActionsData::default();
 
@@ -342,26 +342,7 @@ mod tests {
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
-    }
-
-    #[test]
-    fn missing_next_step() {
-        let mut condition = Combo::default().with_step(ActionA).with_step(ActionB);
-        let time = Time::default();
-        let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-
-        assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
-            ActionState::Ongoing
-        );
-
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-
-        assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
-            ActionState::None
-        );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -372,22 +353,25 @@ mod tests {
         let mut time = Time::default();
         time.advance_by(Duration::from_secs(1));
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Ongoing
         );
+        assert_eq!(condition.step_index, 1);
 
         time.advance_by(Duration::from_secs(1));
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None); // Clear `Completed` event.
+        transition::<ActionB>(&time, &mut actions, ActionState::Fired);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -395,7 +379,7 @@ mod tests {
         let mut condition = Combo::default().with_step(ActionA);
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Ongoing);
+        transition::<ActionA>(&time, &mut actions, ActionState::Ongoing);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
@@ -408,25 +392,31 @@ mod tests {
         let mut condition = Combo::default().with_step(ActionA).with_step(ActionB);
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Ongoing
         );
+        assert_eq!(condition.step_index, 1);
 
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Fired
         );
+        assert_eq!(condition.step_index, 0);
+
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -437,31 +427,37 @@ mod tests {
             .with_step(ActionC);
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionC>(&time, &mut actions, ActionState::None);
-        set_action::<ActionD>(&time, &mut actions, ActionState::None);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionC>(&time, &mut actions, ActionState::None);
+        transition::<ActionD>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
+        assert_eq!(condition.step_index, 0);
 
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Ongoing
         );
+        assert_eq!(condition.step_index, 1);
 
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionC>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionC>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -470,12 +466,14 @@ mod tests {
             Combo::default().with_step(ComboStep::new::<ActionA>().deny::<ActionA>());
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Fired
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -484,12 +482,14 @@ mod tests {
             Combo::default().with_step(ComboStep::new::<ActionA>().deny::<ActionB>());
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Fired
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -499,23 +499,27 @@ mod tests {
             .with_step(ComboStep::new::<ActionB>().deny::<ActionC>());
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionB>(&time, &mut actions, ActionState::None);
-        set_action::<ActionC>(&time, &mut actions, ActionState::None);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Ongoing
         );
+        assert_eq!(condition.step_index, 1);
 
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionC>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::Fired);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -525,23 +529,27 @@ mod tests {
             .with_step(ComboStep::new::<ActionB>().deny_any(ActionEvents::ONGOING));
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionB>(&time, &mut actions, ActionState::None);
-        set_action::<ActionC>(&time, &mut actions, ActionState::None);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Ongoing
         );
+        assert_eq!(condition.step_index, 1);
 
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionC>(&time, &mut actions, ActionState::Ongoing);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::Ongoing);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -551,23 +559,27 @@ mod tests {
             .with_step(ComboStep::new::<ActionB>().allow::<ActionC>());
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionB>(&time, &mut actions, ActionState::None);
-        set_action::<ActionC>(&time, &mut actions, ActionState::None);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Ongoing
         );
+        assert_eq!(condition.step_index, 1);
 
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionC>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::Fired);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Fired
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     #[test]
@@ -582,40 +594,45 @@ mod tests {
             .with_step(
                 ComboStep::new::<ActionB>()
                     .allow::<ActionC>()
-                    .allow::<ActionD>()
-                    .deny::<ActionC>(),
+                    .deny::<ActionC>()
+                    .deny::<ActionD>(),
             );
         let time = Time::default();
         let mut actions = ActionsData::default();
-        set_action::<ActionA>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionB>(&time, &mut actions, ActionState::None);
-        set_action::<ActionC>(&time, &mut actions, ActionState::Fired);
-        set_action::<ActionD>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
+        transition::<ActionC>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionD>(&time, &mut actions, ActionState::Fired);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::Ongoing
         );
+        assert_eq!(condition.step_index, 1);
 
-        set_action::<ActionA>(&time, &mut actions, ActionState::None);
-        set_action::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionA>(&time, &mut actions, ActionState::None);
+        transition::<ActionB>(&time, &mut actions, ActionState::Fired);
+        transition::<ActionB>(&time, &mut actions, ActionState::None);
 
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
             ActionState::None
         );
+        assert_eq!(condition.step_index, 0);
     }
 
     /// Simulates action update to the desired state.
-    fn set_action<A: InputAction>(
+    fn transition<A: InputAction>(
         time: &Time<Virtual>,
         actions: &mut ActionsData,
         state: ActionState,
     ) {
+        let action = actions
+            .action_entry::<A>()
+            .or_insert_with(ActionData::new::<A>);
         let mut world = World::new();
-        let mut action = ActionData::new::<A>();
         action.update(&mut world.commands(), time, &[], state, true);
-        actions.insert_action::<A>(action);
     }
 
     #[derive(Debug, InputAction)]
