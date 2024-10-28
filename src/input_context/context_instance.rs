@@ -11,6 +11,7 @@ use super::{
 use crate::{
     action_value::{ActionValue, ActionValueDim},
     input::{input_reader::InputReader, GamepadDevice, Input},
+    ActionState,
 };
 
 /// Instance for [`InputContext`](super::InputContext).
@@ -95,7 +96,13 @@ impl ContextInstance {
                 .actions
                 .get(&binding.type_id)
                 .expect("actions and bindings should have matching type IDs");
-            action.trigger_removed(commands, entities, binding.dim);
+
+            action.trigger_events(
+                commands,
+                entities,
+                ActionState::None,
+                ActionValue::zero(binding.dim),
+            );
         }
     }
 }
@@ -298,7 +305,9 @@ impl ActionBind {
         let state = tracker.state();
         let value = tracker.value().convert(self.dim);
 
-        action.update(commands, time, entities, state, value);
+        action.update_time(time);
+        action.trigger_events(commands, entities, state, value);
+        action.set_state(state);
     }
 }
 

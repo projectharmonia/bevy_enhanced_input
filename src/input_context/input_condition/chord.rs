@@ -71,11 +71,10 @@ mod tests {
     fn chord() {
         let mut condition = Chord::<DummyAction>::default();
         let mut action = ActionData::new::<DummyAction>();
-        let mut world = World::new();
-        let time = Time::default();
-        action.update(&mut world.commands(), &time, &[], ActionState::Fired, true);
+        action.set_state(ActionState::Fired);
         let mut actions = ActionsData::default();
         actions.insert_action::<DummyAction>(action);
+        let time = Time::default();
 
         assert_eq!(
             condition.evaluate(&actions, &time, true.into()),

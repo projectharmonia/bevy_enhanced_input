@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `Pressed` into `Press`.
 - Rename `BlockedBy` into `BlockBy`.
 - Rename `Scalar` into `Scale`.
+- Split `ActionData::update` into `ActionData::update_time`, `ActionData::trigger_events` and `ActionData::set_state`.
 - Use `isize` for `InputContext::PRIORITY`.
 - Replace `SmoothDelta` with `LerpDelta` that does only linear interpolation. Using easing functions for inputs doesn't make much sense.
 - Modifiers are now allowed to change passed value dimensions.
@@ -35,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `ignore_incompatible!` since no longer needed.
 - `SwizzleAxis::XXX`, `SwizzleAxis::YYY` and `SwizzleAxis::ZZZ`. They encourage a bad pattern of defining actions with duplicate data. Duplicate axes inside the trigger if needed.
+- `ActionData::trigger_removed`, use `ActionData::trigger_events` instead.
 
 ## [0.1.0] - 2024-10-20
 

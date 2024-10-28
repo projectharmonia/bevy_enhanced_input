@@ -47,21 +47,14 @@ impl ActionData {
             state: Default::default(),
             elapsed_secs: 0.0,
             fired_secs: 0.0,
-            trigger_events: Self::trigger::<A>,
+            trigger_events: Self::trigger_events_typed::<A>,
         }
     }
 
-    /// Updates internal state and triggers corresponding events.
-    pub fn update(
-        &mut self,
-        commands: &mut Commands,
-        time: &Time<Virtual>,
-        entities: &[Entity],
-        state: ActionState,
-        value: impl Into<ActionValue>,
-    ) {
-        // Add time from the previous frame if needed
-        // before triggering events.
+    /// Adds time from the previous frame if needed
+    ///
+    /// Should be called before [`Self::trigger_events`].
+    pub fn update_time(&mut self, time: &Time<Virtual>) {
         match self.state {
             ActionState::None => (),
             ActionState::Ongoing => {
@@ -72,11 +65,27 @@ impl ActionData {
                 self.fired_secs += time.delta_seconds();
             }
         }
+    }
 
+    /// Triggers events for transitioning from the current state to the specified `state`.
+    ///
+    /// Should be called after [`Self::update_time`] and before [`Self::set_state`].
+    pub fn trigger_events(
+        &self,
+        commands: &mut Commands,
+        entities: &[Entity],
+        state: ActionState,
+        value: impl Into<ActionValue>,
+    ) {
         (self.trigger_events)(self, commands, entities, state, value.into());
-        self.state = state;
+    }
 
+    /// Sets state and resets time if necessary.
+    ///
+    /// Should be called after [`Self::trigger_events`].
+    pub fn set_state(&mut self, state: ActionState) {
         // Reset time for updated state.
+        self.state = state;
         match self.state {
             ActionState::None => {
                 self.elapsed_secs = 0.0;
@@ -89,29 +98,7 @@ impl ActionData {
         }
     }
 
-    /// Trigger events for removed entities.
-    ///
-    /// This will trigger transition from the current state to [`ActionState::None`]
-    /// simulating releasing the input.
-    ///
-    /// Internal state won't be updated.
-    /// Called for removed entities for shared contexts or for context removals.
-    pub fn trigger_removed(
-        &self,
-        commands: &mut Commands,
-        entities: &[Entity],
-        dim: ActionValueDim,
-    ) {
-        (self.trigger_events)(
-            self,
-            commands,
-            entities,
-            ActionState::None,
-            ActionValue::zero(dim),
-        );
-    }
-
-    fn trigger<A: InputAction>(
+    fn trigger_events_typed<A: InputAction>(
         &self,
         commands: &mut Commands,
         entities: &[Entity],
