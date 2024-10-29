@@ -23,7 +23,7 @@ pub(crate) struct InputReader<'w, 's> {
     gamepad_axis: Res<'w, Axis<GamepadAxis>>,
     gamepads: Res<'w, Gamepads>,
     consumed: Local<'s, ConsumedInput>,
-    params: Local<'s, ReaderParams>,
+    gamepad_device: Local<'s, GamepadDevice>,
     mouse_wheel: Local<'s, Vec2>,
     mouse_motion: Local<'s, Vec2>,
     #[cfg(feature = "ui_priority")]
@@ -83,31 +83,19 @@ impl InputReader<'_, '_> {
 
     /// Assignes a gamepad from which [`Self::value`] should read input.
     pub(crate) fn set_gamepad(&mut self, gamepad: impl Into<GamepadDevice>) {
-        self.params.gamepad = gamepad.into();
-    }
-
-    /// Enables or disables consuming in [`Self::value`].
-    ///
-    /// If the value is consumed, will unavailable for subsequent calls.
-    pub(crate) fn set_consume_input(&mut self, consume_input: bool) {
-        self.params.consume_input = consume_input;
+        *self.gamepad_device = gamepad.into();
     }
 
     /// Returns the [`ActionValue`] for the given [`Input`] if exists.
     ///
-    /// See also [`Self::set_consume_input`] and [`Self::set_gamepad`].
-    pub(crate) fn value(&mut self, input: impl Into<Input>) -> ActionValue {
+    /// See also [`Self::consume`] and [`Self::set_gamepad`].
+    pub(crate) fn value(&self, input: impl Into<Input>) -> ActionValue {
         match input.into() {
             Input::Keyboard { key, modifiers } => {
                 let pressed = !self.consumed.ui_wants_keyboard
                     && self.keys.pressed(key)
                     && !self.consumed.keys.contains(&key)
                     && self.modifiers_pressed(modifiers);
-
-                if pressed && self.params.consume_input {
-                    self.consumed.keys.insert(key);
-                    self.consumed.modifiers.insert(modifiers);
-                }
 
                 pressed.into()
             }
@@ -117,11 +105,6 @@ impl InputReader<'_, '_> {
                     && !self.consumed.mouse_buttons.contains(&button)
                     && self.modifiers_pressed(modifiers);
 
-                if pressed && self.params.consume_input {
-                    self.consumed.mouse_buttons.insert(button);
-                    self.consumed.modifiers.insert(modifiers);
-                }
-
                 pressed.into()
             }
             Input::MouseMotion { modifiers } => {
@@ -130,10 +113,6 @@ impl InputReader<'_, '_> {
                 }
 
                 let value = *self.mouse_motion;
-                if self.params.consume_input {
-                    *self.mouse_motion = Vec2::ZERO;
-                }
-
                 value.into()
             }
             Input::MouseWheel { modifiers } => {
@@ -142,15 +121,11 @@ impl InputReader<'_, '_> {
                 }
 
                 let value = *self.mouse_wheel;
-                if self.params.consume_input {
-                    *self.mouse_wheel = Vec2::ZERO;
-                }
-
                 value.into()
             }
             Input::GamepadButton { button } => {
                 let input = GamepadInput {
-                    gamepad: self.params.gamepad,
+                    gamepad: *self.gamepad_device,
                     input: button,
                 };
 
@@ -158,7 +133,7 @@ impl InputReader<'_, '_> {
                     return false.into();
                 }
 
-                let pressed = match self.params.gamepad {
+                let pressed = match *self.gamepad_device {
                     GamepadDevice::Any => self.gamepads.iter().any(|gamepad| {
                         self.gamepad_buttons.pressed(GamepadButton {
                             gamepad,
@@ -171,15 +146,11 @@ impl InputReader<'_, '_> {
                     }),
                 };
 
-                if pressed && self.params.consume_input {
-                    self.consumed.gamepad_buttons.insert(input);
-                }
-
                 pressed.into()
             }
             Input::GamepadAxis { axis } => {
                 let input = GamepadInput {
-                    gamepad: self.params.gamepad,
+                    gamepad: *self.gamepad_device,
                     input: axis,
                 };
 
@@ -187,7 +158,7 @@ impl InputReader<'_, '_> {
                     return 0.0.into();
                 }
 
-                let value = match self.params.gamepad {
+                let value = match *self.gamepad_device {
                     GamepadDevice::Any => self.gamepads.iter().find_map(|gamepad| {
                         self.gamepad_axis
                             .get_unclamped(GamepadAxis {
@@ -203,11 +174,6 @@ impl InputReader<'_, '_> {
                 };
 
                 let value = value.unwrap_or_default();
-
-                if value != 0.0 && self.params.consume_input {
-                    self.consumed.gamepad_axes.insert(input);
-                }
-
                 value.into()
             }
         }
@@ -229,6 +195,46 @@ impl InputReader<'_, '_> {
         }
 
         true
+    }
+
+    /// Consumes the input, making it unavailable for [`Self::value`].
+    ///
+    /// Resets with [`Self::update_state`].
+    pub(crate) fn consume(&mut self, input: impl Into<Input>) {
+        match input.into() {
+            Input::Keyboard { key, modifiers } => {
+                self.consumed.keys.insert(key);
+                self.consumed.modifiers.insert(modifiers);
+            }
+            Input::MouseButton { button, modifiers } => {
+                self.consumed.mouse_buttons.insert(button);
+                self.consumed.modifiers.insert(modifiers);
+            }
+            Input::MouseMotion { modifiers } => {
+                *self.mouse_motion = Vec2::ZERO;
+                self.consumed.modifiers.insert(modifiers);
+            }
+            Input::MouseWheel { modifiers } => {
+                *self.mouse_wheel = Vec2::ZERO;
+                self.consumed.modifiers.insert(modifiers);
+            }
+            Input::GamepadButton { button } => {
+                let input = GamepadInput {
+                    gamepad: *self.gamepad_device,
+                    input: button,
+                };
+
+                self.consumed.gamepad_buttons.insert(input);
+            }
+            Input::GamepadAxis { axis } => {
+                let input = GamepadInput {
+                    gamepad: *self.gamepad_device,
+                    input: axis,
+                };
+
+                self.consumed.gamepad_axes.insert(input);
+            }
+        }
     }
 }
 
@@ -266,16 +272,6 @@ struct GamepadInput<T: Hash + Eq> {
     input: T,
 }
 
-/// Parameters for [`InputReader`].
-#[derive(Default)]
-struct ReaderParams {
-    /// Whether to consume input after reading from [`InputReader::value`].
-    consume_input: bool,
-
-    /// Associated gamepad.
-    gamepad: GamepadDevice,
-}
-
 #[cfg(test)]
 mod tests {
     use bevy::{
@@ -307,8 +303,7 @@ mod tests {
             ActionValue::Bool(false)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(key), ActionValue::Bool(true));
+        reader.consume(key);
         assert_eq!(reader.value(key), ActionValue::Bool(false));
     }
 
@@ -332,8 +327,7 @@ mod tests {
             ActionValue::Bool(false)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        reader.consume(button);
         assert_eq!(reader.value(button), ActionValue::Bool(false));
     }
 
@@ -353,8 +347,7 @@ mod tests {
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        reader.consume(input);
         assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
     }
 
@@ -379,8 +372,7 @@ mod tests {
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        reader.consume(input);
         assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
     }
 
@@ -419,8 +411,7 @@ mod tests {
             ActionValue::Bool(false)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        reader.consume(button);
         assert_eq!(reader.value(button), ActionValue::Bool(false));
     }
 
@@ -451,10 +442,10 @@ mod tests {
             ActionValue::Bool(false)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        reader.consume(button);
         assert_eq!(reader.value(button), ActionValue::Bool(false));
-        assert_eq!(reader.value(other_button), ActionValue::Bool(true));
+
+        reader.consume(other_button);
         assert_eq!(reader.value(other_button), ActionValue::Bool(false));
     }
 
@@ -497,8 +488,7 @@ mod tests {
             ActionValue::Axis1D(0.0)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
+        reader.consume(axis);
         assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
     }
 
@@ -536,10 +526,10 @@ mod tests {
             ActionValue::Axis1D(0.0)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(1.0));
+        reader.consume(axis);
         assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
-        assert_eq!(reader.value(other_axis), ActionValue::Axis1D(1.0));
+
+        reader.consume(other_axis);
         assert_eq!(reader.value(other_axis), ActionValue::Axis1D(0.0));
     }
 
@@ -569,8 +559,7 @@ mod tests {
             ActionValue::Bool(false)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(input), ActionValue::Bool(true));
+        reader.consume(input);
         assert_eq!(reader.value(input), ActionValue::Bool(false));
 
         // Try another key, but with the same modifier that was consumed.
@@ -582,7 +571,7 @@ mod tests {
             key: other_key,
             modifiers: modifier.into(),
         };
-        let mut reader = state.get_mut(&mut world);
+        let reader = state.get_mut(&mut world);
         assert_eq!(reader.value(other_input), ActionValue::Bool(false));
         assert_eq!(reader.value(other_key), ActionValue::Bool(true));
     }
@@ -614,8 +603,7 @@ mod tests {
             ActionValue::Bool(false)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(input), ActionValue::Bool(true));
+        reader.consume(input);
         assert_eq!(reader.value(input), ActionValue::Bool(false));
     }
 
@@ -647,8 +635,7 @@ mod tests {
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        reader.consume(input);
         assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
     }
 
@@ -685,8 +672,7 @@ mod tests {
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
-        reader.set_consume_input(true);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        reader.consume(input);
         assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
     }
 

@@ -276,10 +276,13 @@ impl ActionBind {
     ) {
         trace!("updating action `{}`", self.action_name);
 
-        reader.set_consume_input(self.consume_input);
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for binding in &mut self.bindings {
             let value = reader.value(binding.input);
+            if self.consume_input {
+                reader.consume(binding.input);
+            }
+
             if binding.ignored {
                 // Ignore until we read zero for this mapping.
                 if value.as_bool() {
