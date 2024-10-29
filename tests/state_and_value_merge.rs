@@ -78,7 +78,7 @@ fn input_level() {
     let recorded = app.world().resource::<RecordedActions>();
     let events = recorded.get::<InputLevel>(entity).unwrap();
     let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::Y.into());
+    assert_eq!(event.value, Vec2::ZERO.into());
     assert_eq!(
         event.state,
         ActionState::None,

@@ -120,7 +120,15 @@ impl TriggerTracker {
 
     /// Merges input-level tracker into an action-level tracker.
     pub(super) fn merge(&mut self, other: Self, accumulation: Accumulation) {
-        match self.state().cmp(&other.state()) {
+        let other_state = other.state();
+        if other_state == ActionState::None {
+            // Don't merge non-active trackers to allow the action to fire even if all
+            // input-level conditions return `ActionState::None`. This ensures that an
+            // action-level condition or modifier can still trigger the action.
+            return;
+        }
+
+        match self.state().cmp(&other_state) {
             Ordering::Less => {
                 let dim = self.value.dim();
                 *self = other;

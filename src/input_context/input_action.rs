@@ -443,7 +443,8 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     const ACCUMULATION: Accumulation = Accumulation::Cumulative;
 }
 
-/// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the same [`ActionState`].
+/// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
+/// same most significant [`ActionState`] (excluding [`ActionState::None`]).
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.

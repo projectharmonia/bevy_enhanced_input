@@ -29,11 +29,11 @@ use crate::{
 ///    1.1. Apply input-level [`InputModifier`]s.
 ///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
 /// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
-///    The value will also be converted using [`ActionValue::convert`] into [`InputAction::DIM`].
+///    Combined value be converted into [`InputAction::DIM`] dimention using [`ActionValue::convert`].
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
-///    The value will also be converted using [`ActionValue::convert`] into [`InputAction::DIM`].
+///    Final value be converted into [`InputAction::DIM`] dimention using [`ActionValue::convert`].
 ///
 /// New instances won't react to currently held inputs until they are released.
 /// This prevents unintended behavior where switching contexts using the same key
