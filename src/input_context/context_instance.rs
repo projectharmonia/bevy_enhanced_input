@@ -279,10 +279,6 @@ impl ActionBind {
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for binding in &mut self.bindings {
             let value = reader.value(binding.input);
-            if self.consume_input {
-                reader.consume(binding.input);
-            }
-
             if binding.ignored {
                 // Ignore until we read zero for this mapping.
                 if value.as_bool() {
@@ -307,6 +303,12 @@ impl ActionBind {
 
         let state = tracker.state();
         let value = tracker.value().convert(self.dim);
+
+        if self.consume_input && state != ActionState::None {
+            for binding in &self.bindings {
+                reader.consume(binding.input);
+            }
+        }
 
         action.update_time(time);
         if !tracker.events_blocked() {

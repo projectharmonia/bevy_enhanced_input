@@ -433,8 +433,8 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.
     ///
-    /// Inputs are consumed only if their [`Modifiers`](crate::input::Modifiers)
-    /// are also pressed.
+    /// Inputs are consumed only if the action state is not equal to [`ActionState::None`].
+    /// For details, see [`ContextInstance`](super::context_instance::ContextInstance).
     ///
     /// Consuming is global and affect actions in all contexts.
     const CONSUME_INPUT: bool = true;
