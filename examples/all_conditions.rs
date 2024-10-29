@@ -1,5 +1,5 @@
 //! Demonstrates all available input conditions.
-//! Press keys 0-9 on the keyboard to trigger actions and observe the output in console.
+//! Press keys from the number row on the keyboard to trigger actions and observe the output in console.
 
 use bevy::{log::LogPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
