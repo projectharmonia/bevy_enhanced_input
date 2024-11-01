@@ -62,9 +62,10 @@ fn rebuild_instance<C: InputContext>(
     _trigger: Trigger<RebuildInputContexts>,
     mut commands: Commands,
     mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
+    time: Res<Time<Virtual>>,
 ) {
     let mut instances = mem::take(&mut *set.p1());
-    instances.rebuild::<C>(set.p0(), &mut commands);
+    instances.rebuild::<C>(set.p0(), &time, &mut commands);
     *set.p1() = instances;
 }
 
@@ -72,8 +73,9 @@ fn remove_instance<C: InputContext>(
     trigger: Trigger<OnRemove, C>,
     mut commands: Commands,
     mut instances: ResMut<ContextInstances>,
+    time: Res<Time<Virtual>>,
 ) {
-    instances.remove::<C>(&mut commands, trigger.entity());
+    instances.remove::<C>(&mut commands, &time, trigger.entity());
 }
 
 #[derive(Resource, Default)]
@@ -105,19 +107,24 @@ impl ContextInstances {
         }
     }
 
-    fn rebuild<C: InputContext>(&mut self, world: &World, commands: &mut Commands) {
+    fn rebuild<C: InputContext>(
+        &mut self,
+        world: &World,
+        time: &Time<Virtual>,
+        commands: &mut Commands,
+    ) {
         if let Some(index) = self.index::<C>() {
             debug!("rebuilding `{}`", any::type_name::<C>());
 
             match &mut self.0[index] {
                 InstanceGroup::Exclusive { instances, .. } => {
                     for (entity, ctx) in instances {
-                        ctx.trigger_removed(commands, &[*entity]);
+                        ctx.trigger_removed(commands, time, &[*entity]);
                         *ctx = C::context_instance(world, *entity);
                     }
                 }
                 InstanceGroup::Shared { ctx, entities, .. } => {
-                    ctx.trigger_removed(commands, entities);
+                    ctx.trigger_removed(commands, time, entities);
 
                     // For shared contexts rebuild the instance using the first entity.
                     let entity = *entities
@@ -129,7 +136,12 @@ impl ContextInstances {
         }
     }
 
-    fn remove<C: InputContext>(&mut self, commands: &mut Commands, entity: Entity) {
+    fn remove<C: InputContext>(
+        &mut self,
+        commands: &mut Commands,
+        time: &Time<Virtual>,
+        entity: Entity,
+    ) {
         debug!("removing `{}` from `{entity}`", any::type_name::<C>());
 
         let group_index = self
@@ -144,7 +156,7 @@ impl ContextInstances {
                     .expect("entity should be inserted before removal");
 
                 let (_, ctx) = instances.swap_remove(entity_index);
-                ctx.trigger_removed(commands, &[entity]);
+                ctx.trigger_removed(commands, time, &[entity]);
 
                 instances.is_empty()
             }
@@ -159,7 +171,7 @@ impl ContextInstances {
                     .expect("entity should be inserted before removal");
 
                 entities.swap_remove(entity_index);
-                instance.trigger_removed(commands, &[entity]);
+                instance.trigger_removed(commands, time, &[entity]);
 
                 entities.is_empty()
             }

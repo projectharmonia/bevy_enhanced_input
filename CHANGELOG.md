@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Logging for binding.
 - `ActionsData::insert_action`.
+- `ActionData::events` to get triggered events from the last update.
+- `ActionData::value` to get triggered value from the last update.
+- `ActionData::trigger_events` to trigger events based on the last `ActionData::update`.
 - `BlockBy::events` to block only events. Could be used for chords to avoid triggering required actions.
 
 ### Changed
@@ -25,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `Pressed` into `Press`.
 - Rename `BlockedBy` into `BlockBy`.
 - Rename `Scalar` into `Scale`.
-- Split `ActionData::update` into `ActionData::update_time`, `ActionData::trigger_events` and `ActionData::set_state`.
+- `ActionData::update` now accepts a value and no longer trigger events.
 - Use `isize` for `InputContext::PRIORITY`.
 - Replace `SmoothDelta` with `LerpDelta` that does only linear interpolation. Using easing functions for inputs doesn't make much sense.
 - Modifiers are now allowed to change passed value dimensions.

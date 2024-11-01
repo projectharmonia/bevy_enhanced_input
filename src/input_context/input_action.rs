@@ -33,80 +33,66 @@ impl From<HashMap<TypeId, ActionData>> for ActionsData {
 #[derive(Clone, Copy)]
 pub struct ActionData {
     state: ActionState,
+    events: ActionEvents,
+    value: ActionValue,
     elapsed_secs: f32,
     fired_secs: f32,
-    trigger_events: fn(&Self, &mut Commands, &[Entity], ActionState, ActionValue),
+    trigger_events: fn(&Self, &mut Commands, &[Entity]),
 }
 
 impl ActionData {
-    /// Creates a new instance that will trigger events
-    /// for action `A`.
+    /// Creates a new instance associated with action `A`.
+    ///
+    /// [`Self::trigger_events`] will trigger events for `A`.
     #[must_use]
     pub fn new<A: InputAction>() -> Self {
         Self {
             state: Default::default(),
+            events: ActionEvents::empty(),
+            value: ActionValue::zero(A::DIM),
             elapsed_secs: 0.0,
             fired_secs: 0.0,
             trigger_events: Self::trigger_events_typed::<A>,
         }
     }
 
-    /// Adds time from the previous frame if needed
-    ///
-    /// Should be called before [`Self::trigger_events`].
-    pub fn update_time(&mut self, time: &Time<Virtual>) {
-        match self.state {
-            ActionState::None => (),
-            ActionState::Ongoing => {
-                self.elapsed_secs += time.delta_seconds();
-            }
-            ActionState::Fired => {
-                self.elapsed_secs += time.delta_seconds();
-                self.fired_secs += time.delta_seconds();
-            }
-        }
-    }
-
-    /// Triggers events for transitioning from the current state to the specified `state`.
-    ///
-    /// Should be called after [`Self::update_time`] and before [`Self::set_state`].
-    pub fn trigger_events(
-        &self,
-        commands: &mut Commands,
-        entities: &[Entity],
+    /// Updates internal state.
+    pub fn update(
+        &mut self,
+        time: &Time<Virtual>,
         state: ActionState,
         value: impl Into<ActionValue>,
     ) {
-        (self.trigger_events)(self, commands, entities, state, value.into());
-    }
-
-    /// Sets state and resets time if necessary.
-    ///
-    /// Should be called after [`Self::trigger_events`].
-    pub fn set_state(&mut self, state: ActionState) {
-        // Reset time for updated state.
-        self.state = state;
         match self.state {
             ActionState::None => {
                 self.elapsed_secs = 0.0;
                 self.fired_secs = 0.0;
             }
             ActionState::Ongoing => {
+                self.elapsed_secs += time.delta_seconds();
                 self.fired_secs = 0.0;
             }
-            ActionState::Fired => (),
+            ActionState::Fired => {
+                self.elapsed_secs += time.delta_seconds();
+                self.fired_secs += time.delta_seconds();
+            }
         }
+
+        self.events = ActionEvents::new(self.state, state);
+        self.state = state;
+        self.value = value.into();
     }
 
-    fn trigger_events_typed<A: InputAction>(
-        &self,
-        commands: &mut Commands,
-        entities: &[Entity],
-        state: ActionState,
-        value: ActionValue,
-    ) {
-        let events = ActionEvents::new(self.state, state);
-        for (_, event) in events.iter_names() {
+    /// Triggers events resulting from a state transition after [`Self::update`].
+    ///
+    /// See also [`Self::new`].
+    pub fn trigger_events(&self, commands: &mut Commands, entities: &[Entity]) {
+        (self.trigger_events)(self, commands, entities);
+    }
+
+    /// A typed version of [`Self::trigger_events`].
+    fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entities: &[Entity]) {
+        for (_, event) in self.events.iter_names() {
             let kind = match event {
                 ActionEvents::FIRED => ActionEventKind::Fired {
                     fired_secs: self.fired_secs,
@@ -129,7 +115,7 @@ impl ActionData {
             // Trigger an event for each entity separately
             // since it's cheaper to copy the event than to clone the entities.
             for &entity in entities {
-                let event = ActionEvent::<A>::new(kind, value, state);
+                let event = ActionEvent::<A>::new(kind, self.value, self.state);
                 trace!("triggering `{event:?}` for `{entity}`");
                 commands.trigger_targets(event, entity);
             }
@@ -139,6 +125,16 @@ impl ActionData {
     /// Returns the current state.
     pub fn state(&self) -> ActionState {
         self.state
+    }
+
+    /// Returns events triggered by a transition of [`Self::state`] since the last update.
+    pub fn events(&self) -> ActionEvents {
+        self.events
+    }
+
+    /// Returns the value since the last update.
+    pub fn value(&self) -> ActionValue {
+        self.value
     }
 
     /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
@@ -263,7 +259,7 @@ impl<A: InputAction> From<ActionEvent<A>> for UntypedActionEvent {
 bitflags! {
     /// [`ActionEventKind`]s triggered for an action.
     #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
-    struct ActionEvents: u8 {
+    pub struct ActionEvents: u8 {
         /// Corresponds to [`ActionEventKind::Started`].
         const STARTED = 0b00000001;
         /// Corresponds to [`ActionEventKind::Fired`].
@@ -279,7 +275,7 @@ bitflags! {
 
 impl ActionEvents {
     /// Creates a new instance based on state transition.
-    fn new(previous: ActionState, current: ActionState) -> ActionEvents {
+    pub fn new(previous: ActionState, current: ActionState) -> ActionEvents {
         match (previous, current) {
             (ActionState::None, ActionState::None) => ActionEvents::empty(),
             (ActionState::None, ActionState::Ongoing) => {

@@ -90,19 +90,22 @@ impl ContextInstance {
         }
     }
 
-    pub(super) fn trigger_removed(&self, commands: &mut Commands, entities: &[Entity]) {
+    /// Copies [`ActionData`] for each binding and triggers transition to [`ActionState::None`] with zero value.
+    ///
+    /// Instance data remains unchanges.
+    pub(super) fn trigger_removed(
+        &self,
+        commands: &mut Commands,
+        time: &Time<Virtual>,
+        entities: &[Entity],
+    ) {
         for binding in &self.bindings {
-            let action = self
+            let mut action = *self
                 .actions
                 .get(&binding.type_id)
                 .expect("actions and bindings should have matching type IDs");
-
-            action.trigger_events(
-                commands,
-                entities,
-                ActionState::None,
-                ActionValue::zero(binding.dim),
-            );
+            action.update(time, ActionState::None, ActionValue::zero(binding.dim));
+            action.trigger_events(commands, entities);
         }
     }
 }
@@ -310,11 +313,10 @@ impl ActionBind {
             }
         }
 
-        action.update_time(time);
+        action.update(time, state, value);
         if !tracker.events_blocked() {
-            action.trigger_events(commands, entities, state, value);
+            action.trigger_events(commands, entities);
         }
-        action.set_state(state);
     }
 }
 
