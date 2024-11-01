@@ -459,3 +459,104 @@ pub enum Accumulation {
     /// For example, given values of 0.5 and -1.5, the input action's value would be -1.5.
     MaxAbs,
 }
+
+#[cfg(test)]
+mod tests {
+    use bevy_enhanced_input_macros::InputAction;
+
+    use super::*;
+
+    #[test]
+    fn none_none() {
+        let events = transition(ActionState::None, ActionState::None);
+        assert!(events.is_empty());
+    }
+
+    #[test]
+    fn none_ongoing() {
+        let events = transition(ActionState::None, ActionState::Ongoing);
+        let [event1, event2] = events.try_into().unwrap();
+        assert!(event1.kind.is_started());
+        assert!(event2.kind.is_ongoing());
+    }
+
+    #[test]
+    fn none_fired() {
+        let events = transition(ActionState::None, ActionState::Fired);
+        let [event1, event2] = events.try_into().unwrap();
+        assert!(event1.kind.is_started());
+        assert!(event2.kind.is_fired());
+    }
+
+    #[test]
+    fn ongoing_none() {
+        let events = transition(ActionState::Ongoing, ActionState::None);
+        let [event] = events.try_into().unwrap();
+        assert!(event.kind.is_canceled());
+    }
+
+    #[test]
+    fn ongoing_ongoing() {
+        let events = transition(ActionState::Ongoing, ActionState::Ongoing);
+        let [event] = events.try_into().unwrap();
+        assert!(event.kind.is_ongoing());
+    }
+
+    #[test]
+    fn ongoing_fired() {
+        let events = transition(ActionState::Ongoing, ActionState::Fired);
+        let [event] = events.try_into().unwrap();
+        assert!(event.kind.is_fired());
+    }
+
+    #[test]
+    fn fired_none() {
+        let events = transition(ActionState::Fired, ActionState::None);
+        let [event] = events.try_into().unwrap();
+        assert!(event.kind.is_completed());
+    }
+
+    #[test]
+    fn fired_ongoing() {
+        let events = transition(ActionState::Fired, ActionState::Ongoing);
+        let [event] = events.try_into().unwrap();
+        assert!(event.kind.is_ongoing());
+    }
+
+    #[test]
+    fn fired_fired() {
+        let events = transition(ActionState::Fired, ActionState::Fired);
+        let [event] = events.try_into().unwrap();
+        assert!(event.kind.is_fired());
+    }
+
+    fn transition(
+        initial_state: ActionState,
+        target_state: ActionState,
+    ) -> Vec<ActionEvent<DummyAction>> {
+        let time = Time::<Virtual>::default();
+        let mut action = ActionData::new::<DummyAction>();
+        action.state = initial_state;
+        action.update(&time, target_state, true);
+
+        let mut world = World::new();
+        world.init_resource::<TriggeredEvents>();
+        world.observe(
+            |trigger: Trigger<ActionEvent<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
+                events.push(*trigger.event());
+            },
+        );
+
+        action.trigger_events(&mut world.commands(), &[Entity::PLACEHOLDER]);
+        world.flush();
+
+        world.remove_resource::<TriggeredEvents>().unwrap().0
+    }
+
+    #[derive(Resource, Default, Deref, DerefMut)]
+    struct TriggeredEvents(Vec<ActionEvent<DummyAction>>);
+
+    #[derive(Debug, InputAction)]
+    #[input_action(dim = Bool)]
+    struct DummyAction;
+}
