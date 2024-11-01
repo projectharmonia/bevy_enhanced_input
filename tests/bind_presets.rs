@@ -1,5 +1,3 @@
-mod action_recorder;
-
 use bevy::{
     input::{
         gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo},
@@ -9,19 +7,11 @@ use bevy::{
 };
 use bevy_enhanced_input::prelude::*;
 
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
-
 #[test]
 fn wasd_and_arrows() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<DummyAction>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -43,11 +33,11 @@ fn wasd_and_arrows() {
 
         app.update();
 
-        let recorded = app.world().resource::<RecordedActions>();
-        let events = recorded.get::<DummyAction>(entity).unwrap();
-        let event = events.last().unwrap();
+        let instances = app.world().resource::<ContextInstances>();
+        let ctx = instances.get::<DummyContext>(entity).unwrap();
+        let action = ctx.action::<DummyAction>().unwrap();
         assert_eq!(
-            event.value,
+            action.value(),
             dir.into(),
             "`{key:?}` should result in `{dir}`"
         );
@@ -63,14 +53,8 @@ fn wasd_and_arrows() {
 #[test]
 fn dpad() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<DummyAction>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let gamepad = Gamepad::new(0);
     app.world_mut().send_event(GamepadConnectionEvent {
@@ -101,11 +85,11 @@ fn dpad() {
 
         app.update();
 
-        let recorded = app.world().resource::<RecordedActions>();
-        let events = recorded.get::<DummyAction>(entity).unwrap();
-        let event = events.last().unwrap();
+        let instances = app.world().resource::<ContextInstances>();
+        let ctx = instances.get::<DummyContext>(entity).unwrap();
+        let action = ctx.action::<DummyAction>().unwrap();
         assert_eq!(
-            event.value,
+            action.value(),
             dir.into(),
             "`{button:?}` should result in `{dir}`"
         );
@@ -121,14 +105,8 @@ fn dpad() {
 #[test]
 fn sticks() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<DummyAction>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let gamepad = Gamepad::new(0);
     app.world_mut().send_event(GamepadConnectionEvent {
@@ -160,11 +138,11 @@ fn sticks() {
 
             app.update();
 
-            let recorded = app.world().resource::<RecordedActions>();
-            let events = recorded.get::<DummyAction>(entity).unwrap();
-            let event = events.last().unwrap();
+            let instances = app.world().resource::<ContextInstances>();
+            let ctx = instances.get::<DummyContext>(entity).unwrap();
+            let action = ctx.action::<DummyAction>().unwrap();
             assert_eq!(
-                event.value,
+                action.value(),
                 dir.into(),
                 "`{axis:?}` should result in `{dir}`"
             );

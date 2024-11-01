@@ -1,29 +1,23 @@
-mod action_recorder;
+use std::any;
 
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
-
 #[test]
 fn explicit() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<Explicit>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Explicit>(entity).unwrap();
-    assert!(events.is_empty());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Explicit>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -31,11 +25,11 @@ fn explicit() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Explicit>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Explicit>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -43,37 +37,34 @@ fn explicit() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Explicit>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::None);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Explicit>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 }
 
 #[test]
 fn implicit() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<ReleaseAction>()
-    .record_action::<Implicit>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    assert!(events.is_empty());
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
-    let events = recorded.get::<Implicit>(entity).unwrap();
-    assert!(events.is_empty());
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Implicit>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -81,17 +72,17 @@ fn implicit() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Ongoing);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Ongoing);
 
-    let events = recorded.get::<Implicit>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::Ongoing);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Implicit>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::Ongoing);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -99,57 +90,54 @@ fn implicit() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<Implicit>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Implicit>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::None);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
-    let events = recorded.get::<Implicit>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::None);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Implicit>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 }
 
 #[test]
 fn blocker() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<ReleaseAction>()
-    .record_action::<Blocker>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    assert!(events.is_empty());
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
-    let events = recorded.get::<Blocker>(entity).unwrap();
-    assert!(events.is_empty());
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Blocker>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.press(ReleaseAction::KEY);
@@ -157,17 +145,17 @@ fn blocker() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Ongoing);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Ongoing);
 
-    let events = recorded.get::<Blocker>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Blocker>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -175,57 +163,54 @@ fn blocker() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<Blocker>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::None);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Blocker>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::None);
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::None);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
-    let events = recorded.get::<Blocker>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Blocker>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[test]
 fn events_blocker() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<ReleaseAction>()
-    .record_action::<EventsBlocker>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    assert!(events.is_empty());
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
-    let events = recorded.get::<EventsBlocker>(entity).unwrap();
-    assert!(events.is_empty());
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<EventsBlocker>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.press(ReleaseAction::KEY);
@@ -233,47 +218,55 @@ fn events_blocker() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Ongoing);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Ongoing);
 
-    let events = recorded.get::<EventsBlocker>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<EventsBlocker>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .release(ReleaseAction::KEY);
+    let observer_entity = app
+        .world_mut()
+        .observe(assert_not_trigger::<EventsBlocker>)
+        .id();
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<EventsBlocker>(entity).unwrap();
-    assert!(events.is_empty());
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<EventsBlocker>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Fired);
+
+    app.world_mut().despawn(observer_entity);
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ReleaseAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
-    assert_eq!(event.state, ActionState::None);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ReleaseAction>().unwrap();
+    assert_eq!(action.value(), false.into());
+    assert_eq!(action.state(), ActionState::None);
 
-    let events = recorded.get::<EventsBlocker>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<EventsBlocker>().unwrap();
+    assert_eq!(action.value(), true.into());
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[derive(Debug, Component)]
@@ -336,4 +329,11 @@ struct EventsBlocker;
 
 impl EventsBlocker {
     const KEY: KeyCode = KeyCode::KeyE;
+}
+
+fn assert_not_trigger<A: InputAction>(_trigger: Trigger<ActionEvent<A>>) {
+    panic!(
+        "event for action `{}` shouldn't trigger",
+        any::type_name::<A>()
+    );
 }

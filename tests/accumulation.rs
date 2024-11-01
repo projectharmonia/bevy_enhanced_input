@@ -1,21 +1,11 @@
-mod action_recorder;
-
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
-
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
 
 #[test]
 fn max_abs() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<MaxAbs>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -27,23 +17,17 @@ fn max_abs() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<MaxAbs>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::Y.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<MaxAbs>().unwrap();
+    assert_eq!(action.value(), Vec2::Y.into());
 }
 
 #[test]
 fn cumulative() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<Cumulative>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -55,9 +39,14 @@ fn cumulative() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Cumulative>(entity).unwrap();
-    assert!(events.is_empty(), "up and down should cancel each other");
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Cumulative>().unwrap();
+    assert_eq!(
+        action.value(),
+        Vec2::ZERO.into(),
+        "up and down should cancel each other"
+    );
 }
 
 #[derive(Debug, Component)]

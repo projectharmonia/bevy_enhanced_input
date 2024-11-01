@@ -1,22 +1,11 @@
-mod action_recorder;
-
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
-
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
 
 #[test]
 fn exclusive() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<Exclusive>()
-    .record_action::<ExclusiveConsume>()
-    .record_action::<ExclusivePassthrough>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<Exclusive>();
 
     let entity1 = app.world_mut().spawn(Exclusive).id();
     let entity2 = app.world_mut().spawn(Exclusive).id();
@@ -29,26 +18,28 @@ fn exclusive() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ExclusiveConsume>(entity1).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<Exclusive>(entity1).unwrap();
 
-    let events = recorded.get::<ExclusivePassthrough>(entity1).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let action = ctx.action::<ExclusiveConsume>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<ExclusiveConsume>(entity2).unwrap();
-    assert!(
-        events.is_empty(),
+    let action = ctx.action::<ExclusivePassthrough>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
+
+    let ctx = instances.get::<Exclusive>(entity2).unwrap();
+
+    let action = ctx.action::<ExclusiveConsume>().unwrap();
+    assert_eq!(
+        action.state(),
+        ActionState::None,
         "only first entity with the same mappings that consume inputs should receive them"
     );
 
-    let events = recorded.get::<ExclusivePassthrough>(entity2).unwrap();
-    let event = events.last().unwrap();
+    let action = ctx.action::<ExclusivePassthrough>().unwrap();
     assert_eq!(
-        event.state,
+        action.state(),
         ActionState::Fired,
         "actions that doesn't consume inputs should still fire"
     );
@@ -57,15 +48,8 @@ fn exclusive() {
 #[test]
 fn shared() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<Shared>()
-    .record_action::<SharedConsume>()
-    .record_action::<SharedPassthrough>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<Shared>();
 
     let entity1 = app.world_mut().spawn(Shared).id();
     let entity2 = app.world_mut().spawn(Shared).id();
@@ -78,38 +62,31 @@ fn shared() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<SharedConsume>(entity1).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<Shared>(entity1).unwrap();
 
-    let events = recorded.get::<SharedPassthrough>(entity1).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let action = ctx.action::<SharedConsume>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<SharedConsume>(entity2).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let action = ctx.action::<SharedPassthrough>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<SharedPassthrough>(entity2).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<Shared>(entity2).unwrap();
+
+    let action = ctx.action::<SharedConsume>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
+
+    let action = ctx.action::<SharedPassthrough>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[test]
 fn context_removal() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<Exclusive>()
-    .add_input_context::<Shared>()
-    .record_action::<ExclusiveConsume>()
-    .record_action::<SharedConsume>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<Exclusive>()
+        .add_input_context::<Shared>();
 
     let entity = app.world_mut().spawn((Exclusive, Shared)).id();
 
@@ -128,30 +105,17 @@ fn context_removal() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-
-    let events = recorded.get::<ExclusiveConsume>(entity).unwrap();
-    let [event] = events.try_into().unwrap();
-    assert!(event.kind.is_completed());
-
-    let events = recorded.get::<SharedConsume>(entity).unwrap();
-    let [event] = events.try_into().unwrap();
-    assert!(event.kind.is_completed());
+    let instances = app.world().resource::<ContextInstances>();
+    assert!(instances.get::<Exclusive>(entity).is_none());
+    assert!(instances.get::<Shared>(entity).is_none());
 }
 
 #[test]
 fn context_rebuild() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<Exclusive>()
-    .add_input_context::<Shared>()
-    .record_action::<ExclusiveConsume>()
-    .record_action::<SharedConsume>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<Exclusive>()
+        .add_input_context::<Shared>();
 
     let entity = app.world_mut().spawn((Exclusive, Shared)).id();
 
@@ -167,15 +131,15 @@ fn context_rebuild() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<ExclusiveConsume>(entity).unwrap();
-    let [event] = events.try_into().unwrap();
-    assert!(event.kind.is_completed());
+    let ctx = instances.get::<Exclusive>(entity).unwrap();
+    let action = ctx.action::<ExclusiveConsume>().unwrap();
+    assert_eq!(action.state(), ActionState::None);
 
-    let events = recorded.get::<SharedConsume>(entity).unwrap();
-    let [event] = events.try_into().unwrap();
-    assert!(event.kind.is_completed());
+    let ctx = instances.get::<Shared>(entity).unwrap();
+    let action = ctx.action::<SharedConsume>().unwrap();
+    assert_eq!(action.state(), ActionState::None);
 }
 
 #[derive(Debug, Component)]

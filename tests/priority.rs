@@ -1,25 +1,12 @@
-mod action_recorder;
-
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
-
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
 
 #[test]
 fn prioritization() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<First>()
-    .add_input_context::<Second>()
-    .record_action::<FirstConsume>()
-    .record_action::<FirstPassthrough>()
-    .record_action::<SecondConsume>()
-    .record_action::<SecondPassthrough>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<First>()
+        .add_input_context::<Second>();
 
     let entity = app.world_mut().spawn((First, Second)).id();
 
@@ -31,26 +18,28 @@ fn prioritization() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
 
-    let events = recorded.get::<FirstConsume>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let ctx = instances.get::<First>(entity).unwrap();
 
-    let events = recorded.get::<SecondConsume>(entity).unwrap();
-    assert!(
-        events.is_empty(),
+    let action = ctx.action::<FirstConsume>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
+
+    let action = ctx.action::<FirstPassthrough>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
+
+    let ctx = instances.get::<Second>(entity).unwrap();
+
+    let action = ctx.action::<SecondConsume>().unwrap();
+    assert_eq!(
+        action.state(),
+        ActionState::None,
         "action should be consumed by context with a higher priority"
     );
 
-    let events = recorded.get::<FirstPassthrough>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
-
-    let events = recorded.get::<SecondPassthrough>(entity).unwrap();
-    let event = events.last().unwrap();
+    let action = ctx.action::<SecondPassthrough>().unwrap();
     assert_eq!(
-        event.state,
+        action.state(),
         ActionState::Fired,
         "actions that doesn't consume inputs should still be triggered"
     );

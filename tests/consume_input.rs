@@ -1,22 +1,11 @@
-mod action_recorder;
-
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
-
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
 
 #[test]
 fn passthrough() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<ConsumeThenPassthrough>()
-    .record_action::<Consume>()
-    .record_action::<Passthrough>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<ConsumeThenPassthrough>();
 
     let entity = app.world_mut().spawn(ConsumeThenPassthrough).id();
 
@@ -28,28 +17,25 @@ fn passthrough() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<ConsumeThenPassthrough>(entity).unwrap();
 
-    let events = recorded.get::<Consume>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let action = ctx.action::<Consume>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<Passthrough>(entity).unwrap();
-    assert!(events.is_empty(), "action should be consumed");
+    let action = ctx.action::<Passthrough>().unwrap();
+    assert_eq!(
+        action.state(),
+        ActionState::None,
+        "action should be consumed"
+    );
 }
 
 #[test]
 fn consume() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<PassthroughThenConsume>()
-    .record_action::<Consume>()
-    .record_action::<Passthrough>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<PassthroughThenConsume>();
 
     let entity = app.world_mut().spawn(PassthroughThenConsume).id();
 
@@ -61,15 +47,14 @@ fn consume() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<PassthroughThenConsume>(entity).unwrap();
 
-    let events = recorded.get::<Consume>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let action = ctx.action::<Consume>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 
-    let events = recorded.get::<Passthrough>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let action = ctx.action::<Passthrough>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[derive(Debug, Component)]

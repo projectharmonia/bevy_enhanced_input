@@ -1,21 +1,13 @@
-mod action_recorder;
+use std::any;
 
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
-
 #[test]
 fn input_level() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<InputLevel>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -27,11 +19,11 @@ fn input_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<InputLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::Y * 2.0).into());
-    assert_eq!(event.state, ActionState::Ongoing);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<InputLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::Y * 2.0).into());
+    assert_eq!(action.state(), ActionState::Ongoing);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -39,11 +31,11 @@ fn input_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<InputLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::Y * 2.0).into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<InputLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::Y * 2.0).into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(InputLevel::KEY1);
@@ -51,11 +43,11 @@ fn input_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<InputLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::NEG_Y.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<InputLevel>().unwrap();
+    assert_eq!(action.value(), Vec2::NEG_Y.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -63,11 +55,11 @@ fn input_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<InputLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::Y.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<InputLevel>().unwrap();
+    assert_eq!(action.value(), Vec2::Y.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -75,12 +67,12 @@ fn input_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<InputLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::ZERO.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<InputLevel>().unwrap();
+    assert_eq!(action.value(), Vec2::ZERO.into());
     assert_eq!(
-        event.state,
+        action.state(),
         ActionState::None,
         "if a blocker condition fails, it should override other conditions"
     );
@@ -89,24 +81,21 @@ fn input_level() {
     keys.release(Blocker::KEY);
     keys.press(EventsBlocker::KEY);
 
+    app.world_mut().observe(assert_not_trigger::<InputLevel>);
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<InputLevel>(entity).unwrap();
-    assert!(events.is_empty());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<InputLevel>().unwrap();
+    assert_eq!(action.value(), Vec2::Y.into());
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[test]
 fn action_level() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<ActionLevel>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -118,11 +107,11 @@ fn action_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<ActionLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::NEG_Y * 2.0).into());
-    assert_eq!(event.state, ActionState::Ongoing);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ActionLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
+    assert_eq!(action.state(), ActionState::Ongoing);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -130,11 +119,11 @@ fn action_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<ActionLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::NEG_Y * 2.0).into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ActionLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(ActionLevel::KEY1);
@@ -142,11 +131,11 @@ fn action_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<ActionLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::NEG_Y * 2.0).into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ActionLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -154,11 +143,11 @@ fn action_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<ActionLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::NEG_Y * 4.0).into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ActionLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -166,12 +155,12 @@ fn action_level() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<ActionLevel>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::NEG_Y * 4.0).into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ActionLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(
-        event.state,
+        action.state(),
         ActionState::None,
         "if a blocker condition fails, it should override other conditions"
     );
@@ -179,25 +168,22 @@ fn action_level() {
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(Blocker::KEY);
     keys.press(EventsBlocker::KEY);
+    app.world_mut().observe(assert_not_trigger::<InputLevel>);
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<ActionLevel>(entity).unwrap();
-    assert!(events.is_empty());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<ActionLevel>().unwrap();
+    assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[test]
 fn both_levels() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<BothLevels>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -209,11 +195,11 @@ fn both_levels() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<BothLevels>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::Y * 2.0).into());
-    assert_eq!(event.state, ActionState::Ongoing);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<BothLevels>().unwrap();
+    assert_eq!(action.value(), (Vec2::Y * 2.0).into());
+    assert_eq!(action.state(), ActionState::Ongoing);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -221,11 +207,11 @@ fn both_levels() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<BothLevels>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (Vec2::Y * 2.0).into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<BothLevels>().unwrap();
+    assert_eq!(action.value(), (Vec2::Y * 2.0).into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(BothLevels::KEY1);
@@ -233,11 +219,11 @@ fn both_levels() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<BothLevels>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::NEG_Y.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<BothLevels>().unwrap();
+    assert_eq!(action.value(), Vec2::NEG_Y.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -245,11 +231,11 @@ fn both_levels() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<BothLevels>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::Y.into());
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<BothLevels>().unwrap();
+    assert_eq!(action.value(), Vec2::Y.into());
+    assert_eq!(action.state(), ActionState::Fired);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -257,12 +243,12 @@ fn both_levels() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<BothLevels>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::Y.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<BothLevels>().unwrap();
+    assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(
-        event.state,
+        action.state(),
         ActionState::None,
         "if a blocker condition fails, it should override other conditions"
     );
@@ -270,12 +256,15 @@ fn both_levels() {
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(Blocker::KEY);
     keys.press(EventsBlocker::KEY);
+    app.world_mut().observe(assert_not_trigger::<InputLevel>);
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<BothLevels>(entity).unwrap();
-    assert!(events.is_empty());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<BothLevels>().unwrap();
+    assert_eq!(action.value(), Vec2::Y.into());
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[derive(Debug, Component)]
@@ -399,4 +388,11 @@ struct EventsBlocker;
 
 impl EventsBlocker {
     const KEY: KeyCode = KeyCode::KeyI;
+}
+
+fn assert_not_trigger<A: InputAction>(_trigger: Trigger<ActionEvent<A>>) {
+    panic!(
+        "event for action `{}` shouldn't trigger",
+        any::type_name::<A>()
+    );
 }

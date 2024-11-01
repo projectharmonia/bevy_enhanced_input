@@ -1,5 +1,3 @@
-mod action_recorder;
-
 use bevy::{
     input::{
         gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo},
@@ -9,19 +7,11 @@ use bevy::{
 };
 use bevy_enhanced_input::prelude::*;
 
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
-
 #[test]
 fn any() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<AnyGamepad>()
-    .record_action::<DummyAction>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<AnyGamepad>();
 
     let gamepad = Gamepad::new(0);
     app.world_mut().send_event(GamepadConnectionEvent {
@@ -54,10 +44,10 @@ fn any() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<DummyAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<AnyGamepad>(entity).unwrap();
+    let action = ctx.action::<DummyAction>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 
     let other_button = GamepadButton {
         gamepad: other_gamepad,
@@ -70,23 +60,17 @@ fn any() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<DummyAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<AnyGamepad>(entity).unwrap();
+    let action = ctx.action::<DummyAction>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 }
 
 #[test]
 fn by_id() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<FirstGamepad>()
-    .record_action::<DummyAction>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<FirstGamepad>();
 
     let gamepad = Gamepad::new(0);
     app.world_mut().send_event(GamepadConnectionEvent {
@@ -119,10 +103,10 @@ fn by_id() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<DummyAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::Fired);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<FirstGamepad>(entity).unwrap();
+    let action = ctx.action::<DummyAction>().unwrap();
+    assert_eq!(action.state(), ActionState::Fired);
 
     let other_button = GamepadButton {
         gamepad: other_gamepad,
@@ -135,10 +119,10 @@ fn by_id() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<DummyAction>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.state, ActionState::None);
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<FirstGamepad>(entity).unwrap();
+    let action = ctx.action::<DummyAction>().unwrap();
+    assert_eq!(action.state(), ActionState::None);
 }
 
 #[derive(Debug, Component)]

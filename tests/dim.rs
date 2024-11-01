@@ -1,21 +1,11 @@
-mod action_recorder;
-
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
-
-use action_recorder::{ActionRecorderPlugin, AppTriggeredExt, RecordedActions};
 
 #[test]
 fn bool() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<Bool>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -27,10 +17,10 @@ fn bool() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Bool>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, true.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Bool>().unwrap();
+    assert_eq!(action.value(), true.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -38,23 +28,17 @@ fn bool() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Bool>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, false.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Bool>().unwrap();
+    assert_eq!(action.value(), false.into());
 }
 
 #[test]
 fn axis1d() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<Axis1D>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -66,10 +50,10 @@ fn axis1d() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Axis1D>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, 1.0.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Axis1D>().unwrap();
+    assert_eq!(action.value(), 1.0.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -77,23 +61,17 @@ fn axis1d() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Axis1D>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, 0.0.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Axis1D>().unwrap();
+    assert_eq!(action.value(), 0.0.into());
 }
 
 #[test]
 fn axis2d() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<Axis2D>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -105,10 +83,10 @@ fn axis2d() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Axis2D>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (1.0, 0.0).into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Axis2D>().unwrap();
+    assert_eq!(action.value(), (1.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -116,23 +94,17 @@ fn axis2d() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Axis2D>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec2::ZERO.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Axis2D>().unwrap();
+    assert_eq!(action.value(), Vec2::ZERO.into());
 }
 
 #[test]
 fn axis3d() {
     let mut app = App::new();
-    app.add_plugins((
-        MinimalPlugins,
-        InputPlugin,
-        EnhancedInputPlugin,
-        ActionRecorderPlugin,
-    ))
-    .add_input_context::<DummyContext>()
-    .record_action::<Axis3D>();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -144,10 +116,10 @@ fn axis3d() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Axis3D>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, (1.0, 0.0, 0.0).into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Axis3D>().unwrap();
+    assert_eq!(action.value(), (1.0, 0.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -155,10 +127,10 @@ fn axis3d() {
 
     app.update();
 
-    let recorded = app.world().resource::<RecordedActions>();
-    let events = recorded.get::<Axis3D>(entity).unwrap();
-    let event = events.last().unwrap();
-    assert_eq!(event.value, Vec3::ZERO.into());
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.get::<DummyContext>(entity).unwrap();
+    let action = ctx.action::<Axis3D>().unwrap();
+    assert_eq!(action.value(), Vec3::ZERO.into());
 }
 
 #[derive(Debug, Component)]
