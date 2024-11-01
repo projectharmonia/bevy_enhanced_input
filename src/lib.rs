@@ -70,7 +70,8 @@ pub mod prelude {
         input_context::{
             context_instance::{ActionBind, ContextInstance, GamepadStick, InputBind},
             input_action::{
-                Accumulation, ActionEvent, ActionEventKind, ActionEvents, ActionState, InputAction,
+                Accumulation, ActionData, ActionEvent, ActionEventKind, ActionEvents, ActionState,
+                InputAction,
             },
             input_condition::{
                 block_by::*, chord::*, condition_timer::*, down::*, hold::*, hold_and_release::*,
@@ -80,7 +81,7 @@ pub mod prelude {
                 dead_zone::*, delta_lerp::*, delta_scale::*, exponential_curve::*, negate::*,
                 normalize::*, scale::*, swizzle_axis::*, InputModifier,
             },
-            ContextAppExt, ContextMode, InputContext, RebuildInputContexts,
+            ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
         },
         EnhancedInputPlugin, EnhancedInputSystem,
     };
@@ -90,8 +91,6 @@ pub mod prelude {
 use bevy::{input::InputSystem, prelude::*};
 
 use input::input_reader::InputReader;
-use input_context::ContextInstances;
-#[allow(unused_imports, reason = "used in the docs")]
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.

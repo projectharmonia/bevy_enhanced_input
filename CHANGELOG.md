@@ -10,11 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Logging for binding.
-- `ActionsData::insert_action`.
+- `ActionsData::insert_action` to insert a data for `A`.
 - `ActionData::events` to get triggered events from the last update.
 - `ActionData::value` to get triggered value from the last update.
 - `ActionData::trigger_events` to trigger events based on the last `ActionData::update`.
 - `BlockBy::events` to block only events. Could be used for chords to avoid triggering required actions.
+- `ContextInstances` to public API and methods to get `ActionData` for an action.
 
 ### Changed
 

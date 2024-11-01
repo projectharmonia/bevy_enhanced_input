@@ -77,6 +77,11 @@ impl ContextInstance {
         }
     }
 
+    /// Returns associated state for action `A`.
+    pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
+        self.actions.action::<A>()
+    }
+
     pub(super) fn update(
         &mut self,
         commands: &mut Commands,

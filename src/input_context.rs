@@ -78,8 +78,9 @@ fn remove_instance<C: InputContext>(
     instances.remove::<C>(&mut commands, &time, trigger.entity());
 }
 
+/// Stores instantiated [`InputContext`]s.
 #[derive(Resource, Default)]
-pub(crate) struct ContextInstances(Vec<InstanceGroup>);
+pub struct ContextInstances(Vec<InstanceGroup>);
 
 impl ContextInstances {
     fn add<C: InputContext>(&mut self, world: &World, entity: Entity) {
@@ -200,6 +201,31 @@ impl ContextInstances {
                 InstanceGroup::Shared { entities, ctx, .. } => {
                     ctx.update(commands, reader, time, entities);
                 }
+            }
+        }
+    }
+
+    /// Returns a context instance for an entity, if it exists.
+    ///
+    /// For a more ergonomic API, it's recommended to react to [`ActionEvent`](input_action::ActionEvent)s
+    /// within observers.
+    ///
+    /// The complexity is `O(n+m)`, where `n` is the number of contexts and `m` is the number of entities,
+    /// since the storage is optimized for iteration. However, there are usually only a few contexts that are instantiated.
+    pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
+        let index = self.index::<C>()?;
+        match &self.0[index] {
+            InstanceGroup::Exclusive { instances, .. } => {
+                instances.iter().find_map(|(entity, ctx)| {
+                    if *entity == instance_entity {
+                        Some(ctx)
+                    } else {
+                        None
+                    }
+                })
+            }
+            InstanceGroup::Shared { entities, ctx, .. } => {
+                entities.contains(&instance_entity).then_some(ctx)
             }
         }
     }
