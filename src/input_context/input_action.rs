@@ -7,7 +7,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Map for actions to their [`ActionData`].
 #[derive(Default, Deref, DerefMut)]
-pub struct ActionsData(HashMap<TypeId, ActionData>);
+pub struct ActionsData(pub HashMap<TypeId, ActionData>);
 
 impl ActionsData {
     /// Returns associated state for action `A`.
@@ -20,12 +20,6 @@ impl ActionsData {
     /// Returns previosly associated state if present.
     pub fn insert_action<A: InputAction>(&mut self, action: ActionData) -> Option<ActionData> {
         self.insert(TypeId::of::<A>(), action)
-    }
-}
-
-impl From<HashMap<TypeId, ActionData>> for ActionsData {
-    fn from(value: HashMap<TypeId, ActionData>) -> Self {
-        Self(value)
     }
 }
 
