@@ -169,8 +169,6 @@ pub enum ActionState {
 
 /// Trigger emitted for transitions between [`ActionState`]s for action `A`.
 ///
-/// See also [`UntypedActionEvent`].
-///
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
@@ -224,37 +222,6 @@ impl<A: InputAction> Clone for ActionEvent<A> {
 }
 
 impl<A: InputAction> Copy for ActionEvent<A> {}
-
-impl<A: InputAction> From<UntypedActionEvent> for ActionEvent<A> {
-    fn from(value: UntypedActionEvent) -> Self {
-        Self {
-            marker: PhantomData,
-            kind: value.kind,
-            value: value.value,
-            state: value.state,
-        }
-    }
-}
-
-/// Represents an [`ActionEvent`] without its associated action type marker.
-///
-/// This can be used to store event data in a type-erased manner.
-#[derive(Clone, Copy)]
-pub struct UntypedActionEvent {
-    pub kind: ActionEventKind,
-    pub value: ActionValue,
-    pub state: ActionState,
-}
-
-impl<A: InputAction> From<ActionEvent<A>> for UntypedActionEvent {
-    fn from(value: ActionEvent<A>) -> Self {
-        Self {
-            kind: value.kind,
-            value: value.value,
-            state: value.state,
-        }
-    }
-}
 
 bitflags! {
     /// [`ActionEventKind`]s triggered for an action.
