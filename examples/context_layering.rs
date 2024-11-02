@@ -31,7 +31,8 @@ impl Plugin for GamePlugin {
             .observe(Self::rotate)
             .observe(Self::exit_water)
             .observe(Self::enter_water)
-            .observe(Self::dive);
+            .observe(Self::start_diving)
+            .observe(Self::end_diving);
     }
 }
 
@@ -41,58 +42,48 @@ impl GamePlugin {
         commands.spawn(PlayerBoxBundle::default());
     }
 
-    fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
+    fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if event.is_fired() {
-            let mut transform = players.get_mut(trigger.entity()).unwrap();
-            transform.translation += event.value.as_axis3d();
-        }
+        let mut transform = players.get_mut(trigger.entity()).unwrap();
+        transform.translation += event.value.as_axis3d();
     }
 
-    fn rotate(trigger: Trigger<ActionEvent<Rotate>>, mut players: Query<&mut Transform>) {
-        if trigger.event().is_started() {
-            let mut transform = players.get_mut(trigger.entity()).unwrap();
-            transform.rotate_z(FRAC_PI_4);
-        }
+    fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
+        let mut transform = players.get_mut(trigger.entity()).unwrap();
+        transform.rotate_z(FRAC_PI_4);
     }
 
     fn enter_water(
-        trigger: Trigger<ActionEvent<EnterWater>>,
+        trigger: Trigger<Started<EnterWater>>,
         mut commands: Commands,
         mut players: Query<&mut PlayerColor>,
     ) {
-        if trigger.event().is_started() {
-            // Change color for visibility.
-            let mut color = players.get_mut(trigger.entity()).unwrap();
-            color.0 = INDIGO_600.into();
+        // Change color for visibility.
+        let mut color = players.get_mut(trigger.entity()).unwrap();
+        color.0 = INDIGO_600.into();
 
-            commands.entity(trigger.entity()).insert(Swimming);
-        }
+        commands.entity(trigger.entity()).insert(Swimming);
     }
 
-    fn dive(trigger: Trigger<ActionEvent<Dive>>, mut players: Query<&mut Visibility>) {
-        // Hide player while diving.
-        let target_visibility = match **trigger.event() {
-            ActionEventKind::Started => Visibility::Hidden,
-            ActionEventKind::Completed { .. } => Visibility::Visible,
-            _ => return,
-        };
-
+    fn start_diving(trigger: Trigger<Started<Dive>>, mut players: Query<&mut Visibility>) {
         let mut visibility = players.get_mut(trigger.entity()).unwrap();
-        *visibility = target_visibility;
+        *visibility = Visibility::Hidden;
+    }
+
+    fn end_diving(trigger: Trigger<Completed<Dive>>, mut players: Query<&mut Visibility>) {
+        let mut visibility = players.get_mut(trigger.entity()).unwrap();
+        *visibility = Visibility::Visible;
     }
 
     fn exit_water(
-        trigger: Trigger<ActionEvent<ExitWater>>,
+        trigger: Trigger<Fired<ExitWater>>,
         mut commands: Commands,
         mut players: Query<&mut PlayerColor>,
     ) {
-        if trigger.event().is_fired() {
-            let mut color = players.get_mut(trigger.entity()).unwrap();
-            color.0 = Default::default();
+        let mut color = players.get_mut(trigger.entity()).unwrap();
+        color.0 = Default::default();
 
-            commands.entity(trigger.entity()).remove::<Swimming>();
-        }
+        commands.entity(trigger.entity()).remove::<Swimming>();
     }
 }
 

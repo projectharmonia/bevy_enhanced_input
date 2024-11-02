@@ -1,4 +1,5 @@
 pub mod context_instance;
+pub mod events;
 pub mod input_action;
 pub mod input_condition;
 pub mod input_modifier;
@@ -207,7 +208,7 @@ impl ContextInstances {
 
     /// Returns a context instance for an entity, if it exists.
     ///
-    /// For a more ergonomic API, it's recommended to react to [`ActionEvent`](input_action::ActionEvent)s
+    /// For a more ergonomic API, it's recommended to react on [`events`].
     /// within observers.
     ///
     /// The complexity is `O(n+m)`, where `n` is the number of contexts and `m` is the number of entities,

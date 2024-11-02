@@ -233,10 +233,7 @@ fn events_blocker() {
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
         .release(ReleaseAction::KEY);
-    let observer_entity = app
-        .world_mut()
-        .observe(assert_not_trigger::<EventsBlocker>)
-        .id();
+    let observers = panic_on_action_events::<EventsBlocker>(app.world_mut());
 
     app.update();
 
@@ -252,7 +249,9 @@ fn events_blocker() {
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
-    app.world_mut().despawn(observer_entity);
+    for entity in observers {
+        app.world_mut().despawn(entity);
+    }
 
     app.update();
 
@@ -331,9 +330,19 @@ impl EventsBlocker {
     const KEY: KeyCode = KeyCode::KeyE;
 }
 
-fn assert_not_trigger<A: InputAction>(_trigger: Trigger<ActionEvent<A>>) {
+fn panic_on_action_events<A: InputAction>(world: &mut World) -> [Entity; 5] {
+    [
+        world.observe(panic_on_event::<Started<A>>).id(),
+        world.observe(panic_on_event::<Ongoing<A>>).id(),
+        world.observe(panic_on_event::<Fired<A>>).id(),
+        world.observe(panic_on_event::<Completed<A>>).id(),
+        world.observe(panic_on_event::<Canceled<A>>).id(),
+    ]
+}
+
+fn panic_on_event<E: Event>(_trigger: Trigger<E>) {
     panic!(
         "event for action `{}` shouldn't trigger",
-        any::type_name::<A>()
+        any::type_name::<E>()
     );
 }

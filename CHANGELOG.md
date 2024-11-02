@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- All events now separate structs instead of enum.
 - Rework `ConditionKind` and the logic around it to make the behavior close to UE.
 - Consume inputs only if the action state is not equal to `ActionState::None`.
 - Remove world access from conditions and modifiers. This means that you no longer can write game-specific conditions or modifiers. But it's much nicer (and faster) to just do it in observers instead.

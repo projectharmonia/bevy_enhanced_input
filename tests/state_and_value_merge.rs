@@ -81,7 +81,7 @@ fn input_level() {
     keys.release(Blocker::KEY);
     keys.press(EventsBlocker::KEY);
 
-    app.world_mut().observe(assert_not_trigger::<InputLevel>);
+    panic_on_action_events::<InputLevel>(app.world_mut());
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
@@ -168,7 +168,7 @@ fn action_level() {
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(Blocker::KEY);
     keys.press(EventsBlocker::KEY);
-    app.world_mut().observe(assert_not_trigger::<InputLevel>);
+    panic_on_action_events::<ActionLevel>(app.world_mut());
 
     app.update();
 
@@ -256,7 +256,7 @@ fn both_levels() {
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
     keys.release(Blocker::KEY);
     keys.press(EventsBlocker::KEY);
-    app.world_mut().observe(assert_not_trigger::<InputLevel>);
+    panic_on_action_events::<BothLevels>(app.world_mut());
 
     app.update();
 
@@ -390,9 +390,17 @@ impl EventsBlocker {
     const KEY: KeyCode = KeyCode::KeyI;
 }
 
-fn assert_not_trigger<A: InputAction>(_trigger: Trigger<ActionEvent<A>>) {
+fn panic_on_action_events<A: InputAction>(world: &mut World) {
+    world.observe(panic_on_event::<Started<A>>);
+    world.observe(panic_on_event::<Ongoing<A>>);
+    world.observe(panic_on_event::<Fired<A>>);
+    world.observe(panic_on_event::<Completed<A>>);
+    world.observe(panic_on_event::<Canceled<A>>);
+}
+
+fn panic_on_event<E: Event>(_trigger: Trigger<E>) {
     panic!(
         "event for action `{}` shouldn't trigger",
-        any::type_name::<A>()
+        any::type_name::<E>()
     );
 }

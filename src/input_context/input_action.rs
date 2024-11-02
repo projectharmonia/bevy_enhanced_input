@@ -1,11 +1,14 @@
 use std::{any::TypeId, fmt::Debug, marker::PhantomData};
 
 use bevy::{prelude::*, utils::HashMap};
-use bitflags::bitflags;
 
+use super::events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started};
 use crate::action_value::{ActionValue, ActionValueDim};
 
-/// Map for actions to their [`ActionData`].
+/// Map for actions to their data.
+///
+/// Can be accessed from [`InputCondition::evaluate`](super::input_condition::InputCondition)
+/// or [`ContextInstances::get`](super::ContextInstances::get).
 #[derive(Default, Deref, DerefMut)]
 pub struct ActionsData(pub HashMap<TypeId, ActionData>);
 
@@ -24,6 +27,8 @@ impl ActionsData {
 }
 
 /// Tracker for action state.
+///
+/// Stored inside [`ActionsData`].
 #[derive(Clone, Copy)]
 pub struct ActionData {
     state: ActionState,
@@ -87,31 +92,69 @@ impl ActionData {
     /// A typed version of [`Self::trigger_events`].
     fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entities: &[Entity]) {
         for (_, event) in self.events.iter_names() {
-            let kind = match event {
-                ActionEvents::FIRED => ActionEventKind::Fired {
-                    fired_secs: self.fired_secs,
-                    elapsed_secs: self.elapsed_secs,
-                },
-                ActionEvents::STARTED => ActionEventKind::Started,
-                ActionEvents::ONGOING => ActionEventKind::Ongoing {
-                    elapsed_secs: self.elapsed_secs,
-                },
-                ActionEvents::COMPLETED => ActionEventKind::Completed {
-                    fired_secs: self.fired_secs,
-                    elapsed_secs: self.elapsed_secs,
-                },
-                ActionEvents::CANCELED => ActionEventKind::Canceled {
-                    elapsed_secs: self.elapsed_secs,
-                },
+            match event {
+                ActionEvents::FIRED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Fired {
+                            marker: PhantomData::<A>,
+                            value: self.value,
+                            state: self.state,
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::STARTED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Started {
+                            marker: PhantomData::<A>,
+                            value: self.value,
+                            state: self.state,
+                        },
+                    );
+                }
+                ActionEvents::ONGOING => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Ongoing {
+                            marker: PhantomData::<A>,
+                            value: self.value,
+                            state: self.state,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::COMPLETED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Completed {
+                            marker: PhantomData::<A>,
+                            value: self.value,
+                            state: self.state,
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::CANCELED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Canceled {
+                            marker: PhantomData::<A>,
+                            value: self.value,
+                            state: self.state,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
                 _ => unreachable!("iteration should yield only named flags"),
-            };
-
-            // Trigger an event for each entity separately
-            // since it's cheaper to copy the event than to clone the entities.
-            for &entity in entities {
-                let event = ActionEvent::<A>::new(kind, self.value, self.state);
-                trace!("triggering `{event:?}` for `{entity}`");
-                commands.trigger_targets(event, entity);
             }
         }
     }
@@ -142,11 +185,25 @@ impl ActionData {
     }
 }
 
+/// Triggers a copyable event for each entity separately and logs it.
+///
+// It's cheaper to copy the event than to clone the entities.
+fn trigger_for_each<E: Event + Debug + Clone + Copy>(
+    commands: &mut Commands,
+    entities: &[Entity],
+    event: E,
+) {
+    for &entity in entities {
+        trace!("triggering `{event:?}` for `{entity}`");
+        commands.trigger_targets(event, entity);
+    }
+}
+
 /// State for [`ActionData`].
 ///
 /// States are ordered by their significance.
 ///
-/// See also [`ActionEvent`].
+/// See also [`ActionEvents`].
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ActionState {
     /// Condition is not triggered.
@@ -161,201 +218,6 @@ pub enum ActionState {
     Fired,
 }
 
-bitflags! {
-    /// [`ActionEventKind`]s triggered for an action.
-    #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
-    pub struct ActionEvents: u8 {
-        /// Corresponds to [`ActionEventKind::Started`].
-        const STARTED = 0b00000001;
-        /// Corresponds to [`ActionEventKind::Fired`].
-        const FIRED = 0b00000010;
-        /// Corresponds to [`ActionEventKind::Ongoing`].
-        const ONGOING = 0b00000100;
-        /// Corresponds to [`ActionEventKind::Completed`].
-        const COMPLETED = 0b00001000;
-        /// Corresponds to [`ActionEventKind::Canceled`].
-        const CANCELED = 0b00010000;
-    }
-}
-
-impl ActionEvents {
-    /// Creates a new instance based on state transition.
-    pub fn new(previous: ActionState, current: ActionState) -> ActionEvents {
-        match (previous, current) {
-            (ActionState::None, ActionState::None) => ActionEvents::empty(),
-            (ActionState::None, ActionState::Ongoing) => {
-                ActionEvents::STARTED | ActionEvents::ONGOING
-            }
-            (ActionState::None, ActionState::Fired) => ActionEvents::STARTED | ActionEvents::FIRED,
-            (ActionState::Ongoing, ActionState::None) => ActionEvents::CANCELED,
-            (ActionState::Ongoing, ActionState::Ongoing) => ActionEvents::ONGOING,
-            (ActionState::Ongoing, ActionState::Fired) => ActionEvents::FIRED,
-            (ActionState::Fired, ActionState::None) => ActionEvents::COMPLETED,
-            (ActionState::Fired, ActionState::Ongoing) => ActionEvents::ONGOING,
-            (ActionState::Fired, ActionState::Fired) => ActionEvents::FIRED,
-        }
-    }
-}
-
-/// Trigger emitted for transitions between [`ActionState`]s for action `A`.
-///
-/// ```
-/// # use bevy::prelude::*;
-/// # use bevy_enhanced_input::prelude::*;
-/// fn move_character(trigger: Trigger<ActionEvent<Move>>) {
-///    let event = trigger.event();
-///
-///    // The event implements `Deref` on `kind` for convenience:
-///    if let ActionEventKind::Fired { fired_secs, elapsed_secs } = **event {
-///        // ..
-///    }
-///
-///    // You cal also use `is_*` helpers:
-///    if event.is_fired() {
-///        let movement = event.value.as_axis3d();
-///        // ..
-///    }
-/// }
-/// # #[derive(Debug, InputAction)]
-/// # #[input_action(dim = Axis2D)]
-/// # struct Move;
-/// ```
-#[derive(Debug, Event, Deref)]
-pub struct ActionEvent<A: InputAction> {
-    /// Action for which the event triggers.
-    marker: PhantomData<A>,
-
-    /// Type of [`ActionState`] transition.
-    #[deref]
-    pub kind: ActionEventKind,
-
-    /// Current action value.
-    pub value: ActionValue,
-
-    /// Current action state.
-    pub state: ActionState,
-}
-
-impl<A: InputAction> ActionEvent<A> {
-    /// Creates a new event for `A`.
-    #[must_use]
-    pub fn new(kind: ActionEventKind, value: ActionValue, state: ActionState) -> Self {
-        Self {
-            marker: PhantomData,
-            kind,
-            value,
-            state,
-        }
-    }
-}
-
-impl<A: InputAction> Clone for ActionEvent<A> {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl<A: InputAction> Copy for ActionEvent<A> {}
-
-/// Represents the type of event triggered by updating [`ActionState`].
-///
-/// Table of state transitions:
-///
-/// | Last state                  | New state                | Events                                |
-/// | --------------------------- | ------------------------ | ------------------------------------- |
-/// | [`ActionState::None`]       | [`ActionState::None`]    | No events                             |
-/// | [`ActionState::None`]       | [`ActionState::Ongoing`] | [`Self::Started`] + [`Self::Ongoing`] |
-/// | [`ActionState::None`]       | [`ActionState::Fired`]   | [`Self::Started`] + [`Self::Fired`]   |
-/// | [`ActionState::Ongoing`]    | [`ActionState::None`]    | [`Self::Canceled`]                    |
-/// | [`ActionState::Ongoing`]    | [`ActionState::Ongoing`] | [`Self::Ongoing`]                     |
-/// | [`ActionState::Ongoing`]    | [`ActionState::Fired`]   | [`Self::Fired`]                       |
-/// | [`ActionState::Fired`]      | [`ActionState::Fired`]   | [`Self::Fired`]                       |
-/// | [`ActionState::Fired`]      | [`ActionState::Ongoing`] | [`Self::Ongoing`]                     |
-/// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Self::Completed`]                   |
-///
-/// The meaning of each kind depends on the assigned [`InputCondition`](super::input_condition::InputCondition)s.
-#[derive(Debug, Event, Clone, Copy)]
-pub enum ActionEventKind {
-    /// Triggers every frame when an action state is [`ActionState::Fired`].
-    ///
-    /// For example, with the [`Release`](super::input_condition::release::Release) condition,
-    /// this event is triggered when the user releases the key.
-    Fired {
-        /// Time that this action was in [`ActionState::Fired`] state.
-        fired_secs: f32,
-
-        /// Total time this action has been in both [`ActionState::Ongoing`] and [`ActionState::Fired`].
-        elapsed_secs: f32,
-    },
-    /// Triggers when an action switches its state from [`ActionState::None`]
-    /// to [`ActionState::Fired`] or [`ActionState::Ongoing`].
-    ///
-    /// Fired before [`Self::Fired`] and [`Self::Ongoing`].
-    ///
-    /// For example, with the [`Tap`](super::input_condition::tap::Tap) condition, this event is triggered
-    /// only on the first press.
-    Started,
-    /// Triggers every frame when an action state is [`ActionState::Ongoing`].
-    ///
-    /// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
-    /// this event is triggered while the user is holding down the button before the specified duration is reached.
-    Ongoing {
-        /// Time that this action was in [`ActionState::Ongoing`] state.
-        elapsed_secs: f32,
-    },
-    /// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`],
-    ///
-    /// For example, with the [`Hold`](super::input_condition::hold::Hold) condition,
-    /// this event is triggered when the user releases the key.
-    Completed {
-        /// Time that this action was in [`ActionState::Fired`] state.
-        fired_secs: f32,
-
-        /// Total time this action has been in both [`ActionState::Ongoing`] and [`ActionState::Fired`].
-        elapsed_secs: f32,
-    },
-    /// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`],
-    ///
-    /// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
-    /// this event is triggered if the user releases the button before the condition is triggered.
-    Canceled {
-        /// Time that this action was in [`ActionState::Ongoing`] state.
-        elapsed_secs: f32,
-    },
-}
-
-impl ActionEventKind {
-    /// Returns `true` if the value is [`ActionEventKind::Fired`].
-    #[must_use]
-    pub fn is_fired(&self) -> bool {
-        matches!(self, ActionEventKind::Fired { .. })
-    }
-
-    /// Returns `true` if the value is [`ActionEventKind::Started`].
-    #[must_use]
-    pub fn is_started(&self) -> bool {
-        matches!(self, ActionEventKind::Started { .. })
-    }
-
-    /// Returns `true` if the value is [`ActionEventKind::Ongoing`].
-    #[must_use]
-    pub fn is_ongoing(&self) -> bool {
-        matches!(self, ActionEventKind::Ongoing { .. })
-    }
-
-    /// Returns `true` if the value is [`ActionEventKind::Completed`].
-    #[must_use]
-    pub fn is_completed(&self) -> bool {
-        matches!(self, ActionEventKind::Completed { .. })
-    }
-
-    /// Returns `true` if the value is [`ActionEventKind::Canceled`].
-    #[must_use]
-    pub fn is_canceled(&self) -> bool {
-        matches!(self, ActionEventKind::Canceled { .. })
-    }
-}
-
 /// Marker for a gameplay-related action.
 ///
 /// Needs to be bind inside
@@ -363,7 +225,30 @@ impl ActionEventKind {
 ///
 /// Each binded action will have [`ActionState`].
 /// When it updates during [`ContextInstance`](super::context_instance::ContextInstance)
-/// evaluation, an [`ActionEvent`] is triggered.
+/// evaluation, [`events`](super::events) are triggered.
+///
+/// Use observers to react on them:
+///
+/// ```
+/// use bevy::prelude::*;
+/// use bevy_enhanced_input::prelude::*;
+///
+/// fn move_character(trigger: Trigger<Fired<Move>>, mut transforms: Query<&mut Transform>) {
+///    let event = trigger.event();
+///    let mut transform = transforms.get_mut(trigger.entity()).unwrap();
+///
+///    // Use the larger dimension because translation is `Vec3`.
+///    // Extra axis will be zero.
+///    transform.translation += event.value.as_axis3d();
+/// }
+///
+/// #[derive(Debug, InputAction)]
+/// #[input_action(dim = Axis2D)]
+/// struct Move;
+/// ```
+///
+/// You can also obtain the state directly from [`ActionData`],
+/// see [`ContextInstances::get`](super::ContextInstances::get).
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:
@@ -419,105 +304,4 @@ pub enum Accumulation {
     ///
     /// For example, given values of 0.5 and -1.5, the input action's value would be -1.5.
     MaxAbs,
-}
-
-#[cfg(test)]
-mod tests {
-    use bevy_enhanced_input_macros::InputAction;
-
-    use super::*;
-
-    #[test]
-    fn none_none() {
-        let events = transition(ActionState::None, ActionState::None);
-        assert!(events.is_empty());
-    }
-
-    #[test]
-    fn none_ongoing() {
-        let events = transition(ActionState::None, ActionState::Ongoing);
-        let [event1, event2] = events.try_into().unwrap();
-        assert!(event1.is_started());
-        assert!(event2.is_ongoing());
-    }
-
-    #[test]
-    fn none_fired() {
-        let events = transition(ActionState::None, ActionState::Fired);
-        let [event1, event2] = events.try_into().unwrap();
-        assert!(event1.is_started());
-        assert!(event2.is_fired());
-    }
-
-    #[test]
-    fn ongoing_none() {
-        let events = transition(ActionState::Ongoing, ActionState::None);
-        let [event] = events.try_into().unwrap();
-        assert!(event.is_canceled());
-    }
-
-    #[test]
-    fn ongoing_ongoing() {
-        let events = transition(ActionState::Ongoing, ActionState::Ongoing);
-        let [event] = events.try_into().unwrap();
-        assert!(event.is_ongoing());
-    }
-
-    #[test]
-    fn ongoing_fired() {
-        let events = transition(ActionState::Ongoing, ActionState::Fired);
-        let [event] = events.try_into().unwrap();
-        assert!(event.is_fired());
-    }
-
-    #[test]
-    fn fired_none() {
-        let events = transition(ActionState::Fired, ActionState::None);
-        let [event] = events.try_into().unwrap();
-        assert!(event.is_completed());
-    }
-
-    #[test]
-    fn fired_ongoing() {
-        let events = transition(ActionState::Fired, ActionState::Ongoing);
-        let [event] = events.try_into().unwrap();
-        assert!(event.is_ongoing());
-    }
-
-    #[test]
-    fn fired_fired() {
-        let events = transition(ActionState::Fired, ActionState::Fired);
-        let [event] = events.try_into().unwrap();
-        assert!(event.is_fired());
-    }
-
-    fn transition(
-        initial_state: ActionState,
-        target_state: ActionState,
-    ) -> Vec<ActionEvent<DummyAction>> {
-        let time = Time::<Virtual>::default();
-        let mut action = ActionData::new::<DummyAction>();
-        action.state = initial_state;
-        action.update(&time, target_state, true);
-
-        let mut world = World::new();
-        world.init_resource::<TriggeredEvents>();
-        world.observe(
-            |trigger: Trigger<ActionEvent<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
-                events.push(*trigger.event());
-            },
-        );
-
-        action.trigger_events(&mut world.commands(), &[Entity::PLACEHOLDER]);
-        world.flush();
-
-        world.remove_resource::<TriggeredEvents>().unwrap().0
-    }
-
-    #[derive(Resource, Default, Deref, DerefMut)]
-    struct TriggeredEvents(Vec<ActionEvent<DummyAction>>);
-
-    #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
-    struct DummyAction;
 }

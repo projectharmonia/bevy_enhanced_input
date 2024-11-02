@@ -32,7 +32,7 @@ We provide a [`prelude`] module, which exports most of the typically used traits
 3. Define context components and assign actions to them by implementing [`InputContext`].
 4. Register contexts using [`ContextAppExt::add_input_context`].
 5. Insert contexts to entities you want to control.
-6. Create observers to react on [`ActionEvent`] for each action.
+6. Create observers to react on [`events`](crate::input_context::events) for each action.
 
 For more details, see the documentation on relevant types. You can also find examples in the repository.
 
@@ -69,10 +69,8 @@ pub mod prelude {
         input::{GamepadDevice, Input, Modifiers},
         input_context::{
             context_instance::{ActionBind, ContextInstance, GamepadStick, InputBind},
-            input_action::{
-                Accumulation, ActionData, ActionEvent, ActionEventKind, ActionEvents, ActionState,
-                InputAction,
-            },
+            events::*,
+            input_action::{Accumulation, ActionData, ActionState, InputAction},
             input_condition::{
                 block_by::*, chord::*, condition_timer::*, down::*, hold::*, hold_and_release::*,
                 press::*, pulse::*, release::*, tap::*, ConditionKind, InputCondition,

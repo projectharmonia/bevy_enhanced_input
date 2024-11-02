@@ -39,20 +39,16 @@ impl GamePlugin {
         commands.spawn(PlayerBoxBundle::default());
     }
 
-    fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
+    fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if event.is_fired() {
-            let mut transform = players.get_mut(trigger.entity()).unwrap();
-            // The value has already been preprocessed by defined modifiers.
-            transform.translation += event.value.as_axis3d();
-        }
+        let mut transform = players.get_mut(trigger.entity()).unwrap();
+        // The value has already been preprocessed by defined modifiers.
+        transform.translation += event.value.as_axis3d();
     }
 
-    fn rotate(trigger: Trigger<ActionEvent<Rotate>>, mut players: Query<&mut Transform>) {
-        if trigger.event().is_started() {
-            let mut transform = players.get_mut(trigger.entity()).unwrap();
-            transform.rotate_z(FRAC_PI_4);
-        }
+    fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
+        let mut transform = players.get_mut(trigger.entity()).unwrap();
+        transform.rotate_z(FRAC_PI_4);
     }
 }
 
