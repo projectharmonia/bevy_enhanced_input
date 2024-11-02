@@ -58,7 +58,7 @@ impl GamePlugin {
     ) {
         // Change color for visibility.
         let mut color = players.get_mut(trigger.entity()).unwrap();
-        color.0 = FUCHSIA_400.into();
+        **color = FUCHSIA_400.into();
 
         commands
             .entity(trigger.entity())
@@ -72,7 +72,7 @@ impl GamePlugin {
         mut players: Query<&mut PlayerColor>,
     ) {
         let mut color = players.get_mut(trigger.entity()).unwrap();
-        color.0 = Default::default();
+        **color = Default::default();
 
         commands
             .entity(trigger.entity())

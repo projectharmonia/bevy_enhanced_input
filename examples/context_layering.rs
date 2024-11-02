@@ -60,7 +60,7 @@ impl GamePlugin {
     ) {
         // Change color for visibility.
         let mut color = players.get_mut(trigger.entity()).unwrap();
-        color.0 = INDIGO_600.into();
+        **color = INDIGO_600.into();
 
         commands.entity(trigger.entity()).insert(Swimming);
     }
@@ -81,7 +81,7 @@ impl GamePlugin {
         mut players: Query<&mut PlayerColor>,
     ) {
         let mut color = players.get_mut(trigger.entity()).unwrap();
-        color.0 = Default::default();
+        **color = Default::default();
 
         commands.entity(trigger.entity()).remove::<Swimming>();
     }

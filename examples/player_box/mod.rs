@@ -42,5 +42,5 @@ pub(super) struct PlayerBoxBundle {
 #[derive(Component, Default)]
 pub(super) struct PlayerBox;
 
-#[derive(Component, Default)]
+#[derive(Component, Default, Deref, DerefMut)]
 pub(super) struct PlayerColor(pub(super) Color);
