@@ -86,7 +86,7 @@ impl GamePlugin {
 
     fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if event.kind.is_fired() {
+        if event.is_fired() {
             let mut transform = players.get_mut(trigger.entity()).unwrap();
             transform.translation += event.value.as_axis3d();
         }
@@ -94,7 +94,7 @@ impl GamePlugin {
 
     fn zoom(trigger: Trigger<ActionEvent<Scale>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if event.kind.is_fired() {
+        if trigger.event().is_fired() {
             let mut transform = players.get_mut(trigger.entity()).unwrap();
             transform.scale += Vec3::splat(event.value.as_axis1d());
         }

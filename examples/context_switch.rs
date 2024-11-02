@@ -42,15 +42,14 @@ impl GamePlugin {
 
     fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if event.kind.is_fired() {
+        if event.is_fired() {
             let mut transform = players.get_mut(trigger.entity()).unwrap();
             transform.translation += event.value.as_axis3d();
         }
     }
 
     fn rotate(trigger: Trigger<ActionEvent<Rotate>>, mut players: Query<&mut Transform>) {
-        let event = trigger.event();
-        if event.kind.is_started() {
+        if trigger.event().is_started() {
             let mut transform = players.get_mut(trigger.entity()).unwrap();
             transform.rotate_z(FRAC_PI_4);
         }
@@ -61,8 +60,7 @@ impl GamePlugin {
         mut commands: Commands,
         mut players: Query<&mut PlayerColor>,
     ) {
-        let event = trigger.event();
-        if event.kind.is_started() {
+        if trigger.event().is_started() {
             // Change color for visibility.
             let mut color = players.get_mut(trigger.entity()).unwrap();
             color.0 = FUCHSIA_400.into();
@@ -79,8 +77,7 @@ impl GamePlugin {
         mut commands: Commands,
         mut players: Query<&mut PlayerColor>,
     ) {
-        let event = trigger.event();
-        if event.kind.is_started() {
+        if trigger.event().is_started() {
             let mut color = players.get_mut(trigger.entity()).unwrap();
             color.0 = Default::default();
 

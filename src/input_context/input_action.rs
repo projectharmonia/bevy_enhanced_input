@@ -168,12 +168,15 @@ pub enum ActionState {
 /// # use bevy_enhanced_input::prelude::*;
 /// fn move_character(trigger: Trigger<ActionEvent<Move>>) {
 ///    let event = trigger.event();
-///    if let ActionEventKind::Fired { fired_secs, elapsed_secs } = event.kind {
+///
+///    // The event implements `Deref` on `kind` for convenience:
+///    if let ActionEventKind::Fired { fired_secs, elapsed_secs } = **event {
 ///        // ..
 ///    }
 ///
-///    // You cal also use `is_*` helpers.
-///    if event.kind.is_fired() {
+///    // You cal also use `is_*` helpers:
+///    if event.is_fired() {
+///        let movement = event.value.as_axis3d();
 ///        // ..
 ///    }
 /// }
@@ -181,12 +184,13 @@ pub enum ActionState {
 /// # #[input_action(dim = Axis2D)]
 /// # struct Move;
 /// ```
-#[derive(Debug, Event)]
+#[derive(Debug, Event, Deref)]
 pub struct ActionEvent<A: InputAction> {
     /// Action for which the event triggers.
     marker: PhantomData<A>,
 
     /// Type of [`ActionState`] transition.
+    #[deref]
     pub kind: ActionEventKind,
 
     /// Current action value.
@@ -433,58 +437,58 @@ mod tests {
     fn none_ongoing() {
         let events = transition(ActionState::None, ActionState::Ongoing);
         let [event1, event2] = events.try_into().unwrap();
-        assert!(event1.kind.is_started());
-        assert!(event2.kind.is_ongoing());
+        assert!(event1.is_started());
+        assert!(event2.is_ongoing());
     }
 
     #[test]
     fn none_fired() {
         let events = transition(ActionState::None, ActionState::Fired);
         let [event1, event2] = events.try_into().unwrap();
-        assert!(event1.kind.is_started());
-        assert!(event2.kind.is_fired());
+        assert!(event1.is_started());
+        assert!(event2.is_fired());
     }
 
     #[test]
     fn ongoing_none() {
         let events = transition(ActionState::Ongoing, ActionState::None);
         let [event] = events.try_into().unwrap();
-        assert!(event.kind.is_canceled());
+        assert!(event.is_canceled());
     }
 
     #[test]
     fn ongoing_ongoing() {
         let events = transition(ActionState::Ongoing, ActionState::Ongoing);
         let [event] = events.try_into().unwrap();
-        assert!(event.kind.is_ongoing());
+        assert!(event.is_ongoing());
     }
 
     #[test]
     fn ongoing_fired() {
         let events = transition(ActionState::Ongoing, ActionState::Fired);
         let [event] = events.try_into().unwrap();
-        assert!(event.kind.is_fired());
+        assert!(event.is_fired());
     }
 
     #[test]
     fn fired_none() {
         let events = transition(ActionState::Fired, ActionState::None);
         let [event] = events.try_into().unwrap();
-        assert!(event.kind.is_completed());
+        assert!(event.is_completed());
     }
 
     #[test]
     fn fired_ongoing() {
         let events = transition(ActionState::Fired, ActionState::Ongoing);
         let [event] = events.try_into().unwrap();
-        assert!(event.kind.is_ongoing());
+        assert!(event.is_ongoing());
     }
 
     #[test]
     fn fired_fired() {
         let events = transition(ActionState::Fired, ActionState::Fired);
         let [event] = events.try_into().unwrap();
-        assert!(event.kind.is_fired());
+        assert!(event.is_fired());
     }
 
     fn transition(
