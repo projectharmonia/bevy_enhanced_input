@@ -161,6 +161,42 @@ pub enum ActionState {
     Fired,
 }
 
+bitflags! {
+    /// [`ActionEventKind`]s triggered for an action.
+    #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+    pub struct ActionEvents: u8 {
+        /// Corresponds to [`ActionEventKind::Started`].
+        const STARTED = 0b00000001;
+        /// Corresponds to [`ActionEventKind::Fired`].
+        const FIRED = 0b00000010;
+        /// Corresponds to [`ActionEventKind::Ongoing`].
+        const ONGOING = 0b00000100;
+        /// Corresponds to [`ActionEventKind::Completed`].
+        const COMPLETED = 0b00001000;
+        /// Corresponds to [`ActionEventKind::Canceled`].
+        const CANCELED = 0b00010000;
+    }
+}
+
+impl ActionEvents {
+    /// Creates a new instance based on state transition.
+    pub fn new(previous: ActionState, current: ActionState) -> ActionEvents {
+        match (previous, current) {
+            (ActionState::None, ActionState::None) => ActionEvents::empty(),
+            (ActionState::None, ActionState::Ongoing) => {
+                ActionEvents::STARTED | ActionEvents::ONGOING
+            }
+            (ActionState::None, ActionState::Fired) => ActionEvents::STARTED | ActionEvents::FIRED,
+            (ActionState::Ongoing, ActionState::None) => ActionEvents::CANCELED,
+            (ActionState::Ongoing, ActionState::Ongoing) => ActionEvents::ONGOING,
+            (ActionState::Ongoing, ActionState::Fired) => ActionEvents::FIRED,
+            (ActionState::Fired, ActionState::None) => ActionEvents::COMPLETED,
+            (ActionState::Fired, ActionState::Ongoing) => ActionEvents::ONGOING,
+            (ActionState::Fired, ActionState::Fired) => ActionEvents::FIRED,
+        }
+    }
+}
+
 /// Trigger emitted for transitions between [`ActionState`]s for action `A`.
 ///
 /// ```
@@ -220,42 +256,6 @@ impl<A: InputAction> Clone for ActionEvent<A> {
 }
 
 impl<A: InputAction> Copy for ActionEvent<A> {}
-
-bitflags! {
-    /// [`ActionEventKind`]s triggered for an action.
-    #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
-    pub struct ActionEvents: u8 {
-        /// Corresponds to [`ActionEventKind::Started`].
-        const STARTED = 0b00000001;
-        /// Corresponds to [`ActionEventKind::Fired`].
-        const FIRED = 0b00000010;
-        /// Corresponds to [`ActionEventKind::Ongoing`].
-        const ONGOING = 0b00000100;
-        /// Corresponds to [`ActionEventKind::Completed`].
-        const COMPLETED = 0b00001000;
-        /// Corresponds to [`ActionEventKind::Canceled`].
-        const CANCELED = 0b00010000;
-    }
-}
-
-impl ActionEvents {
-    /// Creates a new instance based on state transition.
-    pub fn new(previous: ActionState, current: ActionState) -> ActionEvents {
-        match (previous, current) {
-            (ActionState::None, ActionState::None) => ActionEvents::empty(),
-            (ActionState::None, ActionState::Ongoing) => {
-                ActionEvents::STARTED | ActionEvents::ONGOING
-            }
-            (ActionState::None, ActionState::Fired) => ActionEvents::STARTED | ActionEvents::FIRED,
-            (ActionState::Ongoing, ActionState::None) => ActionEvents::CANCELED,
-            (ActionState::Ongoing, ActionState::Ongoing) => ActionEvents::ONGOING,
-            (ActionState::Ongoing, ActionState::Fired) => ActionEvents::FIRED,
-            (ActionState::Fired, ActionState::None) => ActionEvents::COMPLETED,
-            (ActionState::Fired, ActionState::Ongoing) => ActionEvents::ONGOING,
-            (ActionState::Fired, ActionState::Fired) => ActionEvents::FIRED,
-        }
-    }
-}
 
 /// Represents the type of event triggered by updating [`ActionState`].
 ///
