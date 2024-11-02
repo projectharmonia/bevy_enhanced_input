@@ -33,14 +33,14 @@ bitflags! {
     pub struct ActionEvents: u8 {
         /// Corresponds to [`Started`].
         const STARTED = 0b00000001;
-        /// Corresponds to [`Fired`].
-        const FIRED = 0b00000010;
         /// Corresponds to [`Ongoing`].
-        const ONGOING = 0b00000100;
-        /// Corresponds to [`Completed`].
-        const COMPLETED = 0b00001000;
+        const ONGOING = 0b00000010;
+        /// Corresponds to [`Fired`].
+        const FIRED = 0b00000100;
         /// Corresponds to [`Canceled`].
-        const CANCELED = 0b00010000;
+        const CANCELED = 0b00001000;
+        /// Corresponds to [`Completed`].
+        const COMPLETED = 0b00010000;
     }
 }
 
@@ -62,36 +62,6 @@ impl ActionEvents {
         }
     }
 }
-
-/// Triggers every frame when an action state is [`ActionState::Fired`].
-///
-/// For example, with the [`Release`](super::input_condition::release::Release) condition,
-/// this event is triggered when the user releases the key.
-#[derive(Debug, Event)]
-pub struct Fired<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
-    /// Current action value.
-    pub value: ActionValue,
-
-    /// Current action state.
-    pub state: ActionState,
-
-    /// Time that this action has been in [`ActionState::Fired`] state.
-    pub fired_secs: f32,
-
-    /// Total time this action has been in both [`ActionState::Ongoing`] and [`ActionState::Fired`].
-    pub elapsed_secs: f32,
-}
-
-impl<A: InputAction> Clone for Fired<A> {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl<A: InputAction> Copy for Fired<A> {}
 
 /// Triggers when an action switches its state from [`ActionState::None`]
 /// to [`ActionState::Fired`] or [`ActionState::Ongoing`].
@@ -147,6 +117,63 @@ impl<A: InputAction> Clone for Ongoing<A> {
 
 impl<A: InputAction> Copy for Ongoing<A> {}
 
+/// Triggers every frame when an action state is [`ActionState::Fired`].
+///
+/// For example, with the [`Release`](super::input_condition::release::Release) condition,
+/// this event is triggered when the user releases the key.
+#[derive(Debug, Event)]
+pub struct Fired<A: InputAction> {
+    /// Action for which the event triggers.
+    pub marker: PhantomData<A>,
+
+    /// Current action value.
+    pub value: ActionValue,
+
+    /// Current action state.
+    pub state: ActionState,
+
+    /// Time that this action has been in [`ActionState::Fired`] state.
+    pub fired_secs: f32,
+
+    /// Total time this action has been in both [`ActionState::Ongoing`] and [`ActionState::Fired`].
+    pub elapsed_secs: f32,
+}
+
+impl<A: InputAction> Clone for Fired<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: InputAction> Copy for Fired<A> {}
+
+/// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`],
+///
+/// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
+/// this event is triggered if the user releases the button before the condition is triggered.
+#[derive(Debug, Event)]
+pub struct Canceled<A: InputAction> {
+    /// Action for which the event triggers.
+    pub marker: PhantomData<A>,
+
+    /// Current action value.
+    pub value: ActionValue,
+
+    /// Current action state.
+    pub state: ActionState,
+
+    /// Time that this action has been in [`ActionState::Ongoing`] state.
+    pub elapsed_secs: f32,
+}
+
+impl<A: InputAction> Clone for Canceled<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: InputAction> Copy for Canceled<A> {}
+
 /// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`],
 ///
 /// For example, with the [`Hold`](super::input_condition::hold::Hold) condition,
@@ -176,33 +203,6 @@ impl<A: InputAction> Clone for Completed<A> {
 }
 
 impl<A: InputAction> Copy for Completed<A> {}
-
-/// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`],
-///
-/// For example, with the [`HoldAndRelease`](super::input_condition::hold_and_release::HoldAndRelease) condition,
-/// this event is triggered if the user releases the button before the condition is triggered.
-#[derive(Debug, Event)]
-pub struct Canceled<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
-    /// Current action value.
-    pub value: ActionValue,
-
-    /// Current action state.
-    pub state: ActionState,
-
-    /// Time that this action has been in [`ActionState::Ongoing`] state.
-    pub elapsed_secs: f32,
-}
-
-impl<A: InputAction> Clone for Canceled<A> {
-    fn clone(&self) -> Self {
-        *self
-    }
-}
-
-impl<A: InputAction> Copy for Canceled<A> {}
 
 #[cfg(test)]
 mod tests {

@@ -93,19 +93,6 @@ impl ActionData {
     fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entities: &[Entity]) {
         for (_, event) in self.events.iter_names() {
             match event {
-                ActionEvents::FIRED => {
-                    trigger_for_each(
-                        commands,
-                        entities,
-                        Fired {
-                            marker: PhantomData::<A>,
-                            value: self.value,
-                            state: self.state,
-                            fired_secs: self.fired_secs,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                    );
-                }
                 ActionEvents::STARTED => {
                     trigger_for_each(
                         commands,
@@ -129,11 +116,11 @@ impl ActionData {
                         },
                     );
                 }
-                ActionEvents::COMPLETED => {
+                ActionEvents::FIRED => {
                     trigger_for_each(
                         commands,
                         entities,
-                        Completed {
+                        Fired {
                             marker: PhantomData::<A>,
                             value: self.value,
                             state: self.state,
@@ -150,6 +137,19 @@ impl ActionData {
                             marker: PhantomData::<A>,
                             value: self.value,
                             state: self.state,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::COMPLETED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Completed {
+                            marker: PhantomData::<A>,
+                            value: self.value,
+                            state: self.state,
+                            fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
                         },
                     );
