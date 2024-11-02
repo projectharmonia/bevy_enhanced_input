@@ -1,4 +1,7 @@
-use std::any::{self, TypeId};
+use std::{
+    any::{self, TypeId},
+    cmp::Ordering,
+};
 
 use bevy::{prelude::*, utils::Entry};
 
@@ -131,6 +134,9 @@ pub struct ActionBind {
     modifiers: Vec<Box<dyn InputModifier>>,
     conditions: Vec<Box<dyn InputCondition>>,
     bindings: Vec<InputBind>,
+
+    /// Consumed inputs during state evaluation.
+    consume_buffer: Vec<Input>,
 }
 
 impl ActionBind {
@@ -145,6 +151,7 @@ impl ActionBind {
             modifiers: Default::default(),
             conditions: Default::default(),
             bindings: Default::default(),
+            consume_buffer: Default::default(),
         }
     }
 
@@ -301,7 +308,31 @@ impl ActionBind {
             let mut current_tracker = TriggerTracker::new(value);
             current_tracker.apply_modifiers(time, &mut binding.modifiers);
             current_tracker.apply_conditions(actions, time, &mut binding.conditions);
-            tracker.merge(current_tracker, self.accumulation);
+
+            let current_state = current_tracker.state();
+            if current_state == ActionState::None {
+                // Ignore non-active trackers to allow the action to fire even if all
+                // input-level conditions return `ActionState::None`. This ensures that an
+                // action-level condition or modifier can still trigger the action.
+                continue;
+            }
+
+            match current_state.cmp(&tracker.state()) {
+                Ordering::Less => (),
+                Ordering::Equal => {
+                    tracker.combine(current_tracker, self.accumulation);
+                    if self.consume_input {
+                        self.consume_buffer.push(binding.input);
+                    }
+                }
+                Ordering::Greater => {
+                    tracker.overwrite(current_tracker);
+                    if self.consume_input {
+                        self.consume_buffer.clear();
+                        self.consume_buffer.push(binding.input);
+                    }
+                }
+            }
         }
 
         tracker.apply_modifiers(time, &mut self.modifiers);
@@ -314,10 +345,13 @@ impl ActionBind {
         let state = tracker.state();
         let value = tracker.value().convert(self.dim);
 
-        if self.consume_input && state != ActionState::None {
-            for binding in &self.bindings {
-                reader.consume(binding.input);
+        if self.consume_input {
+            if state != ActionState::None {
+                for &input in &self.consume_buffer {
+                    reader.consume(input);
+                }
             }
+            self.consume_buffer.clear();
         }
 
         action.update(time, state, value);

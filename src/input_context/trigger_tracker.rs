@@ -1,5 +1,3 @@
-use std::cmp::Ordering;
-
 use bevy::prelude::*;
 
 use super::{
@@ -118,47 +116,40 @@ impl TriggerTracker {
         self.events_blocked
     }
 
-    /// Merges input-level tracker into an action-level tracker.
-    pub(super) fn merge(&mut self, other: Self, accumulation: Accumulation) {
-        let other_state = other.state();
-        if other_state == ActionState::None {
-            // Don't merge non-active trackers to allow the action to fire even if all
-            // input-level conditions return `ActionState::None`. This ensures that an
-            // action-level condition or modifier can still trigger the action.
-            return;
-        }
+    /// Replaces the state with `other`.
+    ///
+    /// Preserves the value dimention.
+    pub(super) fn overwrite(&mut self, other: TriggerTracker) {
+        let dim = self.value.dim();
+        *self = other;
+        self.value = self.value.convert(dim);
+    }
 
-        match self.state().cmp(&other_state) {
-            Ordering::Less => {
-                let dim = self.value.dim();
-                *self = other;
-                self.value = self.value.convert(dim);
-            }
-            Ordering::Equal => {
-                let accumulated = match accumulation {
-                    Accumulation::MaxAbs => {
-                        let mut value = self.value.as_axis3d().to_array();
-                        let other_value = other.value.as_axis3d().to_array();
-                        for (axis, other_axis) in value.iter_mut().zip(other_value) {
-                            if axis.abs() < other_axis.abs() {
-                                *axis = other_axis;
-                            }
-                        }
-                        value.into()
+    /// Merges two trackers.
+    ///
+    /// Preserves the value dimention.
+    pub(super) fn combine(&mut self, other: Self, accumulation: Accumulation) {
+        let accumulated = match accumulation {
+            Accumulation::MaxAbs => {
+                let mut value = self.value.as_axis3d().to_array();
+                let other_value = other.value.as_axis3d().to_array();
+                for (axis, other_axis) in value.iter_mut().zip(other_value) {
+                    if axis.abs() < other_axis.abs() {
+                        *axis = other_axis;
                     }
-                    Accumulation::Cumulative => self.value.as_axis3d() + other.value.as_axis3d(),
-                };
-
-                self.value = ActionValue::Axis3D(accumulated).convert(self.value.dim());
-                self.found_explicit |= other.found_explicit;
-                self.any_explicit_fired |= other.any_explicit_fired;
-                self.found_active |= other.found_active;
-                self.found_implicit |= other.found_implicit;
-                self.all_implicits_fired &= other.all_implicits_fired;
-                self.blocked |= other.blocked;
-                self.events_blocked |= other.events_blocked;
+                }
+                value.into()
             }
-            Ordering::Greater => (),
-        }
+            Accumulation::Cumulative => self.value.as_axis3d() + other.value.as_axis3d(),
+        };
+
+        self.value = ActionValue::Axis3D(accumulated).convert(self.value.dim());
+        self.found_explicit |= other.found_explicit;
+        self.any_explicit_fired |= other.any_explicit_fired;
+        self.found_active |= other.found_active;
+        self.found_implicit |= other.found_implicit;
+        self.all_implicits_fired &= other.all_implicits_fired;
+        self.blocked |= other.blocked;
+        self.events_blocked |= other.events_blocked;
     }
 }
