@@ -92,7 +92,8 @@ impl GamePlugin {
         }
     }
 
-    fn zoom(trigger: Trigger<ActionEvent<Scale>>, mut players: Query<&mut Transform>) {
+    fn zoom(trigger: Trigger<ActionEvent<Zoom>>, mut players: Query<&mut Transform>) {
+        /// Scale entity to fake zoom.
         let event = trigger.event();
         if trigger.event().is_fired() {
             let mut transform = players.get_mut(trigger.entity()).unwrap();
@@ -110,7 +111,7 @@ impl InputContext for PlayerBox {
             .with_modifier(Normalize)
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
-        ctx.bind::<Scale>()
+        ctx.bind::<Zoom>()
             .with(InputBind::new(Input::mouse_wheel()).with_modifier(SwizzleAxis::YXZ))
             .with_modifier(Scale::splat(3.0));
 
@@ -124,4 +125,4 @@ struct Move;
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Axis1D)]
-struct Scale;
+struct Zoom;
