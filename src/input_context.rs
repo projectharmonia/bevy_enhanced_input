@@ -212,6 +212,28 @@ impl ContextInstances {
     ///
     /// The complexity is `O(n+m)`, where `n` is the number of contexts and `m` is the number of entities,
     /// since the storage is optimized for iteration. However, there are usually only a few contexts that are instantiated.
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// fn observer(trigger: Trigger<Attacked>, instances: Res<ContextInstances>) {
+    ///     let ctx = instances.get::<Player>(trigger.entity()).unwrap();
+    ///     let action = ctx.action::<Dodge>().unwrap();
+    ///     if action.events().contains(ActionEvents::FIRED) {
+    ///         // ..
+    ///     }
+    /// }
+    /// # #[derive(Event)]
+    /// # struct Attacked;
+    /// # #[derive(Component)]
+    /// # struct Player;
+    /// # impl InputContext for Player {
+    /// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
+    /// # }
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(dim = Bool)]
+    /// # struct Dodge;
+    /// ```
     pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
         let index = self.index::<C>()?;
         match &self.0[index] {

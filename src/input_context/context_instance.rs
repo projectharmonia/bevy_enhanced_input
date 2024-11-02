@@ -78,6 +78,8 @@ impl ContextInstance {
     }
 
     /// Returns associated state for action `A`.
+    ///
+    /// See also [`ContextInstances::get`](super::ContextInstances::get).
     pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
         self.actions.action::<A>()
     }
