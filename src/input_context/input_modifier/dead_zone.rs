@@ -3,18 +3,25 @@ use bevy::prelude::*;
 use super::InputModifier;
 use crate::{action_value::ActionValue, input_context::input_action::ActionsData};
 
-/// Input values within the range [Self::lower_threshold] -> [Self::upper_threshold] will be remapped from 0 -> 1.
-/// Values outside this range will be clamped.
+/// Remaps input values within the range [Self::lower_threshold] to [Self::upper_threshold] onto the range 0 to 1.
+/// Values outside this range are clamped.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
 pub struct DeadZone {
+    /// Defines how axes are processed.
+    ///
+    /// By default set to [`DeadZoneKind::Radial`].
     pub kind: DeadZoneKind,
 
     /// Threshold below which input is ignored.
+    ///
+    /// By default set to 0.2.
     pub lower_threshold: f32,
 
     /// Threshold above which input is clamped to 1.
+    ///
+    /// By default set to 1.0.
     pub upper_threshold: f32,
 }
 

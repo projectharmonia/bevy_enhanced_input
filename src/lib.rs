@@ -77,8 +77,7 @@ pub mod prelude {
             },
             input_modifier::{
                 accumulate_by::*, dead_zone::*, delta_lerp::*, delta_scale::*,
-                exponential_curve::*, negate::*, normalize::*, scale::*, swizzle_axis::*,
-                InputModifier,
+                exponential_curve::*, negate::*, scale::*, swizzle_axis::*, InputModifier,
             },
             ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
         },

@@ -108,7 +108,7 @@ impl InputContext for PlayerBox {
 
         ctx.bind::<Move>()
             .with_wasd()
-            .with_modifier(Normalize)
+            .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
         ctx.bind::<Zoom>()

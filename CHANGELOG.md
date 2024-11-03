@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ignore_incompatible!` since no longer needed.
 - `SwizzleAxis::XXX`, `SwizzleAxis::YYY` and `SwizzleAxis::ZZZ`. They encourage a bad pattern of defining actions with duplicate data. Duplicate axes inside the trigger if needed.
 - `ActionData::trigger_removed`, use `ActionData::trigger_events` instead.
+- `Normalize` modifier, use `DeadZone::default` instead to properly work with analogue inputs.
 
 ## [0.1.0] - 2024-10-20
 

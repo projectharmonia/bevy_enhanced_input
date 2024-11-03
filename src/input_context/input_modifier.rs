@@ -4,7 +4,6 @@ pub mod delta_lerp;
 pub mod delta_scale;
 pub mod exponential_curve;
 pub mod negate;
-pub mod normalize;
 pub mod scale;
 pub mod swizzle_axis;
 
