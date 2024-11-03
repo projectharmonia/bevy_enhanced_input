@@ -271,7 +271,7 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(InputBind::new(KeyCode::Space).with_condition(Down::default()));
+    ///     .with(InputBind::new(KeyCode::Space).with_condition(Release::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(dim = Bool)]
     /// # struct Jump;
