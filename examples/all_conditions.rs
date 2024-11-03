@@ -49,9 +49,9 @@ impl InputContext for DummyContext {
         ctx.bind::<HoldAndReleaseAction>()
             .with(HoldAndReleaseAction::KEY)
             .with_condition(HoldAndRelease::new(1.0));
-        ctx.bind::<PressAction>()
-            .with(PressAction::KEY)
-            .with_condition(Press::new(1.0));
+        ctx.bind::<JustPressAction>()
+            .with(JustPressAction::KEY)
+            .with_condition(JustPress::new(1.0));
         ctx.bind::<PulseAction>()
             .with(PulseAction::KEY)
             .with_condition(Pulse::new(1.0));
@@ -105,9 +105,9 @@ impl HoldAndReleaseAction {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct PressAction;
+struct JustPressAction;
 
-impl PressAction {
+impl JustPressAction {
     const KEY: KeyCode = KeyCode::Digit4;
 }
 

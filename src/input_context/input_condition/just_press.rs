@@ -10,13 +10,13 @@ use crate::{
 ///
 /// Holding the input will not cause further triggers.
 #[derive(Clone, Copy, Debug)]
-pub struct Press {
+pub struct JustPress {
     /// Trigger threshold.
     pub actuation: f32,
     actuated: bool,
 }
 
-impl Press {
+impl JustPress {
     #[must_use]
     pub fn new(actuation: f32) -> Self {
         Self {
@@ -26,13 +26,13 @@ impl Press {
     }
 }
 
-impl Default for Press {
+impl Default for JustPress {
     fn default() -> Self {
         Self::new(DEFAULT_ACTUATION)
     }
 }
 
-impl InputCondition for Press {
+impl InputCondition for JustPress {
     fn evaluate(
         &mut self,
         _actions: &ActionsData,
@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn press() {
-        let mut condition = Press::default();
+        let mut condition = JustPress::default();
         let actions = ActionsData::default();
         let time = Time::default();
 
