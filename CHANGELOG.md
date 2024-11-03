@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Logging for binding.
+- `AccumulateBy` modifier.
 - `ActionsData::insert_action` to insert a data for `A`.
 - `ActionData::events` to get triggered events from the last update.
 - `ActionData::value` to get triggered value from the last update.

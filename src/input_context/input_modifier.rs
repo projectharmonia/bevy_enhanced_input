@@ -1,3 +1,4 @@
+pub mod accumulate_by;
 pub mod dead_zone;
 pub mod delta_lerp;
 pub mod delta_scale;
