@@ -8,25 +8,25 @@ use crate::{
 
 /// Returns [`ActionState::Fired`] when the input exceeds the actuation threshold.
 #[derive(Clone, Copy, Debug)]
-pub struct Down {
+pub struct Press {
     /// Trigger threshold.
     pub actuation: f32,
 }
 
-impl Down {
+impl Press {
     #[must_use]
     pub fn new(actuation: f32) -> Self {
         Self { actuation }
     }
 }
 
-impl Default for Down {
+impl Default for Press {
     fn default() -> Self {
         Self::new(DEFAULT_ACTUATION)
     }
 }
 
-impl InputCondition for Down {
+impl InputCondition for Press {
     fn evaluate(
         &mut self,
         _actions: &ActionsData,
@@ -48,7 +48,7 @@ mod tests {
 
     #[test]
     fn down() {
-        let mut condition = Down::new(1.0);
+        let mut condition = Press::new(1.0);
         let actions = ActionsData::default();
         let time = Time::default();
 

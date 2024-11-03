@@ -6,7 +6,7 @@ use crate::{
     input_context::input_action::{ActionState, ActionsData},
 };
 
-/// Like [`super::down::Down`] but returns [`ActionState::Fired`] only once until the next actuation.
+/// Like [`super::press::Press`] but returns [`ActionState::Fired`] only once until the next actuation.
 ///
 /// Holding the input will not cause further triggers.
 #[derive(Clone, Copy, Debug)]

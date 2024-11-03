@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Rename `Press` into `JustPress`.
+- Rename `Down` into `Press` to avoid collision with `Down` from `bevy_picking`.
 
 ## [0.2.0] - 2024-11-03
 

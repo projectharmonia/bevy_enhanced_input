@@ -40,9 +40,9 @@ impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<DownAction>()
-            .with(DownAction::KEY)
-            .with_condition(Down::default());
+        ctx.bind::<PressAction>()
+            .with(PressAction::KEY)
+            .with_condition(Press::default());
         ctx.bind::<HoldAction>()
             .with(HoldAction::KEY)
             .with_condition(Hold::new(1.0));
@@ -81,9 +81,9 @@ impl InputContext for DummyContext {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
-struct DownAction;
+struct PressAction;
 
-impl DownAction {
+impl PressAction {
     const KEY: KeyCode = KeyCode::Digit1;
 }
 

@@ -20,7 +20,7 @@ Instead of reacting to raw input data like "Released" or "Pressed", the crate pr
 [`Modifiers`](input_context::input_modifier) let you change the input before passing it to the action. We provide common modifiers,
 like [`DeadZone`], [`Negate`], etc., but you can add your own by implementing [`InputModifier`].
 
-[`Conditions`](input_context::input_condition) define how an action activates. We also provide built-in conditions, such as [`JustPress`],
+[`Conditions`](input_context::input_condition) define how an action activates. We also provide built-in conditions, such as [`Press`],
 [`Release`], [`Hold`], etc. You can also add your own by implementing [`InputCondition`].
 
 # Quick start
@@ -72,8 +72,9 @@ pub mod prelude {
             events::*,
             input_action::{Accumulation, ActionData, ActionState, InputAction},
             input_condition::{
-                block_by::*, chord::*, condition_timer::*, down::*, hold::*, hold_and_release::*,
-                just_press::*, pulse::*, release::*, tap::*, ConditionKind, InputCondition,
+                block_by::*, chord::*, condition_timer::*, hold::*, hold_and_release::*,
+                just_press::*, press::*, pulse::*, release::*, tap::*, ConditionKind,
+                InputCondition,
             },
             input_modifier::{
                 accumulate_by::*, dead_zone::*, delta_lerp::*, delta_scale::*,

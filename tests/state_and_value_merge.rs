@@ -274,7 +274,7 @@ impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        let down = Down::default();
+        let down = Press::default();
         let release = Release::default();
         let chord = Chord::<ChordMember>::default();
         let block_by = BlockBy::<Blocker>::default();

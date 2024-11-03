@@ -279,7 +279,7 @@ impl InputContext for DummyContext {
             .with(ReleaseAction::KEY)
             .with_condition(Release::default());
         ctx.bind::<Explicit>()
-            .with_condition(Down::default())
+            .with_condition(Press::default())
             .with(Explicit::KEY);
         ctx.bind::<Implicit>()
             .with_condition(Chord::<ReleaseAction>::default());

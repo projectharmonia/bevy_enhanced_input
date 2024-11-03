@@ -1,10 +1,10 @@
 pub mod block_by;
 pub mod chord;
 pub mod condition_timer;
-pub mod down;
 pub mod hold;
 pub mod hold_and_release;
 pub mod just_press;
+pub mod press;
 pub mod pulse;
 pub mod release;
 pub mod tap;
@@ -47,7 +47,7 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 /// Determines how a condition contributes to the final [`ActionState`].
 ///
 /// If no conditions are provided, the state will be set to [`ActionState::Fired`]
-/// on any non-zero value, functioning similarly to a [`Down`](down::Down) condition
+/// on any non-zero value, functioning similarly to a [`Press`](press::Press) condition
 /// with a zero actuation threshold.
 ///
 /// For details about how actions are combined, see [`ContextInstance`](super::context_instance::ContextInstance).
