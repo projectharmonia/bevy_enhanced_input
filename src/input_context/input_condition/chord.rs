@@ -63,8 +63,8 @@ mod tests {
 
     use super::*;
     use crate::{
+        action_value::ActionValueDim,
         input_context::input_action::{ActionData, ActionsData},
-        ActionValueDim,
     };
 
     #[test]
