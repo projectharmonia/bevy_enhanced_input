@@ -8,7 +8,7 @@ use crate::{
     input_context::input_action::{ActionState, ActionsData, InputAction},
 };
 
-/// Requires another action to not be triggered within the same context.
+/// Requires another action to not be fired within the same context.
 #[derive(Debug)]
 pub struct BlockBy<A: InputAction> {
     /// Action that blocks this condition when active.

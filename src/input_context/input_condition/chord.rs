@@ -8,7 +8,7 @@ use crate::{
     input_context::input_action::{ActionState, ActionsData, InputAction},
 };
 
-/// Requires action `A` to be triggered within the same context.
+/// Requires action `A` to be fired within the same context.
 ///
 /// Inherits [`ActionState`] from the specified action.
 #[derive(Debug)]
