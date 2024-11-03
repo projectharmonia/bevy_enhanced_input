@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::action_value::ActionValue;
+use crate::{action_value::ActionValue, input_context::input_action::ActionsData};
 
 /// Multiplies the input value by delta time for this frame.
 ///
@@ -10,7 +10,12 @@ use crate::action_value::ActionValue;
 pub struct DeltaScale;
 
 impl InputModifier for DeltaScale {
-    fn apply(&mut self, time: &Time<Virtual>, value: ActionValue) -> ActionValue {
+    fn apply(
+        &mut self,
+        _actions: &ActionsData,
+        time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionValue {
         match value {
             ActionValue::Bool(value) => {
                 let value = if value { 1.0 } else { 0.0 };
@@ -31,15 +36,19 @@ mod tests {
 
     #[test]
     fn scaling() {
+        let actions = ActionsData::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(500));
 
-        assert_eq!(DeltaScale.apply(&time, true.into()), 0.5.into());
-        assert_eq!(DeltaScale.apply(&time, false.into()), 0.0.into());
-        assert_eq!(DeltaScale.apply(&time, 0.5.into()), 0.25.into());
-        assert_eq!(DeltaScale.apply(&time, Vec2::ONE.into()), (0.5, 0.5).into());
+        assert_eq!(DeltaScale.apply(&actions, &time, true.into()), 0.5.into());
+        assert_eq!(DeltaScale.apply(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(DeltaScale.apply(&actions, &time, 0.5.into()), 0.25.into());
         assert_eq!(
-            DeltaScale.apply(&time, Vec3::ONE.into()),
+            DeltaScale.apply(&actions, &time, Vec2::ONE.into()),
+            (0.5, 0.5).into()
+        );
+        assert_eq!(
+            DeltaScale.apply(&actions, &time, Vec3::ONE.into()),
             (0.5, 0.5, 0.5).into()
         );
     }

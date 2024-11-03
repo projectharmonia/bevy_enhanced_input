@@ -38,11 +38,12 @@ impl TriggerTracker {
 
     pub(super) fn apply_modifiers(
         &mut self,
+        actions: &ActionsData,
         time: &Time<Virtual>,
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
         for modifier in modifiers {
-            let new_value = modifier.apply(time, self.value);
+            let new_value = modifier.apply(actions, time, self.value);
             trace!(
                 "`{modifier:?}` changes `{:?}` to `{new_value:?}`",
                 self.value

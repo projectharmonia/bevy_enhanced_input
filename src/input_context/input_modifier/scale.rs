@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::action_value::ActionValue;
+use crate::{action_value::ActionValue, input_context::input_action::ActionsData};
 
 /// Scales input independently along each axis by a specified factor.
 ///
@@ -28,7 +28,12 @@ impl Scale {
 }
 
 impl InputModifier for Scale {
-    fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
+    fn apply(
+        &mut self,
+        _actions: &ActionsData,
+        _time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionValue {
         match value {
             ActionValue::Bool(value) => {
                 let value = if value { 1.0 } else { 0.0 };
@@ -48,14 +53,18 @@ mod tests {
     #[test]
     fn scaling() {
         let mut modifier = Scale::splat(2.0);
+        let actions = ActionsData::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&time, true.into()), 2.0.into());
-        assert_eq!(modifier.apply(&time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&time, 1.0.into()), 2.0.into());
-        assert_eq!(modifier.apply(&time, Vec2::ONE.into()), (2.0, 2.0).into());
+        assert_eq!(modifier.apply(&actions, &time, true.into()), 2.0.into());
+        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 2.0.into());
         assert_eq!(
-            modifier.apply(&time, Vec3::ONE.into()),
+            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            (2.0, 2.0).into()
+        );
+        assert_eq!(
+            modifier.apply(&actions, &time, Vec3::ONE.into()),
             (2.0, 2.0, 2.0).into()
         );
     }

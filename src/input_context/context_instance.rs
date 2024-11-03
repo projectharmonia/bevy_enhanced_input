@@ -306,7 +306,7 @@ impl ActionBind {
             }
 
             let mut current_tracker = TriggerTracker::new(value);
-            current_tracker.apply_modifiers(time, &mut binding.modifiers);
+            current_tracker.apply_modifiers(actions, time, &mut binding.modifiers);
             current_tracker.apply_conditions(actions, time, &mut binding.conditions);
 
             let current_state = current_tracker.state();
@@ -335,7 +335,7 @@ impl ActionBind {
             }
         }
 
-        tracker.apply_modifiers(time, &mut self.modifiers);
+        tracker.apply_modifiers(actions, time, &mut self.modifiers);
         tracker.apply_conditions(actions, time, &mut self.conditions);
 
         let action = actions

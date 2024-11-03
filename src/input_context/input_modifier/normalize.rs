@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::action_value::ActionValue;
+use crate::{action_value::ActionValue, input_context::input_action::ActionsData};
 
 /// Normalizes input if possible or returns zero.
 ///
@@ -10,7 +10,12 @@ use crate::action_value::ActionValue;
 pub struct Normalize;
 
 impl InputModifier for Normalize {
-    fn apply(&mut self, _time: &Time<Virtual>, value: ActionValue) -> ActionValue {
+    fn apply(
+        &mut self,
+        _actions: &ActionsData,
+        _time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionValue {
         match value {
             ActionValue::Bool(_) => value,
             ActionValue::Axis1D(value) => {
@@ -32,18 +37,19 @@ mod tests {
 
     #[test]
     fn normalization() {
+        let actions = ActionsData::default();
         let time = Time::default();
 
-        assert_eq!(Normalize.apply(&time, true.into()), true.into());
-        assert_eq!(Normalize.apply(&time, false.into()), false.into());
-        assert_eq!(Normalize.apply(&time, 0.5.into()), 1.0.into());
-        assert_eq!(Normalize.apply(&time, 0.0.into()), 0.0.into());
+        assert_eq!(Normalize.apply(&actions, &time, true.into()), true.into());
+        assert_eq!(Normalize.apply(&actions, &time, false.into()), false.into());
+        assert_eq!(Normalize.apply(&actions, &time, 0.5.into()), 1.0.into());
+        assert_eq!(Normalize.apply(&actions, &time, 0.0.into()), 0.0.into());
         assert_eq!(
-            Normalize.apply(&time, Vec2::ONE.into()),
+            Normalize.apply(&actions, &time, Vec2::ONE.into()),
             Vec2::ONE.normalize_or_zero().into(),
         );
         assert_eq!(
-            Normalize.apply(&time, Vec3::ONE.into()),
+            Normalize.apply(&actions, &time, Vec3::ONE.into()),
             Vec3::ONE.normalize_or_zero().into(),
         );
     }

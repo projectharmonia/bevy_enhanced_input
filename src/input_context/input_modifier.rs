@@ -11,6 +11,7 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 
+use super::input_action::ActionsData;
 use crate::action_value::ActionValue;
 
 /// Pre-processor that alter the raw input values.
@@ -25,5 +26,10 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
     ///
     /// Called each frame.
-    fn apply(&mut self, time: &Time<Virtual>, value: ActionValue) -> ActionValue;
+    fn apply(
+        &mut self,
+        actions: &ActionsData,
+        time: &Time<Virtual>,
+        value: ActionValue,
+    ) -> ActionValue;
 }
