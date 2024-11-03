@@ -43,15 +43,15 @@ impl InputContext for DummyContext {
         ctx.bind::<PressAction>()
             .with(PressAction::KEY)
             .with_condition(Press::default());
+        ctx.bind::<JustPressAction>()
+            .with(JustPressAction::KEY)
+            .with_condition(JustPress::new(1.0));
         ctx.bind::<HoldAction>()
             .with(HoldAction::KEY)
             .with_condition(Hold::new(1.0));
         ctx.bind::<HoldAndReleaseAction>()
             .with(HoldAndReleaseAction::KEY)
             .with_condition(HoldAndRelease::new(1.0));
-        ctx.bind::<JustPressAction>()
-            .with(JustPressAction::KEY)
-            .with_condition(JustPress::new(1.0));
         ctx.bind::<PulseAction>()
             .with(PulseAction::KEY)
             .with_condition(Pulse::new(1.0));
@@ -89,10 +89,18 @@ impl PressAction {
 
 #[derive(Debug, InputAction)]
 #[input_action(dim = Bool)]
+struct JustPressAction;
+
+impl JustPressAction {
+    const KEY: KeyCode = KeyCode::Digit2;
+}
+
+#[derive(Debug, InputAction)]
+#[input_action(dim = Bool)]
 struct HoldAction;
 
 impl HoldAction {
-    const KEY: KeyCode = KeyCode::Digit2;
+    const KEY: KeyCode = KeyCode::Digit3;
 }
 
 #[derive(Debug, InputAction)]
@@ -100,14 +108,6 @@ impl HoldAction {
 struct HoldAndReleaseAction;
 
 impl HoldAndReleaseAction {
-    const KEY: KeyCode = KeyCode::Digit3;
-}
-
-#[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
-struct JustPressAction;
-
-impl JustPressAction {
     const KEY: KeyCode = KeyCode::Digit4;
 }
 
