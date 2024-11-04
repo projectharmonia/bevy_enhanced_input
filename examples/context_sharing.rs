@@ -9,7 +9,7 @@ use std::f32::consts::FRAC_PI_4;
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
 
-use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, DEFAULT_SPEED};
+use player_box::{PlayerBox, PlayerBoxPlugin, DEFAULT_SPEED};
 
 fn main() {
     App::new()
@@ -28,24 +28,18 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>()
             .add_systems(Startup, Self::spawn)
-            .observe(Self::apply_movement)
-            .observe(Self::rotate);
+            .add_observer(Self::apply_movement)
+            .add_observer(Self::rotate);
     }
 }
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2dBundle::default());
+        commands.spawn(Camera2d);
 
         // Spawn two entities with the same context.
-        commands.spawn(PlayerBoxBundle {
-            transform: Transform::from_translation(Vec3::X * 50.0),
-            ..Default::default()
-        });
-        commands.spawn(PlayerBoxBundle {
-            transform: Transform::from_translation(-Vec3::X * 50.0),
-            ..Default::default()
-        });
+        commands.spawn((PlayerBox, Transform::from_translation(Vec3::X * 50.0)));
+        commands.spawn((PlayerBox, Transform::from_translation(-Vec3::X * 50.0)));
     }
 
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {

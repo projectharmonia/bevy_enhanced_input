@@ -28,8 +28,8 @@ impl Plugin for GamePlugin {
         app.add_input_context::<PlayerBox>()
             .add_systems(Startup, Self::spawn)
             .add_systems(Update, Self::draw_egui)
-            .observe(Self::apply_movement)
-            .observe(Self::zoom);
+            .add_observer(Self::apply_movement)
+            .add_observer(Self::zoom);
     }
 }
 
@@ -40,27 +40,27 @@ impl GamePlugin {
 
         // Setup simple node with text using Bevy UI.
         commands
-            .spawn(NodeBundle {
-                style: Style {
+            .spawn((
+                Node::default(),
+                Style {
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Start,
                     justify_content: JustifyContent::End,
                     ..Default::default()
                 },
-                ..Default::default()
-            })
+            ))
             .with_children(|parent| {
                 parent
-                    .spawn(NodeBundle {
-                        style: Style {
+                    .spawn((
+                        Node::default(),
+                        Style {
                             margin: UiRect::all(Val::Px(15.0)),
                             padding: UiRect::all(Val::Px(15.0)),
                             ..Default::default()
                         },
-                        background_color: NEUTRAL_900.into(),
-                        ..Default::default()
-                    })
+                        BackgroundColor(NEUTRAL_900.into()),
+                    ))
                     .with_children(|parent| {
                         parent.spawn((
                             Interaction::default(), // All UI nodes with `Interaction` component will intercept all mouse input.

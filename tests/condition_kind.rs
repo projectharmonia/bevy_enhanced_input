@@ -332,11 +332,11 @@ impl EventsBlocker {
 
 fn panic_on_action_events<A: InputAction>(world: &mut World) -> [Entity; 5] {
     [
-        world.observe(panic_on_event::<Started<A>>).id(),
-        world.observe(panic_on_event::<Ongoing<A>>).id(),
-        world.observe(panic_on_event::<Fired<A>>).id(),
-        world.observe(panic_on_event::<Completed<A>>).id(),
-        world.observe(panic_on_event::<Canceled<A>>).id(),
+        world.add_observer(panic_on_event::<Started<A>>).id(),
+        world.add_observer(panic_on_event::<Ongoing<A>>).id(),
+        world.add_observer(panic_on_event::<Fired<A>>).id(),
+        world.add_observer(panic_on_event::<Completed<A>>).id(),
+        world.add_observer(panic_on_event::<Canceled<A>>).id(),
     ]
 }
 

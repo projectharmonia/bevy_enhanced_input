@@ -68,12 +68,12 @@ impl ActionData {
                 self.fired_secs = 0.0;
             }
             ActionState::Ongoing => {
-                self.elapsed_secs += time.delta_seconds();
+                self.elapsed_secs += time.delta_secs();
                 self.fired_secs = 0.0;
             }
             ActionState::Fired => {
-                self.elapsed_secs += time.delta_seconds();
-                self.fired_secs += time.delta_seconds();
+                self.elapsed_secs += time.delta_secs();
+                self.fired_secs += time.delta_secs();
             }
         }
 

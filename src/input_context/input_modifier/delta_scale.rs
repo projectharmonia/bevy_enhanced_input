@@ -19,11 +19,11 @@ impl InputModifier for DeltaScale {
         match value {
             ActionValue::Bool(value) => {
                 let value = if value { 1.0 } else { 0.0 };
-                (value * time.delta_seconds()).into()
+                (value * time.delta_secs()).into()
             }
-            ActionValue::Axis1D(value) => (value * time.delta_seconds()).into(),
-            ActionValue::Axis2D(value) => (value * time.delta_seconds()).into(),
-            ActionValue::Axis3D(value) => (value * time.delta_seconds()).into(),
+            ActionValue::Axis1D(value) => (value * time.delta_secs()).into(),
+            ActionValue::Axis2D(value) => (value * time.delta_secs()).into(),
+            ActionValue::Axis3D(value) => (value * time.delta_secs()).into(),
         }
     }
 }

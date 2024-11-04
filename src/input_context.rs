@@ -38,9 +38,9 @@ impl ContextAppExt for App {
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
         debug!("registering context `{}`", any::type_name::<C>());
 
-        self.observe(add_instance::<C>)
-            .observe(rebuild_instance::<C>)
-            .observe(remove_instance::<C>);
+        self.add_observer(add_instance::<C>)
+            .add_observer(rebuild_instance::<C>)
+            .add_observer(remove_instance::<C>);
 
         self
     }
@@ -343,7 +343,7 @@ impl InstanceGroup {
 ///
 ///         ctx.bind::<Jump>()
 ///             .with(KeyCode::Space)
-///             .with(GamepadButtonType::South);
+///             .with(GamepadButton::South);
 ///
 ///         ctx
 ///     }

@@ -54,11 +54,8 @@ impl ContextInstance {
     /// Associates context with gamepad.
     ///
     /// By default it's [`GamepadDevice::Any`].
-    pub fn with_gamepad(gamepad: impl Into<GamepadDevice>) -> Self {
-        Self {
-            gamepad: gamepad.into(),
-            ..Default::default()
-        }
+    pub fn set_gamepad(&mut self, gamepad: impl Into<GamepadDevice>) {
+        self.gamepad = gamepad.into();
     }
 
     /// Starts binding an action.
@@ -185,10 +182,10 @@ impl ActionBind {
     /// See also [`Self::with_wasd`].
     pub fn with_dpad(&mut self) -> &mut Self {
         self.with_xy_axis(
-            GamepadButtonType::DPadUp,
-            GamepadButtonType::DPadLeft,
-            GamepadButtonType::DPadDown,
-            GamepadButtonType::DPadRight,
+            GamepadButton::DPadUp,
+            GamepadButton::DPadLeft,
+            GamepadButton::DPadDown,
+            GamepadButton::DPadRight,
         )
     }
 
@@ -242,7 +239,7 @@ impl ActionBind {
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
     ///     .with(KeyCode::Space)
-    ///     .with(GamepadButtonType::South);
+    ///     .with(GamepadButton::South);
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(dim = Bool)]
     /// # struct Jump;
@@ -421,18 +418,18 @@ pub enum GamepadStick {
 
 impl GamepadStick {
     /// Returns associated X axis.
-    pub fn x(self) -> GamepadAxisType {
+    pub fn x(self) -> GamepadAxis {
         match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickX,
-            GamepadStick::Right => GamepadAxisType::RightStickX,
+            GamepadStick::Left => GamepadAxis::LeftStickX,
+            GamepadStick::Right => GamepadAxis::RightStickX,
         }
     }
 
     /// Returns associated Y axis.
-    pub fn y(self) -> GamepadAxisType {
+    pub fn y(self) -> GamepadAxis {
         match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickY,
-            GamepadStick::Right => GamepadAxisType::RightStickY,
+            GamepadStick::Left => GamepadAxis::LeftStickY,
+            GamepadStick::Right => GamepadAxis::RightStickY,
         }
     }
 }
