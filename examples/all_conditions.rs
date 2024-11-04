@@ -45,7 +45,7 @@ impl InputContext for DummyContext {
             .with_condition(Press::default());
         ctx.bind::<JustPressAction>()
             .with(JustPressAction::KEY)
-            .with_condition(JustPress::new(1.0));
+            .with_condition(JustPress::default());
         ctx.bind::<HoldAction>()
             .with(HoldAction::KEY)
             .with_condition(Hold::new(1.0));
