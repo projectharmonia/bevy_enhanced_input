@@ -7,8 +7,8 @@ fn any() {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<AnyGamepad>();
 
-    let gamepad_entity1 = app.world_mut().spawn(Gamepad::new(Default::default())).id();
-    let gamepad_entity2 = app.world_mut().spawn(Gamepad::new(Default::default())).id();
+    let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();
+    let gamepad_entity2 = app.world_mut().spawn(Gamepad::default()).id();
 
     let context_entity = app.world_mut().spawn(AnyGamepad).id();
 
@@ -44,8 +44,8 @@ fn by_id() {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<SingleGamepad>();
 
-    let gamepad_entity1 = app.world_mut().spawn(Gamepad::new(Default::default())).id();
-    let gamepad_entity2 = app.world_mut().spawn(Gamepad::new(Default::default())).id();
+    let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();
+    let gamepad_entity2 = app.world_mut().spawn(Gamepad::default()).id();
 
     let context_entity = app.world_mut().spawn(SingleGamepad(gamepad_entity1)).id();
 

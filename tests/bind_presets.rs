@@ -50,7 +50,7 @@ fn dpad() {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
-    let gamepad_entity = app.world_mut().spawn(Gamepad::new(Default::default())).id();
+    let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
     let context_entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
@@ -88,7 +88,7 @@ fn sticks() {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
-    let gamepad_entity = app.world_mut().spawn(Gamepad::new(Default::default())).id();
+    let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
     let context_entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();

@@ -369,12 +369,12 @@ mod tests {
         let (mut world, mut state) = init_world();
 
         let button1 = GamepadButton::South;
-        let mut gamepad1 = Gamepad::new(Default::default());
+        let mut gamepad1 = Gamepad::default();
         gamepad1.digital.press(button1);
         let gamepad_entity = world.spawn(gamepad1).id();
 
         let button2 = GamepadButton::East;
-        let mut gamepad2 = Gamepad::new(Default::default());
+        let mut gamepad2 = Gamepad::default();
         gamepad2.digital.press(button2);
         world.spawn(gamepad2);
 
@@ -397,12 +397,12 @@ mod tests {
         let (mut world, mut state) = init_world();
 
         let button1 = GamepadButton::South;
-        let mut gamepad1 = Gamepad::new(Default::default());
+        let mut gamepad1 = Gamepad::default();
         gamepad1.digital.press(button1);
         world.spawn(gamepad1);
 
         let button2 = GamepadButton::East;
-        let mut gamepad2 = Gamepad::new(Default::default());
+        let mut gamepad2 = Gamepad::default();
         gamepad2.digital.press(button2);
         world.spawn(gamepad2);
 
@@ -425,12 +425,12 @@ mod tests {
         let value = 1.0;
 
         let axis1 = GamepadAxis::LeftStickX;
-        let mut gamepad1 = Gamepad::new(Default::default());
+        let mut gamepad1 = Gamepad::default();
         gamepad1.analog.set(axis1, value);
         let gamepad_entity = world.spawn(gamepad1).id();
 
         let axis2 = GamepadAxis::LeftStickY;
-        let mut gamepad2 = Gamepad::new(Default::default());
+        let mut gamepad2 = Gamepad::default();
         gamepad2.analog.set(axis2, value);
         world.spawn(gamepad2);
 
@@ -458,12 +458,12 @@ mod tests {
         let value = 1.0;
 
         let axis1 = GamepadAxis::LeftStickX;
-        let mut gamepad1 = Gamepad::new(Default::default());
+        let mut gamepad1 = Gamepad::default();
         gamepad1.analog.set(axis1, value);
         world.spawn(gamepad1);
 
         let axis2 = GamepadAxis::LeftStickY;
-        let mut gamepad2 = Gamepad::new(Default::default());
+        let mut gamepad2 = Gamepad::default();
         gamepad2.analog.set(axis2, value);
         world.spawn(gamepad2);
 

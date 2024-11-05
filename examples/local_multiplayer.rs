@@ -73,7 +73,7 @@ impl GamePlugin {
     ) {
         for event in connect_events.read() {
             match event.connection {
-                GamepadConnection::Connected(_) => gamepads.push(event.gamepad),
+                GamepadConnection::Connected { .. } => gamepads.push(event.gamepad),
                 GamepadConnection::Disconnected => {
                     if let Some(index) = gamepads.iter().position(|&entity| entity == event.gamepad)
                     {

@@ -13,7 +13,7 @@ include = ["/src", "/tests", "/examples", "/LICENSE*"]
 
 [dependencies]
 bevy_enhanced_input_macros = { path = "macros", version = "0.2" }
-bevy = { git = "https://github.com/projectharmonia/bevy", branch = "gamepad-improvements", default-features = false, features = [
+bevy = { git = "https://github.com/bevyengine/bevy", default-features = false, features = [
   "serialize",
 ] }
 # bevy_egui = { version = "0.30", default-features = false, optional = true }
@@ -21,7 +21,7 @@ serde = "1.0"
 bitflags = { version = "2.6", features = ["serde"] }
 
 [dev-dependencies]
-bevy = { git = "https://github.com/projectharmonia/bevy", branch = "gamepad-improvements", default-features = false, features = [
+bevy = { git = "https://github.com/bevyengine/bevy", default-features = false, features = [
   "bevy_gilrs",
   "bevy_gizmos",
   "x11",
