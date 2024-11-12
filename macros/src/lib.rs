@@ -41,8 +41,10 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
         Default::default()
     };
 
+    let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
+
     TokenStream::from(quote! {
-        impl InputAction for #struct_name {
+        impl #impl_generics InputAction for #struct_name #type_generics #where_clause {
             const DIM: ActionValueDim = ActionValueDim::#dim;
             #accumulation
             #consume_input
