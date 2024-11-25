@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bitflags::bitflags;
 
 use super::input_action::{ActionState, InputAction};
-use crate::action_value::{ActionValue, ActionValueDimType};
+use crate::action_value::ActionValue;
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
@@ -124,7 +124,7 @@ impl<A: InputAction> Copy for Ongoing<A> {}
 #[derive(Debug, Event)]
 pub struct Fired<A: InputAction> {
     /// Current action value.
-    pub value: <A::Dim as ActionValueDimType>::Output,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -151,7 +151,7 @@ impl<A: InputAction> Copy for Fired<A> {}
 #[derive(Debug, Event)]
 pub struct Canceled<A: InputAction> {
     /// Current action value.
-    pub value: <A::Dim as ActionValueDimType>::Output,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -175,7 +175,7 @@ impl<A: InputAction> Copy for Canceled<A> {}
 #[derive(Debug, Event)]
 pub struct Completed<A: InputAction> {
     /// Current action value.
-    pub value: <A::Dim as ActionValueDimType>::Output,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -302,6 +302,6 @@ mod tests {
     struct TriggeredEvents(ActionEvents);
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }

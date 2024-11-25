@@ -3,7 +3,7 @@ use std::{any::TypeId, fmt::Debug, marker::PhantomData};
 use bevy::{prelude::*, utils::HashMap};
 
 use super::events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started};
-use crate::action_value::{ActionValue, ActionValueDimType};
+use crate::action_value::{ActionValue, ActionValueOutput};
 
 /// Map for actions to their data.
 ///
@@ -48,7 +48,7 @@ impl ActionData {
         Self {
             state: Default::default(),
             events: ActionEvents::empty(),
-            value: ActionValue::zero(A::Dim::DIM),
+            value: ActionValue::zero(A::Output::DIM),
             elapsed_secs: 0.0,
             fired_secs: 0.0,
             trigger_events: Self::trigger_events_typed::<A>,
@@ -121,7 +121,7 @@ impl ActionData {
                         commands,
                         entities,
                         Fired::<A> {
-                            value: A::Dim::convert_value(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -133,7 +133,7 @@ impl ActionData {
                         commands,
                         entities,
                         Canceled::<A> {
-                            value: A::Dim::convert_value(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -144,7 +144,7 @@ impl ActionData {
                         commands,
                         entities,
                         Completed::<A> {
-                            value: A::Dim::convert_value(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -234,13 +234,13 @@ pub enum ActionState {
 ///    let event = trigger.event();
 ///    let mut transform = transforms.get_mut(trigger.entity()).unwrap();
 ///
-///    // Since `Move` has `dim = Axis2D`, the value is `Vec2`.
+///    // Since `Move` has `output = Vec2`, the value is `Vec2`.
 ///    // The value of the Z axis will be zero.
 ///    transform.translation += event.value.extend(0.0);
 /// }
 ///
 /// #[derive(Debug, InputAction)]
-/// #[input_action(dim = Axis2D)]
+/// #[input_action(output = Vec2)]
 /// struct Move;
 /// ```
 ///
@@ -251,35 +251,32 @@ pub enum ActionState {
 /// derive to reduce boilerplate:
 ///
 /// ```
+/// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(Debug, InputAction)]
-/// #[input_action(dim = Axis2D)]
+/// #[input_action(output = Vec2)]
 /// struct Move;
 /// ```
 ///
 /// Optionally you can pass `consume_input` and/or `accumulation`:
 ///
 /// ```
+/// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(Debug, InputAction)]
-/// #[input_action(dim = Axis2D, accumulation = Cumulative, consume_input = false)]
+/// #[input_action(output = Vec2, accumulation = Cumulative, consume_input = false)]
 /// struct Move;
 /// ```
 pub trait InputAction: Debug + Send + Sync + 'static {
-    /// What dimension of value this action will output.
+    /// What type of value this action will output.
     ///
-    /// - Use [`Bool`] for button-like actions (e.g., `Jump`).
-    /// - Use [`Axis1D`] for single-axis actions (e.g., `Zoom`).
-    /// - For multi-axis actions, like `Move`, use [`Axis2D`] or [`Axis3D`].
+    /// - Use [`bool`] for button-like actions (e.g., `Jump`).
+    /// - Use [`f32`] for single-axis actions (e.g., `Zoom`).
+    /// - For multi-axis actions, like `Move`, use [`Vec2`] or [`Vec3`].
     ///
     /// The type here will determine the type of the `value` field on events
     /// e.g. [`Fired::value`], [`Canceled::value`].
-    ///
-    /// [`Bool`]: crate::dim::Bool
-    /// [`Axis1D`]: crate::dim::Axis1D
-    /// [`Axis2D`]: crate::dim::Axis2D
-    /// [`Axis3D`]: crate::dim::Axis3D
-    type Dim: ActionValueDimType;
+    type Output: ActionValueOutput;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.

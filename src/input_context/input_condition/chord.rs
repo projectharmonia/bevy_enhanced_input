@@ -94,6 +94,6 @@ mod tests {
     }
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }

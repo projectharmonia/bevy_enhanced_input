@@ -104,15 +104,15 @@ impl InputContext for PlayerBox {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EnterWater;
 
 /// Context that overrides some actions from [`PlayerBox`].
@@ -136,9 +136,9 @@ impl InputContext for Swimming {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Dive;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ExitWater;

@@ -12,7 +12,7 @@ use super::{
     trigger_tracker::TriggerTracker,
 };
 use crate::{
-    action_value::{ActionValue, ActionValueDim, ActionValueDimType},
+    action_value::{ActionValue, ActionValueDim, ActionValueOutput},
     input::{input_reader::InputReader, GamepadDevice, Input},
     ActionState,
 };
@@ -145,7 +145,7 @@ impl ActionBind {
         Self {
             type_id: TypeId::of::<A>(),
             action_name: any::type_name::<A>(),
-            dim: A::Dim::DIM,
+            dim: A::Output::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
             modifiers: Default::default(),
@@ -244,7 +244,7 @@ impl ActionBind {
     ///     .with(KeyCode::Space)
     ///     .with(GamepadButtonType::South);
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
     ///
@@ -259,7 +259,7 @@ impl ActionBind {
     ///     modifiers: Modifiers::CONTROL,
     /// });
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
     ///
@@ -273,7 +273,7 @@ impl ActionBind {
     /// ctx.bind::<Jump>()
     ///     .with(InputBind::new(KeyCode::Space).with_condition(Release::default()));
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
     pub fn with(&mut self, binding: impl Into<InputBind>) -> &mut Self {
@@ -457,6 +457,6 @@ mod tests {
     }
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }

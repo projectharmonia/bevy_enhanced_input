@@ -102,15 +102,15 @@ impl InputContext for OnFoot {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EnterCar;
 
 #[derive(Component)]
@@ -132,5 +132,5 @@ impl InputContext for InCar {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ExitCar;

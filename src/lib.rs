@@ -63,7 +63,6 @@ Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it p
 extern crate self as bevy_enhanced_input;
 
 pub mod action_value;
-pub mod dim;
 pub mod input;
 pub mod input_context;
 

@@ -3,8 +3,6 @@ use std::fmt::Debug;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::dim;
-
 /// Value for [`Input`](crate::input::Input).
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
 pub enum ActionValue {
@@ -172,57 +170,49 @@ impl From<(f32, f32, f32)> for ActionValue {
 }
 
 mod sealed {
-    pub trait ActionValueDimType {}
+    pub trait ActionValueOutput {}
 }
 
-pub trait ActionValueDimType: sealed::ActionValueDimType + Debug {
+pub trait ActionValueOutput:
+    sealed::ActionValueOutput + Send + Sync + Debug + Clone + Copy
+{
     const DIM: ActionValueDim;
 
-    type Output: Send + Sync + Debug + Clone + Copy;
-
-    fn convert_value(value: ActionValue) -> Self::Output;
+    fn convert_from(value: ActionValue) -> Self;
 }
 
-impl sealed::ActionValueDimType for dim::Bool {}
-impl ActionValueDimType for dim::Bool {
+impl sealed::ActionValueOutput for bool {}
+impl ActionValueOutput for bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
 
-    type Output = bool;
-
-    fn convert_value(value: ActionValue) -> Self::Output {
+    fn convert_from(value: ActionValue) -> Self {
         value.as_bool()
     }
 }
 
-impl sealed::ActionValueDimType for dim::Axis1D {}
-impl ActionValueDimType for dim::Axis1D {
+impl sealed::ActionValueOutput for f32 {}
+impl ActionValueOutput for f32 {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
 
-    type Output = f32;
-
-    fn convert_value(value: ActionValue) -> Self::Output {
+    fn convert_from(value: ActionValue) -> Self {
         value.as_axis1d()
     }
 }
 
-impl sealed::ActionValueDimType for dim::Axis2D {}
-impl ActionValueDimType for dim::Axis2D {
+impl sealed::ActionValueOutput for Vec2 {}
+impl ActionValueOutput for Vec2 {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
 
-    type Output = Vec2;
-
-    fn convert_value(value: ActionValue) -> Self::Output {
+    fn convert_from(value: ActionValue) -> Self {
         value.as_axis2d()
     }
 }
 
-impl sealed::ActionValueDimType for dim::Axis3D {}
-impl ActionValueDimType for dim::Axis3D {
+impl sealed::ActionValueOutput for Vec3 {}
+impl ActionValueOutput for Vec3 {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
 
-    type Output = Vec3;
-
-    fn convert_value(value: ActionValue) -> Self::Output {
+    fn convert_from(value: ActionValue) -> Self {
         value.as_axis3d()
     }
 }

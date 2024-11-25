@@ -232,7 +232,7 @@ impl ContextInstances {
     /// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
     /// # }
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Dodge;
     /// ```
     pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
@@ -349,10 +349,10 @@ impl InstanceGroup {
 ///     }
 /// }
 /// # #[derive(Debug, InputAction)]
-/// # #[input_action(dim = Axis2D)]
+/// # #[input_action(output = Vec2)]
 /// # struct Move;
 /// # #[derive(Debug, InputAction)]
-/// # #[input_action(dim = Bool)]
+/// # #[input_action(output = bool)]
 /// # struct Jump;
 /// # #[derive(Resource)]
 /// # struct AppSettings;

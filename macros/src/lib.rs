@@ -6,7 +6,7 @@ use syn::{parse_macro_input, DeriveInput, Ident};
 #[derive(FromDeriveInput)]
 #[darling(attributes(input_action))]
 struct InputActionOpts {
-    dim: Ident,
+    output: Ident,
     #[darling(default)]
     accumulation: Option<Ident>,
     #[darling(default)]
@@ -18,10 +18,9 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
 
     #[expect(non_snake_case, reason = "item shortcuts")]
-    let (Accumulation, InputAction, dim_path) = (
+    let (Accumulation, InputAction) = (
         quote! { ::bevy_enhanced_input::prelude::Accumulation },
         quote! { ::bevy_enhanced_input::prelude::InputAction },
-        quote! { ::bevy_enhanced_input::dim },
     );
 
     let opts = match InputActionOpts::from_derive_input(&input) {
@@ -32,7 +31,7 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
     };
 
     let struct_name = input.ident;
-    let dim = opts.dim;
+    let output = opts.output;
     let accumulation = if let Some(accumulation) = opts.accumulation {
         quote! {
             const ACCUMULATION: #Accumulation = #Accumulation::#accumulation;
@@ -52,7 +51,7 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
 
     TokenStream::from(quote! {
         impl #impl_generics #InputAction for #struct_name #type_generics #where_clause {
-            type Dim = #dim_path::#dim;
+            type Output = #output;
             #accumulation
             #consume_input
         }

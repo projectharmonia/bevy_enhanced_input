@@ -64,9 +64,9 @@ impl InputContext for DummyContext {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D, accumulation = MaxAbs)]
+#[input_action(output = Vec2, accumulation = MaxAbs)]
 struct MaxAbs;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D, accumulation = Cumulative)]
+#[input_action(output = Vec2, accumulation = Cumulative)]
 struct Cumulative;
