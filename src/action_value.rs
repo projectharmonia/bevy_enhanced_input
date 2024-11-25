@@ -193,30 +193,6 @@ impl From<(f32, f32, f32)> for ActionValue {
     }
 }
 
-/// Marks a type which can be used as [`InputAction::Output`].
-///
-/// [`InputAction::Output`]: crate::prelude::InputAction::Output
-pub trait ActionValueOutput: Send + Sync + Debug + Clone + Copy + From<ActionValue> {
-    /// Dimension of this output.
-    const DIM: ActionValueDim;
-}
-
-impl ActionValueOutput for bool {
-    const DIM: ActionValueDim = ActionValueDim::Bool;
-}
-
-impl ActionValueOutput for f32 {
-    const DIM: ActionValueDim = ActionValueDim::Axis1D;
-}
-
-impl ActionValueOutput for Vec2 {
-    const DIM: ActionValueDim = ActionValueDim::Axis2D;
-}
-
-impl ActionValueOutput for Vec3 {
-    const DIM: ActionValueDim = ActionValueDim::Axis3D;
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

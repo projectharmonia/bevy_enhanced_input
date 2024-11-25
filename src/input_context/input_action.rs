@@ -3,7 +3,7 @@ use std::{any::TypeId, fmt::Debug};
 use bevy::{prelude::*, utils::HashMap};
 
 use super::events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started};
-use crate::action_value::{ActionValue, ActionValueOutput};
+use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Map for actions to their data.
 ///
@@ -274,7 +274,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     ///
     /// The type here will determine the type of the `value` field on events
     /// e.g. [`Fired::value`], [`Canceled::value`].
-    type Output: ActionValueOutput;
+    type Output: InputActionOutput;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.
@@ -287,6 +287,28 @@ pub trait InputAction: Debug + Send + Sync + 'static {
 
     /// Associated accumulation behavior.
     const ACCUMULATION: Accumulation = Accumulation::Cumulative;
+}
+
+/// Marks a type which can be used as [`InputAction::Output`].
+pub trait InputActionOutput: Send + Sync + Debug + Clone + Copy + From<ActionValue> {
+    /// Dimension of this output.
+    const DIM: ActionValueDim;
+}
+
+impl InputActionOutput for bool {
+    const DIM: ActionValueDim = ActionValueDim::Bool;
+}
+
+impl InputActionOutput for f32 {
+    const DIM: ActionValueDim = ActionValueDim::Axis1D;
+}
+
+impl InputActionOutput for Vec2 {
+    const DIM: ActionValueDim = ActionValueDim::Axis2D;
+}
+
+impl InputActionOutput for Vec3 {
+    const DIM: ActionValueDim = ActionValueDim::Axis3D;
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the

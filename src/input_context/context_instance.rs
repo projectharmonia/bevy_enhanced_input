@@ -6,13 +6,13 @@ use std::{
 use bevy::{prelude::*, utils::Entry};
 
 use super::{
-    input_action::{Accumulation, ActionData, ActionsData, InputAction},
+    input_action::{Accumulation, ActionData, ActionsData, InputAction, InputActionOutput},
     input_condition::InputCondition,
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis, InputModifier},
     trigger_tracker::TriggerTracker,
 };
 use crate::{
-    action_value::{ActionValue, ActionValueDim, ActionValueOutput},
+    action_value::{ActionValue, ActionValueDim},
     input::{input_reader::InputReader, GamepadDevice, Input},
     ActionState,
 };
@@ -32,7 +32,7 @@ use crate::{
 ///    1.1. Apply input-level [`InputModifier`]s.
 ///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
 /// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
-///    Combined value be converted into [`InputAction::Output`] using [`ActionValue::from`].
+///    Combined value be converted into [`InputActionOutput::DIM`] using [`ActionValue::convert`].
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
