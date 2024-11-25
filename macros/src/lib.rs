@@ -18,10 +18,10 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
 
     #[expect(non_snake_case, reason = "item shortcuts")]
-    let (Accumulation, InputAction, ActionValueDim) = (
+    let (Accumulation, InputAction, dim_path) = (
         quote! { bevy_enhanced_input::prelude::Accumulation },
         quote! { bevy_enhanced_input::prelude::InputAction },
-        quote! { bevy_enhanced_input::prelude::ActionValueDim },
+        quote! { bevy_enhanced_input::dim },
     );
 
     let opts = match InputActionOpts::from_derive_input(&input) {
@@ -52,7 +52,7 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
 
     TokenStream::from(quote! {
         impl #impl_generics #InputAction for #struct_name #type_generics #where_clause {
-            const DIM: #ActionValueDim = #ActionValueDim::#dim;
+            type Dim = #dim_path::#dim;
             #accumulation
             #consume_input
         }

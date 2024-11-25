@@ -60,6 +60,7 @@ Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it p
 */
 
 pub mod action_value;
+pub mod dim;
 pub mod input;
 pub mod input_context;
 

@@ -12,7 +12,7 @@ use super::{
     trigger_tracker::TriggerTracker,
 };
 use crate::{
-    action_value::{ActionValue, ActionValueDim},
+    action_value::{ActionValue, ActionValueDim, ActionValueDimType},
     input::{input_reader::InputReader, GamepadDevice, Input},
     ActionState,
 };
@@ -145,7 +145,7 @@ impl ActionBind {
         Self {
             type_id: TypeId::of::<A>(),
             action_name: any::type_name::<A>(),
-            dim: A::DIM,
+            dim: A::Dim::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
             modifiers: Default::default(),

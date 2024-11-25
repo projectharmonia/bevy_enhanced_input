@@ -3,7 +3,7 @@ use std::{any::TypeId, fmt::Debug, marker::PhantomData};
 use bevy::{prelude::*, utils::HashMap};
 
 use super::events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started};
-use crate::action_value::{ActionValue, ActionValueDim};
+use crate::action_value::{ActionValue, ActionValueDimType};
 
 /// Map for actions to their data.
 ///
@@ -48,7 +48,7 @@ impl ActionData {
         Self {
             state: Default::default(),
             events: ActionEvents::empty(),
-            value: ActionValue::zero(A::DIM),
+            value: ActionValue::zero(A::Dim::DIM),
             elapsed_secs: 0.0,
             fired_secs: 0.0,
             trigger_events: Self::trigger_events_typed::<A>,
@@ -269,12 +269,14 @@ pub enum ActionState {
 /// struct Move;
 /// ```
 pub trait InputAction: Debug + Send + Sync + 'static {
-    /// Discriminant for [`ActionValue`] that will be used for this action.
-    ///
-    /// Use [`ActionValueDim::Bool`] for button-like actions (e.g., `Jump`).
-    /// Use [`ActionValueDim::Axis1D`] for single-axis actions (e.g., `Zoom`).
-    /// For multi-axis actions, like `Move`, use [`ActionValueDim::Axis2D`] or [`ActionValueDim::Axis3D`].
-    const DIM: ActionValueDim;
+    // TODO docs
+    // /// Discriminant for [`ActionValue`] that will be used for this action.
+    // ///
+    // /// Use [`ActionValueDim::Bool`] for button-like actions (e.g., `Jump`).
+    // /// Use [`ActionValueDim::Axis1D`] for single-axis actions (e.g., `Zoom`).
+    // /// For multi-axis actions, like `Move`, use [`ActionValueDim::Axis2D`] or [`ActionValueDim::Axis3D`].
+    // const DIM: ActionValueDim;
+    type Dim: ActionValueDimType;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.

@@ -1,5 +1,9 @@
+use std::fmt::Debug;
+
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
+
+use crate::dim;
 
 /// Value for [`Input`](crate::input::Input).
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
@@ -165,6 +169,44 @@ impl From<(f32, f32, f32)> for ActionValue {
     fn from(value: (f32, f32, f32)) -> Self {
         ActionValue::Axis3D(value.into())
     }
+}
+
+mod sealed {
+    pub trait ActionValueDimType {}
+}
+
+pub trait ActionValueDimType: sealed::ActionValueDimType {
+    const DIM: ActionValueDim;
+
+    type Output: Send + Sync + Debug + Clone + Copy;
+}
+
+impl sealed::ActionValueDimType for dim::Bool {}
+impl ActionValueDimType for dim::Bool {
+    const DIM: ActionValueDim = ActionValueDim::Bool;
+
+    type Output = bool;
+}
+
+impl sealed::ActionValueDimType for dim::Axis1D {}
+impl ActionValueDimType for dim::Axis1D {
+    const DIM: ActionValueDim = ActionValueDim::Axis1D;
+
+    type Output = f32;
+}
+
+impl sealed::ActionValueDimType for dim::Axis2D {}
+impl ActionValueDimType for dim::Axis2D {
+    const DIM: ActionValueDim = ActionValueDim::Axis2D;
+
+    type Output = Vec2;
+}
+
+impl sealed::ActionValueDimType for dim::Axis3D {}
+impl ActionValueDimType for dim::Axis3D {
+    const DIM: ActionValueDim = ActionValueDim::Axis3D;
+
+    type Output = Vec3;
 }
 
 #[cfg(test)]
