@@ -85,7 +85,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::{input_context::input_action::ActionData, ActionValueDim};
+    use crate::input_context::input_action::ActionData;
 
     #[test]
     fn block() {

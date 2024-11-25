@@ -209,7 +209,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::{action_value::ActionValueDim, input_context::input_action::ActionData};
+    use crate::input_context::input_action::ActionData;
 
     #[test]
     fn none_none() {
