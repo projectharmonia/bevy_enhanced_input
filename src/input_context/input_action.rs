@@ -3,7 +3,7 @@ use std::{any::TypeId, fmt::Debug};
 use bevy::{prelude::*, utils::HashMap};
 
 use super::events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started};
-use crate::action_value::{sealed::ActionValueOutput, ActionValue};
+use crate::action_value::{ActionValue, ActionValueOutput};
 
 /// Map for actions to their data.
 ///

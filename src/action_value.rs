@@ -193,47 +193,29 @@ impl From<(f32, f32, f32)> for ActionValue {
     }
 }
 
-pub(crate) mod sealed {
-    use std::fmt::Debug;
-
-    use super::{ActionValue, ActionValueDim};
-
-    pub trait ActionValueOutput: Send + Sync + Debug + Clone + Copy + From<ActionValue> {
-        const DIM: ActionValueDim;
-    }
-}
-
 /// Marks a type which can be used as [`InputAction::Output`].
 ///
-/// This is a sealed trait, and is only implemented for the variants of
-/// [`ActionValue`]:
-/// - [`bool`]
-/// - [`f32`]
-/// - [`Vec2`]
-/// - [`Vec3`]
-///
 /// [`InputAction::Output`]: crate::prelude::InputAction::Output
-pub trait ActionValueOutput: sealed::ActionValueOutput {}
+pub trait ActionValueOutput: Send + Sync + Debug + Clone + Copy + From<ActionValue> {
+    /// Dimension of this output.
+    const DIM: ActionValueDim;
+}
 
-impl sealed::ActionValueOutput for bool {
+impl ActionValueOutput for bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
 }
-impl ActionValueOutput for bool {}
 
-impl sealed::ActionValueOutput for f32 {
+impl ActionValueOutput for f32 {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
 }
-impl ActionValueOutput for f32 {}
 
-impl sealed::ActionValueOutput for Vec2 {
+impl ActionValueOutput for Vec2 {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
 }
-impl ActionValueOutput for Vec2 {}
 
-impl sealed::ActionValueOutput for Vec3 {
+impl ActionValueOutput for Vec3 {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
 }
-impl ActionValueOutput for Vec3 {}
 
 #[cfg(test)]
 mod tests {
