@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Macro hygiene.
+
 ## [0.2.1] - 2024-11-20
 
 ### Fixed
@@ -15,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Improve macro hygiene.
 - Rename `Press` into `JustPress`.
 - Rename `Down` into `Press` to avoid collision with `Down` from `bevy_picking`.
 
