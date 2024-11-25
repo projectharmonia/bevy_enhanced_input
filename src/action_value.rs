@@ -139,9 +139,21 @@ impl From<bool> for ActionValue {
     }
 }
 
+impl From<ActionValue> for bool {
+    fn from(value: ActionValue) -> Self {
+        value.as_bool()
+    }
+}
+
 impl From<f32> for ActionValue {
     fn from(value: f32) -> Self {
         ActionValue::Axis1D(value)
+    }
+}
+
+impl From<ActionValue> for f32 {
+    fn from(value: ActionValue) -> Self {
+        value.as_axis1d()
     }
 }
 
@@ -151,9 +163,21 @@ impl From<Vec2> for ActionValue {
     }
 }
 
+impl From<ActionValue> for Vec2 {
+    fn from(value: ActionValue) -> Self {
+        value.as_axis2d()
+    }
+}
+
 impl From<Vec3> for ActionValue {
     fn from(value: Vec3) -> Self {
         ActionValue::Axis3D(value)
+    }
+}
+
+impl From<ActionValue> for Vec3 {
+    fn from(value: ActionValue) -> Self {
+        value.as_axis3d()
     }
 }
 
@@ -169,53 +193,47 @@ impl From<(f32, f32, f32)> for ActionValue {
     }
 }
 
-mod sealed {
-    pub trait ActionValueOutput {}
+pub(crate) mod sealed {
+    use std::fmt::Debug;
+
+    use super::{ActionValue, ActionValueDim};
+
+    pub trait ActionValueOutput: Send + Sync + Debug + Clone + Copy + From<ActionValue> {
+        const DIM: ActionValueDim;
+    }
 }
 
-pub trait ActionValueOutput:
-    sealed::ActionValueOutput + Send + Sync + Debug + Clone + Copy
-{
-    const DIM: ActionValueDim;
+/// Marks a type which can be used as [`InputAction::Output`].
+///
+/// This is a sealed trait, and is only implemented for the variants of
+/// [`ActionValue`]:
+/// - [`bool`]
+/// - [`f32`]
+/// - [`Vec2`]
+/// - [`Vec3`]
+///
+/// [`InputAction::Output`]: crate::prelude::InputAction::Output
+pub trait ActionValueOutput: sealed::ActionValueOutput {}
 
-    fn convert_from(value: ActionValue) -> Self;
-}
-
-impl sealed::ActionValueOutput for bool {}
-impl ActionValueOutput for bool {
+impl sealed::ActionValueOutput for bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
-
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_bool()
-    }
 }
+impl ActionValueOutput for bool {}
 
-impl sealed::ActionValueOutput for f32 {}
-impl ActionValueOutput for f32 {
+impl sealed::ActionValueOutput for f32 {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
-
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_axis1d()
-    }
 }
+impl ActionValueOutput for f32 {}
 
-impl sealed::ActionValueOutput for Vec2 {}
-impl ActionValueOutput for Vec2 {
+impl sealed::ActionValueOutput for Vec2 {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
-
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_axis2d()
-    }
 }
+impl ActionValueOutput for Vec2 {}
 
-impl sealed::ActionValueOutput for Vec3 {}
-impl ActionValueOutput for Vec3 {
+impl sealed::ActionValueOutput for Vec3 {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
-
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_axis3d()
-    }
 }
+impl ActionValueOutput for Vec3 {}
 
 #[cfg(test)]
 mod tests {

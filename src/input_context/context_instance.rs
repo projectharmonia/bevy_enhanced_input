@@ -12,7 +12,7 @@ use super::{
     trigger_tracker::TriggerTracker,
 };
 use crate::{
-    action_value::{ActionValue, ActionValueDim, ActionValueOutput},
+    action_value::{sealed::ActionValueOutput, ActionValue, ActionValueDim},
     input::{input_reader::InputReader, GamepadDevice, Input},
     ActionState,
 };

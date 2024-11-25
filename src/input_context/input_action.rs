@@ -3,7 +3,7 @@ use std::{any::TypeId, fmt::Debug};
 use bevy::{prelude::*, utils::HashMap};
 
 use super::events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started};
-use crate::action_value::{ActionValue, ActionValueOutput};
+use crate::action_value::{sealed::ActionValueOutput, ActionValue};
 
 /// Map for actions to their data.
 ///
@@ -98,7 +98,7 @@ impl ActionData {
                         commands,
                         entities,
                         Started::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::from(self.value),
                             state: self.state,
                         },
                     );
@@ -108,7 +108,7 @@ impl ActionData {
                         commands,
                         entities,
                         Ongoing::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -119,7 +119,7 @@ impl ActionData {
                         commands,
                         entities,
                         Fired::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -131,7 +131,7 @@ impl ActionData {
                         commands,
                         entities,
                         Canceled::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -142,7 +142,7 @@ impl ActionData {
                         commands,
                         entities,
                         Completed::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
