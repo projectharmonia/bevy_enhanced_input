@@ -17,12 +17,12 @@ struct InputActionOpts {
 pub fn input_action_derive(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
 
-    #[expect(non_snake_case, reason = "type shortcut")]
-    let Accumulation = quote! { ::bevy_enhanced_input::prelude::Accumulation };
-    #[expect(non_snake_case, reason = "type shortcut")]
-    let InputAction = quote! { ::bevy_enhanced_input::prelude::InputAction };
-    #[expect(non_snake_case, reason = "type shortcut")]
-    let ActionValueDim = quote! { ::bevy_enhanced_input::prelude::ActionValueDim };
+    #[expect(non_snake_case, reason = "item shortcuts")]
+    let (Accumulation, InputAction, ActionValueDim) = (
+        quote! { ::bevy_enhanced_input::prelude::Accumulation },
+        quote! { ::bevy_enhanced_input::prelude::InputAction },
+        quote! { ::bevy_enhanced_input::prelude::ActionValueDim },
+    );
 
     let opts = match InputActionOpts::from_derive_input(&input) {
         Ok(value) => value,
