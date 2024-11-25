@@ -340,7 +340,7 @@ impl InputContext for DummyContext {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct InputLevel;
 
 impl InputLevel {
@@ -349,7 +349,7 @@ impl InputLevel {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct ActionLevel;
 
 impl ActionLevel {
@@ -358,7 +358,7 @@ impl ActionLevel {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct BothLevels;
 
 impl BothLevels {
@@ -367,7 +367,7 @@ impl BothLevels {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ChordMember;
 
 impl ChordMember {
@@ -375,7 +375,7 @@ impl ChordMember {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Blocker;
 
 impl Blocker {
@@ -383,7 +383,7 @@ impl Blocker {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EventsBlocker;
 
 impl EventsBlocker {

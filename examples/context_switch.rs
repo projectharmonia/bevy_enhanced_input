@@ -43,7 +43,7 @@ impl GamePlugin {
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += event.value.as_axis3d();
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
@@ -102,15 +102,15 @@ impl InputContext for OnFoot {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EnterCar;
 
 #[derive(Component)]
@@ -132,5 +132,5 @@ impl InputContext for InCar {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ExitCar;

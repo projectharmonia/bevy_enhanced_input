@@ -1,10 +1,9 @@
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 use bevy::prelude::*;
 use bitflags::bitflags;
 
 use super::input_action::{ActionState, InputAction};
-use crate::action_value::ActionValue;
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
@@ -72,11 +71,8 @@ impl ActionEvents {
 /// only on the first press.
 #[derive(Debug, Event)]
 pub struct Started<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -96,11 +92,8 @@ impl<A: InputAction> Copy for Started<A> {}
 /// this event is triggered while the user is holding down the button before the specified duration is reached.
 #[derive(Debug, Event)]
 pub struct Ongoing<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -123,11 +116,8 @@ impl<A: InputAction> Copy for Ongoing<A> {}
 /// this event is triggered when the user releases the key.
 #[derive(Debug, Event)]
 pub struct Fired<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -153,11 +143,8 @@ impl<A: InputAction> Copy for Fired<A> {}
 /// this event is triggered if the user releases the button before the condition is triggered.
 #[derive(Debug, Event)]
 pub struct Canceled<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -180,11 +167,8 @@ impl<A: InputAction> Copy for Canceled<A> {}
 /// this event is triggered when the user releases the key.
 #[derive(Debug, Event)]
 pub struct Completed<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: A::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -309,6 +293,6 @@ mod tests {
     struct TriggeredEvents(ActionEvents);
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }

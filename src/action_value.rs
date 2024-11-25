@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 

@@ -172,7 +172,7 @@ impl InputContext for Shared {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = true)]
+#[input_action(output = bool, consume_input = true)]
 struct ExclusiveConsume;
 
 impl ExclusiveConsume {
@@ -180,7 +180,7 @@ impl ExclusiveConsume {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = false)]
+#[input_action(output = bool, consume_input = false)]
 struct ExclusivePassthrough;
 
 impl ExclusivePassthrough {
@@ -188,7 +188,7 @@ impl ExclusivePassthrough {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = true)]
+#[input_action(output = bool, consume_input = true)]
 struct SharedConsume;
 
 impl SharedConsume {
@@ -196,7 +196,7 @@ impl SharedConsume {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = false)]
+#[input_action(output = bool, consume_input = false)]
 struct SharedPassthrough;
 
 impl SharedPassthrough {

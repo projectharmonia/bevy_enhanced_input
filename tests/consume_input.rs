@@ -89,9 +89,9 @@ impl InputContext for ConsumeThenPassthrough {
 const KEY: KeyCode = KeyCode::KeyA;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = true)]
+#[input_action(output = bool, consume_input = true)]
 struct Consume;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = false)]
+#[input_action(output = bool, consume_input = false)]
 struct Passthrough;

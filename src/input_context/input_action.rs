@@ -1,4 +1,4 @@
-use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+use std::{any::TypeId, fmt::Debug};
 
 use bevy::{prelude::*, utils::HashMap};
 
@@ -48,7 +48,7 @@ impl ActionData {
         Self {
             state: Default::default(),
             events: ActionEvents::empty(),
-            value: ActionValue::zero(A::DIM),
+            value: ActionValue::zero(A::Output::DIM),
             elapsed_secs: 0.0,
             fired_secs: 0.0,
             trigger_events: Self::trigger_events_typed::<A>,
@@ -97,9 +97,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Started {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Started::<A> {
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                         },
                     );
@@ -108,9 +107,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Ongoing {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Ongoing::<A> {
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -120,9 +118,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Fired {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Fired::<A> {
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -133,9 +130,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Canceled {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Canceled::<A> {
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -145,9 +141,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Completed {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Completed::<A> {
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -237,13 +232,13 @@ pub enum ActionState {
 ///    let event = trigger.event();
 ///    let mut transform = transforms.get_mut(trigger.entity()).unwrap();
 ///
-///    // Use the larger dimension because translation is `Vec3`.
-///    // Extra axis will be zero.
-///    transform.translation += event.value.as_axis3d();
+///    // Since `Move` has `output = Vec2`, the value is `Vec2`.
+///    // The value of the Z axis will be zero.
+///    transform.translation += event.value.extend(0.0);
 /// }
 ///
 /// #[derive(Debug, InputAction)]
-/// #[input_action(dim = Axis2D)]
+/// #[input_action(output = Vec2)]
 /// struct Move;
 /// ```
 ///
@@ -254,27 +249,32 @@ pub enum ActionState {
 /// derive to reduce boilerplate:
 ///
 /// ```
+/// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(Debug, InputAction)]
-/// #[input_action(dim = Axis2D)]
+/// #[input_action(output = Vec2)]
 /// struct Move;
 /// ```
 ///
 /// Optionally you can pass `consume_input` and/or `accumulation`:
 ///
 /// ```
+/// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(Debug, InputAction)]
-/// #[input_action(dim = Axis2D, accumulation = Cumulative, consume_input = false)]
+/// #[input_action(output = Vec2, accumulation = Cumulative, consume_input = false)]
 /// struct Move;
 /// ```
 pub trait InputAction: Debug + Send + Sync + 'static {
-    /// Discriminant for [`ActionValue`] that will be used for this action.
+    /// What type of value this action will output.
     ///
-    /// Use [`ActionValueDim::Bool`] for button-like actions (e.g., `Jump`).
-    /// Use [`ActionValueDim::Axis1D`] for single-axis actions (e.g., `Zoom`).
-    /// For multi-axis actions, like `Move`, use [`ActionValueDim::Axis2D`] or [`ActionValueDim::Axis3D`].
-    const DIM: ActionValueDim;
+    /// - Use [`bool`] for button-like actions (e.g., `Jump`).
+    /// - Use [`f32`] for single-axis actions (e.g., `Zoom`).
+    /// - For multi-axis actions, like `Move`, use [`Vec2`] or [`Vec3`].
+    ///
+    /// The type here will determine the type of the `value` field on events
+    /// e.g. [`Fired::value`], [`Canceled::value`].
+    type Output: ActionOutput;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.
@@ -287,6 +287,50 @@ pub trait InputAction: Debug + Send + Sync + 'static {
 
     /// Associated accumulation behavior.
     const ACCUMULATION: Accumulation = Accumulation::Cumulative;
+}
+
+/// Marks a type which can be used as [`InputAction::Output`].
+pub trait ActionOutput: Send + Sync + Debug + Clone + Copy {
+    /// Dimension of this output.
+    const DIM: ActionValueDim;
+
+    /// Converts the value into the action output type.
+    ///
+    /// If the new dimension is larger, the additional axes will be set to zero.
+    /// If the new dimension is smaller, the extra axes will be discarded.
+    fn convert_from(value: ActionValue) -> Self;
+}
+
+impl ActionOutput for bool {
+    const DIM: ActionValueDim = ActionValueDim::Bool;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_bool()
+    }
+}
+
+impl ActionOutput for f32 {
+    const DIM: ActionValueDim = ActionValueDim::Axis1D;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_axis1d()
+    }
+}
+
+impl ActionOutput for Vec2 {
+    const DIM: ActionValueDim = ActionValueDim::Axis2D;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_axis2d()
+    }
+}
+
+impl ActionOutput for Vec3 {
+    const DIM: ActionValueDim = ActionValueDim::Axis3D;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_axis3d()
+    }
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
