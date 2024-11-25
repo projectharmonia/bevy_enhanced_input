@@ -59,6 +59,8 @@ The exact method depends on the OS shell.
 Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it permanent.
 */
 
+extern crate self as bevy_enhanced_input;
+
 pub mod action_value;
 pub mod input;
 pub mod input_context;
