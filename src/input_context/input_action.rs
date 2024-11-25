@@ -234,9 +234,9 @@ pub enum ActionState {
 ///    let event = trigger.event();
 ///    let mut transform = transforms.get_mut(trigger.entity()).unwrap();
 ///
-///    // Use the larger dimension because translation is `Vec3`.
-///    // Extra axis will be zero.
-///    transform.translation += event.value.as_axis3d();
+///    // Since `Move` has `dim = Axis2D`, the value is `Vec2`.
+///    // The value of the Z axis will be zero.
+///    transform.translation += event.value.extend(0.0);
 /// }
 ///
 /// #[derive(Debug, InputAction)]

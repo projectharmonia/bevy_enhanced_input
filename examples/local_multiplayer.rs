@@ -60,8 +60,7 @@ impl GamePlugin {
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        let value = event.value;
-        transform.translation += Vec3::new(value.x, value.y, 0.0);
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
