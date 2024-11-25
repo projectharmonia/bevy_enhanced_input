@@ -6,22 +6,22 @@
     which breaks macro hygiene"
 )]
 
-struct Accumulation;
 struct InputAction;
+struct Accumulation;
 struct ActionValueDim;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
-#[input_action(dim = Bool)]
-struct Foo1;
+#[input_action(dim = Bool, accumulation = Cumulative)]
+struct Dummy1;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(dim = Axis1D)]
-struct Foo2;
+struct Dummy2;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(dim = Axis2D)]
-struct Foo3;
+struct Dummy3;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(dim = Axis3D)]
-struct Foo4;
+struct Dummy4;
