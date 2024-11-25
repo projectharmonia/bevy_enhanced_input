@@ -82,10 +82,12 @@ impl<A: InputAction> InputCondition for BlockBy<A> {
 
 #[cfg(test)]
 mod tests {
+    extern crate self as bevy_enhanced_input;
+
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::{input_context::input_action::ActionData, ActionValueDim};
+    use crate::input_context::input_action::ActionData;
 
     #[test]
     fn block() {

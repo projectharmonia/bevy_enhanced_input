@@ -439,6 +439,8 @@ impl GamepadStick {
 
 #[cfg(test)]
 mod tests {
+    extern crate self as bevy_enhanced_input;
+
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;

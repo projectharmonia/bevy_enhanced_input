@@ -19,9 +19,9 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
 
     #[expect(non_snake_case, reason = "item shortcuts")]
     let (Accumulation, InputAction, ActionValueDim) = (
-        quote! { ::bevy_enhanced_input::prelude::Accumulation },
-        quote! { ::bevy_enhanced_input::prelude::InputAction },
-        quote! { ::bevy_enhanced_input::prelude::ActionValueDim },
+        quote! { bevy_enhanced_input::prelude::Accumulation },
+        quote! { bevy_enhanced_input::prelude::InputAction },
+        quote! { bevy_enhanced_input::prelude::ActionValueDim },
     );
 
     let opts = match InputActionOpts::from_derive_input(&input) {

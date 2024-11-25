@@ -55,10 +55,12 @@ impl<A: InputAction> InputModifier for AccumulateBy<A> {
 
 #[cfg(test)]
 mod tests {
+    extern crate self as bevy_enhanced_input;
+
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::{action_value::ActionValueDim, input_context::input_action::ActionData};
+    use crate::input_context::input_action::ActionData;
 
     #[test]
     fn accumulation_active() {
