@@ -59,6 +59,7 @@ The exact method depends on the OS shell.
 Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it permanent.
 */
 
+// Required for the derive macro to work within the crate.
 extern crate self as bevy_enhanced_input;
 
 pub mod action_value;
