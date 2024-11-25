@@ -1,4 +1,4 @@
-use std::{any::TypeId, fmt::Debug, marker::PhantomData};
+use std::{any::TypeId, fmt::Debug};
 
 use bevy::{prelude::*, utils::HashMap};
 
@@ -97,9 +97,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Started {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Started::<A> {
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                         },
                     );
@@ -108,9 +107,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Ongoing {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Ongoing::<A> {
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
