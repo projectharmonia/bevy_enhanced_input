@@ -45,7 +45,7 @@ impl GamePlugin {
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += event.value.as_axis3d();
+        transform.translation += Vec3::new(event.value, 0.0, 0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
@@ -104,7 +104,7 @@ impl InputContext for PlayerBox {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(dim = Axis1D)]
 struct Move;
 
 #[derive(Debug, InputAction)]

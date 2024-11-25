@@ -120,9 +120,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Fired {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Fired::<A> {
+                            value: A::Dim::convert_value(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -133,9 +132,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Canceled {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Canceled::<A> {
+                            value: A::Dim::convert_value(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -145,9 +143,8 @@ impl ActionData {
                     trigger_for_each(
                         commands,
                         entities,
-                        Completed {
-                            marker: PhantomData::<A>,
-                            value: self.value,
+                        Completed::<A> {
+                            value: A::Dim::convert_value(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,

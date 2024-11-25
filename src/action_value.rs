@@ -175,10 +175,12 @@ mod sealed {
     pub trait ActionValueDimType {}
 }
 
-pub trait ActionValueDimType: sealed::ActionValueDimType {
+pub trait ActionValueDimType: sealed::ActionValueDimType + Debug {
     const DIM: ActionValueDim;
 
     type Output: Send + Sync + Debug + Clone + Copy;
+
+    fn convert_value(value: ActionValue) -> Self::Output;
 }
 
 impl sealed::ActionValueDimType for dim::Bool {}
@@ -186,6 +188,10 @@ impl ActionValueDimType for dim::Bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
 
     type Output = bool;
+
+    fn convert_value(value: ActionValue) -> Self::Output {
+        value.as_bool()
+    }
 }
 
 impl sealed::ActionValueDimType for dim::Axis1D {}
@@ -193,6 +199,10 @@ impl ActionValueDimType for dim::Axis1D {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
 
     type Output = f32;
+
+    fn convert_value(value: ActionValue) -> Self::Output {
+        value.as_axis1d()
+    }
 }
 
 impl sealed::ActionValueDimType for dim::Axis2D {}
@@ -200,6 +210,10 @@ impl ActionValueDimType for dim::Axis2D {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
 
     type Output = Vec2;
+
+    fn convert_value(value: ActionValue) -> Self::Output {
+        value.as_axis2d()
+    }
 }
 
 impl sealed::ActionValueDimType for dim::Axis3D {}
@@ -207,6 +221,10 @@ impl ActionValueDimType for dim::Axis3D {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
 
     type Output = Vec3;
+
+    fn convert_value(value: ActionValue) -> Self::Output {
+        value.as_axis3d()
+    }
 }
 
 #[cfg(test)]

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use bitflags::bitflags;
 
 use super::input_action::{ActionState, InputAction};
-use crate::action_value::ActionValue;
+use crate::action_value::{ActionValue, ActionValueDimType};
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
@@ -123,11 +123,8 @@ impl<A: InputAction> Copy for Ongoing<A> {}
 /// this event is triggered when the user releases the key.
 #[derive(Debug, Event)]
 pub struct Fired<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: <A::Dim as ActionValueDimType>::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -153,11 +150,8 @@ impl<A: InputAction> Copy for Fired<A> {}
 /// this event is triggered if the user releases the button before the condition is triggered.
 #[derive(Debug, Event)]
 pub struct Canceled<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: <A::Dim as ActionValueDimType>::Output,
 
     /// Current action state.
     pub state: ActionState,
@@ -180,11 +174,8 @@ impl<A: InputAction> Copy for Canceled<A> {}
 /// this event is triggered when the user releases the key.
 #[derive(Debug, Event)]
 pub struct Completed<A: InputAction> {
-    /// Action for which the event triggers.
-    pub marker: PhantomData<A>,
-
     /// Current action value.
-    pub value: ActionValue,
+    pub value: <A::Dim as ActionValueDimType>::Output,
 
     /// Current action state.
     pub state: ActionState,
