@@ -83,6 +83,7 @@ pub mod prelude {
                 accumulate_by::*, dead_zone::*, delta_lerp::*, delta_scale::*,
                 exponential_curve::*, negate::*, scale::*, swizzle_axis::*, InputModifier,
             },
+            preset::{ArrowKeys, DpadButtons, WasdKeys, XyAxis},
             ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
         },
         EnhancedInputPlugin, EnhancedInputSystem,

@@ -3,6 +3,7 @@ pub mod events;
 pub mod input_action;
 pub mod input_condition;
 pub mod input_modifier;
+pub mod preset;
 pub mod trigger_tracker;
 
 use std::{

@@ -87,17 +87,13 @@ impl InputContext for PlayerBox {
         // Assign different mappings based player index.
         match index {
             0 => {
-                ctx.bind::<Move>()
-                    .with_wasd()
-                    .with_stick(GamepadStick::Left);
+                ctx.bind::<Move>().with(WasdKeys).with(GamepadStick::Left);
                 ctx.bind::<Rotate>()
                     .with(KeyCode::Space)
                     .with(GamepadButtonType::South);
             }
             1 => {
-                ctx.bind::<Move>()
-                    .with_arrows()
-                    .with_stick(GamepadStick::Left);
+                ctx.bind::<Move>().with(ArrowKeys).with(GamepadStick::Right);
                 ctx.bind::<Rotate>()
                     .with(KeyCode::Numpad0)
                     .with(GamepadButtonType::South);

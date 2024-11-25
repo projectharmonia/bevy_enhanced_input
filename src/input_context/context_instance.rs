@@ -8,7 +8,8 @@ use bevy::{prelude::*, utils::Entry};
 use super::{
     input_action::{Accumulation, ActionData, ActionsData, InputAction},
     input_condition::InputCondition,
-    input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis, InputModifier},
+    input_modifier::{swizzle_axis::SwizzleAxis, InputModifier},
+    preset::BindPreset,
     trigger_tracker::TriggerTracker,
 };
 use crate::{
@@ -155,66 +156,6 @@ impl ActionBind {
         }
     }
 
-    /// Maps WASD keys as 2-dimentional input.
-    ///
-    /// In Bevy's 3D space, the -Z axis points forward and the +Z axis points
-    /// toward the camera. To map movement correctly in 3D space, you will
-    /// need to invert Y and apply it to Z translation inside your observer.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    pub fn with_wasd(&mut self) -> &mut Self {
-        self.with_xy_axis(KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD)
-    }
-
-    /// Maps keyboard arrow keys as 2-dimentional input.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    /// See also [`Self::with_wasd`].
-    pub fn with_arrows(&mut self) -> &mut Self {
-        self.with_xy_axis(
-            KeyCode::ArrowUp,
-            KeyCode::ArrowLeft,
-            KeyCode::ArrowDown,
-            KeyCode::ArrowRight,
-        )
-    }
-
-    /// Maps D-pad as 2-dimentional input.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    /// See also [`Self::with_wasd`].
-    pub fn with_dpad(&mut self) -> &mut Self {
-        self.with_xy_axis(
-            GamepadButtonType::DPadUp,
-            GamepadButtonType::DPadLeft,
-            GamepadButtonType::DPadDown,
-            GamepadButtonType::DPadRight,
-        )
-    }
-
-    /// Maps 4 buttons as 2-dimentional input.
-    ///
-    /// This is a convenience "preset" that uses [`SwizzleAxis`] and [`Negate`] to
-    /// bind the buttons to X and Y axes.
-    ///
-    /// The order of arguments follows the common "WASD" mapping.
-    pub fn with_xy_axis<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
-        self.with(InputBind::new(up).with_modifier(SwizzleAxis::YXZ))
-            .with(InputBind::new(left).with_modifier(Negate::default()))
-            .with(
-                InputBind::new(down)
-                    .with_modifier(Negate::default())
-                    .with_modifier(SwizzleAxis::YXZ),
-            )
-            .with(right)
-    }
-
-    /// Maps the given stick as 2-dimentional input.
-    pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
-        self.with(stick.x())
-            .with(InputBind::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
-    }
-
     /// Adds action-level modifier.
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
         debug!("adding `{modifier:?}` to `{}`", self.action_name);
@@ -276,10 +217,11 @@ impl ActionBind {
     /// # #[input_action(dim = Bool)]
     /// # struct Jump;
     /// ```
-    pub fn with(&mut self, binding: impl Into<InputBind>) -> &mut Self {
-        let binding = binding.into();
-        debug!("adding `{binding:?}` to `{}`", self.action_name);
-        self.bindings.push(binding);
+    pub fn with(&mut self, bind_preset: impl BindPreset) -> &mut Self {
+        for binding in bind_preset.bindings() {
+            debug!("adding `{binding:?}` to `{}`", self.action_name);
+            self.bindings.push(binding);
+        }
         self
     }
 
@@ -434,6 +376,16 @@ impl GamepadStick {
             GamepadStick::Left => GamepadAxisType::LeftStickY,
             GamepadStick::Right => GamepadAxisType::RightStickY,
         }
+    }
+}
+
+impl BindPreset for GamepadStick {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        [
+            InputBind::new(self.x()),
+            InputBind::new(self.y()).with_modifier(SwizzleAxis::YXZ),
+        ]
+        .into_iter()
     }
 }
 

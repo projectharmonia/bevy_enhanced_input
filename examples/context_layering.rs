@@ -92,7 +92,7 @@ impl InputContext for PlayerBox {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<Move>()
-            .with_wasd()
+            .with(WasdKeys)
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
