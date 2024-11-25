@@ -274,7 +274,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     ///
     /// The type here will determine the type of the `value` field on events
     /// e.g. [`Fired::value`], [`Canceled::value`].
-    type Output: InputActionOutput;
+    type Output: ActionOutput;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.
@@ -290,7 +290,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
 }
 
 /// Marks a type which can be used as [`InputAction::Output`].
-pub trait InputActionOutput: Send + Sync + Debug + Clone + Copy {
+pub trait ActionOutput: Send + Sync + Debug + Clone + Copy {
     /// Dimension of this output.
     const DIM: ActionValueDim;
 
@@ -301,7 +301,7 @@ pub trait InputActionOutput: Send + Sync + Debug + Clone + Copy {
     fn convert_from(value: ActionValue) -> Self;
 }
 
-impl InputActionOutput for bool {
+impl ActionOutput for bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
 
     fn convert_from(value: ActionValue) -> Self {
@@ -309,7 +309,7 @@ impl InputActionOutput for bool {
     }
 }
 
-impl InputActionOutput for f32 {
+impl ActionOutput for f32 {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
 
     fn convert_from(value: ActionValue) -> Self {
@@ -317,7 +317,7 @@ impl InputActionOutput for f32 {
     }
 }
 
-impl InputActionOutput for Vec2 {
+impl ActionOutput for Vec2 {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
 
     fn convert_from(value: ActionValue) -> Self {
@@ -325,7 +325,7 @@ impl InputActionOutput for Vec2 {
     }
 }
 
-impl InputActionOutput for Vec3 {
+impl ActionOutput for Vec3 {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
 
     fn convert_from(value: ActionValue) -> Self {
