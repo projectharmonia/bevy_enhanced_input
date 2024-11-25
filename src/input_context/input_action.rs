@@ -266,13 +266,19 @@ pub enum ActionState {
 /// struct Move;
 /// ```
 pub trait InputAction: Debug + Send + Sync + 'static {
-    // TODO docs
-    // /// Discriminant for [`ActionValue`] that will be used for this action.
-    // ///
-    // /// Use [`ActionValueDim::Bool`] for button-like actions (e.g., `Jump`).
-    // /// Use [`ActionValueDim::Axis1D`] for single-axis actions (e.g., `Zoom`).
-    // /// For multi-axis actions, like `Move`, use [`ActionValueDim::Axis2D`] or [`ActionValueDim::Axis3D`].
-    // const DIM: ActionValueDim;
+    /// What dimension of value this action will output.
+    ///
+    /// - Use [`Bool`] for button-like actions (e.g., `Jump`).
+    /// - Use [`Axis1D`] for single-axis actions (e.g., `Zoom`).
+    /// - For multi-axis actions, like `Move`, use [`Axis2D`] or [`Axis3D`].
+    ///
+    /// The type here will determine the type of the `value` field on events
+    /// e.g. [`Fired::value`], [`Canceled::value`].
+    ///
+    /// [`Bool`]: crate::dim::Bool
+    /// [`Axis1D`]: crate::dim::Axis1D
+    /// [`Axis2D`]: crate::dim::Axis2D
+    /// [`Axis3D`]: crate::dim::Axis3D
     type Dim: ActionValueDimType;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
