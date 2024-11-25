@@ -139,21 +139,9 @@ impl From<bool> for ActionValue {
     }
 }
 
-impl From<ActionValue> for bool {
-    fn from(value: ActionValue) -> Self {
-        value.as_bool()
-    }
-}
-
 impl From<f32> for ActionValue {
     fn from(value: f32) -> Self {
         ActionValue::Axis1D(value)
-    }
-}
-
-impl From<ActionValue> for f32 {
-    fn from(value: ActionValue) -> Self {
-        value.as_axis1d()
     }
 }
 
@@ -163,21 +151,9 @@ impl From<Vec2> for ActionValue {
     }
 }
 
-impl From<ActionValue> for Vec2 {
-    fn from(value: ActionValue) -> Self {
-        value.as_axis2d()
-    }
-}
-
 impl From<Vec3> for ActionValue {
     fn from(value: Vec3) -> Self {
         ActionValue::Axis3D(value)
-    }
-}
-
-impl From<ActionValue> for Vec3 {
-    fn from(value: ActionValue) -> Self {
-        value.as_axis3d()
     }
 }
 

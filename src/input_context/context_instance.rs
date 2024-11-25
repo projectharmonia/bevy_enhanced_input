@@ -36,7 +36,7 @@ use crate::{
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
-///    Final value be converted into [`InputAction::Output`] using [`ActionValue::from`].
+///    Final value be converted into [`InputAction::Output`] using [`InputActionOutput::convert_from`].
 ///
 /// New instances won't react to currently held inputs until they are released.
 /// This prevents unintended behavior where switching contexts using the same key

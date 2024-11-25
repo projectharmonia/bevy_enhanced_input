@@ -98,7 +98,7 @@ impl ActionData {
                         commands,
                         entities,
                         Started::<A> {
-                            value: A::Output::from(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                         },
                     );
@@ -108,7 +108,7 @@ impl ActionData {
                         commands,
                         entities,
                         Ongoing::<A> {
-                            value: A::Output::from(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -119,7 +119,7 @@ impl ActionData {
                         commands,
                         entities,
                         Fired::<A> {
-                            value: A::Output::from(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -131,7 +131,7 @@ impl ActionData {
                         commands,
                         entities,
                         Canceled::<A> {
-                            value: A::Output::from(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -142,7 +142,7 @@ impl ActionData {
                         commands,
                         entities,
                         Completed::<A> {
-                            value: A::Output::from(self.value),
+                            value: A::Output::convert_from(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -290,25 +290,47 @@ pub trait InputAction: Debug + Send + Sync + 'static {
 }
 
 /// Marks a type which can be used as [`InputAction::Output`].
-pub trait InputActionOutput: Send + Sync + Debug + Clone + Copy + From<ActionValue> {
+pub trait InputActionOutput: Send + Sync + Debug + Clone + Copy {
     /// Dimension of this output.
     const DIM: ActionValueDim;
+
+    /// Converts the value into the action output type.
+    ///
+    /// If the new dimension is larger, the additional axes will be set to zero.
+    /// If the new dimension is smaller, the extra axes will be discarded.
+    fn convert_from(value: ActionValue) -> Self;
 }
 
 impl InputActionOutput for bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_bool()
+    }
 }
 
 impl InputActionOutput for f32 {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_axis1d()
+    }
 }
 
 impl InputActionOutput for Vec2 {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_axis2d()
+    }
 }
 
 impl InputActionOutput for Vec3 {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
+
+    fn convert_from(value: ActionValue) -> Self {
+        value.as_axis3d()
+    }
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
