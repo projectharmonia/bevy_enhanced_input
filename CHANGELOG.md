@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Replace `InputAction::DIM` with `InputAction::Output` where you set the type directly (`bool`, `f32`, `Vec2` or `Vec3`) instead of the `ActionValueDim`.
+- `InputAction` macro now accepts `output = <Type>` instead of `dim = <ActionValueDim variant>`.
+- All events now have typed values, based on `InputAction::Output`.
+
 ### Fixed
 
 - Macro hygiene.
