@@ -180,5 +180,5 @@ impl InputContext for DummyContext {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D, consume_input = true)]
+#[input_action(output = Vec2, consume_input = true)]
 struct DummyAction;

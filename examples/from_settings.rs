@@ -5,7 +5,7 @@ mod player_box;
 use std::f32::consts::FRAC_PI_4;
 
 use bevy::prelude::*;
-use bevy_enhanced_input::{input_context::bind::BindConfigs, prelude::*};
+use bevy_enhanced_input::prelude::*;
 
 use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, DEFAULT_SPEED};
 
@@ -100,9 +100,9 @@ impl InputContext for PlayerBox {
 // It can be done manually, but we provide a derive for convenience.
 // The only necessary parameter is `dim`, which defines the output type.
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;

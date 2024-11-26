@@ -80,7 +80,7 @@ impl InputContext for DummyContext {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct PressAction;
 
 impl PressAction {
@@ -88,7 +88,7 @@ impl PressAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct JustPressAction;
 
 impl JustPressAction {
@@ -96,7 +96,7 @@ impl JustPressAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct HoldAction;
 
 impl HoldAction {
@@ -104,7 +104,7 @@ impl HoldAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct HoldAndReleaseAction;
 
 impl HoldAndReleaseAction {
@@ -112,7 +112,7 @@ impl HoldAndReleaseAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct PulseAction;
 
 impl PulseAction {
@@ -120,7 +120,7 @@ impl PulseAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ReleaseAction;
 
 impl ReleaseAction {
@@ -128,7 +128,7 @@ impl ReleaseAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct TapAction;
 
 impl TapAction {
@@ -136,7 +136,7 @@ impl TapAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ChordMember1;
 
 impl ChordMember1 {
@@ -144,7 +144,7 @@ impl ChordMember1 {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ChordMember2;
 
 impl ChordMember2 {
@@ -152,7 +152,7 @@ impl ChordMember2 {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct BlockerAction;
 
 impl BlockerAction {
@@ -160,11 +160,11 @@ impl BlockerAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ChordAction;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct BlockByAction;
 
 impl BlockByAction {

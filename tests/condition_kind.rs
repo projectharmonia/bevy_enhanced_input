@@ -295,7 +295,7 @@ impl InputContext for DummyContext {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ReleaseAction;
 
 impl ReleaseAction {
@@ -303,7 +303,7 @@ impl ReleaseAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Explicit;
 
 impl Explicit {
@@ -311,11 +311,11 @@ impl Explicit {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Implicit;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Blocker;
 
 impl Blocker {
@@ -323,7 +323,7 @@ impl Blocker {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EventsBlocker;
 
 impl EventsBlocker {

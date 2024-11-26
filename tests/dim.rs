@@ -150,7 +150,7 @@ impl InputContext for DummyContext {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Bool;
 
 impl Bool {
@@ -158,7 +158,7 @@ impl Bool {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis1D)]
+#[input_action(output = f32)]
 struct Axis1D;
 
 impl Axis1D {
@@ -166,7 +166,7 @@ impl Axis1D {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Axis2D;
 
 impl Axis2D {
@@ -174,7 +174,7 @@ impl Axis2D {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis3D)]
+#[input_action(output = Vec3)]
 struct Axis3D;
 
 impl Axis3D {

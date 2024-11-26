@@ -7,7 +7,7 @@ use bevy::{prelude::*, utils::Entry};
 
 use super::{
     bind::{BindConfigSet, IntoBindConfigs},
-    input_action::{Accumulation, ActionData, ActionsData, InputAction},
+    input_action::{Accumulation, ActionData, ActionOutput, ActionsData, InputAction},
     input_condition::InputCondition,
     input_modifier::InputModifier,
     trigger_tracker::TriggerTracker,
@@ -33,11 +33,11 @@ use crate::{
 ///    1.1. Apply input-level [`InputModifier`]s.
 ///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
 /// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
-///    Combined value be converted into [`InputAction::DIM`] dimention using [`ActionValue::convert`].
+///    Combined value be converted into [`ActionOutput::DIM`] using [`ActionValue::convert`].
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
-///    Final value be converted into [`InputAction::DIM`] dimention using [`ActionValue::convert`].
+///    Final value be converted into [`InputAction::Output`] using [`ActionOutput::convert_from`].
 ///
 /// New instances won't react to currently held inputs until they are released.
 /// This prevents unintended behavior where switching contexts using the same key
@@ -143,7 +143,7 @@ impl ActionBind {
         Self {
             type_id: TypeId::of::<A>(),
             action_name: any::type_name::<A>(),
-            dim: A::DIM,
+            dim: A::Output::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
             config: BindConfigSet::default(),
@@ -180,7 +180,7 @@ impl ActionBind {
     ///     .with(KeyCode::Space)
     ///     .with(GamepadButtonType::South);
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
     ///
@@ -192,10 +192,10 @@ impl ActionBind {
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>().with(Input::Keyboard {
     ///     key: KeyCode::Space,
-    ///     modifiers: Modifiers::CONTROL,
+    ///     mod_keys: ModKeys::CONTROL,
     /// });
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
     ///
@@ -209,7 +209,7 @@ impl ActionBind {
     /// ctx.bind::<Jump>()
     ///     .with(InputBind::new(KeyCode::Space).with_condition(Release::default()));
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
     pub fn to(&mut self, configs: impl IntoBindConfigs) -> &mut Self {
@@ -317,6 +317,6 @@ mod tests {
     }
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }
