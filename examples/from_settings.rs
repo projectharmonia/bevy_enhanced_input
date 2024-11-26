@@ -43,7 +43,7 @@ impl GamePlugin {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
         // The value has already been preprocessed by defined modifiers.
-        transform.translation += event.value.as_axis3d();
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
