@@ -33,50 +33,49 @@ impl GamePlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, InputContext)]
+#[input_context(ctor = new_dummy_context)]
 struct DummyContext;
 
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn new_dummy_context(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<PressAction>()
-            .with(PressAction::KEY)
-            .with_condition(Press::default());
-        ctx.bind::<JustPressAction>()
-            .with(JustPressAction::KEY)
-            .with_condition(JustPress::default());
-        ctx.bind::<HoldAction>()
-            .with(HoldAction::KEY)
-            .with_condition(Hold::new(1.0));
-        ctx.bind::<HoldAndReleaseAction>()
-            .with(HoldAndReleaseAction::KEY)
-            .with_condition(HoldAndRelease::new(1.0));
-        ctx.bind::<PulseAction>()
-            .with(PulseAction::KEY)
-            .with_condition(Pulse::new(1.0));
-        ctx.bind::<ReleaseAction>()
-            .with(ReleaseAction::KEY)
-            .with_condition(Release::default());
-        ctx.bind::<TapAction>()
-            .with(TapAction::KEY)
-            .with_condition(Tap::new(0.5));
-        ctx.bind::<ChordMember1>()
-            .with(ChordMember1::KEY)
-            .with_condition(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
-        ctx.bind::<ChordMember2>()
-            .with(ChordMember2::KEY)
-            .with_condition(BlockBy::<ChordAction>::events_only());
-        ctx.bind::<ChordAction>()
-            .with_condition(Chord::<ChordMember1>::default())
-            .with_condition(Chord::<ChordMember2>::default());
-        ctx.bind::<BlockerAction>().with(BlockerAction::KEY);
-        ctx.bind::<BlockByAction>()
-            .with(BlockByAction::KEY)
-            .with_condition(BlockBy::<BlockerAction>::default());
+    ctx.bind::<PressAction>()
+        .with(PressAction::KEY)
+        .with_condition(Press::default());
+    ctx.bind::<JustPressAction>()
+        .with(JustPressAction::KEY)
+        .with_condition(JustPress::default());
+    ctx.bind::<HoldAction>()
+        .with(HoldAction::KEY)
+        .with_condition(Hold::new(1.0));
+    ctx.bind::<HoldAndReleaseAction>()
+        .with(HoldAndReleaseAction::KEY)
+        .with_condition(HoldAndRelease::new(1.0));
+    ctx.bind::<PulseAction>()
+        .with(PulseAction::KEY)
+        .with_condition(Pulse::new(1.0));
+    ctx.bind::<ReleaseAction>()
+        .with(ReleaseAction::KEY)
+        .with_condition(Release::default());
+    ctx.bind::<TapAction>()
+        .with(TapAction::KEY)
+        .with_condition(Tap::new(0.5));
+    ctx.bind::<ChordMember1>()
+        .with(ChordMember1::KEY)
+        .with_condition(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
+    ctx.bind::<ChordMember2>()
+        .with(ChordMember2::KEY)
+        .with_condition(BlockBy::<ChordAction>::events_only());
+    ctx.bind::<ChordAction>()
+        .with_condition(Chord::<ChordMember1>::default())
+        .with_condition(Chord::<ChordMember2>::default());
+    ctx.bind::<BlockerAction>().with(BlockerAction::KEY);
+    ctx.bind::<BlockByAction>()
+        .with(BlockByAction::KEY)
+        .with_condition(BlockBy::<BlockerAction>::default());
 
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

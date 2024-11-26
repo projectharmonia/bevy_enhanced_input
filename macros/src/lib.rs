@@ -1,7 +1,7 @@
 use darling::FromDeriveInput;
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, DeriveInput, Ident};
+use syn::{parse_macro_input, DeriveInput, Expr, Ident, Path};
 
 #[derive(FromDeriveInput)]
 #[darling(attributes(input_action))]
@@ -23,30 +23,30 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
         quote! { ::bevy_enhanced_input::prelude::InputAction },
     );
 
-    let opts = match InputActionOpts::from_derive_input(&input) {
+    let InputActionOpts {
+        output,
+        accumulation,
+        consume_input,
+    } = match InputActionOpts::from_derive_input(&input) {
         Ok(value) => value,
         Err(e) => {
             return e.write_errors().into();
         }
     };
 
-    let struct_name = input.ident;
-    let output = opts.output;
-    let accumulation = if let Some(accumulation) = opts.accumulation {
+    let accumulation = accumulation.map_or_else(Default::default, |accumulation| {
         quote! {
             const ACCUMULATION: #Accumulation = #Accumulation::#accumulation;
+
         }
-    } else {
-        Default::default()
-    };
-    let consume_input = if let Some(consume) = opts.consume_input {
+    });
+    let consume_input = consume_input.map_or_else(Default::default, |consume| {
         quote! {
             const CONSUME_INPUT: bool = #consume;
         }
-    } else {
-        Default::default()
-    };
+    });
 
+    let struct_name = input.ident;
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
 
     TokenStream::from(quote! {
@@ -54,6 +54,69 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
             type Output = #output;
             #accumulation
             #consume_input
+        }
+    })
+}
+
+#[derive(FromDeriveInput)]
+#[darling(attributes(input_context))]
+struct InputContextOpts {
+    ctor: Path,
+    #[darling(default)]
+    mode: Option<Ident>,
+    #[darling(default)]
+    priority: Option<Expr>,
+}
+
+#[proc_macro_derive(InputContext, attributes(input_context))]
+pub fn input_context_derive(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+
+    #[expect(non_snake_case, reason = "item shortcuts")]
+    let (InputContext, ContextInstance, ContextMode, World, Entity, IntoSystem, ReadOnlySystem) = (
+        quote! { ::bevy_enhanced_input::prelude::InputContext },
+        quote! { ::bevy_enhanced_input::prelude::ContextInstance },
+        quote! { ContextMode },
+        // TODO
+        quote! { World },
+        quote! { Entity },
+        quote! { IntoSystem },
+        quote! { ReadOnlySystem },
+    );
+
+    let InputContextOpts {
+        ctor,
+        mode,
+        priority,
+    } = match InputContextOpts::from_derive_input(&input) {
+        Ok(value) => value,
+        Err(e) => {
+            return e.write_errors().into();
+        }
+    };
+
+    let mode = mode.map_or_else(Default::default, |mode| {
+        quote! {
+            const MODE: #ContextMode = #ContextMode::#mode;
+        }
+    });
+    let priority = priority.map_or_else(Default::default, |priority| {
+        quote! {
+            const PRIORITY: isize = #priority;
+        }
+    });
+
+    let struct_name = input.ident;
+    let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
+
+    TokenStream::from(quote! {
+        impl #impl_generics #InputContext for #struct_name #type_generics #where_clause {
+            fn context_instance(world: &#World, entity: #Entity) -> #ContextInstance {
+                let mut ctor = #IntoSystem::into_system(#ctor);
+                #ReadOnlySystem::run_readonly(&mut ctor, entity, world)
+            }
+            #mode
+            #priority
         }
     })
 }

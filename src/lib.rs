@@ -87,7 +87,7 @@ pub mod prelude {
         },
         EnhancedInputPlugin, EnhancedInputSystem,
     };
-    pub use bevy_enhanced_input_macros::InputAction;
+    pub use bevy_enhanced_input_macros::{InputAction, InputContext};
 }
 
 use bevy::{input::InputSystem, prelude::*};
