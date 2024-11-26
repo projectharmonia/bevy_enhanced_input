@@ -283,33 +283,29 @@ impl InputContext for DummyContext {
         let negate = Negate::default();
         let scale = Scale::splat(2.0);
 
-        ctx.bind::<ChordMember>().with(ChordMember::KEY);
-        ctx.bind::<Blocker>().with(Blocker::KEY);
-        ctx.bind::<EventsBlocker>().with(EventsBlocker::KEY);
+        ctx.bind::<ChordMember>().to(ChordMember::KEY);
+        ctx.bind::<Blocker>().to(Blocker::KEY);
+        ctx.bind::<EventsBlocker>().to(EventsBlocker::KEY);
         ctx.bind::<InputLevel>()
-            .with(
-                InputBind::new(InputLevel::KEY1)
-                    .with_condition(chord)
-                    .with_condition(block_by)
-                    .with_condition(block_events_by)
-                    .with_condition(down)
-                    .with_condition(release)
-                    .with_modifier(swizzle_axis)
-                    .with_modifier(scale),
-            )
-            .with(
-                InputBind::new(InputLevel::KEY2)
-                    .with_condition(chord)
-                    .with_condition(block_by)
-                    .with_condition(block_events_by)
-                    .with_condition(down)
-                    .with_condition(release)
-                    .with_modifier(swizzle_axis)
-                    .with_modifier(negate),
-            );
+            .to(InputBindTodoRenameMe::new(InputLevel::KEY1)
+                .with_condition(chord)
+                .with_condition(block_by)
+                .with_condition(block_events_by)
+                .with_condition(down)
+                .with_condition(release)
+                .with_modifier(swizzle_axis)
+                .with_modifier(scale))
+            .to(InputBindTodoRenameMe::new(InputLevel::KEY2)
+                .with_condition(chord)
+                .with_condition(block_by)
+                .with_condition(block_events_by)
+                .with_condition(down)
+                .with_condition(release)
+                .with_modifier(swizzle_axis)
+                .with_modifier(negate));
         ctx.bind::<ActionLevel>()
-            .with(ActionLevel::KEY1)
-            .with(ActionLevel::KEY2)
+            .to(ActionLevel::KEY1)
+            .to(ActionLevel::KEY2)
             .with_condition(down)
             .with_condition(release)
             .with_condition(chord)
@@ -319,16 +315,12 @@ impl InputContext for DummyContext {
             .with_modifier(negate)
             .with_modifier(scale);
         ctx.bind::<BothLevels>()
-            .with(
-                InputBind::new(BothLevels::KEY1)
-                    .with_condition(down)
-                    .with_modifier(scale),
-            )
-            .with(
-                InputBind::new(BothLevels::KEY2)
-                    .with_condition(down)
-                    .with_modifier(negate),
-            )
+            .to(InputBindTodoRenameMe::new(BothLevels::KEY1)
+                .with_condition(down)
+                .with_modifier(scale))
+            .to(InputBindTodoRenameMe::new(BothLevels::KEY2)
+                .with_condition(down)
+                .with_modifier(negate))
             .with_condition(release)
             .with_condition(chord)
             .with_condition(block_by)

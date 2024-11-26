@@ -87,16 +87,16 @@ impl InputContext for PlayerBox {
         // Assign different mappings based player index.
         match index {
             0 => {
-                ctx.bind::<Move>().with(WasdKeys).with(GamepadStick::Left);
+                ctx.bind::<Move>().to(WasdKeys).to(GamepadStick::Left);
                 ctx.bind::<Rotate>()
-                    .with(KeyCode::Space)
-                    .with(GamepadButtonType::South);
+                    .to(KeyCode::Space)
+                    .to(GamepadButtonType::South);
             }
             1 => {
-                ctx.bind::<Move>().with(ArrowKeys).with(GamepadStick::Right);
+                ctx.bind::<Move>().to(ArrowKeys).to(GamepadStick::Right);
                 ctx.bind::<Rotate>()
-                    .with(KeyCode::Numpad0)
-                    .with(GamepadButtonType::South);
+                    .to(KeyCode::Numpad0)
+                    .to(GamepadButtonType::South);
             }
             _ => {
                 panic!("game expects only 2 players");

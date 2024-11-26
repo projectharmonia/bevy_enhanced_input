@@ -41,38 +41,38 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<PressAction>()
-            .with(PressAction::KEY)
+            .to(PressAction::KEY)
             .with_condition(Press::default());
         ctx.bind::<JustPressAction>()
-            .with(JustPressAction::KEY)
+            .to(JustPressAction::KEY)
             .with_condition(JustPress::default());
         ctx.bind::<HoldAction>()
-            .with(HoldAction::KEY)
+            .to(HoldAction::KEY)
             .with_condition(Hold::new(1.0));
         ctx.bind::<HoldAndReleaseAction>()
-            .with(HoldAndReleaseAction::KEY)
+            .to(HoldAndReleaseAction::KEY)
             .with_condition(HoldAndRelease::new(1.0));
         ctx.bind::<PulseAction>()
-            .with(PulseAction::KEY)
+            .to(PulseAction::KEY)
             .with_condition(Pulse::new(1.0));
         ctx.bind::<ReleaseAction>()
-            .with(ReleaseAction::KEY)
+            .to(ReleaseAction::KEY)
             .with_condition(Release::default());
         ctx.bind::<TapAction>()
-            .with(TapAction::KEY)
+            .to(TapAction::KEY)
             .with_condition(Tap::new(0.5));
         ctx.bind::<ChordMember1>()
-            .with(ChordMember1::KEY)
+            .to(ChordMember1::KEY)
             .with_condition(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
         ctx.bind::<ChordMember2>()
-            .with(ChordMember2::KEY)
+            .to(ChordMember2::KEY)
             .with_condition(BlockBy::<ChordAction>::events_only());
         ctx.bind::<ChordAction>()
             .with_condition(Chord::<ChordMember1>::default())
             .with_condition(Chord::<ChordMember2>::default());
-        ctx.bind::<BlockerAction>().with(BlockerAction::KEY);
+        ctx.bind::<BlockerAction>().to(BlockerAction::KEY);
         ctx.bind::<BlockByAction>()
-            .with(BlockByAction::KEY)
+            .to(BlockByAction::KEY)
             .with_condition(BlockBy::<BlockerAction>::default());
 
         ctx

@@ -1,40 +1,38 @@
 use bevy::prelude::*;
 
-use crate::{Input, InputBind, Negate, SwizzleAxis};
+use crate::{Negate, SwizzleAxis};
 
-pub trait BindPreset {
-    fn bindings(self) -> impl Iterator<Item = InputBind>;
-}
-
-impl<I: Into<InputBind>> BindPreset for I {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        std::iter::once(self.into())
-    }
-}
+use super::bind::{BindConfigs, IntoBindConfigs};
 
 /// Maps 4 buttons as 2-dimentional input.
 ///
 /// This is a convenience preset that uses [`SwizzleAxis`] and [`Negate`] to
 /// bind the buttons to X and Y axes.
 #[derive(Debug, Clone, Copy)]
-pub struct XyAxis {
-    pub up: Input,
-    pub left: Input,
-    pub down: Input,
-    pub right: Input,
+pub struct Cardinal<N, E, S, W> {
+    pub north: N,
+    pub east: E,
+    pub south: S,
+    pub west: W,
 }
 
-impl BindPreset for XyAxis {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        [
-            InputBind::new(self.up).with_modifier(SwizzleAxis::YXZ),
-            InputBind::new(self.left).with_modifier(Negate::default()),
-            InputBind::new(self.down)
+impl<N, E, S, W> IntoBindConfigs for Cardinal<N, E, S, W>
+where
+    N: IntoBindConfigs,
+    E: IntoBindConfigs,
+    S: IntoBindConfigs,
+    W: IntoBindConfigs,
+{
+    fn into_configs(self) -> BindConfigs {
+        (
+            self.north.with_modifier(SwizzleAxis::YXZ),
+            self.east,
+            self.south
                 .with_modifier(Negate::default())
                 .with_modifier(SwizzleAxis::YXZ),
-            InputBind::new(self.right),
-        ]
-        .into_iter()
+            self.west.with_modifier(Negate::default()),
+        )
+            .into_configs()
     }
 }
 
@@ -44,61 +42,61 @@ impl BindPreset for XyAxis {
 /// toward the camera. To map movement correctly in 3D space, you will
 /// need to invert Y and apply it to Z translation inside your observer.
 ///
-/// Shorthand for [`XyAxis`].
+/// Shorthand for [`Cardinal`] with [`KeyCode`] WASD keys.
 ///
-/// See also [`ArrowKeys`].
+/// See also [`ArrowKeys`], [`DPadButtons`].
 #[derive(Debug, Clone, Copy, Default)]
 pub struct WasdKeys;
 
-impl BindPreset for WasdKeys {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        XyAxis {
-            up: KeyCode::KeyW.into(),
-            left: KeyCode::KeyA.into(),
-            down: KeyCode::KeyS.into(),
-            right: KeyCode::KeyD.into(),
+impl IntoBindConfigs for WasdKeys {
+    fn into_configs(self) -> BindConfigs {
+        Cardinal {
+            north: KeyCode::KeyW,
+            east: KeyCode::KeyD,
+            south: KeyCode::KeyS,
+            west: KeyCode::KeyA,
         }
-        .bindings()
+        .into_configs()
     }
 }
 
 /// Maps keyboard arrow keys as 2-dimentional input.
 ///
-/// Shorthand for [`XyAxis`].
+/// Shorthand for [`Cardinal`] with [`KeyCode`] arrow keys.
 ///
-/// See also [`WasdKeys`].
+/// See also [`WasdKeys`], [`DPadButtons`].
 #[derive(Debug, Clone, Copy, Default)]
 pub struct ArrowKeys;
 
-impl BindPreset for ArrowKeys {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        XyAxis {
-            up: KeyCode::ArrowUp.into(),
-            left: KeyCode::ArrowLeft.into(),
-            down: KeyCode::ArrowDown.into(),
-            right: KeyCode::ArrowRight.into(),
+impl IntoBindConfigs for ArrowKeys {
+    fn into_configs(self) -> BindConfigs {
+        Cardinal {
+            north: KeyCode::ArrowUp,
+            east: KeyCode::ArrowRight,
+            south: KeyCode::ArrowDown,
+            west: KeyCode::ArrowLeft,
         }
-        .bindings()
+        .into_configs()
     }
 }
 
 /// Maps D-pad as 2-dimentional input.
 ///
-/// Shorthand for [`XyAxis`].
+/// Shorthand for [`Cardinal`] with [`GamepadButtonType`] D-pad keys.
 ///
-/// See also [`WasdKeys`].
+/// See also [`WasdKeys`], [`ArrowKeys`].
 #[derive(Debug, Clone, Copy, Default)]
-pub struct DpadButtons;
+pub struct DPadButtons;
 
-impl BindPreset for DpadButtons {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        XyAxis {
-            up: GamepadButtonType::DPadUp.into(),
-            left: GamepadButtonType::DPadLeft.into(),
-            down: GamepadButtonType::DPadDown.into(),
-            right: GamepadButtonType::DPadRight.into(),
+impl IntoBindConfigs for DPadButtons {
+    fn into_configs(self) -> BindConfigs {
+        Cardinal {
+            north: GamepadButtonType::DPadUp,
+            east: GamepadButtonType::DPadRight,
+            south: GamepadButtonType::DPadDown,
+            west: GamepadButtonType::DPadLeft,
         }
-        .bindings()
+        .into_configs()
     }
 }
 
@@ -129,12 +127,8 @@ impl GamepadStick {
     }
 }
 
-impl BindPreset for GamepadStick {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        [
-            InputBind::new(self.x()),
-            InputBind::new(self.y()).with_modifier(SwizzleAxis::YXZ),
-        ]
-        .into_iter()
+impl IntoBindConfigs for GamepadStick {
+    fn into_configs(self) -> BindConfigs {
+        (self.x(), self.y().with_modifier(SwizzleAxis::YXZ)).into_configs()
     }
 }

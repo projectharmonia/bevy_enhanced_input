@@ -6,10 +6,10 @@ use std::{
 use bevy::{prelude::*, utils::Entry};
 
 use super::{
+    bind::{BindConfigSet, IntoBindConfigs},
     input_action::{Accumulation, ActionData, ActionsData, InputAction},
     input_condition::InputCondition,
     input_modifier::InputModifier,
-    preset::BindPreset,
     trigger_tracker::TriggerTracker,
 };
 use crate::{
@@ -81,6 +81,12 @@ impl ContextInstance {
         }
     }
 
+    // TODO(boris): docs
+    pub fn bind_to<A: InputAction>(mut self, configs: impl IntoBindConfigs) -> Self {
+        self.bind::<A>().to(configs);
+        self
+    }
+
     /// Returns associated state for action `A`.
     ///
     /// See also [`ContextInstances::get`](super::ContextInstances::get).
@@ -131,10 +137,7 @@ pub struct ActionBind {
     consume_input: bool,
     accumulation: Accumulation,
     dim: ActionValueDim,
-
-    modifiers: Vec<Box<dyn InputModifier>>,
-    conditions: Vec<Box<dyn InputCondition>>,
-    bindings: Vec<InputBind>,
+    config: BindConfigSet,
 
     /// Consumed inputs during state evaluation.
     consume_buffer: Vec<Input>,
@@ -149,9 +152,7 @@ impl ActionBind {
             dim: A::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
-            modifiers: Default::default(),
-            conditions: Default::default(),
-            bindings: Default::default(),
+            config: BindConfigSet::default(),
             consume_buffer: Default::default(),
         }
     }
@@ -159,14 +160,14 @@ impl ActionBind {
     /// Adds action-level modifier.
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
         debug!("adding `{modifier:?}` to `{}`", self.action_name);
-        self.modifiers.push(Box::new(modifier));
+        self.config.info.modifiers.push(Box::new(modifier));
         self
     }
 
     /// Adds action-level condition.
     pub fn with_condition(&mut self, condition: impl InputCondition) -> &mut Self {
         debug!("adding `{condition:?}` to `{}`", self.action_name);
-        self.conditions.push(Box::new(condition));
+        self.config.info.conditions.push(Box::new(condition));
         self
     }
 
@@ -217,11 +218,10 @@ impl ActionBind {
     /// # #[input_action(dim = Bool)]
     /// # struct Jump;
     /// ```
-    pub fn with(&mut self, bind_preset: impl BindPreset) -> &mut Self {
-        for binding in bind_preset.bindings() {
-            debug!("adding `{binding:?}` to `{}`", self.action_name);
-            self.bindings.push(binding);
-        }
+    pub fn to(&mut self, configs: impl IntoBindConfigs) -> &mut Self {
+        let configs = configs.into_configs();
+        debug!("adding `{configs:?}` to `{}`", self.action_name);
+        self.config.binds.push(configs);
         self
     }
 
@@ -303,53 +303,6 @@ impl ActionBind {
     }
 }
 
-/// Associated input for [`ActionBind`].
-#[derive(Debug)]
-pub struct InputBind {
-    pub input: Input,
-    pub modifiers: Vec<Box<dyn InputModifier>>,
-    pub conditions: Vec<Box<dyn InputCondition>>,
-
-    /// Newly created mappings are ignored by default until until a zero
-    /// value is read for them.
-    ///
-    /// This prevents newly created contexts from reacting to currently
-    /// held inputs until they are released.
-    ignored: bool,
-}
-
-impl InputBind {
-    /// Creates a new instance without modifiers and conditions.
-    pub fn new(input: impl Into<Input>) -> Self {
-        Self {
-            input: input.into(),
-            modifiers: Default::default(),
-            conditions: Default::default(),
-            ignored: true,
-        }
-    }
-
-    /// Adds modifier.
-    #[must_use]
-    pub fn with_modifier(mut self, modifier: impl InputModifier) -> Self {
-        self.modifiers.push(Box::new(modifier));
-        self
-    }
-
-    /// Adds condition.
-    #[must_use]
-    pub fn with_condition(mut self, condition: impl InputCondition) -> Self {
-        self.conditions.push(Box::new(condition));
-        self
-    }
-}
-
-impl<I: Into<Input>> From<I> for InputBind {
-    fn from(input: I) -> Self {
-        Self::new(input)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use bevy_enhanced_input_macros::InputAction;
@@ -359,8 +312,8 @@ mod tests {
     #[test]
     fn bind() {
         let mut ctx = ContextInstance::default();
-        ctx.bind::<DummyAction>().with(KeyCode::KeyA);
-        ctx.bind::<DummyAction>().with(KeyCode::KeyB);
+        ctx.bind::<DummyAction>().to(KeyCode::KeyA);
+        ctx.bind::<DummyAction>().to(KeyCode::KeyB);
         assert_eq!(ctx.bindings.len(), 1);
 
         let action = ctx.bindings.first().unwrap();

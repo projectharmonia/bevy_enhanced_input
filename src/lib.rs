@@ -71,7 +71,7 @@ pub mod prelude {
         action_value::{ActionValue, ActionValueDim},
         input::{GamepadDevice, Input, Modifiers},
         input_context::{
-            context_instance::{ActionBind, ContextInstance, InputBind},
+            context_instance::{ActionBind, ContextInstance},
             events::*,
             input_action::{Accumulation, ActionData, ActionState, InputAction},
             input_condition::{
@@ -83,7 +83,7 @@ pub mod prelude {
                 accumulate_by::*, dead_zone::*, delta_lerp::*, delta_scale::*,
                 exponential_curve::*, negate::*, scale::*, swizzle_axis::*, InputModifier,
             },
-            preset::{ArrowKeys, DpadButtons, GamepadStick, WasdKeys, XyAxis},
+            preset::{ArrowKeys, Cardinal, DPadButtons, GamepadStick, WasdKeys},
             ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
         },
         EnhancedInputPlugin, EnhancedInputSystem,

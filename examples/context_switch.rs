@@ -90,12 +90,12 @@ impl InputContext for OnFoot {
 
         instance
             .bind::<Move>()
-            .with(WasdKeys)
+            .to(WasdKeys)
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
-        instance.bind::<Rotate>().with(KeyCode::Space);
-        instance.bind::<EnterCar>().with(KeyCode::Enter);
+        instance.bind::<Rotate>().to(KeyCode::Space);
+        instance.bind::<EnterCar>().to(KeyCode::Enter);
 
         instance
     }
@@ -121,11 +121,11 @@ impl InputContext for InCar {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<Move>()
-            .with(WasdKeys)
+            .to(WasdKeys)
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED + 20.0)); // Make car faster.
-        ctx.bind::<ExitCar>().with(KeyCode::Enter);
+        ctx.bind::<ExitCar>().to(KeyCode::Enter);
 
         ctx
     }

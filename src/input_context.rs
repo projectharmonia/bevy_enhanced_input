@@ -1,3 +1,4 @@
+pub mod bind;
 pub mod context_instance;
 pub mod events;
 pub mod input_action;
