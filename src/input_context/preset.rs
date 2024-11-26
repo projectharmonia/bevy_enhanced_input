@@ -1,60 +1,14 @@
 use bevy::prelude::*;
 
-use crate::{Input, InputBind, InputCondition, InputModifier, Negate, SwizzleAxis};
+use crate::{Input, InputBind, Negate, SwizzleAxis};
 
 pub trait BindPreset {
     fn bindings(self) -> impl Iterator<Item = InputBind>;
-
-    fn with_modifier<M: InputModifier + Clone>(self, modifier: M) -> PresetWithModifier<Self, M>
-    where
-        Self: Sized,
-    {
-        PresetWithModifier {
-            preset: self,
-            modifier,
-        }
-    }
-
-    fn with_condition<C: InputCondition + Clone>(self, condition: C) -> PresetWithCondition<Self, C>
-    where
-        Self: Sized,
-    {
-        PresetWithCondition {
-            preset: self,
-            condition,
-        }
-    }
 }
 
 impl<I: Into<InputBind>> BindPreset for I {
     fn bindings(self) -> impl Iterator<Item = InputBind> {
         std::iter::once(self.into())
-    }
-}
-
-pub struct PresetWithModifier<P, M> {
-    preset: P,
-    modifier: M,
-}
-
-impl<P: BindPreset, M: InputModifier + Clone> BindPreset for PresetWithModifier<P, M> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.preset
-            .bindings()
-            .map(move |bind| bind.with_modifier(self.modifier.clone()))
-    }
-}
-
-pub struct PresetWithCondition<P, C> {
-    preset: P,
-    condition: C,
-}
-
-impl<P: BindPreset, C: InputCondition + Clone> BindPreset for PresetWithCondition<P, C> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.preset
-            .bindings()
-            .map(move |bind| bind.with_condition(self.condition.clone()))
     }
 }
 
@@ -145,5 +99,42 @@ impl BindPreset for DpadButtons {
             right: GamepadButtonType::DPadRight.into(),
         }
         .bindings()
+    }
+}
+
+/// Represents the side of a gamepad's analog stick.
+#[derive(Clone, Copy, Debug)]
+pub enum GamepadStick {
+    /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
+    Left,
+    /// Corresponds to [`GamepadAxisType::RightStickX`] and [`GamepadAxisType::RightStickY`]
+    Right,
+}
+
+impl GamepadStick {
+    /// Returns associated X axis.
+    pub fn x(self) -> GamepadAxisType {
+        match self {
+            GamepadStick::Left => GamepadAxisType::LeftStickX,
+            GamepadStick::Right => GamepadAxisType::RightStickX,
+        }
+    }
+
+    /// Returns associated Y axis.
+    pub fn y(self) -> GamepadAxisType {
+        match self {
+            GamepadStick::Left => GamepadAxisType::LeftStickY,
+            GamepadStick::Right => GamepadAxisType::RightStickY,
+        }
+    }
+}
+
+impl BindPreset for GamepadStick {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        [
+            InputBind::new(self.x()),
+            InputBind::new(self.y()).with_modifier(SwizzleAxis::YXZ),
+        ]
+        .into_iter()
     }
 }

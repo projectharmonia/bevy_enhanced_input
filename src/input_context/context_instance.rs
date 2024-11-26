@@ -8,7 +8,7 @@ use bevy::{prelude::*, utils::Entry};
 use super::{
     input_action::{Accumulation, ActionData, ActionsData, InputAction},
     input_condition::InputCondition,
-    input_modifier::{swizzle_axis::SwizzleAxis, InputModifier},
+    input_modifier::InputModifier,
     preset::BindPreset,
     trigger_tracker::TriggerTracker,
 };
@@ -347,45 +347,6 @@ impl InputBind {
 impl<I: Into<Input>> From<I> for InputBind {
     fn from(input: I) -> Self {
         Self::new(input)
-    }
-}
-
-/// Represents the side of a gamepad's analog stick.
-///
-/// See also [`ActionBind::with_stick`].
-#[derive(Clone, Copy, Debug)]
-pub enum GamepadStick {
-    /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
-    Left,
-    /// Corresponds to [`GamepadAxisType::RightStickX`] and [`GamepadAxisType::RightStickY`]
-    Right,
-}
-
-impl GamepadStick {
-    /// Returns associated X axis.
-    pub fn x(self) -> GamepadAxisType {
-        match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickX,
-            GamepadStick::Right => GamepadAxisType::RightStickX,
-        }
-    }
-
-    /// Returns associated Y axis.
-    pub fn y(self) -> GamepadAxisType {
-        match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickY,
-            GamepadStick::Right => GamepadAxisType::RightStickY,
-        }
-    }
-}
-
-impl BindPreset for GamepadStick {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        [
-            InputBind::new(self.x()),
-            InputBind::new(self.y()).with_modifier(SwizzleAxis::YXZ),
-        ]
-        .into_iter()
     }
 }
 
