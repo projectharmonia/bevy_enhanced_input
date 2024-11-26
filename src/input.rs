@@ -54,8 +54,10 @@ impl From<KeyCode> for Modifiers {
 /// Inputs that can be associated with an
 /// [`InputAction`](super::input_context::input_action::InputAction).
 ///
-/// If the action's dimension differs from the captured input, it will be converted
-/// using [`ActionValue::convert`](crate::action_value::ActionValue::convert).
+/// [Modifiers](super::input_context::input_modifier) can change the captured dimension.
+///
+/// If the action's dimension differs from the captured input, it will be converted using
+/// [`ActionOutput::convert_from`](super::input_context::input_action::ActionOutput::convert_from).
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Input {
     /// Keyboard button, will be captured as
