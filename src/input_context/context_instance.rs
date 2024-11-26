@@ -317,7 +317,7 @@ mod tests {
         assert_eq!(ctx.bindings.len(), 1);
 
         let action = ctx.bindings.first().unwrap();
-        assert_eq!(action.bindings.len(), 2);
+        assert_eq!(action.config.binds.len(), 2);
     }
 
     #[derive(Debug, InputAction)]
