@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use serde::{Deserialize, Serialize};
 
 use crate::{Negate, SwizzleAxis};
 
@@ -8,7 +9,42 @@ use super::bind::{BindConfigs, IntoBindConfigs};
 ///
 /// This is a convenience preset that uses [`SwizzleAxis`] and [`Negate`] to
 /// bind the buttons to X and Y axes.
-#[derive(Debug, Clone, Copy)]
+///
+/// # Examples
+///
+/// Map keyboard inputs into a 2D movement action
+///
+/// ```
+/// use bevy::prelude::*;
+/// use bevy_enhanced_input::prelude::*;
+///
+/// #[derive(Debug, Resource)]
+/// struct ControlSettings {
+///     forward: Vec<Input>,
+///     right: Vec<Input>,
+///     backward: Vec<Input>,
+///     left: Vec<Input>,
+/// }
+///
+/// #[derive(Debug, Component)]
+/// struct PlayerInputContext;
+///
+/// impl InputContext for PlayerInputContext {
+///     fn context_instance(world: &World, _entity: Entity) -> ContextInstance {
+///         let settings = world.resource::<ControlSettings>();
+///
+///         let mut ctx = ContextInstance::default();
+///         ctx.bind::<Move>().to(Cardinal {
+///             north: settings.forward.clone(),
+///             east: settings.right.clone(),
+///             south: settings.backward.clone(),
+///             west: settings.left.clone(),
+///         });
+///         ctx
+///     }
+/// }
+/// ```
+#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Cardinal<N, E, S, W> {
     pub north: N,
     pub east: E,
@@ -45,7 +81,8 @@ where
 /// Shorthand for [`Cardinal`] with [`KeyCode`] WASD keys.
 ///
 /// See also [`ArrowKeys`], [`DPadButtons`].
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Default)]
 pub struct WasdKeys;
 
 impl IntoBindConfigs for WasdKeys {
@@ -65,7 +102,8 @@ impl IntoBindConfigs for WasdKeys {
 /// Shorthand for [`Cardinal`] with [`KeyCode`] arrow keys.
 ///
 /// See also [`WasdKeys`], [`DPadButtons`].
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Default)]
 pub struct ArrowKeys;
 
 impl IntoBindConfigs for ArrowKeys {
@@ -85,7 +123,8 @@ impl IntoBindConfigs for ArrowKeys {
 /// Shorthand for [`Cardinal`] with [`GamepadButtonType`] D-pad keys.
 ///
 /// See also [`WasdKeys`], [`ArrowKeys`].
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Reflect, Serialize, Deserialize)]
+#[reflect(Default)]
 pub struct DPadButtons;
 
 impl IntoBindConfigs for DPadButtons {
@@ -101,7 +140,7 @@ impl IntoBindConfigs for DPadButtons {
 }
 
 /// Represents the side of a gamepad's analog stick.
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect, Serialize, Deserialize)]
 pub enum GamepadStick {
     /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
     Left,
