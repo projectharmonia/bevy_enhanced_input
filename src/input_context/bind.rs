@@ -115,7 +115,15 @@ impl IntoBindConfigs for BindConfigSet {
     }
 }
 
+// collections
+
 impl<T: IntoBindConfigs, const N: usize> IntoBindConfigs for [T; N] {
+    fn into_configs(self) -> BindConfigs {
+        BindConfigSet::from_iter(self.into_iter().map(IntoBindConfigs::into_configs)).into_configs()
+    }
+}
+
+impl<T: IntoBindConfigs> IntoBindConfigs for Vec<T> {
     fn into_configs(self) -> BindConfigs {
         BindConfigSet::from_iter(self.into_iter().map(IntoBindConfigs::into_configs)).into_configs()
     }

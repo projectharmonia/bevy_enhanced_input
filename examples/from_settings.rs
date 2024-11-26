@@ -1,11 +1,11 @@
-//! Simple setup with a single context.
+//! Creates a context from a settings struct.
 
 mod player_box;
 
 use std::f32::consts::FRAC_PI_4;
 
 use bevy::prelude::*;
-use bevy_enhanced_input::prelude::*;
+use bevy_enhanced_input::{input_context::bind::BindConfigs, prelude::*};
 
 use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, DEFAULT_SPEED};
 
@@ -24,7 +24,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<PlayerBox>() // All input contexts should be registered inside the app.
+        app.add_input_context::<PlayerBox>()
             .add_systems(Startup, Self::spawn)
             .observe(Self::apply_movement)
             .observe(Self::rotate);
@@ -52,30 +52,45 @@ impl GamePlugin {
     }
 }
 
-// To define mappings for actions, implement the context trait.
-// You can implement it for your character component directly, as
-// shown in this example, if you don't plan to switch contexts.
+#[derive(Debug, Resource)]
+struct ControlSettings {
+    up: Vec<Input>,
+    right: Vec<Input>,
+    down: Vec<Input>,
+    left: Vec<Input>,
+    rotate: Vec<Input>,
+}
+
+impl Default for ControlSettings {
+    fn default() -> Self {
+        Self {
+            up: vec![KeyCode::KeyW.into()],
+            right: vec![KeyCode::KeyD.into()],
+            down: vec![KeyCode::KeyS.into()],
+            left: vec![KeyCode::KeyA.into()],
+            rotate: vec![KeyCode::Space.into()],
+        }
+    }
+}
+
 impl InputContext for PlayerBox {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        // Create a context and start defining bindings.
-        // Multiple inputs can be assigned to a single action,
-        // and the action will respond to any of them.
+    fn context_instance(world: &World, _entity: Entity) -> ContextInstance {
+        let settings = world.resource::<ControlSettings>();
+
         let mut ctx = ContextInstance::default();
 
-        // Mappings like WASD or sticks are very common,
-        // so we provide built-ins to assign all keys/axes at once.
-        // We don't assign any conditions and in this case the action will
-        // be triggered with any non-zero value.
         ctx.bind::<Move>()
-            .to(WasdKeys)
-            .to(GamepadStick::Left)
-            .with_modifier(DeadZone::default()) // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
-            .with_modifier(DeltaLerp::default()) // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
-            .with_modifier(Scale::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.
+            .to(Cardinal {
+                north: settings.up.clone(),
+                east: settings.right.clone(),
+                south: settings.down.clone(),
+                west: settings.left.clone(),
+            })
+            .with_modifier(DeadZone::default())
+            .with_modifier(DeltaLerp::default())
+            .with_modifier(Scale::splat(DEFAULT_SPEED));
 
-        ctx.bind::<Rotate>()
-            .to(KeyCode::Space)
-            .to(GamepadButtonType::South);
+        ctx.bind::<Rotate>().to(settings.rotate.clone());
 
         ctx
     }

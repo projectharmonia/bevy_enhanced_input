@@ -81,12 +81,6 @@ impl ContextInstance {
         }
     }
 
-    // TODO(boris): docs
-    pub fn bind_to<A: InputAction>(mut self, configs: impl IntoBindConfigs) -> Self {
-        self.bind::<A>().to(configs);
-        self
-    }
-
     /// Returns associated state for action `A`.
     ///
     /// See also [`ContextInstances::get`](super::ContextInstances::get).
@@ -236,49 +230,51 @@ impl ActionBind {
         trace!("updating action `{}`", self.action_name);
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
-        for binding in &mut self.bindings {
-            let value = reader.value(binding.input);
-            if binding.ignored {
-                // Ignore until we read zero for this mapping.
-                if value.as_bool() {
-                    continue;
-                } else {
-                    binding.ignored = false;
-                }
-            }
 
-            let mut current_tracker = TriggerTracker::new(value);
-            current_tracker.apply_modifiers(actions, time, &mut binding.modifiers);
-            current_tracker.apply_conditions(actions, time, &mut binding.conditions);
+        // TODO
+        // for binding in &mut self.bindings {
+        //     let value = reader.value(binding.input);
+        //     if binding.ignored {
+        //         // Ignore until we read zero for this mapping.
+        //         if value.as_bool() {
+        //             continue;
+        //         } else {
+        //             binding.ignored = false;
+        //         }
+        //     }
 
-            let current_state = current_tracker.state();
-            if current_state == ActionState::None {
-                // Ignore non-active trackers to allow the action to fire even if all
-                // input-level conditions return `ActionState::None`. This ensures that an
-                // action-level condition or modifier can still trigger the action.
-                continue;
-            }
+        //     let mut current_tracker = TriggerTracker::new(value);
+        //     current_tracker.apply_modifiers(actions, time, &mut binding.modifiers);
+        //     current_tracker.apply_conditions(actions, time, &mut binding.conditions);
 
-            match current_state.cmp(&tracker.state()) {
-                Ordering::Less => (),
-                Ordering::Equal => {
-                    tracker.combine(current_tracker, self.accumulation);
-                    if self.consume_input {
-                        self.consume_buffer.push(binding.input);
-                    }
-                }
-                Ordering::Greater => {
-                    tracker.overwrite(current_tracker);
-                    if self.consume_input {
-                        self.consume_buffer.clear();
-                        self.consume_buffer.push(binding.input);
-                    }
-                }
-            }
-        }
+        //     let current_state = current_tracker.state();
+        //     if current_state == ActionState::None {
+        //         // Ignore non-active trackers to allow the action to fire even if all
+        //         // input-level conditions return `ActionState::None`. This ensures that an
+        //         // action-level condition or modifier can still trigger the action.
+        //         continue;
+        //     }
 
-        tracker.apply_modifiers(actions, time, &mut self.modifiers);
-        tracker.apply_conditions(actions, time, &mut self.conditions);
+        //     match current_state.cmp(&tracker.state()) {
+        //         Ordering::Less => (),
+        //         Ordering::Equal => {
+        //             tracker.combine(current_tracker, self.accumulation);
+        //             if self.consume_input {
+        //                 self.consume_buffer.push(binding.input);
+        //             }
+        //         }
+        //         Ordering::Greater => {
+        //             tracker.overwrite(current_tracker);
+        //             if self.consume_input {
+        //                 self.consume_buffer.clear();
+        //                 self.consume_buffer.push(binding.input);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // tracker.apply_modifiers(actions, time, &mut self.modifiers);
+        // tracker.apply_conditions(actions, time, &mut self.conditions);
 
         let action = actions
             .get_mut(&self.type_id)
