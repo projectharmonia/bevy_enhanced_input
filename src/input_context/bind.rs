@@ -134,12 +134,12 @@ impl<T: IntoBindConfigs> IntoBindConfigs for (T,) {
 }
 
 macro_rules! impl_tuple {
-    ($(#[$meta:meta])* $($T:ident),*) => {
+    ($(#[$meta:meta])* $($T:ident $i:tt),*) => {
         $(#[$meta])*
-        impl<$($T),*> IntoBindConfigs for ($($T,)*) {
+        impl<$($T: IntoBindConfigs),*> IntoBindConfigs for ($($T,)*) {
             fn into_configs(self) -> BindConfigs {
                 BindConfigSet::from_iter([
-                    // TODO!!!
+                    $(self.$i.into_configs()),*
                 ])
                 .into_configs()
             }
@@ -147,6 +147,18 @@ macro_rules! impl_tuple {
     };
 }
 
-impl_tuple!(T0, T1);
-impl_tuple!(T0, T1, T2);
-impl_tuple!(T0, T1, T2, T3);
+impl_tuple!(A 0, B 1);
+impl_tuple!(A 0, B 1, C 2);
+impl_tuple!(A 0, B 1, C 2, D 3);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8, J 9);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8, J 9, K 10);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8, J 9, K 10, L 11);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8, J 9, K 10, L 11, M 12);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8, J 9, K 10, L 11, M 12, N 13);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8, J 9, K 10, L 11, M 12, N 13, O 14);
+impl_tuple!(A 0, B 1, C 2, D 3, E 4, F 5, G 6, H 7, I 8, J 9, K 10, L 11, M 12, N 13, O 14, P 15);
