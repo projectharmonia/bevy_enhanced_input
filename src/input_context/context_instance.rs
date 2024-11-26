@@ -256,7 +256,7 @@ impl ActionBind {
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>().with(Input::Keyboard {
     ///     key: KeyCode::Space,
-    ///     modifiers: Modifiers::CONTROL,
+    ///     mod_keys: ModKeys::CONTROL,
     /// });
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]

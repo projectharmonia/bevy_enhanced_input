@@ -9,7 +9,7 @@ use bevy::{
 #[cfg(feature = "egui_priority")]
 use bevy_egui::EguiContext;
 
-use super::{GamepadDevice, Input, Modifiers};
+use super::{GamepadDevice, Input, ModKeys};
 use crate::action_value::ActionValue;
 
 /// Reads input from multiple sources.
@@ -91,32 +91,32 @@ impl InputReader<'_, '_> {
     /// See also [`Self::consume`] and [`Self::set_gamepad`].
     pub(crate) fn value(&self, input: impl Into<Input>) -> ActionValue {
         match input.into() {
-            Input::Keyboard { key, modifiers } => {
+            Input::Keyboard { key, mod_keys } => {
                 let pressed = !self.consumed.ui_wants_keyboard
                     && self.keys.pressed(key)
                     && !self.consumed.keys.contains(&key)
-                    && self.modifiers_pressed(modifiers);
+                    && self.mod_keys_pressed(mod_keys);
 
                 pressed.into()
             }
-            Input::MouseButton { button, modifiers } => {
+            Input::MouseButton { button, mod_keys } => {
                 let pressed = !self.consumed.ui_wants_mouse
                     && self.mouse_buttons.pressed(button)
                     && !self.consumed.mouse_buttons.contains(&button)
-                    && self.modifiers_pressed(modifiers);
+                    && self.mod_keys_pressed(mod_keys);
 
                 pressed.into()
             }
-            Input::MouseMotion { modifiers } => {
-                if self.consumed.ui_wants_mouse || !self.modifiers_pressed(modifiers) {
+            Input::MouseMotion { mod_keys } => {
+                if self.consumed.ui_wants_mouse || !self.mod_keys_pressed(mod_keys) {
                     return Vec2::ZERO.into();
                 }
 
                 let value = *self.mouse_motion;
                 value.into()
             }
-            Input::MouseWheel { modifiers } => {
-                if self.consumed.ui_wants_mouse || !self.modifiers_pressed(modifiers) {
+            Input::MouseWheel { mod_keys } => {
+                if self.consumed.ui_wants_mouse || !self.mod_keys_pressed(mod_keys) {
                     return Vec2::ZERO.into();
                 }
 
@@ -179,17 +179,17 @@ impl InputReader<'_, '_> {
         }
     }
 
-    fn modifiers_pressed(&self, modifiers: Modifiers) -> bool {
-        if !modifiers.is_empty() && self.consumed.ui_wants_keyboard {
+    fn mod_keys_pressed(&self, mod_keys: ModKeys) -> bool {
+        if !mod_keys.is_empty() && self.consumed.ui_wants_keyboard {
             return false;
         }
 
-        if self.consumed.modifiers.intersects(modifiers) {
+        if self.consumed.mod_keys.intersects(mod_keys) {
             return false;
         }
 
-        for modifier_keys in modifiers.iter_keys() {
-            if !self.keys.any_pressed(modifier_keys) {
+        for keys in mod_keys.iter_keys() {
+            if !self.keys.any_pressed(keys) {
                 return false;
             }
         }
@@ -202,21 +202,21 @@ impl InputReader<'_, '_> {
     /// Resets with [`Self::update_state`].
     pub(crate) fn consume(&mut self, input: impl Into<Input>) {
         match input.into() {
-            Input::Keyboard { key, modifiers } => {
+            Input::Keyboard { key, mod_keys } => {
                 self.consumed.keys.insert(key);
-                self.consumed.modifiers.insert(modifiers);
+                self.consumed.mod_keys.insert(mod_keys);
             }
-            Input::MouseButton { button, modifiers } => {
+            Input::MouseButton { button, mod_keys } => {
                 self.consumed.mouse_buttons.insert(button);
-                self.consumed.modifiers.insert(modifiers);
+                self.consumed.mod_keys.insert(mod_keys);
             }
-            Input::MouseMotion { modifiers } => {
+            Input::MouseMotion { mod_keys } => {
                 *self.mouse_motion = Vec2::ZERO;
-                self.consumed.modifiers.insert(modifiers);
+                self.consumed.mod_keys.insert(mod_keys);
             }
-            Input::MouseWheel { modifiers } => {
+            Input::MouseWheel { mod_keys } => {
                 *self.mouse_wheel = Vec2::ZERO;
-                self.consumed.modifiers.insert(modifiers);
+                self.consumed.mod_keys.insert(mod_keys);
             }
             Input::GamepadButton { button } => {
                 let input = GamepadInput {
@@ -246,7 +246,7 @@ struct ConsumedInput {
     ui_wants_keyboard: bool,
     ui_wants_mouse: bool,
     keys: HashSet<KeyCode>,
-    modifiers: Modifiers,
+    mod_keys: ModKeys,
     mouse_buttons: HashSet<MouseButton>,
     gamepad_buttons: HashSet<GamepadInput<GamepadButtonType>>,
     gamepad_axes: HashSet<GamepadInput<GamepadAxisType>>,
@@ -257,7 +257,7 @@ impl ConsumedInput {
         self.ui_wants_keyboard = false;
         self.ui_wants_mouse = false;
         self.keys.clear();
-        self.modifiers = Modifiers::empty();
+        self.mod_keys = ModKeys::empty();
         self.mouse_buttons.clear();
         self.gamepad_buttons.clear();
         self.gamepad_axes.clear();
@@ -298,7 +298,7 @@ mod tests {
         assert_eq!(
             reader.value(Input::Keyboard {
                 key,
-                modifiers: Modifiers::ALT
+                mod_keys: ModKeys::ALT
             }),
             ActionValue::Bool(false)
         );
@@ -322,7 +322,7 @@ mod tests {
         assert_eq!(
             reader.value(Input::MouseButton {
                 button,
-                modifiers: Modifiers::CONTROL
+                mod_keys: ModKeys::CONTROL
             }),
             ActionValue::Bool(false)
         );
@@ -343,7 +343,7 @@ mod tests {
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::SHIFT)),
+            reader.value(input.with_mod_keys(ModKeys::SHIFT)),
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
@@ -368,7 +368,7 @@ mod tests {
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::SUPER)),
+            reader.value(input.with_mod_keys(ModKeys::SUPER)),
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
@@ -545,17 +545,17 @@ mod tests {
 
         let input = Input::Keyboard {
             key,
-            modifiers: modifier.into(),
+            mod_keys: modifier.into(),
         };
         let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
         assert_eq!(reader.value(key), ActionValue::Bool(true));
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::ALT)),
+            reader.value(input.with_mod_keys(ModKeys::ALT)),
             ActionValue::Bool(false)
         );
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::CONTROL | Modifiers::ALT)),
+            reader.value(input.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
             ActionValue::Bool(false)
         );
 
@@ -569,7 +569,7 @@ mod tests {
             .press(other_key);
         let other_input = Input::Keyboard {
             key: other_key,
-            modifiers: modifier.into(),
+            mod_keys: modifier.into(),
         };
         let reader = state.get_mut(&mut world);
         assert_eq!(reader.value(other_input), ActionValue::Bool(false));
@@ -589,17 +589,17 @@ mod tests {
 
         let input = Input::MouseButton {
             button,
-            modifiers: modifier.into(),
+            mod_keys: modifier.into(),
         };
         let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::CONTROL)),
+            reader.value(input.with_mod_keys(ModKeys::CONTROL)),
             ActionValue::Bool(false)
         );
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::CONTROL | Modifiers::ALT)),
+            reader.value(input.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
             ActionValue::Bool(false)
         );
 
@@ -617,21 +617,21 @@ mod tests {
         world.send_event(MouseMotion { delta: value });
 
         let input = Input::MouseMotion {
-            modifiers: modifier.into(),
+            mod_keys: modifier.into(),
         };
         let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
-            reader.value(input.without_modifiers()),
+            reader.value(input.without_mod_keys()),
             ActionValue::Axis2D(value)
         );
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::SUPER)),
+            reader.value(input.with_mod_keys(ModKeys::SUPER)),
             ActionValue::Axis2D(Vec2::ZERO)
         );
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::SHIFT | Modifiers::SUPER)),
+            reader.value(input.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
@@ -654,21 +654,21 @@ mod tests {
         });
 
         let input = Input::MouseWheel {
-            modifiers: modifier.into(),
+            mod_keys: modifier.into(),
         };
         let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
-            reader.value(input.without_modifiers()),
+            reader.value(input.without_mod_keys()),
             ActionValue::Axis2D(value)
         );
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::SHIFT)),
+            reader.value(input.with_mod_keys(ModKeys::SHIFT)),
             ActionValue::Axis2D(Vec2::ZERO)
         );
         assert_eq!(
-            reader.value(input.with_modifiers(Modifiers::SHIFT | Modifiers::SUPER)),
+            reader.value(input.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
             ActionValue::Axis2D(Vec2::ZERO)
         );
 
