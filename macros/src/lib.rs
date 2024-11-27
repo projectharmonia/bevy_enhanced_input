@@ -61,7 +61,7 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
 #[derive(FromDeriveInput)]
 #[darling(attributes(input_context))]
 struct InputContextOpts {
-    ctor: Path,
+    instance_system: Path,
     #[darling(default)]
     mode: Option<Ident>,
     #[darling(default)]
@@ -73,19 +73,18 @@ pub fn input_context_derive(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
 
     #[expect(non_snake_case, reason = "item shortcuts")]
-    let (InputContext, ContextInstance, ContextMode, World, Entity, IntoSystem, ReadOnlySystem) = (
+    let (InputContext, ContextInstance, ContextMode, Entity, IntoSystem, ReadOnlySystem) = (
         quote! { ::bevy_enhanced_input::prelude::InputContext },
         quote! { ::bevy_enhanced_input::prelude::ContextInstance },
         quote! { ContextMode },
         // TODO
-        quote! { World },
         quote! { Entity },
         quote! { IntoSystem },
         quote! { ReadOnlySystem },
     );
 
     let InputContextOpts {
-        ctor,
+        instance_system,
         mode,
         priority,
     } = match InputContextOpts::from_derive_input(&input) {
@@ -111,9 +110,8 @@ pub fn input_context_derive(item: TokenStream) -> TokenStream {
 
     TokenStream::from(quote! {
         impl #impl_generics #InputContext for #struct_name #type_generics #where_clause {
-            fn context_instance(world: &#World, entity: #Entity) -> #ContextInstance {
-                let mut ctor = #IntoSystem::into_system(#ctor);
-                #ReadOnlySystem::run_readonly(&mut ctor, entity, world)
+            fn instance_system() -> impl #ReadOnlySystem<In = #Entity, Out = #ContextInstance> {
+                #IntoSystem::into_system(#instance_system)
             }
             #mode
             #priority

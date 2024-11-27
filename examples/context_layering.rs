@@ -88,19 +88,23 @@ impl GamePlugin {
 }
 
 impl InputContext for PlayerBox {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Move>()
-            .with_wasd()
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
-        ctx.bind::<Rotate>().with(KeyCode::Space);
-        ctx.bind::<EnterWater>().with(KeyCode::Enter);
-
-        ctx
+    fn instance_system() -> impl ReadOnlySystem<In = Entity, Out = ContextInstance> {
+        IntoSystem::into_system(player_box_instance)
     }
+}
+
+fn player_box_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
+
+    ctx.bind::<Move>()
+        .with_wasd()
+        .with_modifier(DeadZone::default())
+        .with_modifier(DeltaLerp::default())
+        .with_modifier(Scale::splat(DEFAULT_SPEED));
+    ctx.bind::<Rotate>().with(KeyCode::Space);
+    ctx.bind::<EnterWater>().with(KeyCode::Enter);
+
+    ctx
 }
 
 #[derive(Debug, InputAction)]
@@ -116,23 +120,23 @@ struct Rotate;
 struct EnterWater;
 
 /// Context that overrides some actions from [`PlayerBox`].
-#[derive(Component)]
+#[derive(Component, InputContext)]
+#[input_context(
+    instance_system = swimming_instance,
+    priority = 1, // Set higher priority to execute its actions first.
+)]
 struct Swimming;
 
-impl InputContext for Swimming {
-    const PRIORITY: isize = 1; // Set higher priority to execute its actions first.
+fn swimming_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+    // `PlayerBox` has lower priority, so `Dive` and `ExitWater` consume inputs first,
+    // preventing `Rotate` and `EnterWater` from being triggered.
+    // The consuming behavior can be configured in the `InputAction` trait.
+    ctx.bind::<Dive>().with(KeyCode::Space);
+    ctx.bind::<ExitWater>().with(KeyCode::Enter);
 
-        // `PlayerBox` has lower priority, so `Dive` and `ExitWater` consume inputs first,
-        // preventing `Rotate` and `EnterWater` from being triggered.
-        // The consuming behavior can be configured in the `InputAction` trait.
-        ctx.bind::<Dive>().with(KeyCode::Space);
-        ctx.bind::<ExitWater>().with(KeyCode::Enter);
-
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

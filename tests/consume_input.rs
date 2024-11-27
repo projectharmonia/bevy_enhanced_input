@@ -57,32 +57,30 @@ fn consume() {
     assert_eq!(action.state(), ActionState::Fired);
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = passthrough_then_consume_instance)]
 struct PassthroughThenConsume;
 
-impl InputContext for PassthroughThenConsume {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn passthrough_then_consume_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Passthrough>().with(KEY);
-        ctx.bind::<Consume>().with(KEY);
+    ctx.bind::<Passthrough>().with(KEY);
+    ctx.bind::<Consume>().with(KEY);
 
-        ctx
-    }
+    ctx
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = consume_then_passthrough_instance)]
 struct ConsumeThenPassthrough;
 
-impl InputContext for ConsumeThenPassthrough {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn consume_then_passthrough_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Consume>().with(KEY);
-        ctx.bind::<Passthrough>().with(KEY);
+    ctx.bind::<Consume>().with(KEY);
+    ctx.bind::<Passthrough>().with(KEY);
 
-        ctx
-    }
+    ctx
 }
 
 /// A key used by both [`Consume`] and [`Passthrough`] actions.

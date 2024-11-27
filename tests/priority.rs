@@ -45,30 +45,26 @@ fn prioritization() {
     );
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = first_instance, priority = Second::PRIORITY + 1)]
 struct First;
 
-impl InputContext for First {
-    const PRIORITY: isize = Second::PRIORITY + 1;
-
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<FirstConsume>().with(CONSUME_KEY);
-        ctx.bind::<FirstPassthrough>().with(PASSTHROUGH_KEY);
-        ctx
-    }
+fn first_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
+    ctx.bind::<FirstConsume>().with(CONSUME_KEY);
+    ctx.bind::<FirstPassthrough>().with(PASSTHROUGH_KEY);
+    ctx
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = second_instance)]
 struct Second;
 
-impl InputContext for Second {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<SecondConsume>().with(CONSUME_KEY);
-        ctx.bind::<SecondPassthrough>().with(PASSTHROUGH_KEY);
-        ctx
-    }
+fn second_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
+    ctx.bind::<SecondConsume>().with(CONSUME_KEY);
+    ctx.bind::<SecondPassthrough>().with(PASSTHROUGH_KEY);
+    ctx
 }
 
 /// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.

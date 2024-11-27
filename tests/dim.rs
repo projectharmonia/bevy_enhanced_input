@@ -133,20 +133,19 @@ fn axis3d() {
     assert_eq!(action.value(), Vec3::ZERO.into());
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = instance)]
 struct DummyContext;
 
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Bool>().with(Bool::KEY);
-        ctx.bind::<Axis1D>().with(Axis1D::KEY);
-        ctx.bind::<Axis2D>().with(Axis2D::KEY);
-        ctx.bind::<Axis3D>().with(Axis3D::KEY);
+    ctx.bind::<Bool>().with(Bool::KEY);
+    ctx.bind::<Axis1D>().with(Axis1D::KEY);
+    ctx.bind::<Axis2D>().with(Axis2D::KEY);
+    ctx.bind::<Axis3D>().with(Axis3D::KEY);
 
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

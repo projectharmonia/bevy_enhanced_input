@@ -267,76 +267,75 @@ fn both_levels() {
     assert_eq!(action.state(), ActionState::Fired);
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = instance)]
 struct DummyContext;
 
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        let down = Press::default();
-        let release = Release::default();
-        let chord = Chord::<ChordMember>::default();
-        let block_by = BlockBy::<Blocker>::default();
-        let block_events_by = BlockBy::<EventsBlocker>::events_only();
-        let swizzle_axis = SwizzleAxis::YXZ;
-        let negate = Negate::default();
-        let scale = Scale::splat(2.0);
+    let down = Press::default();
+    let release = Release::default();
+    let chord = Chord::<ChordMember>::default();
+    let block_by = BlockBy::<Blocker>::default();
+    let block_events_by = BlockBy::<EventsBlocker>::events_only();
+    let swizzle_axis = SwizzleAxis::YXZ;
+    let negate = Negate::default();
+    let scale = Scale::splat(2.0);
 
-        ctx.bind::<ChordMember>().with(ChordMember::KEY);
-        ctx.bind::<Blocker>().with(Blocker::KEY);
-        ctx.bind::<EventsBlocker>().with(EventsBlocker::KEY);
-        ctx.bind::<InputLevel>()
-            .with(
-                InputBind::new(InputLevel::KEY1)
-                    .with_condition(chord)
-                    .with_condition(block_by)
-                    .with_condition(block_events_by)
-                    .with_condition(down)
-                    .with_condition(release)
-                    .with_modifier(swizzle_axis)
-                    .with_modifier(scale),
-            )
-            .with(
-                InputBind::new(InputLevel::KEY2)
-                    .with_condition(chord)
-                    .with_condition(block_by)
-                    .with_condition(block_events_by)
-                    .with_condition(down)
-                    .with_condition(release)
-                    .with_modifier(swizzle_axis)
-                    .with_modifier(negate),
-            );
-        ctx.bind::<ActionLevel>()
-            .with(ActionLevel::KEY1)
-            .with(ActionLevel::KEY2)
-            .with_condition(down)
-            .with_condition(release)
-            .with_condition(chord)
-            .with_condition(block_by)
-            .with_condition(block_events_by)
-            .with_modifier(swizzle_axis)
-            .with_modifier(negate)
-            .with_modifier(scale);
-        ctx.bind::<BothLevels>()
-            .with(
-                InputBind::new(BothLevels::KEY1)
-                    .with_condition(down)
-                    .with_modifier(scale),
-            )
-            .with(
-                InputBind::new(BothLevels::KEY2)
-                    .with_condition(down)
-                    .with_modifier(negate),
-            )
-            .with_condition(release)
-            .with_condition(chord)
-            .with_condition(block_by)
-            .with_condition(block_events_by)
-            .with_modifier(swizzle_axis);
+    ctx.bind::<ChordMember>().with(ChordMember::KEY);
+    ctx.bind::<Blocker>().with(Blocker::KEY);
+    ctx.bind::<EventsBlocker>().with(EventsBlocker::KEY);
+    ctx.bind::<InputLevel>()
+        .with(
+            InputBind::new(InputLevel::KEY1)
+                .with_condition(chord)
+                .with_condition(block_by)
+                .with_condition(block_events_by)
+                .with_condition(down)
+                .with_condition(release)
+                .with_modifier(swizzle_axis)
+                .with_modifier(scale),
+        )
+        .with(
+            InputBind::new(InputLevel::KEY2)
+                .with_condition(chord)
+                .with_condition(block_by)
+                .with_condition(block_events_by)
+                .with_condition(down)
+                .with_condition(release)
+                .with_modifier(swizzle_axis)
+                .with_modifier(negate),
+        );
+    ctx.bind::<ActionLevel>()
+        .with(ActionLevel::KEY1)
+        .with(ActionLevel::KEY2)
+        .with_condition(down)
+        .with_condition(release)
+        .with_condition(chord)
+        .with_condition(block_by)
+        .with_condition(block_events_by)
+        .with_modifier(swizzle_axis)
+        .with_modifier(negate)
+        .with_modifier(scale);
+    ctx.bind::<BothLevels>()
+        .with(
+            InputBind::new(BothLevels::KEY1)
+                .with_condition(down)
+                .with_modifier(scale),
+        )
+        .with(
+            InputBind::new(BothLevels::KEY2)
+                .with_condition(down)
+                .with_modifier(negate),
+        )
+        .with_condition(release)
+        .with_condition(chord)
+        .with_condition(block_by)
+        .with_condition(block_events_by)
+        .with_modifier(swizzle_axis);
 
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

@@ -81,24 +81,23 @@ impl GamePlugin {
     }
 }
 
-#[derive(Component)]
+#[derive(Component, InputContext)]
+#[input_context(instance_system = on_foot_instance)]
 struct OnFoot;
 
-impl InputContext for OnFoot {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut instance = ContextInstance::default();
+fn on_foot_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut instance = ContextInstance::default();
 
-        instance
-            .bind::<Move>()
-            .with_wasd()
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
-        instance.bind::<Rotate>().with(KeyCode::Space);
-        instance.bind::<EnterCar>().with(KeyCode::Enter);
+    instance
+        .bind::<Move>()
+        .with_wasd()
+        .with_modifier(DeadZone::default())
+        .with_modifier(DeltaLerp::default())
+        .with_modifier(Scale::splat(DEFAULT_SPEED));
+    instance.bind::<Rotate>().with(KeyCode::Space);
+    instance.bind::<EnterCar>().with(KeyCode::Enter);
 
-        instance
-    }
+    instance
 }
 
 #[derive(Debug, InputAction)]
@@ -113,22 +112,21 @@ struct Rotate;
 #[input_action(output = bool)]
 struct EnterCar;
 
-#[derive(Component)]
+#[derive(Component, InputContext)]
+#[input_context(instance_system = in_car_instance)]
 struct InCar;
 
-impl InputContext for InCar {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn in_car_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Move>()
-            .with_wasd()
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED + 20.0)); // Make car faster.
-        ctx.bind::<ExitCar>().with(KeyCode::Enter);
+    ctx.bind::<Move>()
+        .with_wasd()
+        .with_modifier(DeadZone::default())
+        .with_modifier(DeltaLerp::default())
+        .with_modifier(Scale::splat(DEFAULT_SPEED + 20.0)); // Make car faster.
+    ctx.bind::<ExitCar>().with(KeyCode::Enter);
 
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

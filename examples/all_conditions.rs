@@ -34,10 +34,10 @@ impl GamePlugin {
 }
 
 #[derive(Component, InputContext)]
-#[input_context(ctor = new_dummy_context)]
+#[input_context(instance_system = instance)]
 struct DummyContext;
 
-fn new_dummy_context(In(_): In<Entity>) -> ContextInstance {
+fn instance(In(_): In<Entity>) -> ContextInstance {
     let mut ctx = ContextInstance::default();
 
     ctx.bind::<PressAction>()

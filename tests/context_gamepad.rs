@@ -125,26 +125,24 @@ fn by_id() {
     assert_eq!(action.state(), ActionState::None);
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = any_gamepad_instance)]
 struct AnyGamepad;
 
-impl InputContext for AnyGamepad {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::with_gamepad(GamepadDevice::Any);
-        ctx.bind::<DummyAction>().with(DummyAction::BUTTON);
-        ctx
-    }
+fn any_gamepad_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::with_gamepad(GamepadDevice::Any);
+    ctx.bind::<DummyAction>().with(DummyAction::BUTTON);
+    ctx
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = first_gamepad_instance)]
 struct FirstGamepad;
 
-impl InputContext for FirstGamepad {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::with_gamepad(0);
-        ctx.bind::<DummyAction>().with(DummyAction::BUTTON);
-        ctx
-    }
+fn first_gamepad_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::with_gamepad(0);
+    ctx.bind::<DummyAction>().with(DummyAction::BUTTON);
+    ctx
 }
 
 #[derive(Debug, InputAction)]

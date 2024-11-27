@@ -161,22 +161,21 @@ const LEFT: Vec2 = Vec2::new(-1.0, 0.0);
 const DOWN: Vec2 = Vec2::new(0.0, -1.0);
 const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = instance)]
 struct DummyContext;
 
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<DummyAction>()
-            .with_wasd()
-            .with_arrows()
-            .with_dpad()
-            .with_stick(GamepadStick::Left)
-            .with_stick(GamepadStick::Right);
+    ctx.bind::<DummyAction>()
+        .with_wasd()
+        .with_arrows()
+        .with_dpad()
+        .with_stick(GamepadStick::Left)
+        .with_stick(GamepadStick::Right);
 
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

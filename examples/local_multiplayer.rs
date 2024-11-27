@@ -73,49 +73,53 @@ impl GamePlugin {
 struct PlayerIndex(usize);
 
 impl InputContext for PlayerBox {
-    fn context_instance(world: &World, entity: Entity) -> ContextInstance {
-        // Could be stored in the context itself, but it's usually
-        // better to have a separate component that is shared
-        // across all contexts.
-        let index = **world.get::<PlayerIndex>(entity).unwrap();
-
-        // By default context read inputs from all gamepads,
-        // but for local multiplayer we need assign specific
-        // gamepad index.
-        let mut ctx = ContextInstance::with_gamepad(index);
-
-        // Assign different mappings based player index.
-        match index {
-            0 => {
-                ctx.bind::<Move>()
-                    .with_wasd()
-                    .with_stick(GamepadStick::Left);
-                ctx.bind::<Rotate>()
-                    .with(KeyCode::Space)
-                    .with(GamepadButtonType::South);
-            }
-            1 => {
-                ctx.bind::<Move>()
-                    .with_arrows()
-                    .with_stick(GamepadStick::Left);
-                ctx.bind::<Rotate>()
-                    .with(KeyCode::Numpad0)
-                    .with(GamepadButtonType::South);
-            }
-            _ => {
-                panic!("game expects only 2 players");
-            }
-        }
-
-        // Can be called multiple times extend bindings.
-        // In our case we cant to add modifiers for all players.
-        ctx.bind::<Move>()
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
-
-        ctx
+    fn instance_system() -> impl ReadOnlySystem<In = Entity, Out = ContextInstance> {
+        IntoSystem::into_system(player_box_instance)
     }
+}
+
+fn player_box_instance(In(entity): In<Entity>, index: Query<&PlayerIndex>) -> ContextInstance {
+    // Could be stored in the context itself, but it's usually
+    // better to have a separate component that is shared
+    // across all contexts.
+    let index = **index.get(entity).unwrap();
+
+    // By default context read inputs from all gamepads,
+    // but for local multiplayer we need assign specific
+    // gamepad index.
+    let mut ctx = ContextInstance::with_gamepad(index);
+
+    // Assign different mappings based player index.
+    match index {
+        0 => {
+            ctx.bind::<Move>()
+                .with_wasd()
+                .with_stick(GamepadStick::Left);
+            ctx.bind::<Rotate>()
+                .with(KeyCode::Space)
+                .with(GamepadButtonType::South);
+        }
+        1 => {
+            ctx.bind::<Move>()
+                .with_arrows()
+                .with_stick(GamepadStick::Left);
+            ctx.bind::<Rotate>()
+                .with(KeyCode::Numpad0)
+                .with(GamepadButtonType::South);
+        }
+        _ => {
+            panic!("game expects only 2 players");
+        }
+    }
+
+    // Can be called multiple times extend bindings.
+    // In our case we cant to add modifiers for all players.
+    ctx.bind::<Move>()
+        .with_modifier(DeadZone::default())
+        .with_modifier(DeltaLerp::default())
+        .with_modifier(Scale::splat(DEFAULT_SPEED));
+
+    ctx
 }
 
 #[derive(Debug, InputAction)]

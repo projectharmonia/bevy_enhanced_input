@@ -103,7 +103,7 @@ impl GamePlugin {
 }
 
 impl InputContext for PlayerBox {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
+    fn instance_system(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<Move>()

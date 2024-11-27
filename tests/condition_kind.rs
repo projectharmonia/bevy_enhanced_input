@@ -268,30 +268,29 @@ fn events_blocker() {
     assert_eq!(action.state(), ActionState::Fired);
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = instance)]
 struct DummyContext;
 
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<ReleaseAction>()
-            .with(ReleaseAction::KEY)
-            .with_condition(Release::default());
-        ctx.bind::<Explicit>()
-            .with_condition(Press::default())
-            .with(Explicit::KEY);
-        ctx.bind::<Implicit>()
-            .with_condition(Chord::<ReleaseAction>::default());
-        ctx.bind::<Blocker>()
-            .with(Blocker::KEY)
-            .with_condition(BlockBy::<ReleaseAction>::default());
-        ctx.bind::<EventsBlocker>()
-            .with(EventsBlocker::KEY)
-            .with_condition(BlockBy::<ReleaseAction>::events_only());
+    ctx.bind::<ReleaseAction>()
+        .with(ReleaseAction::KEY)
+        .with_condition(Release::default());
+    ctx.bind::<Explicit>()
+        .with_condition(Press::default())
+        .with(Explicit::KEY);
+    ctx.bind::<Implicit>()
+        .with_condition(Chord::<ReleaseAction>::default());
+    ctx.bind::<Blocker>()
+        .with(Blocker::KEY)
+        .with_condition(BlockBy::<ReleaseAction>::default());
+    ctx.bind::<EventsBlocker>()
+        .with(EventsBlocker::KEY)
+        .with_condition(BlockBy::<ReleaseAction>::events_only());
 
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

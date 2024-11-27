@@ -142,33 +142,27 @@ fn context_rebuild() {
     assert_eq!(action.state(), ActionState::None);
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = exclusive_instance, mode = Exclusive)]
 struct Exclusive;
 
-impl InputContext for Exclusive {
-    const MODE: ContextMode = ContextMode::Exclusive;
-
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<ExclusiveConsume>().with(ExclusiveConsume::KEY);
-        ctx.bind::<ExclusivePassthrough>()
-            .with(ExclusivePassthrough::KEY);
-        ctx
-    }
+fn exclusive_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
+    ctx.bind::<ExclusiveConsume>().with(ExclusiveConsume::KEY);
+    ctx.bind::<ExclusivePassthrough>()
+        .with(ExclusivePassthrough::KEY);
+    ctx
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = shared_instance, mode = Shared)]
 struct Shared;
 
-impl InputContext for Shared {
-    const MODE: ContextMode = ContextMode::Shared;
-
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<SharedConsume>().with(SharedConsume::KEY);
-        ctx.bind::<SharedPassthrough>().with(SharedPassthrough::KEY);
-        ctx
-    }
+fn shared_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
+    ctx.bind::<SharedConsume>().with(SharedConsume::KEY);
+    ctx.bind::<SharedPassthrough>().with(SharedPassthrough::KEY);
+    ctx
 }
 
 #[derive(Debug, InputAction)]

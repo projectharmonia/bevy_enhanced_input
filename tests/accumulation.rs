@@ -49,18 +49,17 @@ fn cumulative() {
     );
 }
 
-#[derive(Debug, Component)]
+#[derive(Debug, Component, InputContext)]
+#[input_context(instance_system = instance)]
 struct DummyContext;
 
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
+fn instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
 
-        ctx.bind::<MaxAbs>().with_wasd();
-        ctx.bind::<Cumulative>().with_arrows();
+    ctx.bind::<MaxAbs>().with_wasd();
+    ctx.bind::<Cumulative>().with_arrows();
 
-        ctx
-    }
+    ctx
 }
 
 #[derive(Debug, InputAction)]

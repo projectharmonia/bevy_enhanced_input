@@ -68,19 +68,23 @@ impl InputContext for PlayerBox {
     // with this context.
     const MODE: ContextMode = ContextMode::Shared;
 
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Move>()
-            .with_wasd()
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
-
-        ctx.bind::<Rotate>().with(KeyCode::Space);
-
-        ctx
+    fn instance_system() -> impl ReadOnlySystem<In = Entity, Out = ContextInstance> {
+        IntoSystem::into_system(player_box_instance)
     }
+}
+
+fn player_box_instance(In(_): In<Entity>) -> ContextInstance {
+    let mut ctx = ContextInstance::default();
+
+    ctx.bind::<Move>()
+        .with_wasd()
+        .with_modifier(DeadZone::default())
+        .with_modifier(DeltaLerp::default())
+        .with_modifier(Scale::splat(DEFAULT_SPEED));
+
+    ctx.bind::<Rotate>().with(KeyCode::Space);
+
+    ctx
 }
 
 #[derive(Debug, InputAction)]

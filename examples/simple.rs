@@ -56,29 +56,33 @@ impl GamePlugin {
 // You can implement it for your character component directly, as
 // shown in this example, if you don't plan to switch contexts.
 impl InputContext for PlayerBox {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        // Create a context and start defining bindings.
-        // Multiple inputs can be assigned to a single action,
-        // and the action will respond to any of them.
-        let mut ctx = ContextInstance::default();
-
-        // Mappings like WASD or sticks are very common,
-        // so we provide built-ins to assign all keys/axes at once.
-        // We don't assign any conditions and in this case the action will
-        // be triggered with any non-zero value.
-        ctx.bind::<Move>()
-            .with_wasd()
-            .with_stick(GamepadStick::Left)
-            .with_modifier(DeadZone::default()) // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
-            .with_modifier(DeltaLerp::default()) // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
-            .with_modifier(Scale::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.
-
-        ctx.bind::<Rotate>()
-            .with(KeyCode::Space)
-            .with(GamepadButtonType::South);
-
-        ctx
+    fn instance_system() -> impl ReadOnlySystem<In = Entity, Out = ContextInstance> {
+        IntoSystem::into_system(player_box_instance)
     }
+}
+
+fn player_box_instance(In(_): In<Entity>) -> ContextInstance {
+    // Create a context and start defining bindings.
+    // Multiple inputs can be assigned to a single action,
+    // and the action will respond to any of them.
+    let mut ctx = ContextInstance::default();
+
+    // Mappings like WASD or sticks are very common,
+    // so we provide built-ins to assign all keys/axes at once.
+    // We don't assign any conditions and in this case the action will
+    // be triggered with any non-zero value.
+    ctx.bind::<Move>()
+        .with_wasd()
+        .with_stick(GamepadStick::Left)
+        .with_modifier(DeadZone::default()) // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
+        .with_modifier(DeltaLerp::default()) // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
+        .with_modifier(Scale::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.
+
+    ctx.bind::<Rotate>()
+        .with(KeyCode::Space)
+        .with(GamepadButtonType::South);
+
+    ctx
 }
 
 // All actions should implement the `InputAction` trait.

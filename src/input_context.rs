@@ -8,7 +8,9 @@ pub mod trigger_tracker;
 use std::{
     any::{self, TypeId},
     cmp::Reverse,
+    marker::PhantomData,
     mem,
+    sync::Mutex,
 };
 
 use bevy::prelude::*;
@@ -38,12 +40,35 @@ impl ContextAppExt for App {
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
         debug!("registering context `{}`", any::type_name::<C>());
 
-        self.observe(add_instance::<C>)
-            .observe(rebuild_instance::<C>)
-            .observe(remove_instance::<C>);
+        let instance_system = C::instance_system();
+        self.insert_resource(InstanceSystem::<C> {
+            system: Mutex::new(Box::new(instance_system)),
+            _phantom: PhantomData,
+        })
+        .observe(add_instance::<C>)
+        .observe(rebuild_instance::<C>)
+        .observe(remove_instance::<C>);
 
         self
     }
+}
+
+#[derive(Resource)]
+struct InstanceSystem<C> {
+    /// System state which can create a [`ContextInstace`].
+    ///
+    /// This needs to be boxed because we can't name the output type of
+    /// [`InputContext::instance_system`].
+    ///
+    /// We can't make it an associated type either, because `InputContext`
+    /// implementors would have to be able to name their system type, which is
+    /// practically impossible.
+    system: Mutex<Box<dyn ReadOnlySystem<In = Entity, Out = ContextInstance>>>,
+    /// Allows monomorphizing this resource for different [`InputContext`]s.
+    ///
+    /// Otherwise, all `C`s would map to the same resource instance, and would
+    /// use the same `system`.
+    _phantom: PhantomData<C>,
 }
 
 fn add_instance<C: InputContext>(
@@ -90,7 +115,12 @@ impl ContextInstances {
         if let Some(index) = self.index::<C>() {
             match &mut self.0[index] {
                 InstanceGroup::Exclusive { instances, .. } => {
-                    let ctx = C::context_instance(world, entity);
+                    let ctx = world
+                        .resource::<InstanceSystem<C>>()
+                        .system
+                        .lock()
+                        .unwrap()
+                        .run_readonly(entity, world);
                     instances.push((entity, ctx));
                 }
                 InstanceGroup::Shared { entities, .. } => {
@@ -122,7 +152,12 @@ impl ContextInstances {
                 InstanceGroup::Exclusive { instances, .. } => {
                     for (entity, ctx) in instances {
                         ctx.trigger_removed(commands, time, &[*entity]);
-                        *ctx = C::context_instance(world, *entity);
+                        *ctx = world
+                            .resource::<InstanceSystem<C>>()
+                            .system
+                            .lock()
+                            .unwrap()
+                            .run_readonly(*entity, world);
                     }
                 }
                 InstanceGroup::Shared { ctx, entities, .. } => {
@@ -132,7 +167,12 @@ impl ContextInstances {
                     let entity = *entities
                         .first()
                         .expect("groups should be immediately removed when empty");
-                    *ctx = C::context_instance(world, entity);
+                    *ctx = world
+                        .resource::<InstanceSystem<C>>()
+                        .system
+                        .lock()
+                        .unwrap()
+                        .run_readonly(entity, world);
                 }
             }
         }
@@ -279,7 +319,12 @@ impl InstanceGroup {
     #[must_use]
     fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
         let type_id = TypeId::of::<C>();
-        let ctx = C::context_instance(world, entity);
+        let ctx = world
+            .resource::<InstanceSystem<C>>()
+            .system
+            .lock()
+            .unwrap()
+            .run_readonly(entity, world);
         match C::MODE {
             ContextMode::Exclusive => Self::Exclusive {
                 type_id,
@@ -368,16 +413,20 @@ pub trait InputContext: Component {
     /// Contexts with a higher priority evaluated first.
     const PRIORITY: isize = 0;
 
-    /// Creates a new instance for the given entity.
+    /// System which creates a new instance for the given entity.
     ///
-    /// In the implementation you need call [`ContextInstance::bind`]
+    /// In the implementation you need to call [`ContextInstance::bind`]
     /// to associate it with [`InputAction`](input_action::InputAction)s.
     ///
-    /// The function is called on each context instantiation
-    /// which depends on [`Self::MODE`].
+    /// This function is called on [`add_input_context`], and the resulting
+    /// system is cached. That cached system is called on each context
+    /// instantiation, which depends on [`InputContext::MODE`].
+    ///
     /// You can also rebuild all contexts by triggering [`RebuildInputContexts`].
+    ///
+    /// [`add_input_context`]: ContextAppExt::add_input_context
     #[must_use]
-    fn context_instance(world: &World, entity: Entity) -> ContextInstance;
+    fn instance_system() -> impl ReadOnlySystem<In = Entity, Out = ContextInstance>;
 }
 
 /// Configures how instances of [`InputContext`] will be managed.
