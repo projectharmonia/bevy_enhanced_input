@@ -39,7 +39,8 @@ impl ContextAppExt for App {
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
         debug!("registering context `{}`", any::type_name::<C>());
 
-        let instance_system = C::instance_system();
+        let mut instance_system = C::instance_system();
+        instance_system.initialize(self.world_mut());
         self.insert_resource(InstanceSystem::<C> {
             system: Mutex::new(Box::new(instance_system)),
             _phantom: PhantomData,
