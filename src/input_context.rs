@@ -25,11 +25,10 @@ use context_instance::ContextInstance;
 /// # use bevy_enhanced_input::prelude::*;
 /// let mut app = App::new();
 /// app.add_input_context::<Player>();
-/// # #[derive(Component)]
+/// # #[derive(Component, InputContext)]
+/// # #[input_context(instance_system = instance)]
 /// # struct Player;
-/// # impl InputContext for Player {
-/// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
-/// # }
+/// # fn instance(In(_): In<Entity>) -> ContextInstance { default() }
 /// ```
 pub trait ContextAppExt {
     /// Registers an input context.
@@ -266,11 +265,10 @@ impl ContextInstances {
     /// }
     /// # #[derive(Event)]
     /// # struct Attacked;
-    /// # #[derive(Component)]
+    /// # #[derive(Component, InputContext)]
+    /// # #[input_context(instance_system = instance)]
     /// # struct Player;
-    /// # impl InputContext for Player {
-    /// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
-    /// # }
+    /// # fn instance(In(_): In<Entity>) -> ContextInstance { default() }
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Dodge;
@@ -368,30 +366,36 @@ impl InstanceGroup {
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
-/// #[derive(Component)]
+/// #[derive(Component, InputContext)]
+/// #[input_context(
+///     // Specify the path to the system which creates your `ContextInstance`.
+///     instance_system = player_context_instance,
+///     // You can also specify extra parameters, like `mode`.
+///     mode = Exclusive,
+/// )]
 /// struct Player;
 ///
-/// impl InputContext for Player {
-///     fn context_instance(world: &World, entity: Entity) -> ContextInstance {
-///         // You can use world to access the necessaary data.
-///         let settings = world.resource::<AppSettings>();
+/// fn player_context_instance(
+///     In(entity): In<Entity>,
+///     // You can use system params to access the data you need.
+///     settings: Res<AppSettings>,
+///     players: Query<&Player>,
+/// ) -> ContextInstance {
+///     // You can also access the context
+///     // component itself from the entity.
+///     let player = players.get(entity).unwrap();
 ///
-///         // To can also access the context
-///         // component itself from the entity.
-///         let player = world.get::<Self>(entity).unwrap();
+///     let mut ctx = ContextInstance::default();
 ///
-///         let mut ctx = ContextInstance::default();
+///     ctx.bind::<Move>()
+///         .with_wasd()
+///         .with_stick(GamepadStick::Left);
 ///
-///         ctx.bind::<Move>()
-///             .with_wasd()
-///             .with_stick(GamepadStick::Left);
+///     ctx.bind::<Jump>()
+///         .with(KeyCode::Space)
+///         .with(GamepadButtonType::South);
 ///
-///         ctx.bind::<Jump>()
-///             .with(KeyCode::Space)
-///             .with(GamepadButtonType::South);
-///
-///         ctx
-///     }
+///     ctx
 /// }
 /// # #[derive(Debug, InputAction)]
 /// # #[input_action(output = Vec2)]
@@ -418,13 +422,11 @@ pub trait InputContext: Component {
     /// In the implementation you need to call [`ContextInstance::bind`]
     /// to associate it with [`InputAction`](input_action::InputAction)s.
     ///
-    /// This function is called on [`add_input_context`], and the resulting
-    /// system is cached. That cached system is called on each context
-    /// instantiation, which depends on [`InputContext::MODE`].
+    /// This function is called on [`add_input_context`](ContextAppExt::add_input_context),
+    /// and the resulting system is cached. That cached system is called on each
+    /// context instantiation, which depends on [`InputContext::MODE`].
     ///
     /// You can also rebuild all contexts by triggering [`RebuildInputContexts`].
-    ///
-    /// [`add_input_context`]: ContextAppExt::add_input_context
     #[must_use]
     fn instance_system() -> impl ReadOnlySystem<In = Entity, Out = ContextInstance>;
 }

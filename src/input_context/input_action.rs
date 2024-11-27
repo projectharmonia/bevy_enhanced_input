@@ -215,8 +215,8 @@ pub enum ActionState {
 
 /// Marker for a gameplay-related action.
 ///
-/// Needs to be bind inside
-/// [`InputContext::context_instance`](super::InputContext::context_instance)
+/// Needs to be bound inside the system produced by
+/// [`InputContext::instance_system`](super::InputContext::instance_system).
 ///
 /// Each binded action will have [`ActionState`].
 /// When it updates during [`ContextInstance`](super::context_instance::ContextInstance)
