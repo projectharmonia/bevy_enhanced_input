@@ -344,8 +344,8 @@ impl InstanceGroup {
 ///             .with(GamepadStick::Left);
 ///
 ///         ctx.bind::<Jump>()
-///             .with(KeyCode::Space)
-///             .with(GamepadButtonType::South);
+///             .to(KeyCode::Space)
+///             .to(GamepadButtonType::South);
 ///
 ///         ctx
 ///     }

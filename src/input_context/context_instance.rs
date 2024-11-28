@@ -174,8 +174,8 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(KeyCode::Space)
-    ///     .with(GamepadButtonType::South);
+    ///     .to(KeyCode::Space)
+    ///     .to(GamepadButtonType::South);
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -187,7 +187,7 @@ impl ActionBind {
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>().with(Input::Keyboard {
+    /// ctx.bind::<Jump>().to(Input::Keyboard {
     ///     key: KeyCode::Space,
     ///     mod_keys: ModKeys::CONTROL,
     /// });
@@ -204,7 +204,7 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(InputBind::new(KeyCode::Space).with_condition(Release::default()));
+    ///     .to(InputBind::new(KeyCode::Space).with_condition(Release::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
