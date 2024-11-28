@@ -1,7 +1,4 @@
-use std::{
-    any::{self, TypeId},
-    cmp::Ordering,
-};
+use std::any::{self, TypeId};
 
 use bevy::{prelude::*, utils::Entry};
 
@@ -154,14 +151,14 @@ impl ActionBind {
     /// Adds action-level modifier.
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
         debug!("adding `{modifier:?}` to `{}`", self.action_name);
-        self.config.info.modifiers.push(Box::new(modifier));
+        self.config.modifiers.push(Box::new(modifier));
         self
     }
 
     /// Adds action-level condition.
     pub fn with_condition(&mut self, condition: impl InputCondition) -> &mut Self {
         debug!("adding `{condition:?}` to `{}`", self.action_name);
-        self.config.info.conditions.push(Box::new(condition));
+        self.config.conditions.push(Box::new(condition));
         self
     }
 

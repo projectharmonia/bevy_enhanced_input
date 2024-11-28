@@ -1,22 +1,18 @@
 use crate::prelude::*;
 
 #[derive(Debug, Default)]
-pub struct BindConfigInfo {
-    pub modifiers: Vec<Box<dyn InputModifier>>,
-    pub conditions: Vec<Box<dyn InputCondition>>,
-}
-
-#[derive(Debug, Default)]
 pub struct BindConfigSet {
     pub binds: Vec<BindConfigs>,
-    pub info: BindConfigInfo,
+    pub modifiers: Vec<Box<dyn InputModifier>>,
+    pub conditions: Vec<Box<dyn InputCondition>>,
 }
 
 impl FromIterator<BindConfigs> for BindConfigSet {
     fn from_iter<T: IntoIterator<Item = BindConfigs>>(iter: T) -> Self {
         Self {
             binds: iter.into_iter().collect(),
-            info: BindConfigInfo::default(),
+            modifiers: Vec::new(),
+            conditions: Vec::new(),
         }
     }
 }
@@ -30,7 +26,8 @@ impl Extend<BindConfigs> for BindConfigSet {
 #[derive(Debug)]
 pub struct BindConfig {
     pub input: Input,
-    pub info: BindConfigInfo,
+    pub modifiers: Vec<Box<dyn InputModifier>>,
+    pub conditions: Vec<Box<dyn InputCondition>>,
     pub ignored: bool,
 }
 
@@ -38,8 +35,9 @@ impl BindConfig {
     pub fn new(input: impl Into<Input>) -> Self {
         Self {
             input: input.into(),
+            modifiers: Vec::new(),
+            conditions: Vec::new(),
             ignored: true,
-            info: BindConfigInfo::default(),
         }
     }
 }
@@ -48,22 +46,6 @@ impl BindConfig {
 pub enum BindConfigs {
     One(BindConfig),
     Set(BindConfigSet),
-}
-
-impl BindConfigs {
-    pub fn info(&self) -> &BindConfigInfo {
-        match self {
-            Self::One(config) => &config.info,
-            Self::Set(set) => &set.info,
-        }
-    }
-
-    pub fn info_mut(&mut self) -> &mut BindConfigInfo {
-        match self {
-            Self::One(config) => &mut config.info,
-            Self::Set(set) => &mut set.info,
-        }
-    }
 }
 
 pub trait IntoBindConfigs
@@ -87,12 +69,20 @@ impl IntoBindConfigs for BindConfigs {
     }
 
     fn with_modifier(mut self, modifier: impl InputModifier) -> BindConfigs {
-        self.info_mut().modifiers.push(Box::new(modifier));
+        (match &mut self {
+            Self::One(one) => &mut one.modifiers,
+            Self::Set(set) => &mut set.modifiers,
+        })
+        .push(Box::new(modifier));
         self
     }
 
     fn with_condition(mut self, condition: impl InputCondition) -> BindConfigs {
-        self.info_mut().conditions.push(Box::new(condition));
+        (match &mut self {
+            Self::One(one) => &mut one.conditions,
+            Self::Set(set) => &mut set.conditions,
+        })
+        .push(Box::new(condition));
         self
     }
 }

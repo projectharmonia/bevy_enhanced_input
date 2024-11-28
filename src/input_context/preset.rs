@@ -18,20 +18,23 @@ use super::bind::{BindConfigs, IntoBindConfigs};
 /// use bevy::prelude::*;
 /// use bevy_enhanced_input::prelude::*;
 ///
+/// // We use `KeyCode` here because we are only interested in key presses.
+/// // But you can also use `Input` if you want to e.g.
+/// // combine mouse and keyboard input sources.
 /// #[derive(Debug, Resource)]
-/// struct ControlSettings {
-///     forward: Vec<Input>,
-///     right: Vec<Input>,
-///     backward: Vec<Input>,
-///     left: Vec<Input>,
+/// struct KeyboardSettings {
+///     forward: Vec<KeyCode>,
+///     right: Vec<KeyCode>,
+///     backward: Vec<KeyCode>,
+///     left: Vec<KeyCode>,
 /// }
 ///
 /// #[derive(Debug, Component)]
-/// struct PlayerInputContext;
+/// struct Player;
 ///
-/// impl InputContext for PlayerInputContext {
+/// impl InputContext for Player {
 ///     fn context_instance(world: &World, _entity: Entity) -> ContextInstance {
-///         let settings = world.resource::<ControlSettings>();
+///         let settings = world.resource::<KeyboardSettings>();
 ///
 ///         let mut ctx = ContextInstance::default();
 ///         ctx.bind::<Move>().to(Cardinal {
