@@ -199,20 +199,18 @@ impl ActionBind {
     ///
     /// The order of arguments follows the common "WASD" mapping.
     pub fn with_xy_axis<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
-        self.with(InputBind::new(up).with_modifier(SwizzleAxis::YXZ))
-            .with(InputBind::new(left).with_modifier(Negate::default()))
-            .with(
-                InputBind::new(down)
-                    .with_modifier(Negate::default())
-                    .with_modifier(SwizzleAxis::YXZ),
-            )
-            .with(right)
+        self.to(InputBind::new(up).with_modifier(SwizzleAxis::YXZ))
+            .to(InputBind::new(left).with_modifier(Negate::default()))
+            .to(InputBind::new(down)
+                .with_modifier(Negate::default())
+                .with_modifier(SwizzleAxis::YXZ))
+            .to(right)
     }
 
     /// Maps the given stick as 2-dimentional input.
     pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
-        self.with(stick.x())
-            .with(InputBind::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
+        self.to(stick.x())
+            .to(InputBind::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
     }
 
     /// Adds action-level modifier.
@@ -241,8 +239,8 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(KeyCode::Space)
-    ///     .with(GamepadButtonType::South);
+    ///     .to(KeyCode::Space)
+    ///     .to(GamepadButtonType::South);
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -254,7 +252,7 @@ impl ActionBind {
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>().with(Input::Keyboard {
+    /// ctx.bind::<Jump>().to(Input::Keyboard {
     ///     key: KeyCode::Space,
     ///     mod_keys: ModKeys::CONTROL,
     /// });
@@ -271,12 +269,12 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(InputBind::new(KeyCode::Space).with_condition(Release::default()));
+    ///     .to(InputBind::new(KeyCode::Space).with_condition(Release::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
-    pub fn with(&mut self, binding: impl Into<InputBind>) -> &mut Self {
+    pub fn to(&mut self, binding: impl Into<InputBind>) -> &mut Self {
         let binding = binding.into();
         debug!("adding `{binding:?}` to `{}`", self.action_name);
         self.bindings.push(binding);
@@ -446,8 +444,8 @@ mod tests {
     #[test]
     fn bind() {
         let mut ctx = ContextInstance::default();
-        ctx.bind::<DummyAction>().with(KeyCode::KeyA);
-        ctx.bind::<DummyAction>().with(KeyCode::KeyB);
+        ctx.bind::<DummyAction>().to(KeyCode::KeyA);
+        ctx.bind::<DummyAction>().to(KeyCode::KeyB);
         assert_eq!(ctx.bindings.len(), 1);
 
         let action = ctx.bindings.first().unwrap();

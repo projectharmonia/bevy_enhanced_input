@@ -276,18 +276,18 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<ReleaseAction>()
-            .with(ReleaseAction::KEY)
+            .to(ReleaseAction::KEY)
             .with_condition(Release::default());
         ctx.bind::<Explicit>()
             .with_condition(Press::default())
-            .with(Explicit::KEY);
+            .to(Explicit::KEY);
         ctx.bind::<Implicit>()
             .with_condition(Chord::<ReleaseAction>::default());
         ctx.bind::<Blocker>()
-            .with(Blocker::KEY)
+            .to(Blocker::KEY)
             .with_condition(BlockBy::<ReleaseAction>::default());
         ctx.bind::<EventsBlocker>()
-            .with(EventsBlocker::KEY)
+            .to(EventsBlocker::KEY)
             .with_condition(BlockBy::<ReleaseAction>::events_only());
 
         ctx

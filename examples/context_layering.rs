@@ -96,8 +96,8 @@ impl InputContext for PlayerBox {
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
-        ctx.bind::<Rotate>().with(KeyCode::Space);
-        ctx.bind::<EnterWater>().with(KeyCode::Enter);
+        ctx.bind::<Rotate>().to(KeyCode::Space);
+        ctx.bind::<EnterWater>().to(KeyCode::Enter);
 
         ctx
     }
@@ -128,8 +128,8 @@ impl InputContext for Swimming {
         // `PlayerBox` has lower priority, so `Dive` and `ExitWater` consume inputs first,
         // preventing `Rotate` and `EnterWater` from being triggered.
         // The consuming behavior can be configured in the `InputAction` trait.
-        ctx.bind::<Dive>().with(KeyCode::Space);
-        ctx.bind::<ExitWater>().with(KeyCode::Enter);
+        ctx.bind::<Dive>().to(KeyCode::Space);
+        ctx.bind::<ExitWater>().to(KeyCode::Enter);
 
         ctx
     }

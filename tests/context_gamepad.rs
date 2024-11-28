@@ -131,7 +131,7 @@ struct AnyGamepad;
 impl InputContext for AnyGamepad {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::with_gamepad(GamepadDevice::Any);
-        ctx.bind::<DummyAction>().with(DummyAction::BUTTON);
+        ctx.bind::<DummyAction>().to(DummyAction::BUTTON);
         ctx
     }
 }
@@ -142,7 +142,7 @@ struct FirstGamepad;
 impl InputContext for FirstGamepad {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::with_gamepad(0);
-        ctx.bind::<DummyAction>().with(DummyAction::BUTTON);
+        ctx.bind::<DummyAction>().to(DummyAction::BUTTON);
         ctx
     }
 }

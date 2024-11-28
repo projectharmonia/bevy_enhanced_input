@@ -74,8 +74,8 @@ impl InputContext for PlayerBox {
             .with_modifier(Scale::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.
 
         ctx.bind::<Rotate>()
-            .with(KeyCode::Space)
-            .with(GamepadButtonType::South);
+            .to(KeyCode::Space)
+            .to(GamepadButtonType::South);
 
         ctx
     }

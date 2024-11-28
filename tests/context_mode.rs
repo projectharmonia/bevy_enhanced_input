@@ -150,9 +150,9 @@ impl InputContext for Exclusive {
 
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
-        ctx.bind::<ExclusiveConsume>().with(ExclusiveConsume::KEY);
+        ctx.bind::<ExclusiveConsume>().to(ExclusiveConsume::KEY);
         ctx.bind::<ExclusivePassthrough>()
-            .with(ExclusivePassthrough::KEY);
+            .to(ExclusivePassthrough::KEY);
         ctx
     }
 }
@@ -165,8 +165,8 @@ impl InputContext for Shared {
 
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
-        ctx.bind::<SharedConsume>().with(SharedConsume::KEY);
-        ctx.bind::<SharedPassthrough>().with(SharedPassthrough::KEY);
+        ctx.bind::<SharedConsume>().to(SharedConsume::KEY);
+        ctx.bind::<SharedPassthrough>().to(SharedPassthrough::KEY);
         ctx
     }
 }
