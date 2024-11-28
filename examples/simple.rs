@@ -83,7 +83,7 @@ impl InputContext for PlayerBox {
 
 // All actions should implement the `InputAction` trait.
 // It can be done manually, but we provide a derive for convenience.
-// The only necessary parameter is `dim`, which defines the output type.
+// The only necessary parameter is `output`, which defines the output type.
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]
 struct Move;
