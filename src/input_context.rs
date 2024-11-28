@@ -8,13 +8,12 @@ pub mod trigger_tracker;
 use std::{
     any::{self, TypeId},
     cmp::Reverse,
+    marker::PhantomData,
     mem,
+    sync::Mutex,
 };
 
-use bevy::{
-    ecs::system::{IntoObserverSystem, ObserverSystem},
-    prelude::*,
-};
+use bevy::prelude::*;
 
 use crate::input::input_reader::InputReader;
 use context_instance::ContextInstance;
@@ -40,59 +39,60 @@ impl ContextAppExt for App {
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
         debug!("registering context `{}`", any::type_name::<C>());
 
-        let add_instance = add_instance::<C>(self.world_mut());
-        let rebuild_instance = rebuild_instance::<C>(self.world_mut());
-        self.observe(add_instance)
-            .observe(rebuild_instance)
-            .observe(remove_instance::<C>);
+        let mut instance_system = C::instance_system();
+        instance_system.initialize(self.world_mut());
+        self.insert_resource(InstanceSystem::<C> {
+            system: Mutex::new(Box::new(instance_system)),
+            _phantom: PhantomData,
+        })
+        .observe(add_instance::<C>)
+        .observe(rebuild_instance::<C>)
+        .observe(remove_instance::<C>);
 
         self
     }
 }
 
-fn add_instance<C: InputContext>(world: &mut World) -> impl ObserverSystem<OnAdd, C, ()> {
-    // Even though we know `C` statically, we still need to box
-    // the output of `C::instance_system`.
-    // This is because we can't name the output of that function (yet).
-    // We can't add an associated type to `C` either,
-    // because then implementors would have to be able to name their
-    // system type, which harms ergonomics and makes the derive macro
-    // harder to use.
-    let mut instance_system = C::instance_system();
-    instance_system.initialize(world);
-    let mut instance_system = Box::new(instance_system) as BoxedInstanceSystem;
+#[derive(Resource)]
+struct InstanceSystem<C> {
+    /// System state which can create a [`ContextInstace`].
+    ///
+    /// This needs to be boxed because we can't name the output type of
+    /// [`InputContext::instance_system`].
+    ///
+    /// We can't make it an associated type either, because `InputContext`
+    /// implementors would have to be able to name their system type, which is
+    /// practically impossible.
+    system: Mutex<Box<dyn ReadOnlySystem<In = Entity, Out = ContextInstance>>>,
+    /// Allows monomorphizing this resource for different [`InputContext`]s.
+    ///
+    /// Otherwise, all `C`s would map to the same resource instance, and would
+    /// use the same `system`.
+    _phantom: PhantomData<C>,
+}
 
-    IntoObserverSystem::into_system(
-        move |trigger: Trigger<_, _>, mut set: ParamSet<(&World, ResMut<ContextInstances>)>| {
-            // We need to borrow both the world and contexts,
-            // but we can't use `resource_scope` because observers
-            // don't provide mutable access to the world.
-            // So we just move it from the resource and put it back.
-            let mut instances = mem::take(&mut *set.p1());
-            instances.add::<C>(set.p0(), trigger.entity(), &mut instance_system);
-            *set.p1() = instances;
-        },
-    )
+fn add_instance<C: InputContext>(
+    trigger: Trigger<OnAdd, C>,
+    mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
+) {
+    // We need to borrow both the world and contexts,
+    // but we can't use `resource_scope` because observers
+    // don't provide mutable access to the world.
+    // So we just move it from the resource and put it back.
+    let mut instances = mem::take(&mut *set.p1());
+    instances.add::<C>(set.p0(), trigger.entity());
+    *set.p1() = instances;
 }
 
 fn rebuild_instance<C: InputContext>(
-    world: &mut World,
-) -> impl ObserverSystem<RebuildInputContexts, (), ()> {
-    // See above for why we need to box this.
-    let mut instance_system = C::instance_system();
-    instance_system.initialize(world);
-    let mut instance_system = Box::new(instance_system) as BoxedInstanceSystem;
-
-    IntoObserverSystem::into_system(
-        move |_trigger: Trigger<_>,
-              mut commands: Commands,
-              mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
-              time: Res<Time<Virtual>>| {
-            let mut instances = mem::take(&mut *set.p1());
-            instances.rebuild::<C>(set.p0(), &time, &mut commands, &mut instance_system);
-            *set.p1() = instances;
-        },
-    )
+    _trigger: Trigger<RebuildInputContexts>,
+    mut commands: Commands,
+    mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
+    time: Res<Time<Virtual>>,
+) {
+    let mut instances = mem::take(&mut *set.p1());
+    instances.rebuild::<C>(set.p0(), &time, &mut commands);
+    *set.p1() = instances;
 }
 
 fn remove_instance<C: InputContext>(
@@ -109,18 +109,18 @@ fn remove_instance<C: InputContext>(
 pub struct ContextInstances(Vec<InstanceGroup>);
 
 impl ContextInstances {
-    fn add<C: InputContext>(
-        &mut self,
-        world: &World,
-        entity: Entity,
-        instance_system: &mut BoxedInstanceSystem,
-    ) {
+    fn add<C: InputContext>(&mut self, world: &World, entity: Entity) {
         debug!("adding `{}` to `{entity}`", any::type_name::<C>());
 
         if let Some(index) = self.index::<C>() {
             match &mut self.0[index] {
                 InstanceGroup::Exclusive { instances, .. } => {
-                    let ctx = instance_system.run_readonly(entity, world);
+                    let ctx = world
+                        .resource::<InstanceSystem<C>>()
+                        .system
+                        .lock()
+                        .unwrap()
+                        .run_readonly(entity, world);
                     instances.push((entity, ctx));
                 }
                 InstanceGroup::Shared { entities, .. } => {
@@ -134,7 +134,7 @@ impl ContextInstances {
                 .binary_search_by_key(&priority, |group| Reverse(group.priority()))
                 .unwrap_or_else(|e| e);
 
-            let group = InstanceGroup::new::<C>(world, entity, instance_system);
+            let group = InstanceGroup::new::<C>(world, entity);
             self.0.insert(index, group);
         }
     }
@@ -144,7 +144,6 @@ impl ContextInstances {
         world: &World,
         time: &Time<Virtual>,
         commands: &mut Commands,
-        instance_system: &mut BoxedInstanceSystem,
     ) {
         if let Some(index) = self.index::<C>() {
             debug!("rebuilding `{}`", any::type_name::<C>());
@@ -153,7 +152,12 @@ impl ContextInstances {
                 InstanceGroup::Exclusive { instances, .. } => {
                     for (entity, ctx) in instances {
                         ctx.trigger_removed(commands, time, &[*entity]);
-                        *ctx = instance_system.run_readonly(*entity, world);
+                        *ctx = world
+                            .resource::<InstanceSystem<C>>()
+                            .system
+                            .lock()
+                            .unwrap()
+                            .run_readonly(*entity, world);
                     }
                 }
                 InstanceGroup::Shared { ctx, entities, .. } => {
@@ -163,7 +167,12 @@ impl ContextInstances {
                     let entity = *entities
                         .first()
                         .expect("groups should be immediately removed when empty");
-                    *ctx = instance_system.run_readonly(entity, world);
+                    *ctx = world
+                        .resource::<InstanceSystem<C>>()
+                        .system
+                        .lock()
+                        .unwrap()
+                        .run_readonly(entity, world);
                 }
             }
         }
@@ -307,13 +316,14 @@ enum InstanceGroup {
 
 impl InstanceGroup {
     #[must_use]
-    fn new<C: InputContext>(
-        world: &World,
-        entity: Entity,
-        instance_system: &mut BoxedInstanceSystem,
-    ) -> Self {
+    fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
         let type_id = TypeId::of::<C>();
-        let ctx = instance_system.run_readonly(entity, world);
+        let ctx = world
+            .resource::<InstanceSystem<C>>()
+            .system
+            .lock()
+            .unwrap()
+            .run_readonly(entity, world);
         match C::MODE {
             ContextMode::Exclusive => Self::Exclusive {
                 type_id,
@@ -421,8 +431,6 @@ pub trait InputContext: Component {
     #[must_use]
     fn instance_system() -> impl ReadOnlySystem<In = Entity, Out = ContextInstance>;
 }
-
-pub type BoxedInstanceSystem = Box<dyn ReadOnlySystem<In = Entity, Out = ContextInstance>>;
 
 /// Configures how instances of [`InputContext`] will be managed.
 #[derive(Default, Debug)]
