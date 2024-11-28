@@ -119,12 +119,6 @@ impl<T: IntoInputBinds> IntoInputBinds for Vec<T> {
     }
 }
 
-impl IntoInputBinds for () {
-    fn into_binds(self) -> InputBinds {
-        InputBindSet::default().into_binds()
-    }
-}
-
 impl<T: IntoInputBinds> IntoInputBinds for (T,) {
     fn into_binds(self) -> InputBinds {
         self.0.into_binds()
