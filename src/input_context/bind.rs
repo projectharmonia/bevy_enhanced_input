@@ -1,11 +1,47 @@
 use crate::prelude::*;
 
 #[derive(Debug)]
+pub enum InputBinds {
+    One(InputBind),
+    Set(InputBindSet),
+}
+
+impl IntoInputBinds for InputBinds {
+    fn into_binds(self) -> InputBinds {
+        self
+    }
+
+    fn with_modifier(mut self, modifier: impl InputModifier) -> InputBinds {
+        match &mut self {
+            Self::One(one) => one.modifiers.push(Box::new(modifier)),
+            Self::Set(set) => set.modifiers.push(Box::new(modifier)),
+        }
+
+        self
+    }
+
+    fn with_condition(mut self, condition: impl InputCondition) -> InputBinds {
+        match &mut self {
+            Self::One(one) => one.conditions.push(Box::new(condition)),
+            Self::Set(set) => set.conditions.push(Box::new(condition)),
+        }
+
+        self
+    }
+}
+
+#[derive(Debug)]
 pub struct InputBind {
     pub input: Input,
     pub modifiers: Vec<Box<dyn InputModifier>>,
     pub conditions: Vec<Box<dyn InputCondition>>,
     pub ignored: bool,
+}
+
+impl IntoInputBinds for InputBind {
+    fn into_binds(self) -> InputBinds {
+        InputBinds::One(self)
+    }
 }
 
 impl InputBind {
@@ -26,6 +62,12 @@ pub struct InputBindSet {
     pub conditions: Vec<Box<dyn InputCondition>>,
 }
 
+impl IntoInputBinds for InputBindSet {
+    fn into_binds(self) -> InputBinds {
+        InputBinds::Set(self)
+    }
+}
+
 impl FromIterator<InputBinds> for InputBindSet {
     fn from_iter<T: IntoIterator<Item = InputBinds>>(iter: T) -> Self {
         Self {
@@ -40,12 +82,6 @@ impl Extend<InputBinds> for InputBindSet {
     fn extend<T: IntoIterator<Item = InputBinds>>(&mut self, iter: T) {
         self.binds.extend(iter)
     }
-}
-
-#[derive(Debug)]
-pub enum InputBinds {
-    One(InputBind),
-    Set(InputBindSet),
 }
 
 pub trait IntoInputBinds
@@ -63,45 +99,9 @@ where
     }
 }
 
-impl IntoInputBinds for InputBinds {
-    fn into_binds(self) -> InputBinds {
-        self
-    }
-
-    fn with_modifier(mut self, modifier: impl InputModifier) -> InputBinds {
-        (match &mut self {
-            Self::One(one) => &mut one.modifiers,
-            Self::Set(set) => &mut set.modifiers,
-        })
-        .push(Box::new(modifier));
-        self
-    }
-
-    fn with_condition(mut self, condition: impl InputCondition) -> InputBinds {
-        (match &mut self {
-            Self::One(one) => &mut one.conditions,
-            Self::Set(set) => &mut set.conditions,
-        })
-        .push(Box::new(condition));
-        self
-    }
-}
-
-impl IntoInputBinds for InputBind {
-    fn into_binds(self) -> InputBinds {
-        InputBinds::One(self)
-    }
-}
-
 impl<T: Into<Input>> IntoInputBinds for T {
     fn into_binds(self) -> InputBinds {
         InputBind::new(self).into_binds()
-    }
-}
-
-impl IntoInputBinds for InputBindSet {
-    fn into_binds(self) -> InputBinds {
-        InputBinds::Set(self)
     }
 }
 
