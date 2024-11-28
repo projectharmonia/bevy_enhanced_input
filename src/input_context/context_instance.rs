@@ -128,7 +128,7 @@ pub struct ActionBind {
     consume_input: bool,
     accumulation: Accumulation,
     dim: ActionValueDim,
-    config: InputBindSet,
+    bindings: InputBindSet,
 
     /// Consumed inputs during state evaluation.
     consume_buffer: Vec<Input>,
@@ -143,7 +143,7 @@ impl ActionBind {
             dim: A::Output::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
-            config: InputBindSet::default(),
+            bindings: InputBindSet::default(),
             consume_buffer: Default::default(),
         }
     }
@@ -151,14 +151,14 @@ impl ActionBind {
     /// Adds action-level modifier.
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
         debug!("adding `{modifier:?}` to `{}`", self.action_name);
-        self.config.modifiers.push(Box::new(modifier));
+        self.bindings.modifiers.push(Box::new(modifier));
         self
     }
 
     /// Adds action-level condition.
     pub fn with_condition(&mut self, condition: impl InputCondition) -> &mut Self {
         debug!("adding `{condition:?}` to `{}`", self.action_name);
-        self.config.conditions.push(Box::new(condition));
+        self.bindings.conditions.push(Box::new(condition));
         self
     }
 
@@ -209,10 +209,10 @@ impl ActionBind {
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
-    pub fn to(&mut self, configs: impl IntoInputBinds) -> &mut Self {
-        let configs = configs.into_binds();
-        debug!("adding `{configs:?}` to `{}`", self.action_name);
-        self.config.binds.push(configs);
+    pub fn to(&mut self, bindings: impl IntoInputBinds) -> &mut Self {
+        let bindings = bindings.into_binds();
+        debug!("adding `{bindings:?}` to `{}`", self.action_name);
+        self.bindings.binds.push(bindings);
         self
     }
 
@@ -310,7 +310,7 @@ mod tests {
         assert_eq!(ctx.bindings.len(), 1);
 
         let action = ctx.bindings.first().unwrap();
-        assert_eq!(action.config.binds.len(), 2);
+        assert_eq!(action.bindings.binds.len(), 2);
     }
 
     #[derive(Debug, InputAction)]
