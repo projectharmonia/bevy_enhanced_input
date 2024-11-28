@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Negate, SwizzleAxis};
 
-use super::bind::{BindConfigs, IntoBindConfigs};
+use super::bind::{InputBinds, IntoInputBinds};
 
 /// Maps 4 buttons as 2-dimentional input.
 ///
@@ -55,14 +55,14 @@ pub struct Cardinal<N, E, S, W> {
     pub west: W,
 }
 
-impl<N, E, S, W> IntoBindConfigs for Cardinal<N, E, S, W>
+impl<N, E, S, W> IntoInputBinds for Cardinal<N, E, S, W>
 where
-    N: IntoBindConfigs,
-    E: IntoBindConfigs,
-    S: IntoBindConfigs,
-    W: IntoBindConfigs,
+    N: IntoInputBinds,
+    E: IntoInputBinds,
+    S: IntoInputBinds,
+    W: IntoInputBinds,
 {
-    fn into_configs(self) -> BindConfigs {
+    fn into_binds(self) -> InputBinds {
         (
             self.north.with_modifier(SwizzleAxis::YXZ),
             self.east,
@@ -71,7 +71,7 @@ where
                 .with_modifier(SwizzleAxis::YXZ),
             self.west.with_modifier(Negate::default()),
         )
-            .into_configs()
+            .into_binds()
     }
 }
 
@@ -88,15 +88,15 @@ where
 #[reflect(Default)]
 pub struct WasdKeys;
 
-impl IntoBindConfigs for WasdKeys {
-    fn into_configs(self) -> BindConfigs {
+impl IntoInputBinds for WasdKeys {
+    fn into_binds(self) -> InputBinds {
         Cardinal {
             north: KeyCode::KeyW,
             east: KeyCode::KeyD,
             south: KeyCode::KeyS,
             west: KeyCode::KeyA,
         }
-        .into_configs()
+        .into_binds()
     }
 }
 
@@ -109,15 +109,15 @@ impl IntoBindConfigs for WasdKeys {
 #[reflect(Default)]
 pub struct ArrowKeys;
 
-impl IntoBindConfigs for ArrowKeys {
-    fn into_configs(self) -> BindConfigs {
+impl IntoInputBinds for ArrowKeys {
+    fn into_binds(self) -> InputBinds {
         Cardinal {
             north: KeyCode::ArrowUp,
             east: KeyCode::ArrowRight,
             south: KeyCode::ArrowDown,
             west: KeyCode::ArrowLeft,
         }
-        .into_configs()
+        .into_binds()
     }
 }
 
@@ -130,15 +130,15 @@ impl IntoBindConfigs for ArrowKeys {
 #[reflect(Default)]
 pub struct DPadButtons;
 
-impl IntoBindConfigs for DPadButtons {
-    fn into_configs(self) -> BindConfigs {
+impl IntoInputBinds for DPadButtons {
+    fn into_binds(self) -> InputBinds {
         Cardinal {
             north: GamepadButtonType::DPadUp,
             east: GamepadButtonType::DPadRight,
             south: GamepadButtonType::DPadDown,
             west: GamepadButtonType::DPadLeft,
         }
-        .into_configs()
+        .into_binds()
     }
 }
 
@@ -169,8 +169,8 @@ impl GamepadStick {
     }
 }
 
-impl IntoBindConfigs for GamepadStick {
-    fn into_configs(self) -> BindConfigs {
-        (self.x(), self.y().with_modifier(SwizzleAxis::YXZ)).into_configs()
+impl IntoInputBinds for GamepadStick {
+    fn into_binds(self) -> InputBinds {
+        (self.x(), self.y().with_modifier(SwizzleAxis::YXZ)).into_binds()
     }
 }

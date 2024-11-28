@@ -1,37 +1,14 @@
 use crate::prelude::*;
 
-#[derive(Debug, Default)]
-pub struct BindConfigSet {
-    pub binds: Vec<BindConfigs>,
-    pub modifiers: Vec<Box<dyn InputModifier>>,
-    pub conditions: Vec<Box<dyn InputCondition>>,
-}
-
-impl FromIterator<BindConfigs> for BindConfigSet {
-    fn from_iter<T: IntoIterator<Item = BindConfigs>>(iter: T) -> Self {
-        Self {
-            binds: iter.into_iter().collect(),
-            modifiers: Vec::new(),
-            conditions: Vec::new(),
-        }
-    }
-}
-
-impl Extend<BindConfigs> for BindConfigSet {
-    fn extend<T: IntoIterator<Item = BindConfigs>>(&mut self, iter: T) {
-        self.binds.extend(iter)
-    }
-}
-
 #[derive(Debug)]
-pub struct BindConfig {
+pub struct InputBind {
     pub input: Input,
     pub modifiers: Vec<Box<dyn InputModifier>>,
     pub conditions: Vec<Box<dyn InputCondition>>,
     pub ignored: bool,
 }
 
-impl BindConfig {
+impl InputBind {
     pub fn new(input: impl Into<Input>) -> Self {
         Self {
             input: input.into(),
@@ -42,33 +19,56 @@ impl BindConfig {
     }
 }
 
-#[derive(Debug)]
-pub enum BindConfigs {
-    One(BindConfig),
-    Set(BindConfigSet),
+#[derive(Debug, Default)]
+pub struct InputBindSet {
+    pub binds: Vec<InputBinds>,
+    pub modifiers: Vec<Box<dyn InputModifier>>,
+    pub conditions: Vec<Box<dyn InputCondition>>,
 }
 
-pub trait IntoBindConfigs
+impl FromIterator<InputBinds> for InputBindSet {
+    fn from_iter<T: IntoIterator<Item = InputBinds>>(iter: T) -> Self {
+        Self {
+            binds: iter.into_iter().collect(),
+            modifiers: Vec::new(),
+            conditions: Vec::new(),
+        }
+    }
+}
+
+impl Extend<InputBinds> for InputBindSet {
+    fn extend<T: IntoIterator<Item = InputBinds>>(&mut self, iter: T) {
+        self.binds.extend(iter)
+    }
+}
+
+#[derive(Debug)]
+pub enum InputBinds {
+    One(InputBind),
+    Set(InputBindSet),
+}
+
+pub trait IntoInputBinds
 where
     Self: Sized,
 {
-    fn into_configs(self) -> BindConfigs;
+    fn into_binds(self) -> InputBinds;
 
-    fn with_modifier(self, modifier: impl InputModifier) -> BindConfigs {
-        self.into_configs().with_modifier(modifier)
+    fn with_modifier(self, modifier: impl InputModifier) -> InputBinds {
+        self.into_binds().with_modifier(modifier)
     }
 
-    fn with_condition(self, condition: impl InputCondition) -> BindConfigs {
-        self.into_configs().with_condition(condition)
+    fn with_condition(self, condition: impl InputCondition) -> InputBinds {
+        self.into_binds().with_condition(condition)
     }
 }
 
-impl IntoBindConfigs for BindConfigs {
-    fn into_configs(self) -> BindConfigs {
+impl IntoInputBinds for InputBinds {
+    fn into_binds(self) -> InputBinds {
         self
     }
 
-    fn with_modifier(mut self, modifier: impl InputModifier) -> BindConfigs {
+    fn with_modifier(mut self, modifier: impl InputModifier) -> InputBinds {
         (match &mut self {
             Self::One(one) => &mut one.modifiers,
             Self::Set(set) => &mut set.modifiers,
@@ -77,7 +77,7 @@ impl IntoBindConfigs for BindConfigs {
         self
     }
 
-    fn with_condition(mut self, condition: impl InputCondition) -> BindConfigs {
+    fn with_condition(mut self, condition: impl InputCondition) -> InputBinds {
         (match &mut self {
             Self::One(one) => &mut one.conditions,
             Self::Set(set) => &mut set.conditions,
@@ -87,59 +87,59 @@ impl IntoBindConfigs for BindConfigs {
     }
 }
 
-impl IntoBindConfigs for BindConfig {
-    fn into_configs(self) -> BindConfigs {
-        BindConfigs::One(self)
+impl IntoInputBinds for InputBind {
+    fn into_binds(self) -> InputBinds {
+        InputBinds::One(self)
     }
 }
 
-impl<T: Into<Input>> IntoBindConfigs for T {
-    fn into_configs(self) -> BindConfigs {
-        BindConfig::new(self).into_configs()
+impl<T: Into<Input>> IntoInputBinds for T {
+    fn into_binds(self) -> InputBinds {
+        InputBind::new(self).into_binds()
     }
 }
 
-impl IntoBindConfigs for BindConfigSet {
-    fn into_configs(self) -> BindConfigs {
-        BindConfigs::Set(self)
+impl IntoInputBinds for InputBindSet {
+    fn into_binds(self) -> InputBinds {
+        InputBinds::Set(self)
     }
 }
 
 // collections
 
-impl<T: IntoBindConfigs, const N: usize> IntoBindConfigs for [T; N] {
-    fn into_configs(self) -> BindConfigs {
-        BindConfigSet::from_iter(self.into_iter().map(IntoBindConfigs::into_configs)).into_configs()
+impl<T: IntoInputBinds, const N: usize> IntoInputBinds for [T; N] {
+    fn into_binds(self) -> InputBinds {
+        InputBindSet::from_iter(self.into_iter().map(IntoInputBinds::into_binds)).into_binds()
     }
 }
 
-impl<T: IntoBindConfigs> IntoBindConfigs for Vec<T> {
-    fn into_configs(self) -> BindConfigs {
-        BindConfigSet::from_iter(self.into_iter().map(IntoBindConfigs::into_configs)).into_configs()
+impl<T: IntoInputBinds> IntoInputBinds for Vec<T> {
+    fn into_binds(self) -> InputBinds {
+        InputBindSet::from_iter(self.into_iter().map(IntoInputBinds::into_binds)).into_binds()
     }
 }
 
-impl IntoBindConfigs for () {
-    fn into_configs(self) -> BindConfigs {
-        BindConfigSet::default().into_configs()
+impl IntoInputBinds for () {
+    fn into_binds(self) -> InputBinds {
+        InputBindSet::default().into_binds()
     }
 }
 
-impl<T: IntoBindConfigs> IntoBindConfigs for (T,) {
-    fn into_configs(self) -> BindConfigs {
-        self.0.into_configs()
+impl<T: IntoInputBinds> IntoInputBinds for (T,) {
+    fn into_binds(self) -> InputBinds {
+        self.0.into_binds()
     }
 }
 
 macro_rules! impl_tuple {
     ($(#[$meta:meta])* $($T:ident $i:tt),*) => {
         $(#[$meta])*
-        impl<$($T: IntoBindConfigs),*> IntoBindConfigs for ($($T,)*) {
-            fn into_configs(self) -> BindConfigs {
-                BindConfigSet::from_iter([
-                    $(self.$i.into_configs()),*
+        impl<$($T: IntoInputBinds),*> IntoInputBinds for ($($T,)*) {
+            fn into_binds(self) -> InputBinds {
+                InputBindSet::from_iter([
+                    $(self.$i.into_binds()),*
                 ])
-                .into_configs()
+                .into_binds()
             }
         }
     };

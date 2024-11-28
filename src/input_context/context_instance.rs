@@ -3,7 +3,7 @@ use std::any::{self, TypeId};
 use bevy::{prelude::*, utils::Entry};
 
 use super::{
-    bind::{BindConfigSet, IntoBindConfigs},
+    bind::{InputBindSet, IntoInputBinds},
     input_action::{Accumulation, ActionData, ActionOutput, ActionsData, InputAction},
     input_condition::InputCondition,
     input_modifier::InputModifier,
@@ -128,7 +128,7 @@ pub struct ActionBind {
     consume_input: bool,
     accumulation: Accumulation,
     dim: ActionValueDim,
-    config: BindConfigSet,
+    config: InputBindSet,
 
     /// Consumed inputs during state evaluation.
     consume_buffer: Vec<Input>,
@@ -143,7 +143,7 @@ impl ActionBind {
             dim: A::Output::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
-            config: BindConfigSet::default(),
+            config: InputBindSet::default(),
             consume_buffer: Default::default(),
         }
     }
@@ -209,8 +209,8 @@ impl ActionBind {
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
-    pub fn to(&mut self, configs: impl IntoBindConfigs) -> &mut Self {
-        let configs = configs.into_configs();
+    pub fn to(&mut self, configs: impl IntoInputBinds) -> &mut Self {
+        let configs = configs.into_binds();
         debug!("adding `{configs:?}` to `{}`", self.action_name);
         self.config.binds.push(configs);
         self
