@@ -7,10 +7,10 @@ pub mod trigger_tracker;
 
 use std::{
     any::{self, TypeId},
+    cell::RefCell,
     cmp::Reverse,
     marker::PhantomData,
     mem,
-    sync::Mutex,
 };
 
 use bevy::prelude::*;
@@ -41,38 +41,18 @@ impl ContextAppExt for App {
 
         let mut instance_system = C::instance_system();
         instance_system.initialize(self.world_mut());
-        self.insert_resource(InstanceSystem::<C> {
-            system: Mutex::new(Box::new(instance_system)),
-            _phantom: PhantomData,
-        })
-        .observe(add_instance::<C>)
-        .observe(rebuild_instance::<C>)
-        .observe(remove_instance::<C>);
+        self.insert_non_send_resource(InstanceSystem::<C>::new(instance_system))
+            .observe(add_instance::<C>)
+            .observe(rebuild_instance::<C>)
+            .observe(remove_instance::<C>);
 
         self
     }
 }
 
-#[derive(Resource)]
-struct InstanceSystem<C> {
-    /// System state which can create a [`ContextInstace`].
-    ///
-    /// This needs to be boxed because we can't name the output type of
-    /// [`InputContext::instance_system`].
-    ///
-    /// We can't make it an associated type either, because `InputContext`
-    /// implementors would have to be able to name their system type, which is
-    /// practically impossible.
-    system: Mutex<Box<dyn ReadOnlySystem<In = Entity, Out = ContextInstance>>>,
-    /// Allows monomorphizing this resource for different [`InputContext`]s.
-    ///
-    /// Otherwise, all `C`s would map to the same resource instance, and would
-    /// use the same `system`.
-    _phantom: PhantomData<C>,
-}
-
 fn add_instance<C: InputContext>(
     trigger: Trigger<OnAdd, C>,
+    instance_system: NonSend<InstanceSystem<C>>,
     mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
 ) {
     // We need to borrow both the world and contexts,
@@ -80,7 +60,7 @@ fn add_instance<C: InputContext>(
     // don't provide mutable access to the world.
     // So we just move it from the resource and put it back.
     let mut instances = mem::take(&mut *set.p1());
-    instances.add::<C>(set.p0(), trigger.entity());
+    instances.add::<C>(set.p0(), &instance_system, trigger.entity());
     *set.p1() = instances;
 }
 
@@ -88,10 +68,11 @@ fn rebuild_instance<C: InputContext>(
     _trigger: Trigger<RebuildInputContexts>,
     mut commands: Commands,
     mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
+    instance_system: NonSend<InstanceSystem<C>>,
     time: Res<Time<Virtual>>,
 ) {
     let mut instances = mem::take(&mut *set.p1());
-    instances.rebuild::<C>(set.p0(), &time, &mut commands);
+    instances.rebuild::<C>(set.p0(), &instance_system, &time, &mut commands);
     *set.p1() = instances;
 }
 
@@ -109,18 +90,18 @@ fn remove_instance<C: InputContext>(
 pub struct ContextInstances(Vec<InstanceGroup>);
 
 impl ContextInstances {
-    fn add<C: InputContext>(&mut self, world: &World, entity: Entity) {
+    fn add<C: InputContext>(
+        &mut self,
+        world: &World,
+        instance_system: &InstanceSystem<C>,
+        entity: Entity,
+    ) {
         debug!("adding `{}` to `{entity}`", any::type_name::<C>());
 
         if let Some(index) = self.index::<C>() {
             match &mut self.0[index] {
                 InstanceGroup::Exclusive { instances, .. } => {
-                    let ctx = world
-                        .resource::<InstanceSystem<C>>()
-                        .system
-                        .lock()
-                        .unwrap()
-                        .run_readonly(entity, world);
+                    let ctx = instance_system.run(world, entity);
                     instances.push((entity, ctx));
                 }
                 InstanceGroup::Shared { entities, .. } => {
@@ -134,7 +115,7 @@ impl ContextInstances {
                 .binary_search_by_key(&priority, |group| Reverse(group.priority()))
                 .unwrap_or_else(|e| e);
 
-            let group = InstanceGroup::new::<C>(world, entity);
+            let group = InstanceGroup::new::<C>(world, instance_system, entity);
             self.0.insert(index, group);
         }
     }
@@ -142,6 +123,7 @@ impl ContextInstances {
     fn rebuild<C: InputContext>(
         &mut self,
         world: &World,
+        instance_system: &InstanceSystem<C>,
         time: &Time<Virtual>,
         commands: &mut Commands,
     ) {
@@ -152,12 +134,7 @@ impl ContextInstances {
                 InstanceGroup::Exclusive { instances, .. } => {
                     for (entity, ctx) in instances {
                         ctx.trigger_removed(commands, time, &[*entity]);
-                        *ctx = world
-                            .resource::<InstanceSystem<C>>()
-                            .system
-                            .lock()
-                            .unwrap()
-                            .run_readonly(*entity, world);
+                        *ctx = instance_system.run(world, *entity);
                     }
                 }
                 InstanceGroup::Shared { ctx, entities, .. } => {
@@ -167,12 +144,7 @@ impl ContextInstances {
                     let entity = *entities
                         .first()
                         .expect("groups should be immediately removed when empty");
-                    *ctx = world
-                        .resource::<InstanceSystem<C>>()
-                        .system
-                        .lock()
-                        .unwrap()
-                        .run_readonly(entity, world);
+                    *ctx = instance_system.run(world, entity);
                 }
             }
         }
@@ -316,14 +288,13 @@ enum InstanceGroup {
 
 impl InstanceGroup {
     #[must_use]
-    fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
+    fn new<C: InputContext>(
+        world: &World,
+        instance_system: &InstanceSystem<C>,
+        entity: Entity,
+    ) -> Self {
         let type_id = TypeId::of::<C>();
-        let ctx = world
-            .resource::<InstanceSystem<C>>()
-            .system
-            .lock()
-            .unwrap()
-            .run_readonly(entity, world);
+        let ctx = instance_system.run(world, entity);
         match C::MODE {
             ContextMode::Exclusive => Self::Exclusive {
                 type_id,
@@ -351,6 +322,37 @@ impl InstanceGroup {
             InstanceGroup::Exclusive { type_id, .. } => type_id,
             InstanceGroup::Shared { type_id, .. } => type_id,
         }
+    }
+}
+
+struct InstanceSystem<C> {
+    /// System state which can create a [`ContextInstace`].
+    ///
+    /// This needs to be boxed because we can't name the output type of
+    /// [`InputContext::instance_system`].
+    ///
+    /// We can't make it an associated type either, because `InputContext`
+    /// implementors would have to be able to name their system type, which is
+    /// practically impossible.
+    system: RefCell<Box<dyn ReadOnlySystem<In = Entity, Out = ContextInstance>>>,
+
+    /// Allows monomorphizing this resource for different [`InputContext`]s.
+    ///
+    /// Otherwise, all `C`s would map to the same resource instance, and would
+    /// use the same `system`.
+    phantom: PhantomData<C>,
+}
+
+impl<C> InstanceSystem<C> {
+    fn new(system: impl ReadOnlySystem<In = Entity, Out = ContextInstance>) -> Self {
+        Self {
+            system: RefCell::new(Box::new(system)),
+            phantom: PhantomData,
+        }
+    }
+
+    fn run(&self, world: &World, entity: Entity) -> ContextInstance {
+        self.system.borrow_mut().run_readonly(entity, world)
     }
 }
 
