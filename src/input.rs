@@ -6,51 +6,6 @@ use bevy::prelude::*;
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
-bitflags! {
-    /// Keyboard modifiers for both left and right keys.
-    #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-    pub struct ModKeys: u8 {
-        /// Corresponds to [`KeyCode::AltLeft`] and [`KeyCode::AltRight`].
-        const ALT = 0b00000001;
-        /// Corresponds to [`KeyCode::ControlLeft`] and [`KeyCode::ControlRight`].
-        const CONTROL = 0b00000010;
-        /// Corresponds to [`KeyCode::ShiftLeft`] and [`KeyCode::ShiftRight`]
-        const SHIFT = 0b00000100;
-        /// Corresponds to [`KeyCode::SuperLeft`] and [`KeyCode::SuperRight`].
-        const SUPER = 0b00001000;
-    }
-}
-
-impl ModKeys {
-    /// Returns an iterator over the key codes corresponding to the set modifier bits.
-    ///
-    /// Each item contains left and right key codes.
-    pub fn iter_keys(self) -> impl Iterator<Item = [KeyCode; 2]> {
-        self.iter_names().map(|(_, mod_key)| match mod_key {
-            ModKeys::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
-            ModKeys::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
-            ModKeys::SHIFT => [KeyCode::ShiftLeft, KeyCode::ShiftRight],
-            ModKeys::SUPER => [KeyCode::SuperLeft, KeyCode::SuperRight],
-            _ => unreachable!("iteration should yield only named flags"),
-        })
-    }
-}
-
-impl From<KeyCode> for ModKeys {
-    /// Converts key into a named modifier
-    ///
-    /// Returns [`ModKeys::empty`] if the key is not a modifier.
-    fn from(value: KeyCode) -> Self {
-        match value {
-            KeyCode::AltLeft | KeyCode::AltRight => ModKeys::ALT,
-            KeyCode::ControlLeft | KeyCode::ControlRight => ModKeys::CONTROL,
-            KeyCode::ShiftLeft | KeyCode::ShiftRight => ModKeys::SHIFT,
-            KeyCode::SuperLeft | KeyCode::SuperRight => ModKeys::SUPER,
-            _ => ModKeys::empty(),
-        }
-    }
-}
-
 /// Inputs that can be associated with an
 /// [`InputAction`](super::input_context::input_action::InputAction).
 ///
@@ -163,6 +118,51 @@ impl<I: Into<Input>> InputModKeys for I {
             Input::GamepadButton { .. } | Input::GamepadAxis { .. } => {
                 panic!("keyboard modifiers can't be applied to gamepads")
             }
+        }
+    }
+}
+
+bitflags! {
+    /// Keyboard modifiers for both left and right keys.
+    #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+    pub struct ModKeys: u8 {
+        /// Corresponds to [`KeyCode::AltLeft`] and [`KeyCode::AltRight`].
+        const ALT = 0b00000001;
+        /// Corresponds to [`KeyCode::ControlLeft`] and [`KeyCode::ControlRight`].
+        const CONTROL = 0b00000010;
+        /// Corresponds to [`KeyCode::ShiftLeft`] and [`KeyCode::ShiftRight`]
+        const SHIFT = 0b00000100;
+        /// Corresponds to [`KeyCode::SuperLeft`] and [`KeyCode::SuperRight`].
+        const SUPER = 0b00001000;
+    }
+}
+
+impl ModKeys {
+    /// Returns an iterator over the key codes corresponding to the set modifier bits.
+    ///
+    /// Each item contains left and right key codes.
+    pub fn iter_keys(self) -> impl Iterator<Item = [KeyCode; 2]> {
+        self.iter_names().map(|(_, mod_key)| match mod_key {
+            ModKeys::ALT => [KeyCode::AltLeft, KeyCode::AltRight],
+            ModKeys::CONTROL => [KeyCode::ControlLeft, KeyCode::ControlRight],
+            ModKeys::SHIFT => [KeyCode::ShiftLeft, KeyCode::ShiftRight],
+            ModKeys::SUPER => [KeyCode::SuperLeft, KeyCode::SuperRight],
+            _ => unreachable!("iteration should yield only named flags"),
+        })
+    }
+}
+
+impl From<KeyCode> for ModKeys {
+    /// Converts key into a named modifier
+    ///
+    /// Returns [`ModKeys::empty`] if the key is not a modifier.
+    fn from(value: KeyCode) -> Self {
+        match value {
+            KeyCode::AltLeft | KeyCode::AltRight => ModKeys::ALT,
+            KeyCode::ControlLeft | KeyCode::ControlRight => ModKeys::CONTROL,
+            KeyCode::ShiftLeft | KeyCode::ShiftRight => ModKeys::SHIFT,
+            KeyCode::SuperLeft | KeyCode::SuperRight => ModKeys::SUPER,
+            _ => ModKeys::empty(),
         }
     }
 }
