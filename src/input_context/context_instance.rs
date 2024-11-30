@@ -12,10 +12,9 @@ use bevy::{
 };
 
 use super::{
-    bind_preset::BindPreset,
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input_action::{Accumulation, ActionOutput, InputAction},
-    input_bind::InputBind,
+    input_bind::{InputBind, InputBindings},
     input_condition::InputCondition,
     input_modifier::InputModifier,
 };
@@ -187,9 +186,8 @@ impl ActionBind {
     /// 1. Raw input types.
     /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
     /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
-    /// 4. [`BindPreset`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
-    ///
-    /// [`BindPreset`] is also implemented on tuples, so you can pass multiple inputs to a single call.
+    /// 4. [`InputBindings`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
+    /// Also implemented on tuples, so you can pass multiple inputs to a single call.
     ///
     /// # Examples
     ///
@@ -280,8 +278,8 @@ impl ActionBind {
     /// # #[input_action(output = Vec2)]
     /// # struct Inspect;
     /// ```
-    pub fn to(&mut self, preset: impl BindPreset) -> &mut Self {
-        for binding in preset.bindings() {
+    pub fn to(&mut self, bindings: impl InputBindings) -> &mut Self {
+        for binding in bindings.iter_bindings() {
             debug!("adding `{binding:?}` to `{}`", self.action_name);
             self.bindings.push(binding);
         }

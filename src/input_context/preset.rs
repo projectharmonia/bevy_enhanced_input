@@ -1,57 +1,9 @@
-use std::iter;
-
 use bevy::prelude::*;
 
 use super::{
-    input_bind::{InputBind, InputBindModCond},
+    input_bind::{InputBind, InputBindModCond, InputBindings},
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };
-
-pub trait BindPreset {
-    fn bindings(self) -> impl Iterator<Item = InputBind>;
-}
-
-impl<I: Into<InputBind>> BindPreset for I {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        iter::once(self.into())
-    }
-}
-
-impl<I: Into<InputBind> + Copy> BindPreset for &Vec<I> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.as_slice().bindings()
-    }
-}
-
-impl<I: Into<InputBind> + Copy, const N: usize> BindPreset for &[I; N] {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.as_slice().bindings()
-    }
-}
-
-impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.iter().copied().map(Into::into)
-    }
-}
-
-macro_rules! impl_tuple_preset {
-    ($($name:ident),+) => {
-        impl<$($name),+> BindPreset for ($($name,)+)
-        where
-            $($name: BindPreset),+
-        {
-            #[allow(non_snake_case)]
-            fn bindings(self) -> impl Iterator<Item = InputBind> {
-                let ($($name,)+) = self;
-                std::iter::empty()
-                    $(.chain($name.bindings()))+
-            }
-        }
-    };
-}
-
-bevy::utils::all_tuples!(impl_tuple_preset, 1, 15, I);
 
 /// A preset to map buttons as 2-dimentional input.
 ///
@@ -108,7 +60,7 @@ bevy::utils::all_tuples!(impl_tuple_preset, 1, 15, I);
 /// struct Move;
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct Cardinal<I: BindPreset> {
+pub struct Cardinal<I: InputBindings> {
     pub north: I,
     pub east: I,
     pub south: I,
@@ -158,29 +110,29 @@ impl Cardinal<GamepadButtonType> {
     }
 }
 
-impl<I: BindPreset> BindPreset for Cardinal<I> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
+impl<I: InputBindings> InputBindings for Cardinal<I> {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
         // Y
         let north = self
             .north
-            .bindings()
+            .iter_bindings()
             .map(|binding| binding.with_modifier(SwizzleAxis::YXZ));
 
         // -X
         let east = self
             .east
-            .bindings()
+            .iter_bindings()
             .map(|binding| binding.with_modifier(Negate::default()));
 
         // -Y
-        let south = self.south.bindings().map(|binding| {
+        let south = self.south.iter_bindings().map(|binding| {
             binding
                 .with_modifier(Negate::default())
                 .with_modifier(SwizzleAxis::YXZ)
         });
 
         // X
-        let west = self.west.bindings();
+        let west = self.west.iter_bindings();
 
         north.chain(east).chain(south).chain(west)
     }
@@ -192,17 +144,17 @@ impl<I: BindPreset> BindPreset for Cardinal<I> {
 ///
 /// See also [`Cardinal`].
 #[derive(Debug, Clone, Copy)]
-pub struct Biderectional<I: BindPreset> {
+pub struct Biderectional<I: InputBindings> {
     pub positive: I,
     pub negative: I,
 }
 
-impl<I: BindPreset> BindPreset for Biderectional<I> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        let positive = self.positive.bindings();
+impl<I: InputBindings> InputBindings for Biderectional<I> {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+        let positive = self.positive.iter_bindings();
         let negative = self
             .negative
-            .bindings()
+            .iter_bindings()
             .map(|binding| binding.with_modifier(Negate::default()));
 
         positive.chain(negative)
@@ -238,8 +190,8 @@ impl GamepadStick {
     }
 }
 
-impl BindPreset for GamepadStick {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
+impl InputBindings for GamepadStick {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
         [self.x().into(), self.y().with_modifier(SwizzleAxis::YXZ)].into_iter()
     }
 }

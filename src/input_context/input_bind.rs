@@ -1,3 +1,5 @@
+use std::iter;
+
 use super::{input_condition::InputCondition, input_modifier::InputModifier};
 use crate::input::Input;
 
@@ -58,3 +60,55 @@ impl<T: Into<InputBind>> InputBindModCond for T {
         binding
     }
 }
+
+/// Represents collection of bindings that could be passed into
+/// [`ActionBind::to`](super::context_instance::ActionBind::to).
+///
+/// Can be manually implemented to provide custom modifiers or conditions.
+/// See [`preset`](super::preset) for examples.
+pub trait InputBindings {
+    /// Returns an iterator over bindings.
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind>;
+}
+
+impl<I: Into<InputBind>> InputBindings for I {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+        iter::once(self.into())
+    }
+}
+
+impl<I: Into<InputBind> + Copy> InputBindings for &Vec<I> {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+        self.as_slice().iter_bindings()
+    }
+}
+
+impl<I: Into<InputBind> + Copy, const N: usize> InputBindings for &[I; N] {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+        self.as_slice().iter_bindings()
+    }
+}
+
+impl<I: Into<InputBind> + Copy> InputBindings for &[I] {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+        self.iter().copied().map(Into::into)
+    }
+}
+
+macro_rules! impl_tuple_binds {
+    ($($name:ident),+) => {
+        impl<$($name),+> InputBindings for ($($name,)+)
+        where
+            $($name: InputBindings),+
+        {
+            #[allow(non_snake_case)]
+            fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+                let ($($name,)+) = self;
+                std::iter::empty()
+                    $(.chain($name.iter_bindings()))+
+            }
+        }
+    };
+}
+
+bevy::utils::all_tuples!(impl_tuple_binds, 1, 15, I);
