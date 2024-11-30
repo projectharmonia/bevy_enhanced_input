@@ -85,14 +85,14 @@ impl From<MouseButton> for Input {
 }
 
 impl From<GamepadButton> for Input {
-    fn from(button: GamepadButton) -> Self {
-        Self::GamepadButton(button)
+    fn from(value: GamepadButton) -> Self {
+        Self::GamepadButton(value)
     }
 }
 
 impl From<GamepadAxis> for Input {
-    fn from(axis: GamepadAxis) -> Self {
-        Self::GamepadAxis(axis)
+    fn from(value: GamepadAxis) -> Self {
+        Self::GamepadAxis(value)
     }
 }
 
