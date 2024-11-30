@@ -112,7 +112,7 @@ impl InputContext for PlayerBox {
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
         ctx.bind::<Zoom>()
-            .to(InputBind::new(Input::mouse_wheel()).with_modifier(SwizzleAxis::YXZ))
+            .to(Input::mouse_wheel().with_modifier(SwizzleAxis::YXZ))
             .with_modifier(Scale::splat(3.0));
 
         ctx

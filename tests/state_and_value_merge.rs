@@ -287,7 +287,7 @@ impl InputContext for DummyContext {
         ctx.bind::<Blocker>().to(Blocker::KEY);
         ctx.bind::<EventsBlocker>().to(EventsBlocker::KEY);
         ctx.bind::<InputLevel>()
-            .to(InputBind::new(InputLevel::KEY1)
+            .to(InputLevel::KEY1
                 .with_condition(chord)
                 .with_condition(block_by)
                 .with_condition(block_events_by)
@@ -295,7 +295,7 @@ impl InputContext for DummyContext {
                 .with_condition(release)
                 .with_modifier(swizzle_axis)
                 .with_modifier(scale))
-            .to(InputBind::new(InputLevel::KEY2)
+            .to(InputLevel::KEY2
                 .with_condition(chord)
                 .with_condition(block_by)
                 .with_condition(block_events_by)
@@ -315,12 +315,8 @@ impl InputContext for DummyContext {
             .with_modifier(negate)
             .with_modifier(scale);
         ctx.bind::<BothLevels>()
-            .to(InputBind::new(BothLevels::KEY1)
-                .with_condition(down)
-                .with_modifier(scale))
-            .to(InputBind::new(BothLevels::KEY2)
-                .with_condition(down)
-                .with_modifier(negate))
+            .to(BothLevels::KEY1.with_condition(down).with_modifier(scale))
+            .to(BothLevels::KEY2.with_condition(down).with_modifier(negate))
             .with_condition(release)
             .with_condition(chord)
             .with_condition(block_by)
