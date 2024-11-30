@@ -8,7 +8,7 @@ use bevy::{
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn wasd_and_arrows() {
+fn keys() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
@@ -26,6 +26,8 @@ fn wasd_and_arrows() {
         (KeyCode::ArrowLeft, LEFT),
         (KeyCode::ArrowDown, DOWN),
         (KeyCode::ArrowRight, RIGHT),
+        (KeyCode::NumpadSubtract, LEFT),
+        (KeyCode::NumpadAdd, RIGHT),
     ] {
         app.world_mut()
             .resource_mut::<ButtonInput<KeyCode>>()
@@ -172,6 +174,10 @@ impl InputContext for DummyContext {
             Cardinal::wasd_keys(),
             Cardinal::arrow_keys(),
             Cardinal::dpad_buttons(),
+            Biderectional {
+                positive: KeyCode::NumpadAdd,
+                negative: KeyCode::NumpadSubtract,
+            },
             GamepadStick::Left,
             GamepadStick::Right,
         ));

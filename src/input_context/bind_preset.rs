@@ -62,6 +62,8 @@ bevy::utils::all_tuples!(impl_tuple_preset, 1, 15, I);
 /// toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
 /// you will need to invert Y and apply it to Z inside your observer.
 ///
+/// See also [`Biderectional`].
+///
 /// # Examples
 ///
 /// Map keyboard inputs into a 2D movement action
@@ -181,6 +183,29 @@ impl<I: BindPreset> BindPreset for Cardinal<I> {
         let west = self.west.bindings();
 
         north.chain(east).chain(south).chain(west)
+    }
+}
+
+/// A preset to map buttons as 2-dimentional input.
+///
+/// Positive binding will be passed as is and negative will be reversed using [`Negate`].
+///
+/// See also [`Cardinal`].
+#[derive(Debug, Clone, Copy)]
+pub struct Biderectional<I: BindPreset> {
+    pub positive: I,
+    pub negative: I,
+}
+
+impl<I: BindPreset> BindPreset for Biderectional<I> {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        let positive = self.positive.bindings();
+        let negative = self
+            .negative
+            .bindings()
+            .map(|binding| binding.with_modifier(Negate::default()));
+
+        positive.chain(negative)
     }
 }
 
