@@ -26,7 +26,7 @@ See also examples in the repo. [simple.rs](examples/simple.rs) should be a good 
 Have any questions? Feel free to ask in the dedicated [`bevy_enhanced_input` channel](https://discord.com/channels/691052431525675048/1297361733886677036) in Bevy's Discord server.
 
 ## Bevy compatibility
-
 | bevy        | bevy_enhanced_input |
 | ----------- | ------------------- |
+| 0.15.0      | 0.4                 |
 | 0.14.0      | 0.1-0.3             |
