@@ -108,12 +108,14 @@ impl InputContext for PlayerBox {
 
         ctx.bind::<Move>()
             .to(Cardinal::wasd_keys())
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
+            .with_modifiers((
+                DeadZone::default(),
+                DeltaLerp::default(),
+                Scale::splat(DEFAULT_SPEED),
+            ));
         ctx.bind::<Zoom>()
-            .to(Input::mouse_wheel().with_modifier(SwizzleAxis::YXZ))
-            .with_modifier(Scale::splat(3.0));
+            .to(Input::mouse_wheel().with_modifiers(SwizzleAxis::YXZ))
+            .with_modifiers(Scale::splat(3.0));
 
         ctx
     }

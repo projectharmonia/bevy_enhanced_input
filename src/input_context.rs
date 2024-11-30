@@ -1,10 +1,10 @@
-pub mod bind_preset;
 pub mod context_instance;
 pub mod events;
 pub mod input_action;
 pub mod input_bind;
 pub mod input_condition;
 pub mod input_modifier;
+pub mod preset;
 
 use std::{
     any::{self, TypeId},
@@ -339,12 +339,9 @@ impl InstanceGroup {
 ///         let mut ctx = ContextInstance::default();
 ///
 ///         ctx.bind::<Move>()
-///             .to(Cardinal::wasd_keys())
-///             .to(GamepadStick::Left);
-///
+///             .to((GamepadStick::Left, Cardinal::wasd_keys()));
 ///         ctx.bind::<Jump>()
-///             .to(KeyCode::Space)
-///             .to(GamepadButton::South);
+///             .to((KeyCode::Space, GamepadButton::South));
 ///
 ///         ctx
 ///     }

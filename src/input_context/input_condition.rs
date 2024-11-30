@@ -9,7 +9,7 @@ pub mod pulse;
 pub mod release;
 pub mod tap;
 
-use std::fmt::Debug;
+use std::{fmt::Debug, iter};
 
 use bevy::prelude::*;
 
@@ -25,8 +25,8 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 /// or "release" events.
 ///
 /// Can be applied both to inputs and actions.
-/// See [`ActionBind::with_condition`](super::context_instance::ActionBind::with_condition)
-/// and [`InputBindModCond::with_condition`](super::input_bind::InputBindModCond::with_condition).
+/// See [`ActionBind::with_conditions`](super::context_instance::ActionBind::with_conditions)
+/// and [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
     ///
@@ -71,3 +71,35 @@ pub enum ConditionKind {
         events_only: bool,
     },
 }
+
+/// Represents collection of bindings that could be passed into
+/// [`ActionBind::with_conditions`](super::context_instance::ActionBind::with_conditions)
+/// and [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
+pub trait InputConditions {
+    /// Returns an iterator over conditions.
+    fn iter_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>>;
+}
+
+impl<I: InputCondition> InputConditions for I {
+    fn iter_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>> {
+        iter::once(Box::new(self) as Box<dyn InputCondition>)
+    }
+}
+
+macro_rules! impl_tuple_condition {
+    ($($name:ident),+) => {
+        impl<$($name),+> InputConditions for ($($name,)+)
+        where
+            $($name: InputCondition),+
+        {
+            #[allow(non_snake_case)]
+            fn iter_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>> {
+                let ($($name,)+) = self;
+                std::iter::empty()
+                    $(.chain(iter::once(Box::new($name) as Box<dyn InputCondition>)))+
+            }
+        }
+    };
+}
+
+bevy::utils::all_tuples!(impl_tuple_condition, 1, 15, I);

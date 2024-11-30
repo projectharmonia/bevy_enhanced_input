@@ -277,18 +277,18 @@ impl InputContext for DummyContext {
 
         ctx.bind::<ReleaseAction>()
             .to(ReleaseAction::KEY)
-            .with_condition(Release::default());
+            .with_conditions(Release::default());
         ctx.bind::<Explicit>()
-            .with_condition(Press::default())
+            .with_conditions(Press::default())
             .to(Explicit::KEY);
         ctx.bind::<Implicit>()
-            .with_condition(Chord::<ReleaseAction>::default());
+            .with_conditions(Chord::<ReleaseAction>::default());
         ctx.bind::<Blocker>()
             .to(Blocker::KEY)
-            .with_condition(BlockBy::<ReleaseAction>::default());
+            .with_conditions(BlockBy::<ReleaseAction>::default());
         ctx.bind::<EventsBlocker>()
             .to(EventsBlocker::KEY)
-            .with_condition(BlockBy::<ReleaseAction>::events_only());
+            .with_conditions(BlockBy::<ReleaseAction>::events_only());
 
         ctx
     }

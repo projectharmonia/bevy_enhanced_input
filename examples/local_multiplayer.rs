@@ -119,28 +119,25 @@ impl InputContext for PlayerBox {
         match player {
             Player::First => {
                 ctx.bind::<Move>()
-                    .to(Cardinal::wasd_keys())
-                    .to(GamepadStick::Left);
+                    .to((Cardinal::wasd_keys(), GamepadStick::Left));
                 ctx.bind::<Rotate>()
-                    .to(KeyCode::Space)
-                    .to(GamepadButton::South);
+                    .to((KeyCode::Space, GamepadButton::South));
             }
             Player::Second => {
                 ctx.bind::<Move>()
-                    .to(Cardinal::arrow_keys())
-                    .to(GamepadStick::Left);
+                    .to((Cardinal::arrow_keys(), GamepadStick::Left));
                 ctx.bind::<Rotate>()
-                    .to(KeyCode::Numpad0)
-                    .to(GamepadButton::South);
+                    .to((KeyCode::Numpad0, GamepadButton::South));
             }
         }
 
         // Can be called multiple times extend bindings.
         // In our case we cant to add modifiers for all players.
-        ctx.bind::<Move>()
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
+        ctx.bind::<Move>().with_modifiers((
+            DeadZone::default(),
+            DeltaLerp::default(),
+            Scale::splat(DEFAULT_SPEED),
+        ));
 
         ctx
     }

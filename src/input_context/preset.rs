@@ -1,40 +1,9 @@
-use std::iter;
-
 use bevy::prelude::*;
 
 use super::{
-    input_bind::{InputBind, InputBindModCond},
+    input_bind::{InputBind, InputBindModCond, InputBindings},
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };
-use crate::input::Input;
-
-pub trait BindPreset {
-    fn bindings(self) -> impl Iterator<Item = InputBind>;
-}
-
-impl<I: Into<InputBind>> BindPreset for I {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        iter::once(self.into())
-    }
-}
-
-impl<I: Into<InputBind> + Copy> BindPreset for &Vec<I> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.as_slice().bindings()
-    }
-}
-
-impl<I: Into<InputBind> + Copy, const N: usize> BindPreset for &[I; N] {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.as_slice().bindings()
-    }
-}
-
-impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        self.iter().copied().map(Into::into)
-    }
-}
 
 /// A preset to map buttons as 2-dimentional input.
 ///
@@ -44,6 +13,8 @@ impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
 /// In Bevy's 3D space, the -Z axis points forward and the +Z axis points
 /// toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
 /// you will need to invert Y and apply it to Z inside your observer.
+///
+/// See also [`Biderectional`].
 ///
 /// # Examples
 ///
@@ -72,12 +43,14 @@ impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
 ///         let settings = world.resource::<KeyboardSettings>();
 ///
 ///         let mut ctx = ContextInstance::default();
+///
 ///         ctx.bind::<Move>().to(Cardinal {
 ///             north: &settings.forward,
 ///             east: &settings.right,
 ///             south: &settings.backward,
 ///             west: &settings.left,
 ///         });
+///
 ///         ctx
 ///     }
 /// }
@@ -87,24 +60,24 @@ impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
 /// struct Move;
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct Cardinal<'a, I> {
-    pub north: &'a [I],
-    pub east: &'a [I],
-    pub south: &'a [I],
-    pub west: &'a [I],
+pub struct Cardinal<I: InputBindings> {
+    pub north: I,
+    pub east: I,
+    pub south: I,
+    pub west: I,
 }
 
-impl Cardinal<'_, KeyCode> {
+impl Cardinal<KeyCode> {
     /// Maps WASD keys as 2-dimentional input.
     ///
     /// See also [`Self::arrow_keys`].
     #[must_use]
     pub fn wasd_keys() -> Self {
         Self {
-            north: &[KeyCode::KeyW],
-            east: &[KeyCode::KeyA],
-            south: &[KeyCode::KeyS],
-            west: &[KeyCode::KeyD],
+            north: KeyCode::KeyW,
+            east: KeyCode::KeyA,
+            south: KeyCode::KeyS,
+            west: KeyCode::KeyD,
         }
     }
 
@@ -114,54 +87,76 @@ impl Cardinal<'_, KeyCode> {
     #[must_use]
     pub fn arrow_keys() -> Self {
         Self {
-            north: &[KeyCode::ArrowUp],
-            east: &[KeyCode::ArrowLeft],
-            south: &[KeyCode::ArrowDown],
-            west: &[KeyCode::ArrowRight],
+            north: KeyCode::ArrowUp,
+            east: KeyCode::ArrowLeft,
+            south: KeyCode::ArrowDown,
+            west: KeyCode::ArrowRight,
         }
     }
 }
 
-impl Cardinal<'_, GamepadButton> {
+impl Cardinal<GamepadButton> {
     /// Maps D-pad as 2-dimentional input.
     ///
     /// See also [`Self::wasd_keys`].
     #[must_use]
     pub fn dpad_buttons() -> Self {
         Self {
-            north: &[GamepadButton::DPadUp],
-            east: &[GamepadButton::DPadLeft],
-            south: &[GamepadButton::DPadDown],
-            west: &[GamepadButton::DPadRight],
+            north: GamepadButton::DPadUp,
+            east: GamepadButton::DPadLeft,
+            south: GamepadButton::DPadDown,
+            west: GamepadButton::DPadRight,
         }
     }
 }
 
-impl<I: Into<Input> + InputBindModCond + Copy> BindPreset for Cardinal<'_, I> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
+impl<I: InputBindings> InputBindings for Cardinal<I> {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
         // Y
         let north = self
             .north
-            .iter()
-            .map(|binding| binding.with_modifier(SwizzleAxis::YXZ));
+            .iter_bindings()
+            .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
 
         // -X
         let east = self
             .east
-            .iter()
-            .map(|binding| binding.with_modifier(Negate::default()));
+            .iter_bindings()
+            .map(|binding| binding.with_modifiers(Negate::default()));
 
         // -Y
-        let south = self.south.iter().map(|binding| {
-            binding
-                .with_modifier(Negate::default())
-                .with_modifier(SwizzleAxis::YXZ)
-        });
+        let south = self
+            .south
+            .iter_bindings()
+            .map(|binding| binding.with_modifiers((Negate::default(), SwizzleAxis::YXZ)));
 
         // X
-        let west = self.west.iter().copied().map(Into::into).map(Into::into);
+        let west = self.west.iter_bindings();
 
         north.chain(east).chain(south).chain(west)
+    }
+}
+
+/// A preset to map buttons as 2-dimentional input.
+///
+/// Positive binding will be passed as is and negative will be reversed using [`Negate`].
+///
+/// See also [`Cardinal`].
+#[derive(Debug, Clone, Copy)]
+pub struct Biderectional<I: InputBindings> {
+    pub positive: I,
+    pub negative: I,
+}
+
+impl<I: InputBindings> InputBindings for Biderectional<I> {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+        let positive = self.positive.iter_bindings();
+        let negative = self
+            .negative
+            .iter_bindings()
+            .map(|binding| binding.with_modifiers(Negate::default()));
+
+        positive.chain(negative)
     }
 }
 
@@ -194,8 +189,8 @@ impl GamepadStick {
     }
 }
 
-impl BindPreset for GamepadStick {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
-        [self.x().into(), self.y().with_modifier(SwizzleAxis::YXZ)].into_iter()
+impl InputBindings for GamepadStick {
+    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+        [self.x().into(), self.y().with_modifiers(SwizzleAxis::YXZ)].into_iter()
     }
 }

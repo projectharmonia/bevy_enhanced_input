@@ -286,42 +286,27 @@ impl InputContext for DummyContext {
         ctx.bind::<ChordMember>().to(ChordMember::KEY);
         ctx.bind::<Blocker>().to(Blocker::KEY);
         ctx.bind::<EventsBlocker>().to(EventsBlocker::KEY);
-        ctx.bind::<InputLevel>()
-            .to(InputLevel::KEY1
-                .with_condition(chord)
-                .with_condition(block_by)
-                .with_condition(block_events_by)
-                .with_condition(down)
-                .with_condition(release)
-                .with_modifier(swizzle_axis)
-                .with_modifier(scale))
-            .to(InputLevel::KEY2
-                .with_condition(chord)
-                .with_condition(block_by)
-                .with_condition(block_events_by)
-                .with_condition(down)
-                .with_condition(release)
-                .with_modifier(swizzle_axis)
-                .with_modifier(negate));
+        ctx.bind::<InputLevel>().to((
+            InputLevel::KEY1
+                .with_conditions((chord, block_by, block_events_by, down, release))
+                .with_modifiers((swizzle_axis, scale)),
+            InputLevel::KEY2
+                .with_conditions((chord, block_by, block_events_by, down, release))
+                .with_modifiers((swizzle_axis, negate)),
+        ));
         ctx.bind::<ActionLevel>()
-            .to(ActionLevel::KEY1)
-            .to(ActionLevel::KEY2)
-            .with_condition(down)
-            .with_condition(release)
-            .with_condition(chord)
-            .with_condition(block_by)
-            .with_condition(block_events_by)
-            .with_modifier(swizzle_axis)
-            .with_modifier(negate)
-            .with_modifier(scale);
+            .to((ActionLevel::KEY1, ActionLevel::KEY2))
+            .with_conditions((down, release, chord, block_by, block_events_by))
+            .with_modifiers((swizzle_axis, negate, scale));
         ctx.bind::<BothLevels>()
-            .to(BothLevels::KEY1.with_condition(down).with_modifier(scale))
-            .to(BothLevels::KEY2.with_condition(down).with_modifier(negate))
-            .with_condition(release)
-            .with_condition(chord)
-            .with_condition(block_by)
-            .with_condition(block_events_by)
-            .with_modifier(swizzle_axis);
+            .to((
+                BothLevels::KEY1.with_conditions(down).with_modifiers(scale),
+                BothLevels::KEY2
+                    .with_conditions(down)
+                    .with_modifiers(negate),
+            ))
+            .with_conditions((release, chord, block_by, block_events_by))
+            .with_modifiers(swizzle_axis);
 
         ctx
     }

@@ -71,11 +71,10 @@ pub mod prelude {
         action_value::{ActionValue, ActionValueDim},
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_context::{
-            bind_preset::{BindPreset, Cardinal, GamepadStick},
             context_instance::{ActionBind, ActionData, ActionState, ContextInstance},
             events::*,
             input_action::{Accumulation, InputAction},
-            input_bind::{InputBind, InputBindModCond},
+            input_bind::{InputBind, InputBindModCond, InputBindings},
             input_condition::{
                 block_by::*, chord::*, condition_timer::*, hold::*, hold_and_release::*,
                 just_press::*, press::*, pulse::*, release::*, tap::*, ConditionKind,
@@ -85,6 +84,7 @@ pub mod prelude {
                 accumulate_by::*, dead_zone::*, delta_lerp::*, delta_scale::*,
                 exponential_curve::*, negate::*, scale::*, swizzle_axis::*, InputModifier,
             },
+            preset::{Biderectional, Cardinal, GamepadStick},
             ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
         },
         EnhancedInputPlugin, EnhancedInputSystem,
