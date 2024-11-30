@@ -89,40 +89,53 @@ pub trait ActionOutput: Send + Sync + Debug + Clone + Copy {
 
     /// Converts the value into the action output type.
     ///
-    /// If the new dimension is larger, the additional axes will be set to zero.
-    /// If the new dimension is smaller, the extra axes will be discarded.
-    fn convert_from(value: ActionValue) -> Self;
+    /// # Panics
+    ///
+    /// Panics if the value represets a different type.
+    fn as_output(value: ActionValue) -> Self;
 }
 
 impl ActionOutput for bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
 
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_bool()
+    fn as_output(value: ActionValue) -> Self {
+        let ActionValue::Bool(value) = value else {
+            unreachable!("output value should be bool");
+        };
+        value
     }
 }
 
 impl ActionOutput for f32 {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
 
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_axis1d()
+    fn as_output(value: ActionValue) -> Self {
+        let ActionValue::Axis1D(value) = value else {
+            unreachable!("output value should be axis 1D");
+        };
+        value
     }
 }
 
 impl ActionOutput for Vec2 {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
 
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_axis2d()
+    fn as_output(value: ActionValue) -> Self {
+        let ActionValue::Axis2D(value) = value else {
+            unreachable!("output value should be axis 2D");
+        };
+        value
     }
 }
 
 impl ActionOutput for Vec3 {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
 
-    fn convert_from(value: ActionValue) -> Self {
-        value.as_axis3d()
+    fn as_output(value: ActionValue) -> Self {
+        let ActionValue::Axis3D(value) = value else {
+            unreachable!("output value should be axis 3D");
+        };
+        value
     }
 }
 

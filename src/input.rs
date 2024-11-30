@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 /// [Input modifiers](super::input_context::input_modifier) can change the captured dimension.
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
-/// [`ActionOutput::convert_from`](super::input_context::input_action::ActionOutput::convert_from).
+/// [`ActionValue::convert`](crate::action_value::ActionValue::convert).
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Input {
     /// Keyboard button, will be captured as

@@ -44,7 +44,7 @@ use trigger_tracker::TriggerTracker;
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
-///    Final value be converted into [`InputAction::Output`] using [`ActionOutput::convert_from`].
+///    Final value be converted into [`InputAction::Output`] using [`ActionValue::convert`].
 ///
 /// New instances won't react to currently held inputs until they are released.
 /// This prevents unintended behavior where switching contexts using the same key
@@ -458,7 +458,7 @@ impl ActionData {
                         commands,
                         entities,
                         Started::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::as_output(self.value),
                             state: self.state,
                         },
                     );
@@ -468,7 +468,7 @@ impl ActionData {
                         commands,
                         entities,
                         Ongoing::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::as_output(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -479,7 +479,7 @@ impl ActionData {
                         commands,
                         entities,
                         Fired::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::as_output(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -491,7 +491,7 @@ impl ActionData {
                         commands,
                         entities,
                         Canceled::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::as_output(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -502,7 +502,7 @@ impl ActionData {
                         commands,
                         entities,
                         Completed::<A> {
-                            value: A::Output::convert_from(self.value),
+                            value: A::Output::as_output(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
