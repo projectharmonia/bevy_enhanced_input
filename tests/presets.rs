@@ -169,9 +169,9 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<DummyAction>()
-            .to(WasdKeys)
-            .to(ArrowKeys)
-            .to(DpadButtons)
+            .to(Cardinal::wasd_keys())
+            .to(Cardinal::arrow_keys())
+            .to(Cardinal::dpad_buttons())
             .to(GamepadStick::Left)
             .to(GamepadStick::Right);
 

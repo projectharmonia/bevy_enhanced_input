@@ -339,7 +339,7 @@ impl InstanceGroup {
 ///         let mut ctx = ContextInstance::default();
 ///
 ///         ctx.bind::<Move>()
-///             .to(WasdKeys)
+///             .to(Cardinal::wasd_keys())
 ///             .to(GamepadStick::Left);
 ///
 ///         ctx.bind::<Jump>()

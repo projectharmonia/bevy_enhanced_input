@@ -182,7 +182,7 @@ impl ActionBind {
     /// The action can be triggered by any input mapping. If multiple input mappings
     /// return [`ActionState`].
     ///
-    /// Thanks to [`Into`] impls, it can be called directly with buttons/axes:
+    /// Thanks to traits, it can be called directly with buttons/axes:
     ///
     /// ```
     /// # use bevy::prelude::*;
@@ -196,33 +196,40 @@ impl ActionBind {
     /// # struct Jump;
     /// ```
     ///
-    /// or with [`Input`] if you want to assign keyboard modifiers:
+    /// or with [`Input`] with assigned keyboard modifiers:
     ///
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>().to(Input::Keyboard {
-    ///     key: KeyCode::Space,
-    ///     mod_keys: ModKeys::CONTROL,
-    /// });
+    /// ctx.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
     ///
-    /// If you want input with modifiers or conditions,
-    /// you will need to wrap it into [`InputBind`]:
+    /// Or with [`InputBind`] with assigned input conditions or modifiers:
     ///
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>()
-    ///     .to(InputBind::new(KeyCode::Space).with_condition(Release::default()));
+    /// ctx.bind::<Jump>().to(KeyCode::Space.with_condition(Release::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
+    /// ```
+    ///
+    /// Or with a convenience preset which consists of multiple inputs:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Move>().to(Cardinal::wasd_keys());
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Move;
     /// ```
     pub fn to(&mut self, preset: impl BindPreset) -> &mut Self {
         for binding in preset.bindings() {
