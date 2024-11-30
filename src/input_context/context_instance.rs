@@ -184,10 +184,10 @@ impl ActionBind {
     ///
     /// Thanks to traits, this function can be called with multiple types:
     ///
-    /// 1. Raw input
-    /// 2. [`Input`] enum wraps any supported raw input and can store keyboard modifiers.
-    /// 3. [`InputBind`] wraps [`Input`] and can store input modifiers or conditions.
-    /// 4. [`BindPreset`] wraps [`InputBind`] and can store multiple [`InputBind`]s.
+    /// 1. Raw input types.
+    /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
+    /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
+    /// 4. [`BindPreset`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
     ///
     /// # Examples
     ///
@@ -249,7 +249,8 @@ impl ActionBind {
     /// # struct Move;
     /// ```
     ///
-    /// Convenience preset which consists of multiple inputs:
+    /// Convenience preset which consists of multiple inputs
+    /// with predefined conditions and modifiers:
     ///
     /// ```
     /// # use bevy::prelude::*;
@@ -259,6 +260,24 @@ impl ActionBind {
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = Vec2)]
     /// # struct Move;
+    /// ```
+    ///
+    /// Multiple buttons from settings:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// # let mut settings = KeyboardSettings::default();
+    /// ctx.bind::<Inspect>().to(&settings.inspect);
+    ///
+    /// # #[derive(Default)]
+    /// struct KeyboardSettings {
+    ///     inspect: Vec<KeyCode>,
+    /// }
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Inspect;
     /// ```
     pub fn to(&mut self, preset: impl BindPreset) -> &mut Self {
         for binding in preset.bindings() {
