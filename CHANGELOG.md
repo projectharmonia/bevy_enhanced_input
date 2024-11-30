@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Input::with_mod_keys` now a trait method which implemented for any type that can be converted into an input to ergonomically assign keyboard modifiers.
 - `Input::without_mod_keys` no longer `const`.
 - `InputBind::with_modifier` and `InputBind::with_condition` now trait methods which implemented for any type that can be converted into a binding to ergonomically assign modifiers and conditions.
+- Move `ActionState`, `ActionData` and `ActionsData` to `context_instance` module.
 
 ### Fixed
 

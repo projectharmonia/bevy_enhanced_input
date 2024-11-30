@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, input_context::input_action::ActionsData};
+use crate::{action_value::ActionValue, input_context::context_instance::ActionsData};
 
 /// Multiplies the input value by delta time for this frame.
 ///

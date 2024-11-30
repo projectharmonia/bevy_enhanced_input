@@ -3,7 +3,7 @@ use std::fmt::Debug;
 use bevy::prelude::*;
 use bitflags::bitflags;
 
-use super::input_action::{ActionState, InputAction};
+use super::{context_instance::ActionState, input_action::InputAction};
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
@@ -193,7 +193,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::input_context::input_action::ActionData;
+    use crate::input_context::context_instance::ActionData;
 
     #[test]
     fn none_none() {

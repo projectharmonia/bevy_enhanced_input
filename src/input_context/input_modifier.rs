@@ -11,7 +11,7 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 
-use super::input_action::ActionsData;
+use super::context_instance::ActionsData;
 use crate::action_value::ActionValue;
 
 /// Pre-processor that alter the raw input values.

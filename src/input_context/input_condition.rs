@@ -13,7 +13,7 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 
-use super::input_action::{ActionState, ActionsData};
+use super::context_instance::{ActionState, ActionsData};
 use crate::action_value::ActionValue;
 
 pub const DEFAULT_ACTUATION: f32 = 0.5;

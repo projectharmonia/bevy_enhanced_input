@@ -1,7 +1,8 @@
 use bevy::prelude::*;
 
 use super::{
-    input_action::{Accumulation, ActionState, ActionsData},
+    context_instance::{ActionState, ActionsData},
+    input_action::Accumulation,
     input_condition::{ConditionKind, InputCondition},
     input_modifier::InputModifier,
 };
