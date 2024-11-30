@@ -180,9 +180,18 @@ impl ActionBind {
     /// Adds input mapping.
     ///
     /// The action can be triggered by any input mapping. If multiple input mappings
-    /// return [`ActionState`].
+    /// return [`ActionState`], the behavior is determined by [`InputAction::ACCUMULATION`].
     ///
-    /// Thanks to traits, it can be called directly with buttons/axes:
+    /// Thanks to traits, this function can be called with multiple types:
+    ///
+    /// 1. Raw input
+    /// 2. [`Input`] enum wraps any supported raw input and can store keyboard modifiers.
+    /// 3. [`InputBind`] wraps [`Input`] and can store input modifiers or conditions.
+    /// 4. [`BindPreset`] wraps [`InputBind`] and can store multiple [`InputBind`]s.
+    ///
+    /// # Examples
+    ///
+    /// Raw input:
     ///
     /// ```
     /// # use bevy::prelude::*;
@@ -196,7 +205,7 @@ impl ActionBind {
     /// # struct Jump;
     /// ```
     ///
-    /// or with [`Input`] with assigned keyboard modifiers:
+    /// Raw input with keyboard modifiers:
     ///
     /// ```
     /// # use bevy::prelude::*;
@@ -208,19 +217,39 @@ impl ActionBind {
     /// # struct Jump;
     /// ```
     ///
-    /// Or with [`InputBind`] with assigned input conditions or modifiers:
+    /// Raw input with input conditions or modifiers:
     ///
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>().to(KeyCode::Space.with_condition(Release::default()));
+    /// ctx.bind::<Attack>().to(MouseButton::Left.with_modifier(Scale::splat(10.0)));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Attack;
     /// ```
     ///
-    /// Or with a convenience preset which consists of multiple inputs:
+    /// [`Input`] type directly:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Zoom>().to(Input::mouse_wheel());
+    /// ctx.bind::<Move>().to(Input::mouse_motion());
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Zoom;
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Move;
+    /// ```
+    ///
+    /// Convenience preset which consists of multiple inputs:
     ///
     /// ```
     /// # use bevy::prelude::*;
@@ -228,7 +257,7 @@ impl ActionBind {
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Move>().to(Cardinal::wasd_keys());
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = bool)]
+    /// # #[input_action(output = Vec2)]
     /// # struct Move;
     /// ```
     pub fn to(&mut self, preset: impl BindPreset) -> &mut Self {
