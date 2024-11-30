@@ -15,8 +15,8 @@ use super::{
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input_action::{Accumulation, ActionOutput, InputAction},
     input_bind::{InputBind, InputBindings},
-    input_condition::InputCondition,
-    input_modifier::InputModifier,
+    input_condition::{InputCondition, InputConditions},
+    input_modifier::{InputModifier, InputModifiers},
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
@@ -162,17 +162,79 @@ impl ActionBind {
         }
     }
 
-    /// Adds action-level modifier.
-    pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
-        debug!("adding `{modifier:?}` to `{}`", self.action_name);
-        self.modifiers.push(Box::new(modifier));
+    /// Adds action-level modifiers.
+    ///
+    /// # Examples
+    ///
+    /// Single modifier:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_modifiers(Scale::splat(2.0)));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Multiple modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_modifiers((Scale::splat(2.0), Negate::default())));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Jump;
+    /// ```
+    pub fn with_modifiers(&mut self, modifiers: impl InputModifiers) -> &mut Self {
+        for modifier in modifiers.iter_modifiers() {
+            debug!("adding `{modifier:?}` to `{}`", self.action_name);
+            self.modifiers.push(modifier);
+        }
+
         self
     }
 
-    /// Adds action-level condition.
-    pub fn with_condition(&mut self, condition: impl InputCondition) -> &mut Self {
-        debug!("adding `{condition:?}` to `{}`", self.action_name);
-        self.conditions.push(Box::new(condition));
+    /// Adds action-level conditions.
+    ///
+    /// # Examples
+    ///
+    /// Single condition:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_conditions(Release::default()));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Multiple conditions:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_conditions((Release::default(), JustPress::default())));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
+    pub fn with_conditions(&mut self, conditions: impl InputConditions) -> &mut Self {
+        for condition in conditions.iter_conditions() {
+            debug!("adding `{condition:?}` to `{}`", self.action_name);
+            self.conditions.push(condition);
+        }
+
         self
     }
 
@@ -187,7 +249,7 @@ impl ActionBind {
     /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
     /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
     /// 4. [`InputBindings`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
-    /// Also implemented on tuples, so you can pass multiple inputs to a single call.
+    ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
     ///
     /// # Examples
     ///
@@ -222,8 +284,8 @@ impl ActionBind {
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>().to(KeyCode::Space.with_condition(Release::default()));
-    /// ctx.bind::<Attack>().to(MouseButton::Left.with_modifier(Scale::splat(10.0)));
+    /// ctx.bind::<Jump>().to(KeyCode::Space.with_conditions(Release::default()));
+    /// ctx.bind::<Attack>().to(MouseButton::Left.with_modifiers(Scale::splat(10.0)));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;

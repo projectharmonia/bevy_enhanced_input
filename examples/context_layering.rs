@@ -93,9 +93,11 @@ impl InputContext for PlayerBox {
 
         ctx.bind::<Move>()
             .to(Cardinal::wasd_keys())
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
+            .with_modifiers((
+                DeadZone::default(),
+                DeltaLerp::default(),
+                Scale::splat(DEFAULT_SPEED),
+            ));
         ctx.bind::<Rotate>().to(KeyCode::Space);
         ctx.bind::<EnterWater>().to(KeyCode::Enter);
 

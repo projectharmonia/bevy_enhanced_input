@@ -116,20 +116,19 @@ impl<I: InputBindings> InputBindings for Cardinal<I> {
         let north = self
             .north
             .iter_bindings()
-            .map(|binding| binding.with_modifier(SwizzleAxis::YXZ));
+            .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
 
         // -X
         let east = self
             .east
             .iter_bindings()
-            .map(|binding| binding.with_modifier(Negate::default()));
+            .map(|binding| binding.with_modifiers(Negate::default()));
 
         // -Y
-        let south = self.south.iter_bindings().map(|binding| {
-            binding
-                .with_modifier(Negate::default())
-                .with_modifier(SwizzleAxis::YXZ)
-        });
+        let south = self
+            .south
+            .iter_bindings()
+            .map(|binding| binding.with_modifiers((Negate::default(), SwizzleAxis::YXZ)));
 
         // X
         let west = self.west.iter_bindings();
@@ -155,7 +154,7 @@ impl<I: InputBindings> InputBindings for Biderectional<I> {
         let negative = self
             .negative
             .iter_bindings()
-            .map(|binding| binding.with_modifier(Negate::default()));
+            .map(|binding| binding.with_modifiers(Negate::default()));
 
         positive.chain(negative)
     }
@@ -192,6 +191,6 @@ impl GamepadStick {
 
 impl InputBindings for GamepadStick {
     fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
-        [self.x().into(), self.y().with_modifier(SwizzleAxis::YXZ)].into_iter()
+        [self.x().into(), self.y().with_modifiers(SwizzleAxis::YXZ)].into_iter()
     }
 }

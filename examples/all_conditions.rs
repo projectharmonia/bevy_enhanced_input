@@ -42,38 +42,39 @@ impl InputContext for DummyContext {
 
         ctx.bind::<PressAction>()
             .to(PressAction::KEY)
-            .with_condition(Press::default());
+            .with_conditions(Press::default());
         ctx.bind::<JustPressAction>()
             .to(JustPressAction::KEY)
-            .with_condition(JustPress::default());
+            .with_conditions(JustPress::default());
         ctx.bind::<HoldAction>()
             .to(HoldAction::KEY)
-            .with_condition(Hold::new(1.0));
+            .with_conditions(Hold::new(1.0));
         ctx.bind::<HoldAndReleaseAction>()
             .to(HoldAndReleaseAction::KEY)
-            .with_condition(HoldAndRelease::new(1.0));
+            .with_conditions(HoldAndRelease::new(1.0));
         ctx.bind::<PulseAction>()
             .to(PulseAction::KEY)
-            .with_condition(Pulse::new(1.0));
+            .with_conditions(Pulse::new(1.0));
         ctx.bind::<ReleaseAction>()
             .to(ReleaseAction::KEY)
-            .with_condition(Release::default());
+            .with_conditions(Release::default());
         ctx.bind::<TapAction>()
             .to(TapAction::KEY)
-            .with_condition(Tap::new(0.5));
+            .with_conditions(Tap::new(0.5));
         ctx.bind::<ChordMember1>()
             .to(ChordMember1::KEY)
-            .with_condition(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
+            .with_conditions(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
         ctx.bind::<ChordMember2>()
             .to(ChordMember2::KEY)
-            .with_condition(BlockBy::<ChordAction>::events_only());
-        ctx.bind::<ChordAction>()
-            .with_condition(Chord::<ChordMember1>::default())
-            .with_condition(Chord::<ChordMember2>::default());
+            .with_conditions(BlockBy::<ChordAction>::events_only());
+        ctx.bind::<ChordAction>().with_conditions((
+            Chord::<ChordMember1>::default(),
+            Chord::<ChordMember2>::default(),
+        ));
         ctx.bind::<BlockerAction>().to(BlockerAction::KEY);
         ctx.bind::<BlockByAction>()
             .to(BlockByAction::KEY)
-            .with_condition(BlockBy::<BlockerAction>::default());
+            .with_conditions(BlockBy::<BlockerAction>::default());
 
         ctx
     }

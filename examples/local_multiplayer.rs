@@ -105,10 +105,11 @@ impl InputContext for PlayerBox {
 
         // Can be called multiple times extend bindings.
         // In our case we cant to add modifiers for all players.
-        ctx.bind::<Move>()
-            .with_modifier(DeadZone::default())
-            .with_modifier(DeltaLerp::default())
-            .with_modifier(Scale::splat(DEFAULT_SPEED));
+        ctx.bind::<Move>().with_modifiers((
+            DeadZone::default(),
+            DeltaLerp::default(),
+            Scale::splat(DEFAULT_SPEED),
+        ));
 
         ctx
     }

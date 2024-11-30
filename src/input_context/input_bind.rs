@@ -1,6 +1,9 @@
 use std::iter;
 
-use super::{input_condition::InputCondition, input_modifier::InputModifier};
+use super::{
+    input_condition::{InputCondition, InputConditions},
+    input_modifier::{InputModifier, InputModifiers},
+};
 use crate::input::Input;
 
 /// Associated input for [`ActionBind`](super::context_instance::ActionBind).
@@ -36,27 +39,27 @@ impl<I: Into<Input>> From<I> for InputBind {
     }
 }
 
-/// A trait to ergonomically add a modifier or condition to any type that can be converted into a binding.
+/// A trait to ergonomically add modifiers or conditions to any type that can be converted into a binding.
 pub trait InputBindModCond {
-    /// Adds modifier.
+    /// Adds modifiers.
     #[must_use]
-    fn with_modifier(self, modifier: impl InputModifier) -> InputBind;
+    fn with_modifiers(self, modifier: impl InputModifiers) -> InputBind;
 
-    /// Adds condition.
+    /// Adds conditions.
     #[must_use]
-    fn with_condition(self, condition: impl InputCondition) -> InputBind;
+    fn with_conditions(self, condition: impl InputConditions) -> InputBind;
 }
 
 impl<T: Into<InputBind>> InputBindModCond for T {
-    fn with_modifier(self, modifier: impl InputModifier) -> InputBind {
+    fn with_modifiers(self, modifier: impl InputModifiers) -> InputBind {
         let mut binding = self.into();
-        binding.modifiers.push(Box::new(modifier));
+        binding.modifiers.extend(modifier.iter_modifiers());
         binding
     }
 
-    fn with_condition(self, condition: impl InputCondition) -> InputBind {
+    fn with_conditions(self, condition: impl InputConditions) -> InputBind {
         let mut binding = self.into();
-        binding.conditions.push(Box::new(condition));
+        binding.conditions.extend(condition.iter_conditions());
         binding
     }
 }
