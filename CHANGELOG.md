@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Input::without_mod_keys` no longer `const`.
 - `InputBind::with_modifier` and `InputBind::with_condition` now trait methods which implemented for any type that can be converted into a binding to ergonomically assign modifiers and conditions.
 - Move `ActionState`, `ActionData` and `ActionsData` to `context_instance` module.
+- Move `InputBind` to newly created `input_context::input_bind` module.
 
 ### Fixed
 

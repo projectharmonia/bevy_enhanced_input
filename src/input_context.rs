@@ -1,6 +1,7 @@
 pub mod context_instance;
 pub mod events;
 pub mod input_action;
+pub mod input_bind;
 pub mod input_condition;
 pub mod input_modifier;
 
