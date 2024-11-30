@@ -168,7 +168,7 @@ impl<I: Into<Input> + InputBindModCond + Copy> BindPreset for Cardinal<'_, I> {
 /// A preset to map a stick as 2-dimentional input.
 ///
 /// Represents the side of a gamepad's analog stick.
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum GamepadStick {
     /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
     Left,
