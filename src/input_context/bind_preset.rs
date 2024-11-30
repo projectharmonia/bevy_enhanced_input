@@ -6,7 +6,6 @@ use super::{
     input_bind::{InputBind, InputBindModCond},
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };
-use crate::input::Input;
 
 pub trait BindPreset {
     fn bindings(self) -> impl Iterator<Item = InputBind>;
@@ -35,6 +34,24 @@ impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
         self.iter().copied().map(Into::into)
     }
 }
+
+macro_rules! impl_tuple_preset {
+    ($($name:ident),+) => {
+        impl<$($name),+> BindPreset for ($($name,)+)
+        where
+            $($name: BindPreset),+
+        {
+            #[allow(non_snake_case)]
+            fn bindings(self) -> impl Iterator<Item = InputBind> {
+                let ($($name,)+) = self;
+                std::iter::empty()
+                    $(.chain($name.bindings()))+
+            }
+        }
+    };
+}
+
+bevy::utils::all_tuples!(impl_tuple_preset, 1, 15, I);
 
 /// A preset to map buttons as 2-dimentional input.
 ///
@@ -72,12 +89,14 @@ impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
 ///         let settings = world.resource::<KeyboardSettings>();
 ///
 ///         let mut ctx = ContextInstance::default();
+///
 ///         ctx.bind::<Move>().to(Cardinal {
 ///             north: &settings.forward,
 ///             east: &settings.right,
 ///             south: &settings.backward,
 ///             west: &settings.left,
 ///         });
+///
 ///         ctx
 ///     }
 /// }
@@ -87,24 +106,24 @@ impl<I: Into<InputBind> + Copy> BindPreset for &[I] {
 /// struct Move;
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct Cardinal<'a, I> {
-    pub north: &'a [I],
-    pub east: &'a [I],
-    pub south: &'a [I],
-    pub west: &'a [I],
+pub struct Cardinal<I: BindPreset> {
+    pub north: I,
+    pub east: I,
+    pub south: I,
+    pub west: I,
 }
 
-impl Cardinal<'_, KeyCode> {
+impl Cardinal<KeyCode> {
     /// Maps WASD keys as 2-dimentional input.
     ///
     /// See also [`Self::arrow_keys`].
     #[must_use]
     pub fn wasd_keys() -> Self {
         Self {
-            north: &[KeyCode::KeyW],
-            east: &[KeyCode::KeyA],
-            south: &[KeyCode::KeyS],
-            west: &[KeyCode::KeyD],
+            north: KeyCode::KeyW,
+            east: KeyCode::KeyA,
+            south: KeyCode::KeyS,
+            west: KeyCode::KeyD,
         }
     }
 
@@ -114,52 +133,52 @@ impl Cardinal<'_, KeyCode> {
     #[must_use]
     pub fn arrow_keys() -> Self {
         Self {
-            north: &[KeyCode::ArrowUp],
-            east: &[KeyCode::ArrowLeft],
-            south: &[KeyCode::ArrowDown],
-            west: &[KeyCode::ArrowRight],
+            north: KeyCode::ArrowUp,
+            east: KeyCode::ArrowLeft,
+            south: KeyCode::ArrowDown,
+            west: KeyCode::ArrowRight,
         }
     }
 }
 
-impl Cardinal<'_, GamepadButtonType> {
+impl Cardinal<GamepadButtonType> {
     /// Maps D-pad as 2-dimentional input.
     ///
     /// See also [`Self::wasd_keys`].
     #[must_use]
     pub fn dpad_buttons() -> Self {
         Self {
-            north: &[GamepadButtonType::DPadUp],
-            east: &[GamepadButtonType::DPadLeft],
-            south: &[GamepadButtonType::DPadDown],
-            west: &[GamepadButtonType::DPadRight],
+            north: GamepadButtonType::DPadUp,
+            east: GamepadButtonType::DPadLeft,
+            south: GamepadButtonType::DPadDown,
+            west: GamepadButtonType::DPadRight,
         }
     }
 }
 
-impl<I: Into<Input> + InputBindModCond + Copy> BindPreset for Cardinal<'_, I> {
+impl<I: BindPreset> BindPreset for Cardinal<I> {
     fn bindings(self) -> impl Iterator<Item = InputBind> {
         // Y
         let north = self
             .north
-            .iter()
+            .bindings()
             .map(|binding| binding.with_modifier(SwizzleAxis::YXZ));
 
         // -X
         let east = self
             .east
-            .iter()
+            .bindings()
             .map(|binding| binding.with_modifier(Negate::default()));
 
         // -Y
-        let south = self.south.iter().map(|binding| {
+        let south = self.south.bindings().map(|binding| {
             binding
                 .with_modifier(Negate::default())
                 .with_modifier(SwizzleAxis::YXZ)
         });
 
         // X
-        let west = self.west.iter().copied().map(Into::into).map(Into::into);
+        let west = self.west.bindings();
 
         north.chain(east).chain(south).chain(west)
     }

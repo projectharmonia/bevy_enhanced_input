@@ -71,7 +71,7 @@ pub mod prelude {
         action_value::{ActionValue, ActionValueDim},
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_context::{
-            bind_preset::{BindPreset, Cardinal, GamepadStick},
+            bind_preset::{Biderectional, BindPreset, Cardinal, GamepadStick},
             context_instance::{ActionBind, ActionData, ActionState, ContextInstance},
             events::*,
             input_action::{Accumulation, InputAction},

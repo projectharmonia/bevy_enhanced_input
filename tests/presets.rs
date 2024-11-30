@@ -168,12 +168,13 @@ impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<DummyAction>()
-            .to(Cardinal::wasd_keys())
-            .to(Cardinal::arrow_keys())
-            .to(Cardinal::dpad_buttons())
-            .to(GamepadStick::Left)
-            .to(GamepadStick::Right);
+        ctx.bind::<DummyAction>().to((
+            Cardinal::wasd_keys(),
+            Cardinal::arrow_keys(),
+            Cardinal::dpad_buttons(),
+            GamepadStick::Left,
+            GamepadStick::Right,
+        ));
 
         ctx
     }

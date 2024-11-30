@@ -88,19 +88,15 @@ impl InputContext for PlayerBox {
         match index {
             0 => {
                 ctx.bind::<Move>()
-                    .to(Cardinal::wasd_keys())
-                    .to(GamepadStick::Left);
+                    .to((Cardinal::wasd_keys(), GamepadStick::Left));
                 ctx.bind::<Rotate>()
-                    .to(KeyCode::Space)
-                    .to(GamepadButtonType::South);
+                    .to((KeyCode::Space, GamepadButtonType::South));
             }
             1 => {
                 ctx.bind::<Move>()
-                    .to(Cardinal::arrow_keys())
-                    .to(GamepadStick::Left);
+                    .to((Cardinal::arrow_keys(), GamepadStick::Left));
                 ctx.bind::<Rotate>()
-                    .to(KeyCode::Numpad0)
-                    .to(GamepadButtonType::South);
+                    .to((KeyCode::Numpad0, GamepadButtonType::South));
             }
             _ => {
                 panic!("game expects only 2 players");

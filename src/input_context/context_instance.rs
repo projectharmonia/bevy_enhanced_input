@@ -189,6 +189,8 @@ impl ActionBind {
     /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
     /// 4. [`BindPreset`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
     ///
+    /// [`BindPreset`] is also implemented on tuples, so you can pass multiple inputs to a single call.
+    ///
     /// # Examples
     ///
     /// Raw input:
@@ -198,8 +200,7 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .to(KeyCode::Space)
-    ///     .to(GamepadButtonType::South);
+    ///     .to((KeyCode::Space, GamepadButtonType::South));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;

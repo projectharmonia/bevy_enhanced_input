@@ -76,7 +76,6 @@ impl InputContext for PlayerBox {
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
-
         ctx.bind::<Rotate>().to(KeyCode::Space);
 
         ctx

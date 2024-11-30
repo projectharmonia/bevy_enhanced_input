@@ -86,18 +86,17 @@ struct OnFoot;
 
 impl InputContext for OnFoot {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut instance = ContextInstance::default();
+        let mut ctx = ContextInstance::default();
 
-        instance
-            .bind::<Move>()
+        ctx.bind::<Move>()
             .to(Cardinal::wasd_keys())
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
-        instance.bind::<Rotate>().to(KeyCode::Space);
-        instance.bind::<EnterCar>().to(KeyCode::Enter);
+        ctx.bind::<Rotate>().to(KeyCode::Space);
+        ctx.bind::<EnterCar>().to(KeyCode::Enter);
 
-        instance
+        ctx
     }
 }
 
