@@ -1,3 +1,5 @@
+mod trigger_tracker;
+
 use std::{
     any::{self, TypeId},
     cmp::Ordering,
@@ -14,12 +16,12 @@ use super::{
     input_action::{Accumulation, ActionOutput, InputAction},
     input_condition::InputCondition,
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis, InputModifier},
-    trigger_tracker::TriggerTracker,
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
     input::{input_reader::InputReader, GamepadDevice, Input},
 };
+use trigger_tracker::TriggerTracker;
 
 /// Instance for [`InputContext`](super::InputContext).
 ///
