@@ -56,8 +56,8 @@ impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<MaxAbs>().with_wasd();
-        ctx.bind::<Cumulative>().with_arrows();
+        ctx.bind::<MaxAbs>().to(WasdKeys);
+        ctx.bind::<Cumulative>().to(ArrowKeys);
 
         ctx
     }

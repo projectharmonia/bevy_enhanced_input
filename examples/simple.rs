@@ -67,8 +67,8 @@ impl InputContext for PlayerBox {
         // We don't assign any conditions and in this case the action will
         // be triggered with any non-zero value.
         ctx.bind::<Move>()
-            .with_wasd()
-            .with_stick(GamepadStick::Left)
+            .to(WasdKeys)
+            .to(GamepadStick::Left)
             .with_modifier(DeadZone::default()) // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
             .with_modifier(DeltaLerp::default()) // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
             .with_modifier(Scale::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.

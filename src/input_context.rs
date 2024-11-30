@@ -1,3 +1,4 @@
+pub mod bind_preset;
 pub mod context_instance;
 pub mod events;
 pub mod input_action;
@@ -338,8 +339,8 @@ impl InstanceGroup {
 ///         let mut ctx = ContextInstance::default();
 ///
 ///         ctx.bind::<Move>()
-///             .with_wasd()
-///             .with_stick(GamepadStick::Left);
+///             .to(WasdKeys)
+///             .to(GamepadStick::Left);
 ///
 ///         ctx.bind::<Jump>()
 ///             .to(KeyCode::Space)

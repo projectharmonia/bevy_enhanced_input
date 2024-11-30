@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace `InputAction::DIM` with `InputAction::Output` where you set the type directly (`bool`, `f32`, `Vec2` or `Vec3`) instead of the `ActionValueDim`.
 - `InputAction` macro now accepts `output = <Type>` instead of `dim = <ActionValueDim variant>`.
 - All events now have typed values, based on `InputAction::Output`.
-- Rename `with` into `to`.
+- Rename `ActionBind::with` into `ActionBind::to`.
+- All presets now structs (see `input_context::context_instance::input_preset`) that can be passed directly into `ActionBind::to`.
 - Rename `Modifiers` into `ModKeys` to avod confusion with input modifiers.
 - Rename all `modifiers` fields in the `Input` enum into `mod_keys`.
 - Rename `Input::with_modifiers` and `Input::without_modifiers` into `Input::with_mod_keys` and `Input::without_mod_keys`, respectively.

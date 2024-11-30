@@ -12,11 +12,12 @@ use bevy::{
 };
 
 use super::{
+    bind_preset::BindPreset,
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input_action::{Accumulation, ActionOutput, InputAction},
-    input_bind::{InputBind, InputBindModCond},
+    input_bind::InputBind,
     input_condition::InputCondition,
-    input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis, InputModifier},
+    input_modifier::InputModifier,
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
@@ -162,65 +163,6 @@ impl ActionBind {
         }
     }
 
-    /// Maps WASD keys as 2-dimentional input.
-    ///
-    /// In Bevy's 3D space, the -Z axis points forward and the +Z axis points
-    /// toward the camera. To map movement correctly in 3D space, you will
-    /// need to invert Y and apply it to Z translation inside your observer.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    pub fn with_wasd(&mut self) -> &mut Self {
-        self.with_xy_axis(KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD)
-    }
-
-    /// Maps keyboard arrow keys as 2-dimentional input.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    /// See also [`Self::with_wasd`].
-    pub fn with_arrows(&mut self) -> &mut Self {
-        self.with_xy_axis(
-            KeyCode::ArrowUp,
-            KeyCode::ArrowLeft,
-            KeyCode::ArrowDown,
-            KeyCode::ArrowRight,
-        )
-    }
-
-    /// Maps D-pad as 2-dimentional input.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    /// See also [`Self::with_wasd`].
-    pub fn with_dpad(&mut self) -> &mut Self {
-        self.with_xy_axis(
-            GamepadButtonType::DPadUp,
-            GamepadButtonType::DPadLeft,
-            GamepadButtonType::DPadDown,
-            GamepadButtonType::DPadRight,
-        )
-    }
-
-    /// Maps 4 buttons as 2-dimentional input.
-    ///
-    /// This is a convenience "preset" that uses [`SwizzleAxis`] and [`Negate`] to
-    /// bind the buttons to X and Y axes.
-    ///
-    /// The order of arguments follows the common "WASD" mapping.
-    pub fn with_xy_axis<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
-        self.to(up.with_modifier(SwizzleAxis::YXZ))
-            .to(left.with_modifier(Negate::default()))
-            .to(down
-                .with_modifier(Negate::default())
-                .with_modifier(SwizzleAxis::YXZ))
-            .to(right)
-    }
-
-    /// Maps the given stick as 2-dimentional input.
-    pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
-        self.to(stick.x())
-            .to(stick.y())
-            .with_modifier(SwizzleAxis::YXZ)
-    }
-
     /// Adds action-level modifier.
     pub fn with_modifier(&mut self, modifier: impl InputModifier) -> &mut Self {
         debug!("adding `{modifier:?}` to `{}`", self.action_name);
@@ -282,10 +224,11 @@ impl ActionBind {
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
-    pub fn to(&mut self, binding: impl Into<InputBind>) -> &mut Self {
-        let binding = binding.into();
-        debug!("adding `{binding:?}` to `{}`", self.action_name);
-        self.bindings.push(binding);
+    pub fn to(&mut self, preset: impl BindPreset) -> &mut Self {
+        for binding in preset.bindings() {
+            debug!("adding `{binding:?}` to `{}`", self.action_name);
+            self.bindings.push(binding);
+        }
         self
     }
 
@@ -573,35 +516,6 @@ pub enum ActionState {
     Ongoing,
     /// The condition has been met.
     Fired,
-}
-
-/// Represents the side of a gamepad's analog stick.
-///
-/// See also [`ActionBind::with_stick`].
-#[derive(Clone, Copy, Debug)]
-pub enum GamepadStick {
-    /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
-    Left,
-    /// Corresponds to [`GamepadAxisType::RightStickX`] and [`GamepadAxisType::RightStickY`]
-    Right,
-}
-
-impl GamepadStick {
-    /// Returns associated X axis.
-    pub fn x(self) -> GamepadAxisType {
-        match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickX,
-            GamepadStick::Right => GamepadAxisType::RightStickX,
-        }
-    }
-
-    /// Returns associated Y axis.
-    pub fn y(self) -> GamepadAxisType {
-        match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickY,
-            GamepadStick::Right => GamepadAxisType::RightStickY,
-        }
-    }
 }
 
 #[cfg(test)]
