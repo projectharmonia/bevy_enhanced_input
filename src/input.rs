@@ -54,7 +54,7 @@ impl From<KeyCode> for ModKeys {
 /// Inputs that can be associated with an
 /// [`InputAction`](super::input_context::input_action::InputAction).
 ///
-/// [Modifiers](super::input_context::input_modifier) can change the captured dimension.
+/// [Input modifiers](super::input_context::input_modifier) can change the captured dimension.
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
 /// [`ActionOutput::convert_from`](super::input_context::input_action::ActionOutput::convert_from).
@@ -106,26 +106,8 @@ impl Input {
     ///
     /// Panics when called on [`Self::GamepadButton`] or [`Self::GamepadAxis`].
     #[must_use]
-    pub const fn without_mod_keys(self) -> Self {
+    pub fn without_mod_keys(self) -> Self {
         self.with_mod_keys(ModKeys::empty())
-    }
-
-    /// Returns new instance with the replaced keyboard modifiers.
-    ///
-    /// # Panics
-    ///
-    /// Panics when called on [`Self::GamepadButton`] or [`Self::GamepadAxis`].
-    #[must_use]
-    pub const fn with_mod_keys(self, mod_keys: ModKeys) -> Self {
-        match self {
-            Input::Keyboard { key, .. } => Self::Keyboard { key, mod_keys },
-            Input::MouseButton { button, .. } => Self::MouseButton { button, mod_keys },
-            Input::MouseMotion { .. } => Self::MouseMotion { mod_keys },
-            Input::MouseWheel { .. } => Self::MouseWheel { mod_keys },
-            Input::GamepadButton { .. } | Input::GamepadAxis { .. } => {
-                panic!("keyboard modifiers can't be applied to gamepads")
-            }
-        }
     }
 }
 
@@ -156,6 +138,32 @@ impl From<GamepadButtonType> for Input {
 impl From<GamepadAxisType> for Input {
     fn from(axis: GamepadAxisType) -> Self {
         Self::GamepadAxis { axis }
+    }
+}
+
+/// A trait to ergonomically assign keyboard modifiers to any type that can be converted into an input.
+pub trait InputModKeys {
+    /// Returns an input with assigned keyboard modifiers.
+    #[must_use]
+    fn with_mod_keys(self, mod_keys: ModKeys) -> Input;
+}
+
+impl<I: Into<Input>> InputModKeys for I {
+    /// Returns new instance with the replaced keyboard modifiers.
+    ///
+    /// # Panics
+    ///
+    /// Panics when called on [`Self::GamepadButton`] or [`Self::GamepadAxis`].
+    fn with_mod_keys(self, mod_keys: ModKeys) -> Input {
+        match self.into() {
+            Input::Keyboard { key, .. } => Input::Keyboard { key, mod_keys },
+            Input::MouseButton { button, .. } => Input::MouseButton { button, mod_keys },
+            Input::MouseMotion { .. } => Input::MouseMotion { mod_keys },
+            Input::MouseWheel { .. } => Input::MouseWheel { mod_keys },
+            Input::GamepadButton { .. } | Input::GamepadAxis { .. } => {
+                panic!("keyboard modifiers can't be applied to gamepads")
+            }
+        }
     }
 }
 

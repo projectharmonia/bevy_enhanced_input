@@ -283,7 +283,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::Input;
+    use crate::{input::InputModKeys, Input};
 
     #[test]
     fn keyboard() {
@@ -296,10 +296,7 @@ mod tests {
         assert_eq!(reader.value(key), ActionValue::Bool(true));
         assert_eq!(reader.value(KeyCode::Escape), ActionValue::Bool(false));
         assert_eq!(
-            reader.value(Input::Keyboard {
-                key,
-                mod_keys: ModKeys::ALT
-            }),
+            reader.value(key.with_mod_keys(ModKeys::ALT)),
             ActionValue::Bool(false)
         );
 
@@ -320,10 +317,7 @@ mod tests {
         assert_eq!(reader.value(button), ActionValue::Bool(true));
         assert_eq!(reader.value(MouseButton::Right), ActionValue::Bool(false));
         assert_eq!(
-            reader.value(Input::MouseButton {
-                button,
-                mod_keys: ModKeys::CONTROL
-            }),
+            reader.value(button.with_mod_keys(ModKeys::CONTROL)),
             ActionValue::Bool(false)
         );
 
@@ -543,10 +537,7 @@ mod tests {
         keys.press(modifier);
         keys.press(key);
 
-        let input = Input::Keyboard {
-            key,
-            mod_keys: modifier.into(),
-        };
+        let input = key.with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
         assert_eq!(reader.value(key), ActionValue::Bool(true));
@@ -567,10 +558,7 @@ mod tests {
         world
             .resource_mut::<ButtonInput<KeyCode>>()
             .press(other_key);
-        let other_input = Input::Keyboard {
-            key: other_key,
-            mod_keys: modifier.into(),
-        };
+        let other_input = other_key.with_mod_keys(modifier.into());
         let reader = state.get_mut(&mut world);
         assert_eq!(reader.value(other_input), ActionValue::Bool(false));
         assert_eq!(reader.value(other_key), ActionValue::Bool(true));
@@ -587,10 +575,7 @@ mod tests {
             .resource_mut::<ButtonInput<MouseButton>>()
             .press(button);
 
-        let input = Input::MouseButton {
-            button,
-            mod_keys: modifier.into(),
-        };
+        let input = button.with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         assert_eq!(reader.value(input), ActionValue::Bool(true));
         assert_eq!(reader.value(button), ActionValue::Bool(true));
@@ -616,9 +601,7 @@ mod tests {
         world.resource_mut::<ButtonInput<KeyCode>>().press(modifier);
         world.send_event(MouseMotion { delta: value });
 
-        let input = Input::MouseMotion {
-            mod_keys: modifier.into(),
-        };
+        let input = Input::mouse_motion().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
@@ -653,9 +636,7 @@ mod tests {
             window: Entity::PLACEHOLDER,
         });
 
-        let input = Input::MouseWheel {
-            mod_keys: modifier.into(),
-        };
+        let input = Input::mouse_wheel().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         reader.update_state();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));

@@ -69,7 +69,7 @@ pub mod input_context;
 pub mod prelude {
     pub use super::{
         action_value::{ActionValue, ActionValueDim},
-        input::{GamepadDevice, Input, ModKeys},
+        input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_context::{
             context_instance::{ActionBind, ContextInstance, GamepadStick, InputBind},
             events::*,

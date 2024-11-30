@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `Modifiers` into `ModKeys` to avod confusion with input modifiers.
 - Rename all `modifiers` fields in the `Input` enum into `mod_keys`.
 - Rename `Input::with_modifiers` and `Input::without_modifiers` into `Input::with_mod_keys` and `Input::without_mod_keys`, respectively.
+- `Input::with_mod_keys` now a trait method which implemented for any type that can be converted into an input to ergonomically assign keyboard modifiers.
+- `Input::without_mod_keys` no longer `const`.
 
 ### Fixed
 
