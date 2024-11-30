@@ -13,15 +13,15 @@ include = ["/src", "/tests", "/examples", "/LICENSE*"]
 
 [dependencies]
 bevy_enhanced_input_macros = { path = "macros", version = "0.2" }
-bevy = { version = "0.15.0-rc.3", default-features = false, features = [
+bevy = { version = "0.15.0", default-features = false, features = [
   "serialize",
 ] }
-# bevy_egui = { version = "0.30", default-features = false, optional = true }
+bevy_egui = { version = "0.31", default-features = false, optional = true }
 serde = "1.0"
 bitflags = { version = "2.6", features = ["serde"] }
 
 [dev-dependencies]
-bevy = { version = "0.15.0-rc.3", default-features = false, features = [
+bevy = { version = "0.15.0", default-features = false, features = [
   "bevy_gilrs",
   "bevy_gizmos",
   "x11",
@@ -34,16 +34,15 @@ default = ["ui_priority"]
 ui_priority = ['bevy/bevy_ui']
 
 # Prioritizes 'egui' over actions when processing inputs.
-# egui_priority = ['dep:bevy_egui']
-egui_priority = []
+egui_priority = ['dep:bevy_egui']
 
 [[example]]
 name = "ui_priority"
 required-features = [
   "ui_priority",
   "egui_priority",
-  # "bevy_egui/render",
-  # "bevy_egui/default_fonts",
+  "bevy_egui/render",
+  "bevy_egui/default_fonts",
   "bevy/default_font",
 ]
 

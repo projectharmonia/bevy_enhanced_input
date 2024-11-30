@@ -62,7 +62,7 @@ fn dpad() {
         (GamepadButton::DPadRight, RIGHT),
     ] {
         let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
-        gamepad.digital.press(button);
+        gamepad.digital_mut().press(button);
 
         app.update();
 
@@ -76,7 +76,7 @@ fn dpad() {
         );
 
         let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
-        gamepad.digital.release(button);
+        gamepad.digital_mut().release(button);
 
         app.update();
     }
@@ -101,7 +101,7 @@ fn sticks() {
     ] {
         for (dir, value) in dirs.into_iter().zip([-1.0, 1.0]) {
             let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
-            gamepad.analog.set(axis, value);
+            gamepad.analog_mut().set(axis, value);
 
             app.update();
 
@@ -115,7 +115,7 @@ fn sticks() {
             );
 
             let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
-            gamepad.analog.set(axis, 0.0);
+            gamepad.analog_mut().set(axis, 0.0);
 
             app.update();
         }

@@ -132,14 +132,13 @@ impl InputReader<'_, '_> {
                 }
 
                 let pressed = match *self.gamepad_device {
-                    GamepadDevice::Any => self
-                        .gamepads
-                        .iter()
-                        .any(|gamepad| gamepad.digital.pressed(button)),
+                    GamepadDevice::Any => {
+                        self.gamepads.iter().any(|gamepad| gamepad.pressed(button))
+                    }
                     GamepadDevice::Single(entity) => self
                         .gamepads
                         .get(entity)
-                        .is_ok_and(|gamepad| gamepad.digital.pressed(button)),
+                        .is_ok_and(|gamepad| gamepad.pressed(button)),
                 };
 
                 pressed.into()
@@ -156,16 +155,13 @@ impl InputReader<'_, '_> {
 
                 let value = match *self.gamepad_device {
                     GamepadDevice::Any => self.gamepads.iter().find_map(|gamepad| {
-                        gamepad
-                            .analog
-                            .get_unclamped(axis)
-                            .filter(|&value| value != 0.0)
+                        gamepad.get_unclamped(axis).filter(|&value| value != 0.0)
                     }),
                     GamepadDevice::Single(entity) => self
                         .gamepads
                         .get(entity)
                         .ok()
-                        .and_then(|gamepad| gamepad.analog.get(axis)),
+                        .and_then(|gamepad| gamepad.get(axis)),
                 };
 
                 let value = value.unwrap_or_default();
@@ -370,12 +366,12 @@ mod tests {
 
         let button1 = GamepadButton::South;
         let mut gamepad1 = Gamepad::default();
-        gamepad1.digital.press(button1);
+        gamepad1.digital_mut().press(button1);
         let gamepad_entity = world.spawn(gamepad1).id();
 
         let button2 = GamepadButton::East;
         let mut gamepad2 = Gamepad::default();
-        gamepad2.digital.press(button2);
+        gamepad2.digital_mut().press(button2);
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
@@ -398,12 +394,12 @@ mod tests {
 
         let button1 = GamepadButton::South;
         let mut gamepad1 = Gamepad::default();
-        gamepad1.digital.press(button1);
+        gamepad1.digital_mut().press(button1);
         world.spawn(gamepad1);
 
         let button2 = GamepadButton::East;
         let mut gamepad2 = Gamepad::default();
-        gamepad2.digital.press(button2);
+        gamepad2.digital_mut().press(button2);
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
@@ -426,12 +422,12 @@ mod tests {
 
         let axis1 = GamepadAxis::LeftStickX;
         let mut gamepad1 = Gamepad::default();
-        gamepad1.analog.set(axis1, value);
+        gamepad1.analog_mut().set(axis1, value);
         let gamepad_entity = world.spawn(gamepad1).id();
 
         let axis2 = GamepadAxis::LeftStickY;
         let mut gamepad2 = Gamepad::default();
-        gamepad2.analog.set(axis2, value);
+        gamepad2.analog_mut().set(axis2, value);
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
@@ -459,12 +455,12 @@ mod tests {
 
         let axis1 = GamepadAxis::LeftStickX;
         let mut gamepad1 = Gamepad::default();
-        gamepad1.analog.set(axis1, value);
+        gamepad1.analog_mut().set(axis1, value);
         world.spawn(gamepad1);
 
         let axis2 = GamepadAxis::LeftStickY;
         let mut gamepad2 = Gamepad::default();
-        gamepad2.analog.set(axis2, value);
+        gamepad2.analog_mut().set(axis2, value);
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
