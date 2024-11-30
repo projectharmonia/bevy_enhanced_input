@@ -4,7 +4,9 @@ use bevy::prelude::*;
 
 use super::InputModifier;
 use crate::{
-    action_value::ActionValue, input_context::input_action::ActionsData, ActionState, InputAction,
+    action_value::ActionValue,
+    input_context::context_instance::{ActionState, ActionsData},
+    InputAction,
 };
 
 /// Produces accumulated value when another action is fired within the same context.
@@ -58,7 +60,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::{action_value::ActionValueDim, input_context::input_action::ActionData};
+    use crate::input_context::context_instance::ActionData;
 
     #[test]
     fn accumulation_active() {
@@ -96,6 +98,6 @@ mod tests {
     }
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }

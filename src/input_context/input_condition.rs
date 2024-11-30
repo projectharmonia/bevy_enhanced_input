@@ -13,7 +13,7 @@ use std::fmt::Debug;
 
 use bevy::prelude::*;
 
-use super::input_action::{ActionState, ActionsData};
+use super::context_instance::{ActionState, ActionsData};
 use crate::action_value::ActionValue;
 
 pub const DEFAULT_ACTUATION: f32 = 0.5;
@@ -26,7 +26,7 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 ///
 /// Can be applied both to inputs and actions.
 /// See [`ActionBind::with_condition`](super::context_instance::ActionBind::with_condition)
-/// and [`InputBind::with_condition`](super::context_instance::InputBind::with_condition).
+/// and [`InputBindModCond::with_condition`](super::input_bind::InputBindModCond::with_condition).
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
     ///

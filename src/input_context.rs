@@ -1,9 +1,10 @@
+pub mod bind_preset;
 pub mod context_instance;
 pub mod events;
 pub mod input_action;
+pub mod input_bind;
 pub mod input_condition;
 pub mod input_modifier;
-pub mod trigger_tracker;
 
 use std::{
     any::{self, TypeId},
@@ -232,7 +233,7 @@ impl ContextInstances {
     /// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
     /// # }
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Dodge;
     /// ```
     pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
@@ -316,7 +317,7 @@ impl InstanceGroup {
 /// entity in a resource.
 ///
 /// Removing deactivates [`ContextInstance`] for the entity and trigger
-/// transitions for all actions to [`ActionState::None`](input_action::ActionState::None).
+/// transitions for all actions to [`ActionState::None`](crate::input_context::context_instance::ActionState::None).
 ///
 /// Each context should be registered using [`ContextAppExt::add_input_context`].
 ///
@@ -338,21 +339,21 @@ impl InstanceGroup {
 ///         let mut ctx = ContextInstance::default();
 ///
 ///         ctx.bind::<Move>()
-///             .with_wasd()
-///             .with_stick(GamepadStick::Left);
+///             .to(Cardinal::wasd_keys())
+///             .to(GamepadStick::Left);
 ///
 ///         ctx.bind::<Jump>()
-///             .with(KeyCode::Space)
-///             .with(GamepadButton::South);
+///             .to(KeyCode::Space)
+///             .to(GamepadButton::South);
 ///
 ///         ctx
 ///     }
 /// }
 /// # #[derive(Debug, InputAction)]
-/// # #[input_action(dim = Axis2D)]
+/// # #[input_action(output = Vec2)]
 /// # struct Move;
 /// # #[derive(Debug, InputAction)]
-/// # #[input_action(dim = Bool)]
+/// # #[input_action(output = bool)]
 /// # struct Jump;
 /// # #[derive(Resource)]
 /// # struct AppSettings;
@@ -405,7 +406,7 @@ pub enum ContextMode {
 ///
 /// Use it when you change your application settings and want to reload the mappings.
 ///
-/// This will also reset all actions to [`ActionState::None`](crate::input_context::input_action::ActionState::None)
+/// This will also reset all actions to [`ActionState::None`](crate::input_context::context_instance::ActionState::None)
 /// and trigger the corresponding events.
 #[derive(Event)]
 pub struct RebuildInputContexts;

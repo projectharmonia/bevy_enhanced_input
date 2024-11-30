@@ -107,12 +107,12 @@ impl InputContext for PlayerBox {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<Move>()
-            .with_wasd()
+            .to(Cardinal::wasd_keys())
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
         ctx.bind::<Zoom>()
-            .with(InputBind::new(Input::mouse_wheel()).with_modifier(SwizzleAxis::YXZ))
+            .to(Input::mouse_wheel().with_modifier(SwizzleAxis::YXZ))
             .with_modifier(Scale::splat(3.0));
 
         ctx
@@ -120,9 +120,9 @@ impl InputContext for PlayerBox {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis1D)]
+#[input_action(output = f32)]
 struct Zoom;

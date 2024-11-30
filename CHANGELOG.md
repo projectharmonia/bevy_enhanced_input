@@ -9,6 +9,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Replace `InputAction::DIM` with `InputAction::Output` where you set the type directly (`bool`, `f32`, `Vec2` or `Vec3`) instead of the `ActionValueDim`.
+- `InputAction` macro now accepts `output = <Type>` instead of `dim = <ActionValueDim variant>`.
+- All events now have typed values, based on `InputAction::Output`.
+- Rename `ActionBind::with` into `ActionBind::to`.
+- All presets now structs (see `input_context::context_instance::input_preset`) that can be passed directly into `ActionBind::to`.
+- Rename `Modifiers` into `ModKeys` to avod confusion with input modifiers.
+- Rename all `modifiers` fields in the `Input` enum into `mod_keys`.
+- Rename `Input::with_modifiers` and `Input::without_modifiers` into `Input::with_mod_keys` and `Input::without_mod_keys`, respectively.
+- `Input::with_mod_keys` now a trait method which implemented for any type that can be converted into an input to ergonomically assign keyboard modifiers.
+- `Input::without_mod_keys` no longer `const`.
+- `InputBind::with_modifier` and `InputBind::with_condition` now trait methods which implemented for any type that can be converted into a binding to ergonomically assign modifiers and conditions.
+- Move `ActionState`, `ActionData` and `ActionsData` to `context_instance` module.
+- Move `InputBind` to newly created `input_context::input_bind` module.
+
+### Fixed
+
+- Macro hygiene.
+
+## [0.2.1] - 2024-11-20
+
+### Fixed
+
+- Correctly handle generics in the derive macro.
+
+### Changed
+
 - Rename `Press` into `JustPress`.
 - Rename `Down` into `Press` to avoid collision with `Down` from `bevy_picking`.
 - Replace `ContextInstance::with_gamepad` builder with just `ContextInstance::set_gamepad` setter.
@@ -61,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.2.0...HEAD
+[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/projectharmonia/bevy_replicon/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/projectharmonia/bevy_replicon/releases/tag/v0.1.0

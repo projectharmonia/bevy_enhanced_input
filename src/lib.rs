@@ -59,6 +59,9 @@ The exact method depends on the OS shell.
 Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it permanent.
 */
 
+// Required for the derive macro to work within the crate.
+extern crate self as bevy_enhanced_input;
+
 pub mod action_value;
 pub mod input;
 pub mod input_context;
@@ -66,11 +69,13 @@ pub mod input_context;
 pub mod prelude {
     pub use super::{
         action_value::{ActionValue, ActionValueDim},
-        input::{GamepadDevice, Input, Modifiers},
+        input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_context::{
-            context_instance::{ActionBind, ContextInstance, GamepadStick, InputBind},
+            bind_preset::{BindPreset, Cardinal, GamepadStick},
+            context_instance::{ActionBind, ActionData, ActionState, ContextInstance},
             events::*,
-            input_action::{Accumulation, ActionData, ActionState, InputAction},
+            input_action::{Accumulation, InputAction},
+            input_bind::{InputBind, InputBindModCond},
             input_condition::{
                 block_by::*, chord::*, condition_timer::*, hold::*, hold_and_release::*,
                 just_press::*, press::*, pulse::*, release::*, tap::*, ConditionKind,

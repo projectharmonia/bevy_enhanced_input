@@ -58,7 +58,7 @@ impl GamePlugin {
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += event.value.as_axis3d();
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
@@ -119,19 +119,19 @@ impl InputContext for PlayerBox {
         match player {
             Player::First => {
                 ctx.bind::<Move>()
-                    .with_wasd()
-                    .with_stick(GamepadStick::Left);
+                    .to(Cardinal::wasd_keys())
+                    .to(GamepadStick::Left);
                 ctx.bind::<Rotate>()
-                    .with(KeyCode::Space)
-                    .with(GamepadButton::South);
+                    .to(KeyCode::Space)
+                    .to(GamepadButton::South);
             }
             Player::Second => {
                 ctx.bind::<Move>()
-                    .with_arrows()
-                    .with_stick(GamepadStick::Left);
+                    .to(Cardinal::arrow_keys())
+                    .to(GamepadStick::Left);
                 ctx.bind::<Rotate>()
-                    .with(KeyCode::Numpad0)
-                    .with(GamepadButton::South);
+                    .to(KeyCode::Numpad0)
+                    .to(GamepadButton::South);
             }
         }
 
@@ -147,9 +147,9 @@ impl InputContext for PlayerBox {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;

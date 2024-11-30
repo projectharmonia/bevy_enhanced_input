@@ -5,7 +5,10 @@ use bevy::prelude::*;
 use super::{ConditionKind, InputCondition};
 use crate::{
     action_value::ActionValue,
-    input_context::input_action::{ActionState, ActionsData, InputAction},
+    input_context::{
+        context_instance::{ActionState, ActionsData},
+        input_action::InputAction,
+    },
 };
 
 /// Requires another action to not be fired within the same context.
@@ -85,7 +88,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::{input_context::input_action::ActionData, ActionValueDim};
+    use crate::input_context::context_instance::ActionData;
 
     #[test]
     fn block() {
@@ -115,6 +118,6 @@ mod tests {
     }
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }

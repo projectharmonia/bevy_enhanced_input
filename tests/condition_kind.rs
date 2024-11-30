@@ -276,18 +276,18 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<ReleaseAction>()
-            .with(ReleaseAction::KEY)
+            .to(ReleaseAction::KEY)
             .with_condition(Release::default());
         ctx.bind::<Explicit>()
             .with_condition(Press::default())
-            .with(Explicit::KEY);
+            .to(Explicit::KEY);
         ctx.bind::<Implicit>()
             .with_condition(Chord::<ReleaseAction>::default());
         ctx.bind::<Blocker>()
-            .with(Blocker::KEY)
+            .to(Blocker::KEY)
             .with_condition(BlockBy::<ReleaseAction>::default());
         ctx.bind::<EventsBlocker>()
-            .with(EventsBlocker::KEY)
+            .to(EventsBlocker::KEY)
             .with_condition(BlockBy::<ReleaseAction>::events_only());
 
         ctx
@@ -295,7 +295,7 @@ impl InputContext for DummyContext {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ReleaseAction;
 
 impl ReleaseAction {
@@ -303,7 +303,7 @@ impl ReleaseAction {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Explicit;
 
 impl Explicit {
@@ -311,11 +311,11 @@ impl Explicit {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Implicit;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Blocker;
 
 impl Blocker {
@@ -323,7 +323,7 @@ impl Blocker {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EventsBlocker;
 
 impl EventsBlocker {

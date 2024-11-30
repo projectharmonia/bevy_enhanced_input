@@ -45,7 +45,7 @@ impl GamePlugin {
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += event.value.as_axis3d();
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
@@ -66,21 +66,21 @@ impl InputContext for PlayerBox {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<Move>()
-            .with_wasd()
+            .to(Cardinal::wasd_keys())
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
 
-        ctx.bind::<Rotate>().with(KeyCode::Space);
+        ctx.bind::<Rotate>().to(KeyCode::Space);
 
         ctx
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;

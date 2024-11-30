@@ -56,17 +56,17 @@ impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<MaxAbs>().with_wasd();
-        ctx.bind::<Cumulative>().with_arrows();
+        ctx.bind::<MaxAbs>().to(Cardinal::wasd_keys());
+        ctx.bind::<Cumulative>().to(Cardinal::arrow_keys());
 
         ctx
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D, accumulation = MaxAbs)]
+#[input_action(output = Vec2, accumulation = MaxAbs)]
 struct MaxAbs;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D, accumulation = Cumulative)]
+#[input_action(output = Vec2, accumulation = Cumulative)]
 struct Cumulative;

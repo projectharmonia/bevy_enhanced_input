@@ -53,8 +53,8 @@ impl InputContext for First {
 
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
-        ctx.bind::<FirstConsume>().with(CONSUME_KEY);
-        ctx.bind::<FirstPassthrough>().with(PASSTHROUGH_KEY);
+        ctx.bind::<FirstConsume>().to(CONSUME_KEY);
+        ctx.bind::<FirstPassthrough>().to(PASSTHROUGH_KEY);
         ctx
     }
 }
@@ -65,8 +65,8 @@ struct Second;
 impl InputContext for Second {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
-        ctx.bind::<SecondConsume>().with(CONSUME_KEY);
-        ctx.bind::<SecondPassthrough>().with(PASSTHROUGH_KEY);
+        ctx.bind::<SecondConsume>().to(CONSUME_KEY);
+        ctx.bind::<SecondPassthrough>().to(PASSTHROUGH_KEY);
         ctx
     }
 }
@@ -78,17 +78,17 @@ const CONSUME_KEY: KeyCode = KeyCode::KeyA;
 const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyB;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = true)]
+#[input_action(output = bool, consume_input = true)]
 struct FirstConsume;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = true)]
+#[input_action(output = bool, consume_input = true)]
 struct SecondConsume;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = false)]
+#[input_action(output = bool, consume_input = false)]
 struct FirstPassthrough;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = false)]
+#[input_action(output = bool, consume_input = false)]
 struct SecondPassthrough;

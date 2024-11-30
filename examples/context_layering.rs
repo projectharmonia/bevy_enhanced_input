@@ -45,7 +45,7 @@ impl GamePlugin {
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += event.value.as_axis3d();
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
@@ -92,27 +92,27 @@ impl InputContext for PlayerBox {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<Move>()
-            .with_wasd()
+            .to(Cardinal::wasd_keys())
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
-        ctx.bind::<Rotate>().with(KeyCode::Space);
-        ctx.bind::<EnterWater>().with(KeyCode::Enter);
+        ctx.bind::<Rotate>().to(KeyCode::Space);
+        ctx.bind::<EnterWater>().to(KeyCode::Enter);
 
         ctx
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EnterWater;
 
 /// Context that overrides some actions from [`PlayerBox`].
@@ -128,17 +128,17 @@ impl InputContext for Swimming {
         // `PlayerBox` has lower priority, so `Dive` and `ExitWater` consume inputs first,
         // preventing `Rotate` and `EnterWater` from being triggered.
         // The consuming behavior can be configured in the `InputAction` trait.
-        ctx.bind::<Dive>().with(KeyCode::Space);
-        ctx.bind::<ExitWater>().with(KeyCode::Enter);
+        ctx.bind::<Dive>().to(KeyCode::Space);
+        ctx.bind::<ExitWater>().to(KeyCode::Enter);
 
         ctx
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Dive;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ExitWater;

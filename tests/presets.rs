@@ -135,16 +135,16 @@ impl InputContext for DummyContext {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<DummyAction>()
-            .with_wasd()
-            .with_arrows()
-            .with_dpad()
-            .with_stick(GamepadStick::Left)
-            .with_stick(GamepadStick::Right);
+            .to(Cardinal::wasd_keys())
+            .to(Cardinal::arrow_keys())
+            .to(Cardinal::dpad_buttons())
+            .to(GamepadStick::Left)
+            .to(GamepadStick::Right);
 
         ctx
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D, consume_input = true)]
+#[input_action(output = Vec2, consume_input = true)]
 struct DummyAction;

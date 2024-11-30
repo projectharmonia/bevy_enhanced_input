@@ -43,7 +43,7 @@ impl GamePlugin {
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += event.value.as_axis3d();
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
@@ -90,27 +90,27 @@ impl InputContext for OnFoot {
 
         instance
             .bind::<Move>()
-            .with_wasd()
+            .to(Cardinal::wasd_keys())
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED));
-        instance.bind::<Rotate>().with(KeyCode::Space);
-        instance.bind::<EnterCar>().with(KeyCode::Enter);
+        instance.bind::<Rotate>().to(KeyCode::Space);
+        instance.bind::<EnterCar>().to(KeyCode::Enter);
 
         instance
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct EnterCar;
 
 #[derive(Component)]
@@ -121,16 +121,16 @@ impl InputContext for InCar {
         let mut ctx = ContextInstance::default();
 
         ctx.bind::<Move>()
-            .with_wasd()
+            .to(Cardinal::wasd_keys())
             .with_modifier(DeadZone::default())
             .with_modifier(DeltaLerp::default())
             .with_modifier(Scale::splat(DEFAULT_SPEED + 20.0)); // Make car faster.
-        ctx.bind::<ExitCar>().with(KeyCode::Enter);
+        ctx.bind::<ExitCar>().to(KeyCode::Enter);
 
         ctx
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct ExitCar;

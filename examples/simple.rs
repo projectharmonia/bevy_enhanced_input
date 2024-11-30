@@ -43,7 +43,7 @@ impl GamePlugin {
         let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
         // The value has already been preprocessed by defined modifiers.
-        transform.translation += event.value.as_axis3d();
+        transform.translation += event.value.extend(0.0);
     }
 
     fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
@@ -67,15 +67,15 @@ impl InputContext for PlayerBox {
         // We don't assign any conditions and in this case the action will
         // be triggered with any non-zero value.
         ctx.bind::<Move>()
-            .with_wasd()
-            .with_stick(GamepadStick::Left)
+            .to(Cardinal::wasd_keys())
+            .to(GamepadStick::Left)
             .with_modifier(DeadZone::default()) // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
             .with_modifier(DeltaLerp::default()) // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
             .with_modifier(Scale::splat(DEFAULT_SPEED)); // Additionally multiply by a constant to achieve the desired speed.
 
         ctx.bind::<Rotate>()
-            .with(KeyCode::Space)
-            .with(GamepadButton::South);
+            .to(KeyCode::Space)
+            .to(GamepadButton::South);
 
         ctx
     }
@@ -83,11 +83,11 @@ impl InputContext for PlayerBox {
 
 // All actions should implement the `InputAction` trait.
 // It can be done manually, but we provide a derive for convenience.
-// The only necessary parameter is `dim`, which defines the output type.
+// The only necessary parameter is `output`, which defines the output type.
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Move;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Rotate;

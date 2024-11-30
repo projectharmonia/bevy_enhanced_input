@@ -140,17 +140,17 @@ impl InputContext for DummyContext {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Bool>().with(Bool::KEY);
-        ctx.bind::<Axis1D>().with(Axis1D::KEY);
-        ctx.bind::<Axis2D>().with(Axis2D::KEY);
-        ctx.bind::<Axis3D>().with(Axis3D::KEY);
+        ctx.bind::<Bool>().to(Bool::KEY);
+        ctx.bind::<Axis1D>().to(Axis1D::KEY);
+        ctx.bind::<Axis2D>().to(Axis2D::KEY);
+        ctx.bind::<Axis3D>().to(Axis3D::KEY);
 
         ctx
     }
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool)]
+#[input_action(output = bool)]
 struct Bool;
 
 impl Bool {
@@ -158,7 +158,7 @@ impl Bool {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis1D)]
+#[input_action(output = f32)]
 struct Axis1D;
 
 impl Axis1D {
@@ -166,7 +166,7 @@ impl Axis1D {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis2D)]
+#[input_action(output = Vec2)]
 struct Axis2D;
 
 impl Axis2D {
@@ -174,7 +174,7 @@ impl Axis2D {
 }
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Axis3D)]
+#[input_action(output = Vec3)]
 struct Axis3D;
 
 impl Axis3D {

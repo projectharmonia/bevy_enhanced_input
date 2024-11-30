@@ -64,8 +64,8 @@ impl InputContext for PassthroughThenConsume {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Passthrough>().with(KEY);
-        ctx.bind::<Consume>().with(KEY);
+        ctx.bind::<Passthrough>().to(KEY);
+        ctx.bind::<Consume>().to(KEY);
 
         ctx
     }
@@ -78,8 +78,8 @@ impl InputContext for ConsumeThenPassthrough {
     fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
         let mut ctx = ContextInstance::default();
 
-        ctx.bind::<Consume>().with(KEY);
-        ctx.bind::<Passthrough>().with(KEY);
+        ctx.bind::<Consume>().to(KEY);
+        ctx.bind::<Passthrough>().to(KEY);
 
         ctx
     }
@@ -89,9 +89,9 @@ impl InputContext for ConsumeThenPassthrough {
 const KEY: KeyCode = KeyCode::KeyA;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = true)]
+#[input_action(output = bool, consume_input = true)]
 struct Consume;
 
 #[derive(Debug, InputAction)]
-#[input_action(dim = Bool, consume_input = false)]
+#[input_action(output = bool, consume_input = false)]
 struct Passthrough;

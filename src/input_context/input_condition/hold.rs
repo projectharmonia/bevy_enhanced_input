@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::input_action::{ActionState, ActionsData},
+    input_context::context_instance::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when the input becomes actuated and
@@ -95,7 +95,7 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::input_context::input_action::ActionsData;
+    use crate::input_context::context_instance::ActionsData;
 
     #[test]
     fn hold() {

@@ -1,21 +1,29 @@
+mod trigger_tracker;
+
 use std::{
     any::{self, TypeId},
     cmp::Ordering,
+    fmt::Debug,
 };
 
-use bevy::{prelude::*, utils::Entry};
+use bevy::{
+    prelude::*,
+    utils::{Entry, HashMap},
+};
 
 use super::{
-    input_action::{Accumulation, ActionData, ActionsData, InputAction},
+    bind_preset::BindPreset,
+    events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
+    input_action::{Accumulation, ActionOutput, InputAction},
+    input_bind::InputBind,
     input_condition::InputCondition,
-    input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis, InputModifier},
-    trigger_tracker::TriggerTracker,
+    input_modifier::InputModifier,
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
     input::{input_reader::InputReader, GamepadDevice, Input},
-    ActionState,
 };
+use trigger_tracker::TriggerTracker;
 
 /// Instance for [`InputContext`](super::InputContext).
 ///
@@ -32,17 +40,17 @@ use crate::{
 ///    1.1. Apply input-level [`InputModifier`]s.
 ///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
 /// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
-///    Combined value be converted into [`InputAction::DIM`] dimention using [`ActionValue::convert`].
+///    Combined value be converted into [`ActionOutput::DIM`] using [`ActionValue::convert`].
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
-///    Final value be converted into [`InputAction::DIM`] dimention using [`ActionValue::convert`].
+///    Final value be converted into [`InputAction::Output`] using [`ActionValue::convert`].
 ///
 /// New instances won't react to currently held inputs until they are released.
 /// This prevents unintended behavior where switching contexts using the same key
 /// could cause an immediate switch back, as buttons are rarely pressed for only a single frame.
 ///
-/// [`ActionState`]: super::input_action::ActionState
+/// [`ActionState`]: super::context_instance::ActionState
 #[derive(Default)]
 pub struct ContextInstance {
     gamepad: GamepadDevice,
@@ -142,7 +150,7 @@ impl ActionBind {
         Self {
             type_id: TypeId::of::<A>(),
             action_name: any::type_name::<A>(),
-            dim: A::DIM,
+            dim: A::Output::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
             modifiers: Default::default(),
@@ -150,66 +158,6 @@ impl ActionBind {
             bindings: Default::default(),
             consume_buffer: Default::default(),
         }
-    }
-
-    /// Maps WASD keys as 2-dimentional input.
-    ///
-    /// In Bevy's 3D space, the -Z axis points forward and the +Z axis points
-    /// toward the camera. To map movement correctly in 3D space, you will
-    /// need to invert Y and apply it to Z translation inside your observer.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    pub fn with_wasd(&mut self) -> &mut Self {
-        self.with_xy_axis(KeyCode::KeyW, KeyCode::KeyA, KeyCode::KeyS, KeyCode::KeyD)
-    }
-
-    /// Maps keyboard arrow keys as 2-dimentional input.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    /// See also [`Self::with_wasd`].
-    pub fn with_arrows(&mut self) -> &mut Self {
-        self.with_xy_axis(
-            KeyCode::ArrowUp,
-            KeyCode::ArrowLeft,
-            KeyCode::ArrowDown,
-            KeyCode::ArrowRight,
-        )
-    }
-
-    /// Maps D-pad as 2-dimentional input.
-    ///
-    /// Shorthand for [`Self::with_xy_axis`].
-    /// See also [`Self::with_wasd`].
-    pub fn with_dpad(&mut self) -> &mut Self {
-        self.with_xy_axis(
-            GamepadButton::DPadUp,
-            GamepadButton::DPadLeft,
-            GamepadButton::DPadDown,
-            GamepadButton::DPadRight,
-        )
-    }
-
-    /// Maps 4 buttons as 2-dimentional input.
-    ///
-    /// This is a convenience "preset" that uses [`SwizzleAxis`] and [`Negate`] to
-    /// bind the buttons to X and Y axes.
-    ///
-    /// The order of arguments follows the common "WASD" mapping.
-    pub fn with_xy_axis<I: Into<Input>>(&mut self, up: I, left: I, down: I, right: I) -> &mut Self {
-        self.with(InputBind::new(up).with_modifier(SwizzleAxis::YXZ))
-            .with(InputBind::new(left).with_modifier(Negate::default()))
-            .with(
-                InputBind::new(down)
-                    .with_modifier(Negate::default())
-                    .with_modifier(SwizzleAxis::YXZ),
-            )
-            .with(right)
-    }
-
-    /// Maps the given stick as 2-dimentional input.
-    pub fn with_stick(&mut self, stick: GamepadStick) -> &mut Self {
-        self.with(stick.x())
-            .with(InputBind::new(stick.y()).with_modifier(SwizzleAxis::YXZ))
     }
 
     /// Adds action-level modifier.
@@ -229,54 +177,110 @@ impl ActionBind {
     /// Adds input mapping.
     ///
     /// The action can be triggered by any input mapping. If multiple input mappings
-    /// return [`ActionState`].
+    /// return [`ActionState`], the behavior is determined by [`InputAction::ACCUMULATION`].
     ///
-    /// Thanks to [`Into`] impls, it can be called directly with buttons/axes:
+    /// Thanks to traits, this function can be called with multiple types:
     ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>()
-    ///     .with(KeyCode::Space)
-    ///     .with(GamepadButton::South);
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
-    /// # struct Jump;
-    /// ```
+    /// 1. Raw input types.
+    /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
+    /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
+    /// 4. [`BindPreset`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
     ///
-    /// or with [`Input`] if you want to assign keyboard modifiers:
+    /// # Examples
     ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>().with(Input::Keyboard {
-    ///     key: KeyCode::Space,
-    ///     modifiers: Modifiers::CONTROL,
-    /// });
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
-    /// # struct Jump;
-    /// ```
-    ///
-    /// If you want input with modifiers or conditions,
-    /// you will need to wrap it into [`InputBind`]:
+    /// Raw input:
     ///
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .with(InputBind::new(KeyCode::Space).with_condition(Release::default()));
+    ///     .to(KeyCode::Space)
+    ///     .to(GamepadButton::South);
     /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(dim = Bool)]
+    /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
-    pub fn with(&mut self, binding: impl Into<InputBind>) -> &mut Self {
-        let binding = binding.into();
-        debug!("adding `{binding:?}` to `{}`", self.action_name);
-        self.bindings.push(binding);
+    ///
+    /// Raw input with keyboard modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Raw input with input conditions or modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>().to(KeyCode::Space.with_condition(Release::default()));
+    /// ctx.bind::<Attack>().to(MouseButton::Left.with_modifier(Scale::splat(10.0)));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Attack;
+    /// ```
+    ///
+    /// [`Input`] type directly:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Zoom>().to(Input::mouse_wheel());
+    /// ctx.bind::<Move>().to(Input::mouse_motion());
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Zoom;
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Move;
+    /// ```
+    ///
+    /// Convenience preset which consists of multiple inputs
+    /// with predefined conditions and modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Move>().to(Cardinal::wasd_keys());
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Move;
+    /// ```
+    ///
+    /// Multiple buttons from settings:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// # let mut settings = KeyboardSettings::default();
+    /// ctx.bind::<Inspect>().to(&settings.inspect);
+    ///
+    /// # #[derive(Default)]
+    /// struct KeyboardSettings {
+    ///     inspect: Vec<KeyCode>,
+    /// }
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Inspect;
+    /// ```
+    pub fn to(&mut self, preset: impl BindPreset) -> &mut Self {
+        for binding in preset.bindings() {
+            debug!("adding `{binding:?}` to `{}`", self.action_name);
+            self.bindings.push(binding);
+        }
         self
     }
 
@@ -358,80 +362,212 @@ impl ActionBind {
     }
 }
 
-/// Associated input for [`ActionBind`].
-#[derive(Debug)]
-pub struct InputBind {
-    pub input: Input,
-    pub modifiers: Vec<Box<dyn InputModifier>>,
-    pub conditions: Vec<Box<dyn InputCondition>>,
-
-    /// Newly created mappings are ignored by default until until a zero
-    /// value is read for them.
-    ///
-    /// This prevents newly created contexts from reacting to currently
-    /// held inputs until they are released.
-    ignored: bool,
-}
-
-impl InputBind {
-    /// Creates a new instance without modifiers and conditions.
-    pub fn new(input: impl Into<Input>) -> Self {
-        Self {
-            input: input.into(),
-            modifiers: Default::default(),
-            conditions: Default::default(),
-            ignored: true,
-        }
-    }
-
-    /// Adds modifier.
-    #[must_use]
-    pub fn with_modifier(mut self, modifier: impl InputModifier) -> Self {
-        self.modifiers.push(Box::new(modifier));
-        self
-    }
-
-    /// Adds condition.
-    #[must_use]
-    pub fn with_condition(mut self, condition: impl InputCondition) -> Self {
-        self.conditions.push(Box::new(condition));
-        self
-    }
-}
-
-impl<I: Into<Input>> From<I> for InputBind {
-    fn from(input: I) -> Self {
-        Self::new(input)
-    }
-}
-
-/// Represents the side of a gamepad's analog stick.
+/// Map for actions to their data.
 ///
-/// See also [`ActionBind::with_stick`].
-#[derive(Clone, Copy, Debug)]
-pub enum GamepadStick {
-    /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
-    Left,
-    /// Corresponds to [`GamepadAxisType::RightStickX`] and [`GamepadAxisType::RightStickY`]
-    Right,
+/// Can be accessed from [`InputCondition::evaluate`]
+/// or [`ContextInstances::get`](super::ContextInstances::get).
+#[derive(Default, Deref, DerefMut)]
+pub struct ActionsData(pub HashMap<TypeId, ActionData>);
+
+impl ActionsData {
+    /// Returns associated state for action `A`.
+    pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
+        self.get(&TypeId::of::<A>())
+    }
+
+    /// Inserts a state for action `A`.
+    ///
+    /// Returns previosly associated state if present.
+    pub fn insert_action<A: InputAction>(&mut self, action: ActionData) -> Option<ActionData> {
+        self.insert(TypeId::of::<A>(), action)
+    }
 }
 
-impl GamepadStick {
-    /// Returns associated X axis.
-    pub fn x(self) -> GamepadAxis {
-        match self {
-            GamepadStick::Left => GamepadAxis::LeftStickX,
-            GamepadStick::Right => GamepadAxis::RightStickX,
+/// Tracker for action state.
+///
+/// Stored inside [`ActionsData`].
+#[derive(Clone, Copy)]
+pub struct ActionData {
+    state: ActionState,
+    events: ActionEvents,
+    value: ActionValue,
+    elapsed_secs: f32,
+    fired_secs: f32,
+    trigger_events: fn(&Self, &mut Commands, &[Entity]),
+}
+
+impl ActionData {
+    /// Creates a new instance associated with action `A`.
+    ///
+    /// [`Self::trigger_events`] will trigger events for `A`.
+    #[must_use]
+    pub fn new<A: InputAction>() -> Self {
+        Self {
+            state: Default::default(),
+            events: ActionEvents::empty(),
+            value: ActionValue::zero(A::Output::DIM),
+            elapsed_secs: 0.0,
+            fired_secs: 0.0,
+            trigger_events: Self::trigger_events_typed::<A>,
         }
     }
 
-    /// Returns associated Y axis.
-    pub fn y(self) -> GamepadAxis {
-        match self {
-            GamepadStick::Left => GamepadAxis::LeftStickY,
-            GamepadStick::Right => GamepadAxis::RightStickY,
+    /// Updates internal state.
+    pub fn update(
+        &mut self,
+        time: &Time<Virtual>,
+        state: ActionState,
+        value: impl Into<ActionValue>,
+    ) {
+        match self.state {
+            ActionState::None => {
+                self.elapsed_secs = 0.0;
+                self.fired_secs = 0.0;
+            }
+            ActionState::Ongoing => {
+                self.elapsed_secs += time.delta_secs();
+                self.fired_secs = 0.0;
+            }
+            ActionState::Fired => {
+                self.elapsed_secs += time.delta_secs();
+                self.fired_secs += time.delta_secs();
+            }
+        }
+
+        self.events = ActionEvents::new(self.state, state);
+        self.state = state;
+        self.value = value.into();
+    }
+
+    /// Triggers events resulting from a state transition after [`Self::update`].
+    ///
+    /// See also [`Self::new`].
+    pub fn trigger_events(&self, commands: &mut Commands, entities: &[Entity]) {
+        (self.trigger_events)(self, commands, entities);
+    }
+
+    /// A typed version of [`Self::trigger_events`].
+    fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entities: &[Entity]) {
+        for (_, event) in self.events.iter_names() {
+            match event {
+                ActionEvents::STARTED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Started::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                        },
+                    );
+                }
+                ActionEvents::ONGOING => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Ongoing::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::FIRED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Fired::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::CANCELED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Canceled::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::COMPLETED => {
+                    trigger_for_each(
+                        commands,
+                        entities,
+                        Completed::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                _ => unreachable!("iteration should yield only named flags"),
+            }
         }
     }
+
+    /// Returns the current state.
+    pub fn state(&self) -> ActionState {
+        self.state
+    }
+
+    /// Returns events triggered by a transition of [`Self::state`] since the last update.
+    pub fn events(&self) -> ActionEvents {
+        self.events
+    }
+
+    /// Returns the value since the last update.
+    pub fn value(&self) -> ActionValue {
+        self.value
+    }
+
+    /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
+    pub fn elapsed_secs(&self) -> f32 {
+        self.elapsed_secs
+    }
+
+    /// Time the action was in [`ActionState::Fired`] state.
+    pub fn fired_secs(&self) -> f32 {
+        self.fired_secs
+    }
+}
+
+/// Triggers a copyable event for each entity separately and logs it.
+///
+// It's cheaper to copy the event than to clone the entities.
+fn trigger_for_each<E: Event + Debug + Clone + Copy>(
+    commands: &mut Commands,
+    entities: &[Entity],
+    event: E,
+) {
+    for &entity in entities {
+        trace!("triggering `{event:?}` for `{entity}`");
+        commands.trigger_targets(event, entity);
+    }
+}
+
+/// State for [`ActionData`].
+///
+/// States are ordered by their significance.
+///
+/// See also [`ActionEvents`].
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ActionState {
+    /// Condition is not triggered.
+    #[default]
+    None,
+    /// Condition has started triggering, but has not yet finished.
+    ///
+    /// For example, [`Hold`](super::input_condition::hold::Hold) condition
+    /// requires its state to be maintained over several frames.
+    Ongoing,
+    /// The condition has been met.
+    Fired,
 }
 
 #[cfg(test)]
@@ -443,8 +579,8 @@ mod tests {
     #[test]
     fn bind() {
         let mut ctx = ContextInstance::default();
-        ctx.bind::<DummyAction>().with(KeyCode::KeyA);
-        ctx.bind::<DummyAction>().with(KeyCode::KeyB);
+        ctx.bind::<DummyAction>().to(KeyCode::KeyA);
+        ctx.bind::<DummyAction>().to(KeyCode::KeyB);
         assert_eq!(ctx.bindings.len(), 1);
 
         let action = ctx.bindings.first().unwrap();
@@ -452,6 +588,6 @@ mod tests {
     }
 
     #[derive(Debug, InputAction)]
-    #[input_action(dim = Bool)]
+    #[input_action(output = bool)]
     struct DummyAction;
 }
