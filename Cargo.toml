@@ -22,7 +22,9 @@ bitflags = { version = "2.6", features = ["serde"] }
 bevy = { version = "0.15", default-features = false, features = [
   "bevy_gilrs",
   "bevy_gizmos",
+  "bevy_window",
   "x11",
+  "wayland",
 ] }
 
 [features]
