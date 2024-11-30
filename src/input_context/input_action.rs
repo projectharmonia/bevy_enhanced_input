@@ -9,7 +9,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// Needs to be bind inside
 /// [`InputContext::context_instance`](super::InputContext::context_instance)
 ///
-/// Each binded action will have [`ActionState`].
+/// Each binded action will have [`ActionState`](super::context_instance::ActionState).
 /// When it updates during [`ContextInstance`](super::context_instance::ContextInstance)
 /// evaluation, [`events`](super::events) are triggered.
 ///
@@ -33,7 +33,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// struct Move;
 /// ```
 ///
-/// You can also obtain the state directly from [`ActionData`],
+/// You can also obtain the state directly from [`ActionData`](super::context_instance::ActionData),
 /// see [`ContextInstances::get`](super::ContextInstances::get).
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
@@ -64,13 +64,15 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// - For multi-axis actions, like `Move`, use [`Vec2`] or [`Vec3`].
     ///
     /// The type here will determine the type of the `value` field on events
-    /// e.g. [`Fired::value`], [`Canceled::value`].
+    /// e.g. [`Fired::value`](super::events::Fired::value),
+    /// [`Canceled::value`](super::events::Canceled::value).
     type Output: ActionOutput;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.
     ///
-    /// Inputs are consumed only if the action state is not equal to [`ActionState::None`].
+    /// Inputs are consumed only if the action state is not equal to
+    /// [`ActionState::None`](super::context_instance::ActionState::None).
     /// For details, see [`ContextInstance`](super::context_instance::ContextInstance).
     ///
     /// Consuming is global and affect actions in all contexts.
@@ -125,7 +127,8 @@ impl ActionOutput for Vec3 {
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
-/// same most significant [`ActionState`] (excluding [`ActionState::None`]).
+/// same most significant [`ActionState`](super::context_instance::ActionState)
+/// (excluding [`ActionState::None`](super::context_instance::ActionState::None)).
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.

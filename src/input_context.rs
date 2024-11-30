@@ -317,7 +317,7 @@ impl InstanceGroup {
 /// entity in a resource.
 ///
 /// Removing deactivates [`ContextInstance`] for the entity and trigger
-/// transitions for all actions to [`ActionState::None`](input_action::ActionState::None).
+/// transitions for all actions to [`ActionState::None`](crate::input_context::context_instance::ActionState::None).
 ///
 /// Each context should be registered using [`ContextAppExt::add_input_context`].
 ///
@@ -406,7 +406,7 @@ pub enum ContextMode {
 ///
 /// Use it when you change your application settings and want to reload the mappings.
 ///
-/// This will also reset all actions to [`ActionState::None`](crate::input_context::input_action::ActionState::None)
+/// This will also reset all actions to [`ActionState::None`](crate::input_context::context_instance::ActionState::None)
 /// and trigger the corresponding events.
 #[derive(Event)]
 pub struct RebuildInputContexts;

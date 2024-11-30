@@ -1,7 +1,7 @@
 use super::{input_condition::InputCondition, input_modifier::InputModifier};
 use crate::input::Input;
 
-/// Associated input for [`ActionBind`].
+/// Associated input for [`ActionBind`](super::context_instance::ActionBind).
 #[derive(Debug)]
 pub struct InputBind {
     pub input: Input,

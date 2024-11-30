@@ -108,7 +108,7 @@ impl<I: Into<Input>> InputModKeys for I {
     ///
     /// # Panics
     ///
-    /// Panics when called on [`Self::GamepadButton`] or [`Self::GamepadAxis`].
+    /// Panics when called on [`Input::GamepadButton`] or [`Input::GamepadAxis`].
     fn with_mod_keys(self, mod_keys: ModKeys) -> Input {
         match self.into() {
             Input::Keyboard { key, .. } => Input::Keyboard { key, mod_keys },

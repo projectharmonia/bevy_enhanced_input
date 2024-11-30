@@ -21,7 +21,7 @@ use crate::action_value::ActionValue;
 ///
 /// Can be applied both to inputs and actions.
 /// See [`ActionBind::with_modifier`](super::context_instance::ActionBind::with_modifier)
-/// and [`InputBind::with_modifier`](super::context_instance::InputBind::with_modifier).
+/// and [`InputBindModCond::with_modifier`](super::input_bind::InputBindModCond::with_modifier).
 pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
     ///

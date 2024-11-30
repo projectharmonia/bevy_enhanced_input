@@ -50,7 +50,7 @@ use trigger_tracker::TriggerTracker;
 /// This prevents unintended behavior where switching contexts using the same key
 /// could cause an immediate switch back, as buttons are rarely pressed for only a single frame.
 ///
-/// [`ActionState`]: super::input_action::ActionState
+/// [`ActionState`]: super::context_instance::ActionState
 #[derive(Default)]
 pub struct ContextInstance {
     gamepad: GamepadDevice,
