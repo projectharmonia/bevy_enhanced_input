@@ -32,10 +32,10 @@ pub enum Input {
     MouseWheel { mod_keys: ModKeys },
     /// Gamepad button, will be captured as
     /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
-    GamepadButton { button: GamepadButtonType },
+    GamepadButton(GamepadButton),
     /// Gamepad stick axis, will be captured as
     /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
-    GamepadAxis { axis: GamepadAxisType },
+    GamepadAxis(GamepadAxis),
 }
 
 impl Input {
@@ -84,15 +84,15 @@ impl From<MouseButton> for Input {
     }
 }
 
-impl From<GamepadButtonType> for Input {
-    fn from(button: GamepadButtonType) -> Self {
-        Self::GamepadButton { button }
+impl From<GamepadButton> for Input {
+    fn from(value: GamepadButton) -> Self {
+        Self::GamepadButton(value)
     }
 }
 
-impl From<GamepadAxisType> for Input {
-    fn from(axis: GamepadAxisType) -> Self {
-        Self::GamepadAxis { axis }
+impl From<GamepadAxis> for Input {
+    fn from(value: GamepadAxis) -> Self {
+        Self::GamepadAxis(value)
     }
 }
 
@@ -179,17 +179,21 @@ pub enum GamepadDevice {
     #[default]
     Any,
     /// Matches input from specific gamepad.
-    Id(Gamepad),
+    Single(Entity),
 }
 
-impl From<Gamepad> for GamepadDevice {
-    fn from(value: Gamepad) -> Self {
-        Self::Id(value)
+impl GamepadDevice {
+    /// Returns `true` if this device matches the specified gamepad entity.
+    pub fn matches(self, gamepad_entity: Entity) -> bool {
+        match self {
+            GamepadDevice::Any => true,
+            GamepadDevice::Single(entity) => entity == gamepad_entity,
+        }
     }
 }
 
-impl From<usize> for GamepadDevice {
-    fn from(value: usize) -> Self {
-        Gamepad::new(value).into()
+impl From<Entity> for GamepadDevice {
+    fn from(value: Entity) -> Self {
+        Self::Single(value)
     }
 }

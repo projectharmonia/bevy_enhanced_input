@@ -61,11 +61,8 @@ impl ContextInstance {
     /// Associates context with gamepad.
     ///
     /// By default it's [`GamepadDevice::Any`].
-    pub fn with_gamepad(gamepad: impl Into<GamepadDevice>) -> Self {
-        Self {
-            gamepad: gamepad.into(),
-            ..Default::default()
-        }
+    pub fn set_gamepad(&mut self, gamepad: impl Into<GamepadDevice>) {
+        self.gamepad = gamepad.into();
     }
 
     /// Starts binding an action.
@@ -260,7 +257,7 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .to((KeyCode::Space, GamepadButtonType::South));
+    ///     .to((KeyCode::Space, GamepadButton::South));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -489,12 +486,12 @@ impl ActionData {
                 self.fired_secs = 0.0;
             }
             ActionState::Ongoing => {
-                self.elapsed_secs += time.delta_seconds();
+                self.elapsed_secs += time.delta_secs();
                 self.fired_secs = 0.0;
             }
             ActionState::Fired => {
-                self.elapsed_secs += time.delta_seconds();
-                self.fired_secs += time.delta_seconds();
+                self.elapsed_secs += time.delta_secs();
+                self.fired_secs += time.delta_secs();
             }
         }
 

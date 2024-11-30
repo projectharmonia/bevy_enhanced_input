@@ -21,7 +21,7 @@ impl ConditionTimer {
             timer.relative_speed()
         };
 
-        self.duration += timer.delta_seconds() / scale;
+        self.duration += timer.delta_secs() / scale;
     }
 
     pub fn reset(&mut self) {

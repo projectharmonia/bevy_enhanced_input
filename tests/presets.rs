@@ -1,10 +1,4 @@
-use bevy::{
-    input::{
-        gamepad::{GamepadConnection, GamepadConnectionEvent, GamepadInfo},
-        InputPlugin,
-    },
-    prelude::*,
-};
+use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
@@ -58,37 +52,24 @@ fn dpad() {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
-    let gamepad = Gamepad::new(0);
-    app.world_mut().send_event(GamepadConnectionEvent {
-        gamepad,
-        connection: GamepadConnection::Connected(GamepadInfo {
-            name: "Dummy".to_string(),
-        }),
-    });
-
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
+    let context_entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
     for (button, dir) in [
-        (GamepadButtonType::DPadUp, UP),
-        (GamepadButtonType::DPadLeft, LEFT),
-        (GamepadButtonType::DPadDown, DOWN),
-        (GamepadButtonType::DPadRight, RIGHT),
+        (GamepadButton::DPadUp, UP),
+        (GamepadButton::DPadLeft, LEFT),
+        (GamepadButton::DPadDown, DOWN),
+        (GamepadButton::DPadRight, RIGHT),
     ] {
-        let button = GamepadButton {
-            gamepad,
-            button_type: button,
-        };
-
-        app.world_mut()
-            .resource_mut::<ButtonInput<GamepadButton>>()
-            .press(button);
+        let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
+        gamepad.digital_mut().press(button);
 
         app.update();
 
         let instances = app.world().resource::<ContextInstances>();
-        let ctx = instances.get::<DummyContext>(entity).unwrap();
+        let ctx = instances.get::<DummyContext>(context_entity).unwrap();
         let action = ctx.action::<DummyAction>().unwrap();
         assert_eq!(
             action.value(),
@@ -96,9 +77,8 @@ fn dpad() {
             "`{button:?}` should result in `{dir}`"
         );
 
-        app.world_mut()
-            .resource_mut::<ButtonInput<GamepadButton>>()
-            .release(button);
+        let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
+        gamepad.digital_mut().release(button);
 
         app.update();
     }
@@ -110,38 +90,25 @@ fn sticks() {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
-    let gamepad = Gamepad::new(0);
-    app.world_mut().send_event(GamepadConnectionEvent {
-        gamepad,
-        connection: GamepadConnection::Connected(GamepadInfo {
-            name: "Dummy".to_string(),
-        }),
-    });
-
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
+    let context_entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
     for (axis, dirs) in [
-        (GamepadAxisType::LeftStickX, [LEFT, RIGHT]),
-        (GamepadAxisType::RightStickX, [LEFT, RIGHT]),
-        (GamepadAxisType::LeftStickY, [DOWN, UP]),
-        (GamepadAxisType::RightStickY, [DOWN, UP]),
+        (GamepadAxis::LeftStickX, [LEFT, RIGHT]),
+        (GamepadAxis::RightStickX, [LEFT, RIGHT]),
+        (GamepadAxis::LeftStickY, [DOWN, UP]),
+        (GamepadAxis::RightStickY, [DOWN, UP]),
     ] {
-        let axis = GamepadAxis {
-            gamepad,
-            axis_type: axis,
-        };
-
         for (dir, value) in dirs.into_iter().zip([-1.0, 1.0]) {
-            app.world_mut()
-                .resource_mut::<Axis<GamepadAxis>>()
-                .set(axis, value);
+            let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
+            gamepad.analog_mut().set(axis, value);
 
             app.update();
 
             let instances = app.world().resource::<ContextInstances>();
-            let ctx = instances.get::<DummyContext>(entity).unwrap();
+            let ctx = instances.get::<DummyContext>(context_entity).unwrap();
             let action = ctx.action::<DummyAction>().unwrap();
             assert_eq!(
                 action.value(),
@@ -149,9 +116,8 @@ fn sticks() {
                 "`{axis:?}` should result in `{dir}`"
             );
 
-            app.world_mut()
-                .resource_mut::<Axis<GamepadAxis>>()
-                .set(axis, 0.0);
+            let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
+            gamepad.analog_mut().set(axis, 0.0);
 
             app.update();
         }

@@ -364,11 +364,11 @@ impl EventsBlocker {
 }
 
 fn panic_on_action_events<A: InputAction>(world: &mut World) {
-    world.observe(panic_on_event::<Started<A>>);
-    world.observe(panic_on_event::<Ongoing<A>>);
-    world.observe(panic_on_event::<Fired<A>>);
-    world.observe(panic_on_event::<Completed<A>>);
-    world.observe(panic_on_event::<Canceled<A>>);
+    world.add_observer(panic_on_event::<Started<A>>);
+    world.add_observer(panic_on_event::<Ongoing<A>>);
+    world.add_observer(panic_on_event::<Fired<A>>);
+    world.add_observer(panic_on_event::<Completed<A>>);
+    world.add_observer(panic_on_event::<Canceled<A>>);
 }
 
 fn panic_on_event<E: Event>(_trigger: Trigger<E>) {

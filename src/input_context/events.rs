@@ -257,27 +257,27 @@ mod tests {
 
         let mut world = World::new();
         world.init_resource::<TriggeredEvents>();
-        world.observe(
+        world.add_observer(
             |_trigger: Trigger<Fired<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::FIRED);
             },
         );
-        world.observe(
+        world.add_observer(
             |_trigger: Trigger<Started<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::STARTED);
             },
         );
-        world.observe(
+        world.add_observer(
             |_trigger: Trigger<Ongoing<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::ONGOING);
             },
         );
-        world.observe(
+        world.add_observer(
             |_trigger: Trigger<Completed<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::COMPLETED);
             },
         );
-        world.observe(
+        world.add_observer(
             |_trigger: Trigger<Canceled<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::CANCELED);
             },

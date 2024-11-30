@@ -7,7 +7,7 @@ use std::f32::consts::FRAC_PI_4;
 use bevy::{color::palettes::tailwind::INDIGO_600, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
-use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, PlayerColor, DEFAULT_SPEED};
+use player_box::{PlayerBox, PlayerBoxPlugin, PlayerColor, DEFAULT_SPEED};
 
 fn main() {
     App::new()
@@ -27,19 +27,19 @@ impl Plugin for GamePlugin {
         app.add_input_context::<PlayerBox>()
             .add_input_context::<Swimming>()
             .add_systems(Startup, Self::spawn)
-            .observe(Self::apply_movement)
-            .observe(Self::rotate)
-            .observe(Self::exit_water)
-            .observe(Self::enter_water)
-            .observe(Self::start_diving)
-            .observe(Self::end_diving);
+            .add_observer(Self::apply_movement)
+            .add_observer(Self::rotate)
+            .add_observer(Self::exit_water)
+            .add_observer(Self::enter_water)
+            .add_observer(Self::start_diving)
+            .add_observer(Self::end_diving);
     }
 }
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2dBundle::default());
-        commands.spawn(PlayerBoxBundle::default());
+        commands.spawn(Camera2d);
+        commands.spawn(PlayerBox);
     }
 
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {

@@ -51,7 +51,7 @@ impl InputModifier for DeltaLerp {
             return value;
         }
 
-        let alpha = time.delta_seconds() * self.speed;
+        let alpha = time.delta_secs() * self.speed;
         let smoothed = self.prev_value.lerp(target_value, alpha);
         self.prev_value = smoothed;
 

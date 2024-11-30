@@ -95,17 +95,17 @@ impl Cardinal<KeyCode> {
     }
 }
 
-impl Cardinal<GamepadButtonType> {
+impl Cardinal<GamepadButton> {
     /// Maps D-pad as 2-dimentional input.
     ///
     /// See also [`Self::wasd_keys`].
     #[must_use]
     pub fn dpad_buttons() -> Self {
         Self {
-            north: GamepadButtonType::DPadUp,
-            east: GamepadButtonType::DPadLeft,
-            south: GamepadButtonType::DPadDown,
-            west: GamepadButtonType::DPadRight,
+            north: GamepadButton::DPadUp,
+            east: GamepadButton::DPadLeft,
+            south: GamepadButton::DPadDown,
+            west: GamepadButton::DPadRight,
         }
     }
 }
@@ -165,26 +165,26 @@ impl<I: InputBindings> InputBindings for Biderectional<I> {
 /// Represents the side of a gamepad's analog stick.
 #[derive(Debug, Clone, Copy)]
 pub enum GamepadStick {
-    /// Corresponds to [`GamepadAxisType::LeftStickX`] and [`GamepadAxisType::LeftStickY`]
+    /// Corresponds to [`GamepadAxis::LeftStickX`] and [`GamepadAxis::LeftStickY`]
     Left,
-    /// Corresponds to [`GamepadAxisType::RightStickX`] and [`GamepadAxisType::RightStickY`]
+    /// Corresponds to [`GamepadAxis::RightStickX`] and [`GamepadAxis::RightStickY`]
     Right,
 }
 
 impl GamepadStick {
     /// Returns associated X axis.
-    pub fn x(self) -> GamepadAxisType {
+    pub fn x(self) -> GamepadAxis {
         match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickX,
-            GamepadStick::Right => GamepadAxisType::RightStickX,
+            GamepadStick::Left => GamepadAxis::LeftStickX,
+            GamepadStick::Right => GamepadAxis::RightStickX,
         }
     }
 
     /// Returns associated Y axis.
-    pub fn y(self) -> GamepadAxisType {
+    pub fn y(self) -> GamepadAxis {
         match self {
-            GamepadStick::Left => GamepadAxisType::LeftStickY,
-            GamepadStick::Right => GamepadAxisType::RightStickY,
+            GamepadStick::Left => GamepadAxis::LeftStickY,
+            GamepadStick::Right => GamepadAxis::RightStickY,
         }
     }
 }

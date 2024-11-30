@@ -7,7 +7,7 @@ use std::f32::consts::FRAC_PI_4;
 use bevy::{color::palettes::tailwind::FUCHSIA_400, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
-use player_box::{PlayerBoxBundle, PlayerBoxPlugin, PlayerColor, DEFAULT_SPEED};
+use player_box::{PlayerBox, PlayerBoxPlugin, PlayerColor, DEFAULT_SPEED};
 
 fn main() {
     App::new()
@@ -27,17 +27,17 @@ impl Plugin for GamePlugin {
         app.add_input_context::<OnFoot>()
             .add_input_context::<InCar>()
             .add_systems(Startup, Self::spawn)
-            .observe(Self::apply_movement)
-            .observe(Self::rotate)
-            .observe(Self::enter_car)
-            .observe(Self::exit_car);
+            .add_observer(Self::apply_movement)
+            .add_observer(Self::rotate)
+            .add_observer(Self::enter_car)
+            .add_observer(Self::exit_car);
     }
 }
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2dBundle::default());
-        commands.spawn((PlayerBoxBundle::default(), OnFoot));
+        commands.spawn(Camera2d);
+        commands.spawn((PlayerBox, OnFoot));
     }
 
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {

@@ -19,8 +19,7 @@ impl PlayerBoxPlugin {
             if visibility != Visibility::Hidden {
                 const DEFAULT_SCALE: Vec2 = Vec2::splat(50.0);
                 gizmos.rect(
-                    transform.translation,
-                    transform.rotation,
+                    Isometry3d::new(transform.translation, transform.rotation),
                     DEFAULT_SCALE + transform.scale.xy(),
                     color.0,
                 );
@@ -31,15 +30,8 @@ impl PlayerBoxPlugin {
 
 pub(super) const DEFAULT_SPEED: f32 = 10.0;
 
-#[derive(Bundle, Default)]
-pub(super) struct PlayerBoxBundle {
-    pub(super) color: PlayerColor,
-    pub(super) visibility: Visibility,
-    pub(super) player: PlayerBox,
-    pub(super) transform: Transform,
-}
-
 #[derive(Component, Default)]
+#[require(PlayerColor, Visibility, Transform)]
 pub(super) struct PlayerBox;
 
 #[derive(Component, Default, Deref, DerefMut)]
