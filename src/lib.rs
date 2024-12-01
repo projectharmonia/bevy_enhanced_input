@@ -84,7 +84,7 @@ pub mod prelude {
                 accumulate_by::*, dead_zone::*, delta_lerp::*, delta_scale::*,
                 exponential_curve::*, negate::*, scale::*, swizzle_axis::*, InputModifier,
             },
-            preset::{Biderectional, Cardinal, GamepadStick},
+            preset::{Bidirectional, Cardinal, GamepadStick},
             ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
         },
         EnhancedInputPlugin, EnhancedInputSystem,

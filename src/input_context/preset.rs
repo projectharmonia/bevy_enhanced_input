@@ -143,12 +143,12 @@ impl<I: InputBindings> InputBindings for Cardinal<I> {
 ///
 /// See also [`Cardinal`].
 #[derive(Debug, Clone, Copy)]
-pub struct Biderectional<I: InputBindings> {
+pub struct Bidirectional<I: InputBindings> {
     pub positive: I,
     pub negative: I,
 }
 
-impl<I: InputBindings> InputBindings for Biderectional<I> {
+impl<I: InputBindings> InputBindings for Bidirectional<I> {
     fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
         let positive = self.positive.iter_bindings();
         let negative = self
