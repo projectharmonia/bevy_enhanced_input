@@ -108,7 +108,7 @@ impl InputReader<'_, '_> {
                     return Vec2::ZERO.into();
                 }
 
-                let value = self.accumulated_mouse_scroll.delta;
+                let value = self.mouse_scroll.delta;
                 value.into()
             }
             Input::GamepadButton(button) => {
