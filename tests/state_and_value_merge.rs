@@ -280,7 +280,7 @@ impl InputContext for DummyContext {
         let block_by = BlockBy::<Blocker>::default();
         let block_events_by = BlockBy::<EventsBlocker>::events_only();
         let swizzle_axis = SwizzleAxis::YXZ;
-        let negate = Negate::default();
+        let negate = Negate::all();
         let scale = Scale::splat(2.0);
 
         ctx.bind::<ChordMember>().to(ChordMember::KEY);

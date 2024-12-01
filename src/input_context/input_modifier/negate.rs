@@ -69,12 +69,6 @@ impl Negate {
     }
 }
 
-impl Default for Negate {
-    fn default() -> Self {
-        Self::splat(true)
-    }
-}
-
 impl InputModifier for Negate {
     fn apply(
         &mut self,
@@ -182,7 +176,7 @@ mod tests {
 
     #[test]
     fn all() {
-        let mut modifier = Negate::default();
+        let mut modifier = Negate::all();
         let actions = ActionsData::default();
         let time = Time::default();
 
