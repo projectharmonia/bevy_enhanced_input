@@ -2,7 +2,7 @@ use std::hash::Hash;
 
 use bevy::{
     ecs::system::SystemParam,
-    input::mouse::{MouseMotion, MouseWheel},
+    input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll},
     prelude::*,
     utils::HashSet,
 };
@@ -17,13 +17,11 @@ use crate::action_value::ActionValue;
 pub(crate) struct InputReader<'w, 's> {
     keys: Res<'w, ButtonInput<KeyCode>>,
     mouse_buttons: Res<'w, ButtonInput<MouseButton>>,
-    mouse_motion_events: EventReader<'w, 's, MouseMotion>,
-    mouse_wheel_events: EventReader<'w, 's, MouseWheel>,
+    accumulated_mouse_motion: Res<'w, AccumulatedMouseMotion>,
+    accumulated_mouse_scroll: Res<'w, AccumulatedMouseScroll>,
     gamepads: Query<'w, 's, &'static Gamepad>,
     consumed: Local<'s, ConsumedInput>,
     gamepad_device: Local<'s, GamepadDevice>,
-    mouse_wheel: Local<'s, Vec2>,
-    mouse_motion: Local<'s, Vec2>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
     // In egui mutable reference is required to get contexts,
@@ -63,20 +61,6 @@ impl InputReader<'_, '_> {
         {
             self.consumed.ui_wants_mouse = true;
         }
-
-        // Mouse motion and wheel input need to be accumulated
-        // because they only exist as events, and subsequent reads
-        // will return zero.
-        *self.mouse_motion = self
-            .mouse_motion_events
-            .read()
-            .map(|event| event.delta)
-            .sum();
-        *self.mouse_wheel = self
-            .mouse_wheel_events
-            .read()
-            .map(|event| Vec2::new(event.x, event.y))
-            .sum();
     }
 
     /// Assigns a gamepad from which [`Self::value`] should read input.
@@ -106,19 +90,25 @@ impl InputReader<'_, '_> {
                 pressed.into()
             }
             Input::MouseMotion { mod_keys } => {
-                if self.consumed.ui_wants_mouse || !self.mod_keys_pressed(mod_keys) {
+                if self.consumed.ui_wants_mouse
+                    || !self.mod_keys_pressed(mod_keys)
+                    || self.consumed.mouse_motion
+                {
                     return Vec2::ZERO.into();
                 }
 
-                let value = *self.mouse_motion;
+                let value = self.accumulated_mouse_motion.delta;
                 value.into()
             }
             Input::MouseWheel { mod_keys } => {
-                if self.consumed.ui_wants_mouse || !self.mod_keys_pressed(mod_keys) {
+                if self.consumed.ui_wants_mouse
+                    || !self.mod_keys_pressed(mod_keys)
+                    || self.consumed.mouse_wheel
+                {
                     return Vec2::ZERO.into();
                 }
 
-                let value = *self.mouse_wheel;
+                let value = self.accumulated_mouse_scroll.delta;
                 value.into()
             }
             Input::GamepadButton(button) => {
@@ -202,11 +192,11 @@ impl InputReader<'_, '_> {
                 self.consumed.mod_keys.insert(mod_keys);
             }
             Input::MouseMotion { mod_keys } => {
-                *self.mouse_motion = Vec2::ZERO;
+                self.consumed.mouse_motion = true;
                 self.consumed.mod_keys.insert(mod_keys);
             }
             Input::MouseWheel { mod_keys } => {
-                *self.mouse_wheel = Vec2::ZERO;
+                self.consumed.mouse_wheel = true;
                 self.consumed.mod_keys.insert(mod_keys);
             }
             Input::GamepadButton(button) => {
@@ -239,6 +229,8 @@ struct ConsumedInput {
     keys: HashSet<KeyCode>,
     mod_keys: ModKeys,
     mouse_buttons: HashSet<MouseButton>,
+    mouse_motion: bool,
+    mouse_wheel: bool,
     gamepad_buttons: HashSet<GamepadInput<GamepadButton>>,
     gamepad_axes: HashSet<GamepadInput<GamepadAxis>>,
 }
@@ -250,6 +242,8 @@ impl ConsumedInput {
         self.keys.clear();
         self.mod_keys = ModKeys::empty();
         self.mouse_buttons.clear();
+        self.mouse_motion = false;
+        self.mouse_wheel = false;
         self.gamepad_buttons.clear();
         self.gamepad_axes.clear();
     }
@@ -264,7 +258,10 @@ struct GamepadInput<T: Hash + Eq> {
 
 #[cfg(test)]
 mod tests {
-    use bevy::{ecs::system::SystemState, input::mouse::MouseScrollUnit};
+    use bevy::{
+        ecs::system::SystemState,
+        input::mouse::{MouseMotion, MouseScrollUnit, MouseWheel},
+    };
 
     use super::*;
     use crate::{input::InputModKeys, Input};
