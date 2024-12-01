@@ -311,7 +311,7 @@ mod tests {
         let (mut world, mut state) = init_world();
 
         let value = Vec2::ONE;
-        world.send_event(MouseMotion { delta: value });
+        world.insert_resource(AccumulatedMouseMotion { delta: value });
 
         let input = Input::mouse_motion();
         let mut reader = state.get_mut(&mut world);
@@ -331,11 +331,9 @@ mod tests {
         let (mut world, mut state) = init_world();
 
         let value = Vec2::ONE;
-        world.send_event(MouseWheel {
-            x: value.x,
-            y: value.y,
+        world.insert_resource(AccumulatedMouseScroll {
             unit: MouseScrollUnit::Line,
-            window: Entity::PLACEHOLDER,
+            delta: value,
         });
 
         let input = Input::mouse_wheel();
@@ -541,7 +539,7 @@ mod tests {
         let value = Vec2::ONE;
         let modifier = KeyCode::ShiftLeft;
         world.resource_mut::<ButtonInput<KeyCode>>().press(modifier);
-        world.send_event(MouseMotion { delta: value });
+        world.insert_resource(AccumulatedMouseMotion { delta: value });
 
         let input = Input::mouse_motion().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
@@ -571,11 +569,9 @@ mod tests {
         let value = Vec2::ONE;
         let modifier = KeyCode::SuperLeft;
         world.resource_mut::<ButtonInput<KeyCode>>().press(modifier);
-        world.send_event(MouseWheel {
-            x: value.x,
-            y: value.y,
+        world.insert_resource(AccumulatedMouseScroll {
             unit: MouseScrollUnit::Line,
-            window: Entity::PLACEHOLDER,
+            delta: value,
         });
 
         let input = Input::mouse_wheel().with_mod_keys(modifier.into());
@@ -642,6 +638,8 @@ mod tests {
         world.init_resource::<Events<MouseWheel>>();
         world.init_resource::<ButtonInput<GamepadButton>>();
         world.init_resource::<Axis<GamepadAxis>>();
+        world.init_resource::<AccumulatedMouseMotion>();
+        world.init_resource::<AccumulatedMouseScroll>();
 
         let state = SystemState::<InputReader>::new(&mut world);
 
