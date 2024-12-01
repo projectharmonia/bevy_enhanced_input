@@ -23,7 +23,7 @@ pub struct Negate {
 impl Negate {
     /// Returns [`Self`] with invertion for all axes set to `invert`
     #[must_use]
-    pub fn all(invert: bool) -> Self {
+    pub fn splat(invert: bool) -> Self {
         Self {
             x: invert,
             y: invert,
@@ -31,40 +31,41 @@ impl Negate {
         }
     }
 
-    /// Returns [`Self`] with invertion for x set to `invert`
+    /// Returns [`Self`] with none of the axes inverted.
+    pub fn none() -> Self {
+        Self::splat(false)
+    }
+
+    /// Returns [`Self`] with all of the axes inverted.
+    pub fn all() -> Self {
+        Self::splat(true)
+    }
+
+    /// Returns [`Self`] with the X axis inverted.
     #[must_use]
-    pub fn x(invert: bool) -> Self {
+    pub fn x() -> Self {
         Self {
-            x: invert,
-            y: false,
-            z: false,
+            x: true,
+            ..Self::none()
         }
     }
 
-    /// Returns [`Self`] with invertion for y set to `invert`
+    /// Returns [`Self`] with the Y axis inverted.
     #[must_use]
-    pub fn y(invert: bool) -> Self {
+    pub fn y() -> Self {
         Self {
-            x: false,
-            y: invert,
-            z: false,
+            y: true,
+            ..Self::none()
         }
     }
 
-    /// Returns [`Self`] with invertion for z set to `invert`
+    /// Returns [`Self`] with the Z axis inverted.
     #[must_use]
-    pub fn z(invert: bool) -> Self {
+    pub fn z() -> Self {
         Self {
-            x: false,
-            y: false,
-            z: invert,
+            z: true,
+            ..Self::none()
         }
-    }
-}
-
-impl Default for Negate {
-    fn default() -> Self {
-        Self::all(true)
     }
 }
 
@@ -118,7 +119,7 @@ mod tests {
 
     #[test]
     fn x() {
-        let mut modifier = Negate::x(true);
+        let mut modifier = Negate::x();
         let actions = ActionsData::default();
         let time = Time::default();
 
@@ -137,7 +138,7 @@ mod tests {
 
     #[test]
     fn y() {
-        let mut modifier = Negate::y(true);
+        let mut modifier = Negate::y();
         let actions = ActionsData::default();
         let time = Time::default();
 
@@ -156,7 +157,7 @@ mod tests {
 
     #[test]
     fn z() {
-        let mut modifier = Negate::z(true);
+        let mut modifier = Negate::z();
         let actions = ActionsData::default();
         let time = Time::default();
 
@@ -175,7 +176,7 @@ mod tests {
 
     #[test]
     fn all() {
-        let mut modifier = Negate::default();
+        let mut modifier = Negate::all();
         let actions = ActionsData::default();
         let time = Time::default();
 

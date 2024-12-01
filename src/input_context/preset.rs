@@ -122,13 +122,13 @@ impl<I: InputBindings> InputBindings for Cardinal<I> {
         let east = self
             .east
             .iter_bindings()
-            .map(|binding| binding.with_modifiers(Negate::default()));
+            .map(|binding| binding.with_modifiers(Negate::all()));
 
         // -Y
         let south = self
             .south
             .iter_bindings()
-            .map(|binding| binding.with_modifiers((Negate::default(), SwizzleAxis::YXZ)));
+            .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::YXZ)));
 
         // X
         let west = self.west.iter_bindings();
@@ -154,7 +154,7 @@ impl<I: InputBindings> InputBindings for Biderectional<I> {
         let negative = self
             .negative
             .iter_bindings()
-            .map(|binding| binding.with_modifiers(Negate::default()));
+            .map(|binding| binding.with_modifiers(Negate::all()));
 
         positive.chain(negative)
     }
