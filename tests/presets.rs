@@ -140,7 +140,7 @@ impl InputContext for DummyContext {
             Cardinal::wasd_keys(),
             Cardinal::arrow_keys(),
             Cardinal::dpad_buttons(),
-            Biderectional {
+            Bidirectional {
                 positive: KeyCode::NumpadAdd,
                 negative: KeyCode::NumpadSubtract,
             },

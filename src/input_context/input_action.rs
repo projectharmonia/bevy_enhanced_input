@@ -91,7 +91,7 @@ pub trait ActionOutput: Send + Sync + Debug + Clone + Copy {
     ///
     /// # Panics
     ///
-    /// Panics if the value represets a different type.
+    /// Panics if the value represents a different type.
     fn as_output(value: ActionValue) -> Self;
 }
 

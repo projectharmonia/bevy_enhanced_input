@@ -13,7 +13,7 @@ pub enum ActionValue {
 }
 
 impl ActionValue {
-    /// Creates a zero-initialized value for the specified dimention.
+    /// Creates a zero-initialized value for the specified dimension.
     pub fn zero(dim: ActionValueDim) -> Self {
         match dim {
             ActionValueDim::Bool => ActionValue::Bool(false),
@@ -23,7 +23,7 @@ impl ActionValue {
         }
     }
 
-    /// Returns dimention.
+    /// Returns dimension.
     pub fn dim(self) -> ActionValueDim {
         match self {
             Self::Bool(_) => ActionValueDim::Bool,
@@ -33,7 +33,7 @@ impl ActionValue {
         }
     }
 
-    /// Converts the value into the specified variant based on the dimention.
+    /// Converts the value into the specified variant based on the dimension.
     ///
     /// If the new dimension is larger, the additional axes will be set to zero.
     /// If the new dimension is smaller, the extra axes will be discarded.
@@ -124,7 +124,7 @@ impl ActionValue {
     }
 }
 
-/// A dimention discriminant for [`ActionValue`].
+/// A dimension discriminant for [`ActionValue`].
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum ActionValueDim {
     Bool,

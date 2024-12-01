@@ -17,7 +17,7 @@ pub struct BlockBy<A: InputAction> {
     /// Action that blocks this condition when active.
     marker: PhantomData<A>,
 
-    /// Wheter to block the state or only the events.
+    /// Whether to block the state or only the events.
     ///
     /// By default set to false.
     pub events_only: bool,

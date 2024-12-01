@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Negate`'s functions `x`, `y`, `z` no longer take an `invert` parameter and assume it is `true`.
 - `Negate::all`'s current function has been moved to `Negate::splat`.
 - `Negate::all` no longer takes an `invert` parameter and assumes it is `true` (opposite is `Negate::none`).
+- Rename `Biderectional` to `Bidirectional` to fix typo
 
 ### Removed
 
@@ -32,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All events now have typed values, based on `InputAction::Output`.
 - Rename `ActionBind::with` into `ActionBind::to`.
 - All presets now structs (see `input_context::context_instance::input_preset`) that can be passed directly into `ActionBind::to`.
-- Rename `Modifiers` into `ModKeys` to avod confusion with input modifiers.
+- Rename `Modifiers` into `ModKeys` to avoid confusion with input modifiers.
 - Rename all `modifiers` fields in the `Input` enum into `mod_keys`.
 - Rename `Input::with_modifiers` and `Input::without_modifiers` into `Input::with_mod_keys` and `Input::without_mod_keys`, respectively.
 - `Input::with_mod_keys` now a trait method which implemented for any type that can be converted into an input to ergonomically assign keyboard modifiers.
@@ -76,7 +77,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - All events now separate structs instead of enum.
 - Modifiers now accept `ActionsData`.
-- Rework `ConditionKind` and the logic around it to make the behavior close to UE.
+- Rework `ConditionKind` and the logic around it to make the behavior close to Unreal Engine.
 - Consume inputs only if the action state is not equal to `ActionState::None`.
 - Remove world access from conditions and modifiers. This means that you no longer can write game-specific conditions or modifiers. But it's much nicer (and faster) to just do it in observers instead.
 - Values from `Input` are now converted to the action-level dimension only after applying all input-level modifiers and conditions. This allows things like mapping the Y-axis of `ActionValue::Axis2D` into an action with `ActionValueDim::Axis1D`.
@@ -90,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `isize` for `InputContext::PRIORITY`.
 - Replace `SmoothDelta` with `LerpDelta` that does only linear interpolation. Using easing functions for inputs doesn't make much sense.
 - Modifiers are now allowed to change passed value dimensions.
-- All built-in modifiers now handle values of any dimention.
+- All built-in modifiers now handle values of any dimension.
 - Replace `with_held_timer` with `relative_speed` that just accepts a boolean.
 - Rename `HeldTimer` into `ConditionTimer`.
 - Use `trace!` instead of `debug!` for triggered events.

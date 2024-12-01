@@ -122,7 +122,7 @@ impl TriggerTracker {
 
     /// Replaces the state with `other`.
     ///
-    /// Preserves the value dimention.
+    /// Preserves the value dimension.
     pub(super) fn overwrite(&mut self, other: TriggerTracker) {
         let dim = self.value.dim();
         *self = other;
@@ -131,7 +131,7 @@ impl TriggerTracker {
 
     /// Merges two trackers.
     ///
-    /// Preserves the value dimention.
+    /// Preserves the value dimension.
     pub(super) fn combine(&mut self, other: Self, accumulation: Accumulation) {
         let accumulated = match accumulation {
             Accumulation::MaxAbs => {
