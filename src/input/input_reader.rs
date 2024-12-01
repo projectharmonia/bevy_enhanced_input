@@ -17,8 +17,8 @@ use crate::action_value::ActionValue;
 pub(crate) struct InputReader<'w, 's> {
     keys: Res<'w, ButtonInput<KeyCode>>,
     mouse_buttons: Res<'w, ButtonInput<MouseButton>>,
-    accumulated_mouse_motion: Res<'w, AccumulatedMouseMotion>,
-    accumulated_mouse_scroll: Res<'w, AccumulatedMouseScroll>,
+    mouse_motion: Res<'w, AccumulatedMouseMotion>,
+    mouse_scroll: Res<'w, AccumulatedMouseScroll>,
     gamepads: Query<'w, 's, &'static Gamepad>,
     consumed: Local<'s, ConsumedInput>,
     gamepad_device: Local<'s, GamepadDevice>,
@@ -97,7 +97,7 @@ impl InputReader<'_, '_> {
                     return Vec2::ZERO.into();
                 }
 
-                let value = self.accumulated_mouse_motion.delta;
+                let value = self.mouse_motion.delta;
                 value.into()
             }
             Input::MouseWheel { mod_keys } => {
