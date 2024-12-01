@@ -438,7 +438,7 @@ impl ActionsData {
 
     /// Inserts a state for action `A`.
     ///
-    /// Returns previosly associated state if present.
+    /// Returns previously associated state if present.
     pub fn insert_action<A: InputAction>(&mut self, action: ActionData) -> Option<ActionData> {
         self.insert(TypeId::of::<A>(), action)
     }

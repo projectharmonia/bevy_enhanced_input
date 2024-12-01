@@ -38,13 +38,13 @@ impl InputCondition for Release {
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
-        let previosly_actuated = self.actuated;
+        let previously_actuated = self.actuated;
         self.actuated = value.is_actuated(self.actuation);
 
         if self.actuated {
             // Ongoing on hold.
             ActionState::Ongoing
-        } else if previosly_actuated {
+        } else if previously_actuated {
             // Fired on release.
             ActionState::Fired
         } else {

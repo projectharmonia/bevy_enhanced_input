@@ -5,7 +5,7 @@ use super::{
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };
 
-/// A preset to map buttons as 2-dimentional input.
+/// A preset to map buttons as 2-dimensional input.
 ///
 /// This is a convenience preset that uses [`SwizzleAxis`] and [`Negate`] to
 /// bind the buttons to X and Y axes.
@@ -68,7 +68,7 @@ pub struct Cardinal<I: InputBindings> {
 }
 
 impl Cardinal<KeyCode> {
-    /// Maps WASD keys as 2-dimentional input.
+    /// Maps WASD keys as 2-dimensional input.
     ///
     /// See also [`Self::arrow_keys`].
     #[must_use]
@@ -81,7 +81,7 @@ impl Cardinal<KeyCode> {
         }
     }
 
-    /// Maps keyboard arrow keys as 2-dimentional input.
+    /// Maps keyboard arrow keys as 2-dimensional input.
     ///
     /// See also [`Self::wasd_keys`].
     #[must_use]
@@ -96,7 +96,7 @@ impl Cardinal<KeyCode> {
 }
 
 impl Cardinal<GamepadButton> {
-    /// Maps D-pad as 2-dimentional input.
+    /// Maps D-pad as 2-dimensional input.
     ///
     /// See also [`Self::wasd_keys`].
     #[must_use]
@@ -137,7 +137,7 @@ impl<I: InputBindings> InputBindings for Cardinal<I> {
     }
 }
 
-/// A preset to map buttons as 2-dimentional input.
+/// A preset to map buttons as 2-dimensional input.
 ///
 /// Positive binding will be passed as is and negative will be reversed using [`Negate`].
 ///
@@ -160,7 +160,7 @@ impl<I: InputBindings> InputBindings for Bidirectional<I> {
     }
 }
 
-/// A preset to map a stick as 2-dimentional input.
+/// A preset to map a stick as 2-dimensional input.
 ///
 /// Represents the side of a gamepad's analog stick.
 #[derive(Debug, Clone, Copy)]

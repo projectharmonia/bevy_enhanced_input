@@ -47,7 +47,7 @@ while interacting with the UI, we implement temporary workarounds enabled by spe
 # Troubleshooting
 
 If you face any issue, try to enable logging to see what is going on.
-To enable logging, you can temporarely set `RUST_LOG` environment variable to `bevy_enhanced_input=debug`
+To enable logging, you can temporarily set `RUST_LOG` environment variable to `bevy_enhanced_input=debug`
 (or `bevy_enhanced_input=trace` for more noisy output) like this:
 
 ```bash

@@ -39,10 +39,10 @@ impl InputCondition for JustPress {
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
-        let previosly_actuated = self.actuated;
+        let previously_actuated = self.actuated;
         self.actuated = value.is_actuated(self.actuation);
 
-        if self.actuated && !previosly_actuated {
+        if self.actuated && !previously_actuated {
             ActionState::Fired
         } else {
             ActionState::None

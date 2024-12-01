@@ -10,18 +10,18 @@ use crate::{action_value::ActionValue, input_context::context_instance::ActionsD
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
 pub struct Negate {
-    /// Wheter to inverse the X axis.
+    /// Whether to inverse the X axis.
     pub x: bool,
 
-    /// Wheter to inverse the Y axis.
+    /// Whether to inverse the Y axis.
     pub y: bool,
 
-    /// Wheter to inverse the Z axis.
+    /// Whether to inverse the Z axis.
     pub z: bool,
 }
 
 impl Negate {
-    /// Returns [`Self`] with invertion for all axes set to `invert`
+    /// Returns [`Self`] with inversion for all axes set to `invert`
     #[must_use]
     pub fn splat(invert: bool) -> Self {
         Self {

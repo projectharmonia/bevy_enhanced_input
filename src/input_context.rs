@@ -329,7 +329,7 @@ impl InstanceGroup {
 ///
 /// impl InputContext for Player {
 ///     fn context_instance(world: &World, entity: Entity) -> ContextInstance {
-///         // You can use world to access the necessaary data.
+///         // You can use world to access the necessary data.
 ///         let settings = world.resource::<AppSettings>();
 ///
 ///         // To can also access the context

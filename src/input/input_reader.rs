@@ -79,7 +79,7 @@ impl InputReader<'_, '_> {
             .sum();
     }
 
-    /// Assignes a gamepad from which [`Self::value`] should read input.
+    /// Assigns a gamepad from which [`Self::value`] should read input.
     pub(crate) fn set_gamepad(&mut self, gamepad: impl Into<GamepadDevice>) {
         *self.gamepad_device = gamepad.into();
     }
