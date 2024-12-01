@@ -14,7 +14,7 @@ use super::{
 /// toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
 /// you will need to invert Y and apply it to Z inside your observer.
 ///
-/// See also [`Biderectional`].
+/// See also [`Bidirectional`].
 ///
 /// # Examples
 ///
