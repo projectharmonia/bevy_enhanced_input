@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::{
-    input_bind::{InputBind, InputBindModCond, InputBindings},
+    input_bind::{InputBind, InputBindModCond, InputBindSet},
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };
 
@@ -60,7 +60,7 @@ use super::{
 /// struct Move;
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct Cardinal<I: InputBindings> {
+pub struct Cardinal<I: InputBindSet> {
     pub north: I,
     pub east: I,
     pub south: I,
@@ -110,28 +110,28 @@ impl Cardinal<GamepadButton> {
     }
 }
 
-impl<I: InputBindings> InputBindings for Cardinal<I> {
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+impl<I: InputBindSet> InputBindSet for Cardinal<I> {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
         // Y
         let north = self
             .north
-            .iter_bindings()
+            .bindings()
             .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
 
         // -X
         let east = self
             .east
-            .iter_bindings()
+            .bindings()
             .map(|binding| binding.with_modifiers(Negate::all()));
 
         // -Y
         let south = self
             .south
-            .iter_bindings()
+            .bindings()
             .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::YXZ)));
 
         // X
-        let west = self.west.iter_bindings();
+        let west = self.west.bindings();
 
         north.chain(east).chain(south).chain(west)
     }
@@ -143,17 +143,17 @@ impl<I: InputBindings> InputBindings for Cardinal<I> {
 ///
 /// See also [`Cardinal`].
 #[derive(Debug, Clone, Copy)]
-pub struct Bidirectional<I: InputBindings> {
+pub struct Bidirectional<I: InputBindSet> {
     pub positive: I,
     pub negative: I,
 }
 
-impl<I: InputBindings> InputBindings for Bidirectional<I> {
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
-        let positive = self.positive.iter_bindings();
+impl<I: InputBindSet> InputBindSet for Bidirectional<I> {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        let positive = self.positive.bindings();
         let negative = self
             .negative
-            .iter_bindings()
+            .bindings()
             .map(|binding| binding.with_modifiers(Negate::all()));
 
         positive.chain(negative)
@@ -189,8 +189,8 @@ impl GamepadStick {
     }
 }
 
-impl InputBindings for GamepadStick {
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+impl InputBindSet for GamepadStick {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
         [self.x().into(), self.y().with_modifiers(SwizzleAxis::YXZ)].into_iter()
     }
 }

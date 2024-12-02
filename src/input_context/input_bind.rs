@@ -1,8 +1,8 @@
 use std::iter;
 
 use super::{
-    input_condition::{InputCondition, InputConditions},
-    input_modifier::{InputModifier, InputModifiers},
+    input_condition::{InputCondition, InputConditionSet},
+    input_modifier::{InputModifier, InputModifierSet},
 };
 use crate::input::Input;
 
@@ -43,23 +43,23 @@ impl<I: Into<Input>> From<I> for InputBind {
 pub trait InputBindModCond {
     /// Adds modifiers.
     #[must_use]
-    fn with_modifiers(self, modifier: impl InputModifiers) -> InputBind;
+    fn with_modifiers(self, set: impl InputModifierSet) -> InputBind;
 
     /// Adds conditions.
     #[must_use]
-    fn with_conditions(self, condition: impl InputConditions) -> InputBind;
+    fn with_conditions(self, set: impl InputConditionSet) -> InputBind;
 }
 
 impl<T: Into<InputBind>> InputBindModCond for T {
-    fn with_modifiers(self, modifier: impl InputModifiers) -> InputBind {
+    fn with_modifiers(self, set: impl InputModifierSet) -> InputBind {
         let mut binding = self.into();
-        binding.modifiers.extend(modifier.iter_modifiers());
+        binding.modifiers.extend(set.modifiers());
         binding
     }
 
-    fn with_conditions(self, condition: impl InputConditions) -> InputBind {
+    fn with_conditions(self, set: impl InputConditionSet) -> InputBind {
         let mut binding = self.into();
-        binding.conditions.extend(condition.iter_conditions());
+        binding.conditions.extend(set.conditions());
         binding
     }
 }
@@ -69,46 +69,46 @@ impl<T: Into<InputBind>> InputBindModCond for T {
 ///
 /// Can be manually implemented to provide custom modifiers or conditions.
 /// See [`preset`](super::preset) for examples.
-pub trait InputBindings {
+pub trait InputBindSet {
     /// Returns an iterator over bindings.
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind>;
+    fn bindings(self) -> impl Iterator<Item = InputBind>;
 }
 
-impl<I: Into<InputBind>> InputBindings for I {
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+impl<I: Into<InputBind>> InputBindSet for I {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
         iter::once(self.into())
     }
 }
 
-impl<I: Into<InputBind> + Copy> InputBindings for &Vec<I> {
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
-        self.as_slice().iter_bindings()
+impl<I: Into<InputBind> + Copy> InputBindSet for &Vec<I> {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        self.as_slice().bindings()
     }
 }
 
-impl<I: Into<InputBind> + Copy, const N: usize> InputBindings for &[I; N] {
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
-        self.as_slice().iter_bindings()
+impl<I: Into<InputBind> + Copy, const N: usize> InputBindSet for &[I; N] {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        self.as_slice().bindings()
     }
 }
 
-impl<I: Into<InputBind> + Copy> InputBindings for &[I] {
-    fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+impl<I: Into<InputBind> + Copy> InputBindSet for &[I] {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
         self.iter().copied().map(Into::into)
     }
 }
 
 macro_rules! impl_tuple_binds {
     ($($name:ident),+) => {
-        impl<$($name),+> InputBindings for ($($name,)+)
+        impl<$($name),+> InputBindSet for ($($name,)+)
         where
-            $($name: InputBindings),+
+            $($name: InputBindSet),+
         {
             #[allow(non_snake_case)]
-            fn iter_bindings(self) -> impl Iterator<Item = InputBind> {
+            fn bindings(self) -> impl Iterator<Item = InputBind> {
                 let ($($name,)+) = self;
                 std::iter::empty()
-                    $(.chain($name.iter_bindings()))+
+                    $(.chain($name.bindings()))+
             }
         }
     };

@@ -12,7 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Negate`'s functions `x`, `y`, `z` no longer take an `invert` parameter and assume it is `true`.
 - `Negate::all`'s current function has been moved to `Negate::splat`.
 - `Negate::all` no longer takes an `invert` parameter and assumes it is `true` (opposite is `Negate::none`).
-- Rename `Biderectional` to `Bidirectional` to fix typo
+- Rename `Biderectional` to `Bidirectional` to fix typo.
+- Rename `InputConditions` to `InputConditionSet`.
+- Rename `InputConditionSet::iter_conditions` to `InputConditionSet::conditions`.
+- Rename `InputModifiers` to `InputModifierSet`.
+- Rename `InputModifierSet::iter_modifiers` to `InputModifierSet::modifiers`.
+- Rename `InputBindings` to `InputBindSet`.
+- Rename `InputBindSet::iter_bindings` to `InputBindSet::bindings`.
 
 ### Removed
 

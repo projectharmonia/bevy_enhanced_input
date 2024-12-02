@@ -74,7 +74,7 @@ pub mod prelude {
             context_instance::{ActionBind, ActionData, ActionState, ContextInstance},
             events::*,
             input_action::{Accumulation, InputAction},
-            input_bind::{InputBind, InputBindModCond, InputBindings},
+            input_bind::{InputBind, InputBindModCond, InputBindSet},
             input_condition::{
                 block_by::*, chord::*, condition_timer::*, hold::*, hold_and_release::*,
                 just_press::*, press::*, pulse::*, release::*, tap::*, ConditionKind,

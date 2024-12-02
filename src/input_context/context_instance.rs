@@ -14,9 +14,9 @@ use bevy::{
 use super::{
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input_action::{Accumulation, ActionOutput, InputAction},
-    input_bind::{InputBind, InputBindings},
-    input_condition::{InputCondition, InputConditions},
-    input_modifier::{InputModifier, InputModifiers},
+    input_bind::{InputBind, InputBindSet},
+    input_condition::{InputCondition, InputConditionSet},
+    input_modifier::{InputModifier, InputModifierSet},
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
@@ -188,8 +188,8 @@ impl ActionBind {
     /// # #[input_action(output = f32)]
     /// # struct Jump;
     /// ```
-    pub fn with_modifiers(&mut self, modifiers: impl InputModifiers) -> &mut Self {
-        for modifier in modifiers.iter_modifiers() {
+    pub fn with_modifiers(&mut self, set: impl InputModifierSet) -> &mut Self {
+        for modifier in set.modifiers() {
             debug!("adding `{modifier:?}` to `{}`", self.action_name);
             self.modifiers.push(modifier);
         }
@@ -226,8 +226,8 @@ impl ActionBind {
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
-    pub fn with_conditions(&mut self, conditions: impl InputConditions) -> &mut Self {
-        for condition in conditions.iter_conditions() {
+    pub fn with_conditions(&mut self, set: impl InputConditionSet) -> &mut Self {
+        for condition in set.conditions() {
             debug!("adding `{condition:?}` to `{}`", self.action_name);
             self.conditions.push(condition);
         }
@@ -245,7 +245,7 @@ impl ActionBind {
     /// 1. Raw input types.
     /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
     /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
-    /// 4. [`InputBindings`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
+    /// 4. [`InputBindSet`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
     ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
     ///
     /// # Examples
@@ -337,8 +337,8 @@ impl ActionBind {
     /// # #[input_action(output = Vec2)]
     /// # struct Inspect;
     /// ```
-    pub fn to(&mut self, bindings: impl InputBindings) -> &mut Self {
-        for binding in bindings.iter_bindings() {
+    pub fn to(&mut self, set: impl InputBindSet) -> &mut Self {
+        for binding in set.bindings() {
             debug!("adding `{binding:?}` to `{}`", self.action_name);
             self.bindings.push(binding);
         }
