@@ -287,24 +287,21 @@ impl InputContext for DummyContext {
         ctx.bind::<Blocker>().to(Blocker::KEY);
         ctx.bind::<EventsBlocker>().to(EventsBlocker::KEY);
         ctx.bind::<InputLevel>().to((
-            InputLevel::KEY1
-                .with_conditions((chord, block_by, block_events_by, down, release))
-                .with_modifiers((swizzle_axis, scale)),
-            InputLevel::KEY2
-                .with_conditions((chord, block_by, block_events_by, down, release))
-                .with_modifiers((swizzle_axis, negate)),
-        ));
+            InputLevel::KEY1.with_modifiers(scale),
+            InputLevel::KEY2.with_modifiers(negate),
+        )
+            .with_modifiers_each(swizzle_axis)
+            .with_conditions_each((chord, block_by, block_events_by, down, release)));
         ctx.bind::<ActionLevel>()
             .to((ActionLevel::KEY1, ActionLevel::KEY2))
             .with_conditions((down, release, chord, block_by, block_events_by))
             .with_modifiers((swizzle_axis, negate, scale));
         ctx.bind::<BothLevels>()
             .to((
-                BothLevels::KEY1.with_conditions(down).with_modifiers(scale),
-                BothLevels::KEY2
-                    .with_conditions(down)
-                    .with_modifiers(negate),
-            ))
+                BothLevels::KEY1.with_modifiers(scale),
+                BothLevels::KEY2.with_modifiers(negate),
+            )
+                .with_conditions_each(down))
             .with_conditions((release, chord, block_by, block_events_by))
             .with_modifiers(swizzle_axis);
 

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `InputBindSet::with_modifiers_each` and `InputBindSet::with_conditions_each` to add conditions and modifiers to sets.
+
 ### Changed
 
 - `Negate`'s functions `x`, `y`, `z` no longer take an `invert` parameter and assume it is `true`.

@@ -6,6 +6,9 @@ use crate::{action_value::ActionValue, input_context::context_instance::ActionsD
 /// Remaps input values within the range [Self::lower_threshold] to [Self::upper_threshold] onto the range 0 to 1.
 /// Values outside this range are clamped.
 ///
+/// This modifier acts as a normalizer, suitable for both analog and digital inputs (e.g., keyboards and gamepad sticks).
+/// Apply at the action level to ensure consistent diagonal movement speeds across different input sources.
+///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Clone, Copy, Debug)]
 pub struct DeadZone {

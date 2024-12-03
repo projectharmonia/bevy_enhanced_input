@@ -72,6 +72,62 @@ impl<T: Into<InputBind>> InputBindModCond for T {
 pub trait InputBindSet {
     /// Returns an iterator over bindings.
     fn bindings(self) -> impl Iterator<Item = InputBind>;
+
+    /// Adds modifiers to **each** binding in a set.
+    ///
+    /// <div class="warning">
+    ///
+    /// Avoid using this with modifiers like [`DeadZone`](super::input_modifier::dead_zone::DeadZone),
+    /// as this method applies the modifier to each input **individually** rather than to the entire set.
+    ///
+    /// </div>
+    ///
+    /// # Examples
+    ///
+    /// Negate each gamepad axis for the stick set:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Move>()
+    ///     .to((
+    ///         Input::mouse_motion(),
+    ///         GamepadStick::Left.with_modifiers_each(Negate::all()), // Will be applied to each axis.
+    ///     ))
+    ///     .with_modifiers(DeadZone::default()); // Modifiers like `DeadZone` need to be applied at the action level!
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Move;
+    /// ```
+    fn with_modifiers_each<I: InputModifierSet + Clone>(
+        self,
+        set: I,
+    ) -> InputBindModifierEach<Self, I>
+    where
+        Self: Sized,
+    {
+        InputBindModifierEach {
+            input_set: self,
+            modifier_set: set,
+        }
+    }
+
+    /// Adds condition to **each** binding in a set.
+    ///
+    /// Similar to [`Self::with_modifiers_each`].
+    fn with_conditions_each<I: InputConditionSet + Clone>(
+        self,
+        set: I,
+    ) -> InputBindConditionEach<Self, I>
+    where
+        Self: Sized,
+    {
+        InputBindConditionEach {
+            input_set: self,
+            condition_set: set,
+        }
+    }
 }
 
 impl<I: Into<InputBind>> InputBindSet for I {
@@ -115,3 +171,35 @@ macro_rules! impl_tuple_binds {
 }
 
 bevy::utils::all_tuples!(impl_tuple_binds, 1, 15, I);
+
+/// A set with assigned modifiers.
+///
+/// See also [`InputBindSet::with_modifiers_each`]
+pub struct InputBindModifierEach<I: InputBindSet, M: InputModifierSet + Clone> {
+    input_set: I,
+    modifier_set: M,
+}
+
+impl<I: InputBindSet, M: InputModifierSet + Clone> InputBindSet for InputBindModifierEach<I, M> {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        self.input_set
+            .bindings()
+            .map(move |binding| binding.with_modifiers(self.modifier_set.clone()))
+    }
+}
+
+/// A set with assigned conditions.
+///
+/// See also [`InputBindSet::with_conditions_each`]
+pub struct InputBindConditionEach<I: InputBindSet, M: InputConditionSet + Clone> {
+    input_set: I,
+    condition_set: M,
+}
+
+impl<I: InputBindSet, M: InputConditionSet + Clone> InputBindSet for InputBindConditionEach<I, M> {
+    fn bindings(self) -> impl Iterator<Item = InputBind> {
+        self.input_set
+            .bindings()
+            .map(move |binding| binding.with_conditions(self.condition_set.clone()))
+    }
+}
