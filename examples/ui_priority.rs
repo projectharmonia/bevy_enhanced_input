@@ -7,7 +7,7 @@ use bevy::{color::palettes::tailwind::NEUTRAL_900, prelude::*};
 use bevy_egui::{egui::Window, EguiContexts, EguiPlugin};
 use bevy_enhanced_input::prelude::*;
 
-use player_box::{PlayerBox, PlayerBoxBundle, PlayerBoxPlugin, DEFAULT_SPEED};
+use player_box::{PlayerBox, PlayerBoxPlugin, DEFAULT_SPEED};
 
 fn main() {
     App::new()
@@ -35,26 +35,22 @@ impl Plugin for GamePlugin {
 
 impl GamePlugin {
     fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2dBundle::default());
-        commands.spawn(PlayerBoxBundle::default());
+        commands.spawn(Camera2d);
+        commands.spawn(PlayerBox);
 
         // Setup simple node with text using Bevy UI.
         commands
-            .spawn((
-                Node::default(),
-                Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Start,
-                    justify_content: JustifyContent::End,
-                    ..Default::default()
-                },
-            ))
+            .spawn(Node {
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                align_items: AlignItems::Start,
+                justify_content: JustifyContent::End,
+                ..Default::default()
+            })
             .with_children(|parent| {
                 parent
                     .spawn((
-                        Node::default(),
-                        Style {
+                        Node {
                             margin: UiRect::all(Val::Px(15.0)),
                             padding: UiRect::all(Val::Px(15.0)),
                             ..Default::default()
@@ -64,14 +60,12 @@ impl GamePlugin {
                     .with_children(|parent| {
                         parent.spawn((
                             Interaction::default(), // All UI nodes with `Interaction` component will intercept all mouse input.
-                            TextBundle::from_section(
-                                "Bevy UI",
-                                TextStyle {
-                                    font_size: 30.0,
-                                    color: Color::WHITE,
-                                    ..default()
-                                },
-                            ),
+                            Text::new("Bevy UI"),
+                            TextColor(Color::WHITE),
+                            TextFont {
+                                font_size: 30.0,
+                                ..Default::default()
+                            },
                         ));
                     });
             });
@@ -84,21 +78,17 @@ impl GamePlugin {
         });
     }
 
-    fn apply_movement(trigger: Trigger<ActionEvent<Move>>, mut players: Query<&mut Transform>) {
+    fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
         let event = trigger.event();
-        if event.is_fired() {
-            let mut transform = players.get_mut(trigger.entity()).unwrap();
-            transform.translation += event.value.as_axis3d();
-        }
+        let mut transform = players.get_mut(trigger.entity()).unwrap();
+        transform.translation += event.value.extend(0.0);
     }
 
-    fn zoom(trigger: Trigger<ActionEvent<Zoom>>, mut players: Query<&mut Transform>) {
-        /// Scale entity to fake zoom.
+    fn zoom(trigger: Trigger<Fired<Zoom>>, mut players: Query<&mut Transform>) {
+        // Scale entity to fake zoom.
         let event = trigger.event();
-        if trigger.event().is_fired() {
-            let mut transform = players.get_mut(trigger.entity()).unwrap();
-            transform.scale += Vec3::splat(event.value.as_axis1d());
-        }
+        let mut transform = players.get_mut(trigger.entity()).unwrap();
+        transform.scale += Vec3::splat(event.value);
     }
 }
 
