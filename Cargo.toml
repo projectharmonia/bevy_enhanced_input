@@ -14,7 +14,7 @@ include = ["/src", "/tests", "/examples", "/LICENSE*"]
 [dependencies]
 bevy_enhanced_input_macros = { path = "macros", version = "0.5.0" }
 bevy = { version = "0.15", default-features = false, features = ["serialize"] }
-bevy_egui = { version = "0.31", default-features = false, optional = true }
+bevy_egui = { version = "0.32", default-features = false, optional = true }
 serde = "1.0"
 bitflags = { version = "2.6", features = ["serde"] }
 
