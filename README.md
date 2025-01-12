@@ -35,4 +35,4 @@ Have any questions? Feel free to ask in the dedicated [`bevy_enhanced_input` cha
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option. 
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option.
