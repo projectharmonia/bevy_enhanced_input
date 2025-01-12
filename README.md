@@ -3,6 +3,7 @@
 [![crates.io](https://img.shields.io/crates/v/bevy_enhanced_input)](https://crates.io/crates/bevy_enhanced_input)
 [![docs.rs](https://docs.rs/bevy_enhanced_input/badge.svg)](https://docs.rs/bevy_enhanced_input)
 [![codecov](https://codecov.io/gh/projectharmonia/bevy_enhanced_input/graph/badge.svg?token=wirFEuKmMz)](https://codecov.io/gh/projectharmonia/bevy_enhanced_input)
+[![license](https://img.shields.io/crates/l/bevy_enhanced_input)](#license)
 
 Dynamic and contextual input mappings for Bevy, inspired by [Unreal Engine Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine).
 
@@ -26,7 +27,12 @@ See also examples in the repo. [simple.rs](examples/simple.rs) should be a good 
 Have any questions? Feel free to ask in the dedicated [`bevy_enhanced_input` channel](https://discord.com/channels/691052431525675048/1297361733886677036) in Bevy's Discord server.
 
 ## Bevy compatibility
+
 | bevy        | bevy_enhanced_input |
 | ----------- | ------------------- |
 | 0.15.0      | 0.4-0.5             |
 | 0.14.0      | 0.1-0.3             |
+
+## License
+
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or [MIT License](LICENSE-MIT) at your option. 
