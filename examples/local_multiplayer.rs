@@ -135,7 +135,7 @@ impl InputContext for PlayerBox {
         // In our case we cant to add modifiers for all players.
         ctx.bind::<Move>().with_modifiers((
             DeadZone::default(),
-            DeltaLerp::default(),
+            SmoothNudge::default(),
             Scale::splat(DEFAULT_SPEED),
         ));
 

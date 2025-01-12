@@ -95,7 +95,7 @@ impl InputContext for PlayerBox {
             .to(Cardinal::wasd_keys())
             .with_modifiers((
                 DeadZone::default(),
-                DeltaLerp::default(),
+                SmoothNudge::default(),
                 Scale::splat(DEFAULT_SPEED),
             ));
         ctx.bind::<Rotate>().to(KeyCode::Space);

@@ -70,7 +70,7 @@ impl InputContext for PlayerBox {
             .to((Cardinal::wasd_keys(), GamepadStick::Left))
             .with_modifiers((
                 DeadZone::default(), // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
-                DeltaLerp::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
+                SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
                 Scale::splat(DEFAULT_SPEED), // Additionally multiply by a constant to achieve the desired speed.
             ));
 

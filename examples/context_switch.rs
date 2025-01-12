@@ -92,7 +92,7 @@ impl InputContext for OnFoot {
             .to(Cardinal::wasd_keys())
             .with_modifiers((
                 DeadZone::default(),
-                DeltaLerp::default(),
+                SmoothNudge::default(),
                 Scale::splat(DEFAULT_SPEED),
             ));
         ctx.bind::<Rotate>().to(KeyCode::Space);
@@ -125,7 +125,7 @@ impl InputContext for InCar {
             .to(Cardinal::wasd_keys())
             .with_modifiers((
                 DeadZone::default(),
-                DeltaLerp::default(),
+                SmoothNudge::default(),
                 Scale::splat(DEFAULT_SPEED + 20.0), // Make car faster.
             ));
         ctx.bind::<ExitCar>().to(KeyCode::Enter);

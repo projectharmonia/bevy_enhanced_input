@@ -1,10 +1,10 @@
 pub mod accumulate_by;
 pub mod dead_zone;
-pub mod delta_lerp;
 pub mod delta_scale;
 pub mod exponential_curve;
 pub mod negate;
 pub mod scale;
+pub mod smooth_nudge;
 pub mod swizzle_axis;
 
 use std::{fmt::Debug, iter};

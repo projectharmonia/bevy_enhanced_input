@@ -81,8 +81,8 @@ pub mod prelude {
                 InputCondition,
             },
             input_modifier::{
-                accumulate_by::*, dead_zone::*, delta_lerp::*, delta_scale::*,
-                exponential_curve::*, negate::*, scale::*, swizzle_axis::*, InputModifier,
+                accumulate_by::*, dead_zone::*, delta_scale::*, exponential_curve::*, negate::*,
+                scale::*, smooth_nudge::*, swizzle_axis::*, InputModifier,
             },
             preset::{Bidirectional, Cardinal, GamepadStick},
             ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
