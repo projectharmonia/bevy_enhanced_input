@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replace `SmoothDelta` modifier with `SmoothNudge`. It uses `StableInterpolate::smooth_nudge`, which properly interpolates inputs across frames.
 
+### Removed
+
+`InputContext::MODE`. All contexts now work like `InputContext::Exclusive` (the default). If you want to share the same input across multiple entities, use a separate "controller" entity for a context and apply inputs to the desired entities. This approach is more efficient and explicit, so it's not worth having a special case in the crate for it.
+
 ## [0.5.0] - 2024-12-05
 
 ### Added

@@ -88,21 +88,18 @@ impl ContextInstances {
     fn add<C: InputContext>(&mut self, world: &World, entity: Entity) {
         debug!("adding `{}` to `{entity}`", any::type_name::<C>());
 
-        if let Some(index) = self.index::<C>() {
-            match &mut self.0[index] {
-                InstanceGroup::Exclusive { instances, .. } => {
-                    let ctx = C::context_instance(world, entity);
-                    instances.push((entity, ctx));
-                }
-                InstanceGroup::Shared { entities, .. } => {
-                    entities.push(entity);
-                }
-            }
+        if let Some(group) = self
+            .0
+            .iter_mut()
+            .find(|group| group.type_id == TypeId::of::<C>())
+        {
+            let ctx = C::context_instance(world, entity);
+            group.instances.push((entity, ctx));
         } else {
             let priority = Reverse(C::PRIORITY);
             let index = self
                 .0
-                .binary_search_by_key(&priority, |group| Reverse(group.priority()))
+                .binary_search_by_key(&priority, |group| Reverse(group.priority))
                 .unwrap_or_else(|e| e);
 
             let group = InstanceGroup::new::<C>(world, entity);
@@ -116,25 +113,15 @@ impl ContextInstances {
         time: &Time<Virtual>,
         commands: &mut Commands,
     ) {
-        if let Some(index) = self.index::<C>() {
+        if let Some(group) = self
+            .0
+            .iter_mut()
+            .find(|group| group.type_id == TypeId::of::<C>())
+        {
             debug!("rebuilding `{}`", any::type_name::<C>());
-
-            match &mut self.0[index] {
-                InstanceGroup::Exclusive { instances, .. } => {
-                    for (entity, ctx) in instances {
-                        ctx.trigger_removed(commands, time, &[*entity]);
-                        *ctx = C::context_instance(world, *entity);
-                    }
-                }
-                InstanceGroup::Shared { ctx, entities, .. } => {
-                    ctx.trigger_removed(commands, time, entities);
-
-                    // For shared contexts rebuild the instance using the first entity.
-                    let entity = *entities
-                        .first()
-                        .expect("groups should be immediately removed when empty");
-                    *ctx = C::context_instance(world, entity);
-                }
+            for (entity, ctx) in &mut group.instances {
+                ctx.trigger_removed(commands, time, &[*entity]);
+                *ctx = C::context_instance(world, *entity);
             }
         }
     }
@@ -148,39 +135,22 @@ impl ContextInstances {
         debug!("removing `{}` from `{entity}`", any::type_name::<C>());
 
         let group_index = self
-            .index::<C>()
+            .0
+            .iter()
+            .position(|group| group.type_id == TypeId::of::<C>())
             .expect("context should be instantiated before removal");
 
-        let empty = match &mut self.0[group_index] {
-            InstanceGroup::Exclusive { instances, .. } => {
-                let entity_index = instances
-                    .iter()
-                    .position(|&(mapped_entity, _)| mapped_entity == entity)
-                    .expect("entity should be inserted before removal");
+        let group = &mut self.0[group_index];
+        let entity_index = group
+            .instances
+            .iter()
+            .position(|&(mapped_entity, _)| mapped_entity == entity)
+            .expect("entity should be inserted before removal");
 
-                let (_, ctx) = instances.swap_remove(entity_index);
-                ctx.trigger_removed(commands, time, &[entity]);
+        let (_, ctx) = group.instances.swap_remove(entity_index);
+        ctx.trigger_removed(commands, time, &[entity]);
 
-                instances.is_empty()
-            }
-            InstanceGroup::Shared {
-                entities,
-                ctx: instance,
-                ..
-            } => {
-                let entity_index = entities
-                    .iter()
-                    .position(|&mapped_entity| mapped_entity == entity)
-                    .expect("entity should be inserted before removal");
-
-                entities.swap_remove(entity_index);
-                instance.trigger_removed(commands, time, &[entity]);
-
-                entities.is_empty()
-            }
-        };
-
-        if empty {
+        if group.instances.is_empty() {
             // Remove the group if no entity references it.
             debug!("removing empty `{}`", any::type_name::<C>());
             self.0.remove(group_index);
@@ -194,15 +164,8 @@ impl ContextInstances {
         time: &Time<Virtual>,
     ) {
         for group in &mut self.0 {
-            match group {
-                InstanceGroup::Exclusive { instances, .. } => {
-                    for (entity, ctx) in instances {
-                        ctx.update(commands, reader, time, &[*entity]);
-                    }
-                }
-                InstanceGroup::Shared { entities, ctx, .. } => {
-                    ctx.update(commands, reader, time, entities);
-                }
+            for (entity, ctx) in &mut group.instances {
+                ctx.update(commands, reader, time, &[*entity]);
             }
         }
     }
@@ -237,43 +200,26 @@ impl ContextInstances {
     /// # struct Dodge;
     /// ```
     pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
-        let index = self.index::<C>()?;
-        match &self.0[index] {
-            InstanceGroup::Exclusive { instances, .. } => {
-                instances.iter().find_map(|(entity, ctx)| {
-                    if *entity == instance_entity {
-                        Some(ctx)
-                    } else {
-                        None
-                    }
-                })
-            }
-            InstanceGroup::Shared { entities, ctx, .. } => {
-                entities.contains(&instance_entity).then_some(ctx)
-            }
-        }
-    }
-
-    fn index<C: InputContext>(&self) -> Option<usize> {
-        self.0
+        let group = self
+            .0
             .iter()
-            .position(|group| group.type_id() == TypeId::of::<C>())
+            .find(|group| group.type_id == TypeId::of::<C>())?;
+
+        group.instances.iter().find_map(|(entity, ctx)| {
+            if *entity == instance_entity {
+                Some(ctx)
+            } else {
+                None
+            }
+        })
     }
 }
 
-/// Instances of [`InputContext`] for the same type based on [`InputContext::MODE`].
-enum InstanceGroup {
-    Exclusive {
-        type_id: TypeId,
-        priority: isize,
-        instances: Vec<(Entity, ContextInstance)>,
-    },
-    Shared {
-        type_id: TypeId,
-        priority: isize,
-        entities: Vec<Entity>,
-        ctx: ContextInstance,
-    },
+/// Instances of [`InputContext`] for the same type.
+struct InstanceGroup {
+    type_id: TypeId,
+    priority: isize,
+    instances: Vec<(Entity, ContextInstance)>,
 }
 
 impl InstanceGroup {
@@ -281,32 +227,10 @@ impl InstanceGroup {
     fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
         let type_id = TypeId::of::<C>();
         let ctx = C::context_instance(world, entity);
-        match C::MODE {
-            ContextMode::Exclusive => Self::Exclusive {
-                type_id,
-                priority: C::PRIORITY,
-                instances: vec![(entity, ctx)],
-            },
-            ContextMode::Shared => Self::Shared {
-                type_id,
-                priority: C::PRIORITY,
-                entities: vec![entity],
-                ctx,
-            },
-        }
-    }
-
-    fn priority(&self) -> isize {
-        match *self {
-            InstanceGroup::Exclusive { priority, .. } => priority,
-            InstanceGroup::Shared { priority, .. } => priority,
-        }
-    }
-
-    fn type_id(&self) -> TypeId {
-        match *self {
-            InstanceGroup::Exclusive { type_id, .. } => type_id,
-            InstanceGroup::Shared { type_id, .. } => type_id,
+        Self {
+            type_id,
+            priority: C::PRIORITY,
+            instances: vec![(entity, ctx)],
         }
     }
 }
@@ -356,9 +280,6 @@ impl InstanceGroup {
 /// # struct AppSettings;
 /// ```
 pub trait InputContext: Component {
-    /// Configures how context will be instantiated.
-    const MODE: ContextMode = ContextMode::Exclusive;
-
     /// Determines the evaluation order of [`ContextInstance`]s produced
     /// by this component.
     ///
@@ -371,32 +292,10 @@ pub trait InputContext: Component {
     /// In the implementation you need call [`ContextInstance::bind`]
     /// to associate it with [`InputAction`](input_action::InputAction)s.
     ///
-    /// The function is called on each context instantiation
-    /// which depends on [`Self::MODE`].
+    /// The function is called on each context instantiation.
     /// You can also rebuild all contexts by triggering [`RebuildInputContexts`].
     #[must_use]
     fn context_instance(world: &World, entity: Entity) -> ContextInstance;
-}
-
-/// Configures how instances of [`InputContext`] will be managed.
-#[derive(Default, Debug)]
-pub enum ContextMode {
-    /// Instantiate a new context for each entity.
-    ///
-    /// The context will be created and removed with the component.
-    ///
-    /// With this mode you can assign different mappings using the same context type.
-    ///
-    /// Useful for local multiplayer scenarios where each player has different input mappings.
-    #[default]
-    Exclusive,
-    /// Share a single context instance among all entities.
-    ///
-    /// The context will be created once for the first insertion reused for all other entities
-    /// with the same component. It will be removed once no context components of this type exist.
-    ///
-    /// Useful for games where multiple entities are controlled with the same input.
-    Shared,
 }
 
 /// A trigger that causes the reconstruction of all active context maps.

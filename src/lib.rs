@@ -85,7 +85,7 @@ pub mod prelude {
                 scale::*, smooth_nudge::*, swizzle_axis::*, InputModifier,
             },
             preset::{Bidirectional, Cardinal, GamepadStick},
-            ContextAppExt, ContextInstances, ContextMode, InputContext, RebuildInputContexts,
+            ContextAppExt, ContextInstances, InputContext, RebuildInputContexts,
         },
         EnhancedInputPlugin, EnhancedInputSystem,
     };
