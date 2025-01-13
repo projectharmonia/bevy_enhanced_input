@@ -30,7 +30,7 @@ Have any questions? Feel free to ask in the dedicated [`bevy_enhanced_input` cha
 
 | bevy        | bevy_enhanced_input |
 | ----------- | ------------------- |
-| 0.15.0      | 0.4-0.5             |
+| 0.15.0      | 0.4-0.6             |
 | 0.14.0      | 0.1-0.3             |
 
 ## License
