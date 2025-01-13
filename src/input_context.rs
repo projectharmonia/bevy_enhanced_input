@@ -19,6 +19,8 @@ use context_instance::ContextInstance;
 
 /// An extension trait for [`App`] to register contexts.
 ///
+/// # Examples
+///
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
@@ -272,6 +274,8 @@ impl InstanceGroup {
 /// transitions for all actions to [`ActionState::None`](crate::input_context::context_instance::ActionState::None).
 ///
 /// Each context should be registered using [`ContextAppExt::add_input_context`].
+///
+/// # Examples
 ///
 /// ```
 /// # use bevy::prelude::*;

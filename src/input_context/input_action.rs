@@ -13,6 +13,8 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// When it updates during [`ContextInstance`](super::context_instance::ContextInstance)
 /// evaluation, [`events`](super::events) are triggered.
 ///
+/// # Examples
+///
 /// Use observers to react on them:
 ///
 /// ```
