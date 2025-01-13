@@ -20,8 +20,8 @@ fn input_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<InputLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -32,8 +32,8 @@ fn input_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<InputLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -44,8 +44,8 @@ fn input_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<InputLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::NEG_Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -56,8 +56,8 @@ fn input_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<InputLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -68,8 +68,8 @@ fn input_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<InputLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::ZERO.into());
     assert_eq!(
         action.state(),
@@ -85,8 +85,8 @@ fn input_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<InputLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 }
@@ -108,8 +108,8 @@ fn action_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ActionLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -120,8 +120,8 @@ fn action_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ActionLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -132,8 +132,8 @@ fn action_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ActionLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -144,8 +144,8 @@ fn action_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ActionLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -156,8 +156,8 @@ fn action_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ActionLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(
         action.state(),
@@ -173,8 +173,8 @@ fn action_level() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ActionLevel>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 }
@@ -196,8 +196,8 @@ fn both_levels() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<BothLevels>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -208,8 +208,8 @@ fn both_levels() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<BothLevels>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -220,8 +220,8 @@ fn both_levels() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<BothLevels>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::NEG_Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -232,8 +232,8 @@ fn both_levels() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<BothLevels>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -244,8 +244,8 @@ fn both_levels() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<BothLevels>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(
         action.state(),
@@ -261,8 +261,8 @@ fn both_levels() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<BothLevels>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 }

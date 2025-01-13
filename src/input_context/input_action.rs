@@ -34,7 +34,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// ```
 ///
 /// You can also obtain the state directly from [`ActionData`](super::context_instance::ActionData),
-/// see [`ContextInstances::get`](super::ContextInstances::get).
+/// see [`ContextInstances::context`](super::ContextInstances::context).
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:

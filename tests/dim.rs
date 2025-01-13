@@ -18,8 +18,8 @@ fn bool() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Bool>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Bool>();
     assert_eq!(action.value(), true.into());
 
     app.world_mut()
@@ -29,8 +29,8 @@ fn bool() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Bool>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Bool>();
     assert_eq!(action.value(), false.into());
 }
 
@@ -51,8 +51,8 @@ fn axis1d() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Axis1D>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Axis1D>();
     assert_eq!(action.value(), 1.0.into());
 
     app.world_mut()
@@ -62,8 +62,8 @@ fn axis1d() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Axis1D>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Axis1D>();
     assert_eq!(action.value(), 0.0.into());
 }
 
@@ -84,8 +84,8 @@ fn axis2d() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Axis2D>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Axis2D>();
     assert_eq!(action.value(), (1.0, 0.0).into());
 
     app.world_mut()
@@ -95,8 +95,8 @@ fn axis2d() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Axis2D>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Axis2D>();
     assert_eq!(action.value(), Vec2::ZERO.into());
 }
 
@@ -117,8 +117,8 @@ fn axis3d() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Axis3D>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Axis3D>();
     assert_eq!(action.value(), (1.0, 0.0, 0.0).into());
 
     app.world_mut()
@@ -128,8 +128,8 @@ fn axis3d() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Axis3D>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Axis3D>();
     assert_eq!(action.value(), Vec3::ZERO.into());
 }
 

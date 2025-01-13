@@ -170,7 +170,33 @@ impl ContextInstances {
         }
     }
 
+    #[deprecated = "use `ContextInstances::get_context` instead"]
+    pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
+        self.get_context::<C>(instance_entity)
+    }
+
     /// Returns a context instance for an entity, if it exists.
+    ///
+    /// For panicking version see [`Self::context`].
+    pub fn get_context<C: InputContext>(
+        &self,
+        instance_entity: Entity,
+    ) -> Option<&ContextInstance> {
+        let group = self
+            .0
+            .iter()
+            .find(|group| group.type_id == TypeId::of::<C>())?;
+
+        group.instances.iter().find_map(|(entity, ctx)| {
+            if *entity == instance_entity {
+                Some(ctx)
+            } else {
+                None
+            }
+        })
+    }
+
+    /// Returns a context instance for an entity.
     ///
     /// For a more ergonomic API, it's recommended to react on [`events`].
     /// within observers.
@@ -178,12 +204,20 @@ impl ContextInstances {
     /// The complexity is `O(n+m)`, where `n` is the number of contexts and `m` is the number of entities,
     /// since the storage is optimized for iteration. However, there are usually only a few contexts that are instantiated.
     ///
+    /// For non-panicking version see [`Self::get_context`].
+    ///
+    /// # Panics
+    ///
+    /// Panics if `C` is not registered as an input context or the entity doesn't have this component.
+    ///
+    /// # Examples
+    ///
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
     /// fn observer(trigger: Trigger<Attacked>, instances: Res<ContextInstances>) {
-    ///     let ctx = instances.get::<Player>(trigger.entity()).unwrap();
-    ///     let action = ctx.action::<Dodge>().unwrap();
+    ///     let ctx = instances.context::<Player>(trigger.entity());
+    ///     let action = ctx.action::<Dodge>();
     ///     if action.events().contains(ActionEvents::FIRED) {
     ///         // ..
     ///     }
@@ -199,18 +233,12 @@ impl ContextInstances {
     /// # #[input_action(output = bool)]
     /// # struct Dodge;
     /// ```
-    pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
-        let group = self
-            .0
-            .iter()
-            .find(|group| group.type_id == TypeId::of::<C>())?;
-
-        group.instances.iter().find_map(|(entity, ctx)| {
-            if *entity == instance_entity {
-                Some(ctx)
-            } else {
-                None
-            }
+    pub fn context<C: InputContext>(&self, instance_entity: Entity) -> &ContextInstance {
+        self.get_context::<C>(instance_entity).unwrap_or_else(|| {
+            panic!(
+                "entity `{instance_entity}` should have component `{}` registered as input context",
+                any::type_name::<C>()
+            )
         })
     }
 }

@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Replace `SmoothDelta` modifier with `SmoothNudge`. It uses `StableInterpolate::smooth_nudge`, which properly interpolates inputs across frames.
+- Rename `InputContext::get` into `InputContext::get_context`. We now provide `InputContext::context` for panicking version. Handling failing case is unlikely needed and most of the time users know that the context exists.
+- Rename `ContextInstance::action` into `ContextInstance::get_action`. We now provide `ContextInstance::action` for panicking version.
 
 ### Removed
 

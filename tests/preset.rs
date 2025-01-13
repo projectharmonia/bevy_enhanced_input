@@ -30,8 +30,8 @@ fn keys() {
         app.update();
 
         let instances = app.world().resource::<ContextInstances>();
-        let ctx = instances.get::<DummyContext>(entity).unwrap();
-        let action = ctx.action::<DummyAction>().unwrap();
+        let ctx = instances.context::<DummyContext>(entity);
+        let action = ctx.action::<DummyAction>();
         assert_eq!(
             action.value(),
             dir.into(),
@@ -69,8 +69,8 @@ fn dpad() {
         app.update();
 
         let instances = app.world().resource::<ContextInstances>();
-        let ctx = instances.get::<DummyContext>(context_entity).unwrap();
-        let action = ctx.action::<DummyAction>().unwrap();
+        let ctx = instances.context::<DummyContext>(context_entity);
+        let action = ctx.action::<DummyAction>();
         assert_eq!(
             action.value(),
             dir.into(),
@@ -108,8 +108,8 @@ fn sticks() {
             app.update();
 
             let instances = app.world().resource::<ContextInstances>();
-            let ctx = instances.get::<DummyContext>(context_entity).unwrap();
-            let action = ctx.action::<DummyAction>().unwrap();
+            let ctx = instances.context::<DummyContext>(context_entity);
+            let action = ctx.action::<DummyAction>();
             assert_eq!(
                 action.value(),
                 dir.into(),

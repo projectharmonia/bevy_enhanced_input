@@ -20,8 +20,8 @@ fn any() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<AnyGamepad>(context_entity).unwrap();
-    let action = ctx.action::<DummyAction>().unwrap();
+    let ctx = instances.context::<AnyGamepad>(context_entity);
+    let action = ctx.action::<DummyAction>();
     assert_eq!(action.state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
@@ -33,8 +33,8 @@ fn any() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<AnyGamepad>(context_entity).unwrap();
-    let action = ctx.action::<DummyAction>().unwrap();
+    let ctx = instances.context::<AnyGamepad>(context_entity);
+    let action = ctx.action::<DummyAction>();
     assert_eq!(action.state(), ActionState::Fired);
 }
 
@@ -57,8 +57,8 @@ fn by_id() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<SingleGamepad>(context_entity).unwrap();
-    let action = ctx.action::<DummyAction>().unwrap();
+    let ctx = instances.context::<SingleGamepad>(context_entity);
+    let action = ctx.action::<DummyAction>();
     assert_eq!(action.state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
@@ -70,8 +70,8 @@ fn by_id() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<SingleGamepad>(context_entity).unwrap();
-    let action = ctx.action::<DummyAction>().unwrap();
+    let ctx = instances.context::<SingleGamepad>(context_entity);
+    let action = ctx.action::<DummyAction>();
     assert_eq!(action.state(), ActionState::None);
 }
 

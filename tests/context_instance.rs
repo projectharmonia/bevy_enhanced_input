@@ -21,7 +21,7 @@ fn context_removal() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    assert!(instances.get::<DummyContext>(entity).is_none());
+    assert!(instances.get_context::<DummyContext>(entity).is_none());
 }
 
 #[test]
@@ -44,8 +44,8 @@ fn context_rebuild() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<DummyAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<DummyAction>();
     assert_eq!(action.state(), ActionState::None);
 }
 

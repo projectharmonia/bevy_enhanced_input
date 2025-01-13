@@ -84,11 +84,29 @@ impl ContextInstance {
         }
     }
 
+    /// Returns associated state for action `A` if exists.
+    ///
+    /// For panicking version see [`Self::action`].
+    /// For usage example see [`ContextInstances::context`](super::ContextInstances::context).
+    pub fn get_action<A: InputAction>(&self) -> Option<&ActionData> {
+        self.actions.action::<A>()
+    }
+
     /// Returns associated state for action `A`.
     ///
-    /// See also [`ContextInstances::get`](super::ContextInstances::get).
-    pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
-        self.actions.action::<A>()
+    /// For non-panicking version see [`Self::get_action`].
+    /// For usage example see [`ContextInstances::context`](super::ContextInstances::context).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the action `A` was not bound beforehand.
+    pub fn action<A: InputAction>(&self) -> &ActionData {
+        self.get_action::<A>().unwrap_or_else(|| {
+            panic!(
+                "action `{}` should be binded before access",
+                any::type_name::<A>()
+            )
+        })
     }
 
     pub(super) fn update(
@@ -426,7 +444,7 @@ impl ActionBind {
 /// Map for actions to their data.
 ///
 /// Can be accessed from [`InputCondition::evaluate`]
-/// or [`ContextInstances::get`](super::ContextInstances::get).
+/// or [`ContextInstances::context`](super::ContextInstances::context).
 #[derive(Default, Deref, DerefMut)]
 pub struct ActionsData(pub HashMap<TypeId, ActionData>);
 

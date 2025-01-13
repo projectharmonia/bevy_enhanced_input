@@ -14,8 +14,8 @@ fn explicit() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Explicit>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Explicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -26,8 +26,8 @@ fn explicit() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Explicit>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Explicit>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -38,8 +38,8 @@ fn explicit() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Explicit>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Explicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 }
@@ -56,13 +56,13 @@ fn implicit() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Implicit>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -74,13 +74,13 @@ fn implicit() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Implicit>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -92,13 +92,13 @@ fn implicit() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Implicit>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -106,13 +106,13 @@ fn implicit() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Implicit>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 }
@@ -129,13 +129,13 @@ fn blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Blocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -147,13 +147,13 @@ fn blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Blocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -165,13 +165,13 @@ fn blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Blocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -179,13 +179,13 @@ fn blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<Blocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 }
@@ -202,13 +202,13 @@ fn events_blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<EventsBlocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -220,13 +220,13 @@ fn events_blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<EventsBlocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -239,13 +239,13 @@ fn events_blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<EventsBlocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -257,13 +257,13 @@ fn events_blocker() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<ReleaseAction>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.get::<DummyContext>(entity).unwrap();
-    let action = ctx.action::<EventsBlocker>().unwrap();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 }

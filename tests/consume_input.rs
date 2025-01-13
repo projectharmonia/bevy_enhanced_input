@@ -20,12 +20,12 @@ fn consume() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<ConsumeOnly>(entity1).unwrap();
-    let action = ctx.action::<Consume>().unwrap();
+    let ctx = instances.context::<ConsumeOnly>(entity1);
+    let action = ctx.action::<Consume>();
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.get::<ConsumeOnly>(entity2).unwrap();
-    let action = ctx.action::<Consume>().unwrap();
+    let ctx = instances.context::<ConsumeOnly>(entity2);
+    let action = ctx.action::<Consume>();
     assert_eq!(
         action.state(),
         ActionState::None,
@@ -52,12 +52,12 @@ fn passthrough() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.get::<PassthroughOnly>(entity1).unwrap();
-    let action = ctx.action::<Passthrough>().unwrap();
+    let ctx = instances.context::<PassthroughOnly>(entity1);
+    let action = ctx.action::<Passthrough>();
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.get::<PassthroughOnly>(entity2).unwrap();
-    let action = ctx.action::<Passthrough>().unwrap();
+    let ctx = instances.context::<PassthroughOnly>(entity2);
+    let action = ctx.action::<Passthrough>();
     assert_eq!(
         action.state(),
         ActionState::Fired,
@@ -82,12 +82,12 @@ fn consume_then_passthrough() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<ConsumeThenPassthrough>(entity).unwrap();
+    let ctx = instances.context::<ConsumeThenPassthrough>(entity);
 
-    let action = ctx.action::<Consume>().unwrap();
+    let action = ctx.action::<Consume>();
     assert_eq!(action.state(), ActionState::Fired);
 
-    let action = ctx.action::<Passthrough>().unwrap();
+    let action = ctx.action::<Passthrough>();
     assert_eq!(
         action.state(),
         ActionState::None,
@@ -112,12 +112,12 @@ fn passthrough_then_consume() {
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.get::<PassthroughThenConsume>(entity).unwrap();
+    let ctx = instances.context::<PassthroughThenConsume>(entity);
 
-    let action = ctx.action::<Consume>().unwrap();
+    let action = ctx.action::<Consume>();
     assert_eq!(action.state(), ActionState::Fired);
 
-    let action = ctx.action::<Passthrough>().unwrap();
+    let action = ctx.action::<Passthrough>();
     assert_eq!(action.state(), ActionState::Fired);
 }
 
