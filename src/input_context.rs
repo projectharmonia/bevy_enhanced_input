@@ -64,12 +64,12 @@ fn add_instance<C: InputContext>(
 
 fn rebuild_instance<C: InputContext>(
     _trigger: Trigger<RebuildInputContexts>,
-    mut commands: Commands,
     mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
+    mut commands: Commands,
     time: Res<Time<Virtual>>,
 ) {
     let mut instances = mem::take(&mut *set.p1());
-    instances.rebuild::<C>(set.p0(), &time, &mut commands);
+    instances.rebuild::<C>(set.p0(), &mut commands, &time);
     *set.p1() = instances;
 }
 
@@ -112,8 +112,8 @@ impl ContextInstances {
     fn rebuild<C: InputContext>(
         &mut self,
         world: &World,
-        time: &Time<Virtual>,
         commands: &mut Commands,
+        time: &Time<Virtual>,
     ) {
         if let Some(group) = self
             .0
