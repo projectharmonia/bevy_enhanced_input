@@ -122,19 +122,17 @@ impl ContextInstance {
         }
     }
 
-    /// Copies [`ActionData`] for each binding and triggers transition to [`ActionState::None`] with zero value.
-    ///
-    /// Instance data remains unchanges.
+    /// Sets the state for each action to [`ActionState::None`]  and triggers transitions with zero value.
     pub(super) fn trigger_removed(
-        &self,
+        &mut self,
         commands: &mut Commands,
         time: &Time<Virtual>,
         entity: Entity,
     ) {
         for binding in &self.bindings {
-            let mut action = *self
+            let action = self
                 .actions
-                .get(&binding.type_id)
+                .get_mut(&binding.type_id)
                 .expect("actions and bindings should have matching type IDs");
             action.update(time, ActionState::None, ActionValue::zero(binding.dim));
             action.trigger_events(commands, entity);

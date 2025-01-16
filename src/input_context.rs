@@ -149,7 +149,7 @@ impl ContextInstances {
             .position(|&(mapped_entity, _)| mapped_entity == entity)
             .expect("entity should be inserted before removal");
 
-        let (_, ctx) = group.instances.swap_remove(entity_index);
+        let (_, mut ctx) = group.instances.swap_remove(entity_index);
         ctx.trigger_removed(commands, time, entity);
 
         if group.instances.is_empty() {
