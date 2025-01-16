@@ -625,7 +625,7 @@ fn trigger_for_each<E: Event + Debug + Clone + Copy>(
     event: E,
 ) {
     for &entity in entities {
-        trace!("triggering `{event:?}` for `{entity}`");
+        debug!("triggering `{event:?}` for `{entity}`");
         commands.trigger_targets(event, entity);
     }
 }
