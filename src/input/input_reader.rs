@@ -220,8 +220,6 @@ impl InputReader<'_, '_> {
 }
 
 /// Tracks all consumed input from Bevy resources.
-///
-/// Mouse motion and wheel can be consumed directly since we accumulate them.
 #[derive(Resource, Default)]
 struct ConsumedInput {
     ui_wants_keyboard: bool,
