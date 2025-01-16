@@ -122,7 +122,7 @@ impl ContextInstances {
         {
             debug!("rebuilding `{}`", any::type_name::<C>());
             for (entity, ctx) in &mut group.instances {
-                ctx.trigger_removed(commands, time, &[*entity]);
+                ctx.trigger_removed(commands, time, *entity);
                 *ctx = C::context_instance(world, *entity);
             }
         }
@@ -150,7 +150,7 @@ impl ContextInstances {
             .expect("entity should be inserted before removal");
 
         let (_, ctx) = group.instances.swap_remove(entity_index);
-        ctx.trigger_removed(commands, time, &[entity]);
+        ctx.trigger_removed(commands, time, entity);
 
         if group.instances.is_empty() {
             // Remove the group if no entity references it.
@@ -167,7 +167,7 @@ impl ContextInstances {
     ) {
         for group in &mut self.0 {
             for (entity, ctx) in &mut group.instances {
-                ctx.update(commands, reader, time, &[*entity]);
+                ctx.update(commands, reader, time, *entity);
             }
         }
     }

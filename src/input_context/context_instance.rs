@@ -114,11 +114,11 @@ impl ContextInstance {
         commands: &mut Commands,
         reader: &mut InputReader,
         time: &Time<Virtual>,
-        entities: &[Entity],
+        entity: Entity,
     ) {
         reader.set_gamepad(self.gamepad);
         for binding in &mut self.bindings {
-            binding.update(commands, reader, &mut self.actions, time, entities);
+            binding.update(commands, reader, &mut self.actions, time, entity);
         }
     }
 
@@ -129,7 +129,7 @@ impl ContextInstance {
         &self,
         commands: &mut Commands,
         time: &Time<Virtual>,
-        entities: &[Entity],
+        entity: Entity,
     ) {
         for binding in &self.bindings {
             let mut action = *self
@@ -137,7 +137,7 @@ impl ContextInstance {
                 .get(&binding.type_id)
                 .expect("actions and bindings should have matching type IDs");
             action.update(time, ActionState::None, ActionValue::zero(binding.dim));
-            action.trigger_events(commands, entities);
+            action.trigger_events(commands, entity);
         }
     }
 }
@@ -369,7 +369,7 @@ impl ActionBind {
         reader: &mut InputReader,
         actions: &mut ActionsData,
         time: &Time<Virtual>,
-        entities: &[Entity],
+        entity: Entity,
     ) {
         trace!("updating action `{}`", self.action_name);
 
@@ -436,7 +436,7 @@ impl ActionBind {
 
         action.update(time, state, value);
         if !tracker.events_blocked() {
-            action.trigger_events(commands, entities);
+            action.trigger_events(commands, entity);
         }
     }
 }
@@ -472,7 +472,7 @@ pub struct ActionData {
     value: ActionValue,
     elapsed_secs: f32,
     fired_secs: f32,
-    trigger_events: fn(&Self, &mut Commands, &[Entity]),
+    trigger_events: fn(&Self, &mut Commands, Entity),
 }
 
 impl ActionData {
@@ -521,18 +521,18 @@ impl ActionData {
     /// Triggers events resulting from a state transition after [`Self::update`].
     ///
     /// See also [`Self::new`].
-    pub fn trigger_events(&self, commands: &mut Commands, entities: &[Entity]) {
-        (self.trigger_events)(self, commands, entities);
+    pub fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
+        (self.trigger_events)(self, commands, entity);
     }
 
     /// A typed version of [`Self::trigger_events`].
-    fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entities: &[Entity]) {
+    fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entity: Entity) {
         for (_, event) in self.events.iter_names() {
             match event {
                 ActionEvents::STARTED => {
-                    trigger_for_each(
+                    trigger_and_log(
                         commands,
-                        entities,
+                        entity,
                         Started::<A> {
                             value: A::Output::as_output(self.value),
                             state: self.state,
@@ -540,9 +540,9 @@ impl ActionData {
                     );
                 }
                 ActionEvents::ONGOING => {
-                    trigger_for_each(
+                    trigger_and_log(
                         commands,
-                        entities,
+                        entity,
                         Ongoing::<A> {
                             value: A::Output::as_output(self.value),
                             state: self.state,
@@ -551,9 +551,9 @@ impl ActionData {
                     );
                 }
                 ActionEvents::FIRED => {
-                    trigger_for_each(
+                    trigger_and_log(
                         commands,
-                        entities,
+                        entity,
                         Fired::<A> {
                             value: A::Output::as_output(self.value),
                             state: self.state,
@@ -563,9 +563,9 @@ impl ActionData {
                     );
                 }
                 ActionEvents::CANCELED => {
-                    trigger_for_each(
+                    trigger_and_log(
                         commands,
-                        entities,
+                        entity,
                         Canceled::<A> {
                             value: A::Output::as_output(self.value),
                             state: self.state,
@@ -574,9 +574,9 @@ impl ActionData {
                     );
                 }
                 ActionEvents::COMPLETED => {
-                    trigger_for_each(
+                    trigger_and_log(
                         commands,
-                        entities,
+                        entity,
                         Completed::<A> {
                             value: A::Output::as_output(self.value),
                             state: self.state,
@@ -616,18 +616,13 @@ impl ActionData {
     }
 }
 
-/// Triggers a copyable event for each entity separately and logs it.
-///
-// It's cheaper to copy the event than to clone the entities.
-fn trigger_for_each<E: Event + Debug + Clone + Copy>(
+fn trigger_and_log<E: Event + Debug + Clone + Copy>(
     commands: &mut Commands,
-    entities: &[Entity],
+    entity: Entity,
     event: E,
 ) {
-    for &entity in entities {
-        debug!("triggering `{event:?}` for `{entity}`");
-        commands.trigger_targets(event, entity);
-    }
+    debug!("triggering `{event:?}` for `{entity}`");
+    commands.trigger_targets(event, entity);
 }
 
 /// State for [`ActionData`].

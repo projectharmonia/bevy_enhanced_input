@@ -283,7 +283,7 @@ mod tests {
             },
         );
 
-        action.trigger_events(&mut world.commands(), &[Entity::PLACEHOLDER]);
+        action.trigger_events(&mut world.commands(), Entity::PLACEHOLDER);
         world.flush();
 
         *world.remove_resource::<TriggeredEvents>().unwrap()
