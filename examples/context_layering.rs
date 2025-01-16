@@ -76,7 +76,7 @@ impl GamePlugin {
     }
 
     fn exit_water(
-        trigger: Trigger<Fired<ExitWater>>,
+        trigger: Trigger<Started<ExitWater>>,
         mut commands: Commands,
         mut players: Query<&mut PlayerColor>,
     ) {
