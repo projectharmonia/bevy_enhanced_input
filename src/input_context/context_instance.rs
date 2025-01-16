@@ -530,7 +530,7 @@ impl ActionData {
         for (_, event) in self.events.iter_names() {
             match event {
                 ActionEvents::STARTED => {
-                    trigger_and_log(
+                    trigger_and_log::<A, _>(
                         commands,
                         entity,
                         Started::<A> {
@@ -540,7 +540,7 @@ impl ActionData {
                     );
                 }
                 ActionEvents::ONGOING => {
-                    trigger_and_log(
+                    trigger_and_log::<A, _>(
                         commands,
                         entity,
                         Ongoing::<A> {
@@ -551,7 +551,7 @@ impl ActionData {
                     );
                 }
                 ActionEvents::FIRED => {
-                    trigger_and_log(
+                    trigger_and_log::<A, _>(
                         commands,
                         entity,
                         Fired::<A> {
@@ -563,7 +563,7 @@ impl ActionData {
                     );
                 }
                 ActionEvents::CANCELED => {
-                    trigger_and_log(
+                    trigger_and_log::<A, _>(
                         commands,
                         entity,
                         Canceled::<A> {
@@ -574,7 +574,7 @@ impl ActionData {
                     );
                 }
                 ActionEvents::COMPLETED => {
-                    trigger_and_log(
+                    trigger_and_log::<A, _>(
                         commands,
                         entity,
                         Completed::<A> {
@@ -616,12 +616,11 @@ impl ActionData {
     }
 }
 
-fn trigger_and_log<E: Event + Debug + Clone + Copy>(
-    commands: &mut Commands,
-    entity: Entity,
-    event: E,
-) {
-    debug!("triggering `{event:?}` for `{entity}`");
+fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity, event: E) {
+    debug!(
+        "triggering `{event:?}` for `{}` for `{entity}`",
+        any::type_name::<A>()
+    );
     commands.trigger_targets(event, entity);
 }
 
