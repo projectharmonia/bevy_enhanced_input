@@ -53,7 +53,7 @@ use trigger_tracker::TriggerTracker;
 #[derive(Default)]
 pub struct ContextInstance {
     gamepad: GamepadDevice,
-    bindings: Vec<ActionBind>,
+    action_binds: Vec<ActionBind>,
     actions: ActionsData,
 }
 
@@ -72,14 +72,14 @@ impl ContextInstance {
         let type_id = TypeId::of::<A>();
         match self.actions.entry(type_id) {
             Entry::Occupied(_entry) => self
-                .bindings
+                .action_binds
                 .iter_mut()
-                .find(|binding| binding.type_id == type_id)
+                .find(|action_bind| action_bind.type_id == type_id)
                 .expect("actions and bindings should have matching type IDs"),
             Entry::Vacant(entry) => {
                 entry.insert(ActionData::new::<A>());
-                self.bindings.push(ActionBind::new::<A>());
-                self.bindings.last_mut().unwrap()
+                self.action_binds.push(ActionBind::new::<A>());
+                self.action_binds.last_mut().unwrap()
             }
         }
     }
@@ -117,8 +117,8 @@ impl ContextInstance {
         entity: Entity,
     ) {
         reader.set_gamepad(self.gamepad);
-        for binding in &mut self.bindings {
-            binding.update(commands, reader, &mut self.actions, time, entity);
+        for action_bind in &mut self.action_binds {
+            action_bind.update(commands, reader, &mut self.actions, time, entity);
         }
     }
 
@@ -129,12 +129,12 @@ impl ContextInstance {
         time: &Time<Virtual>,
         entity: Entity,
     ) {
-        for binding in &self.bindings {
+        for action_bind in &self.action_binds {
             let action = self
                 .actions
-                .get_mut(&binding.type_id)
+                .get_mut(&action_bind.type_id)
                 .expect("actions and bindings should have matching type IDs");
-            action.update(time, ActionState::None, ActionValue::zero(binding.dim));
+            action.update(time, ActionState::None, ActionValue::zero(action_bind.dim));
             action.trigger_events(commands, entity);
         }
     }
@@ -652,9 +652,9 @@ mod tests {
         let mut ctx = ContextInstance::default();
         ctx.bind::<DummyAction>().to(KeyCode::KeyA);
         ctx.bind::<DummyAction>().to(KeyCode::KeyB);
-        assert_eq!(ctx.bindings.len(), 1);
+        assert_eq!(ctx.action_binds.len(), 1);
 
-        let action = ctx.bindings.first().unwrap();
+        let action = ctx.action_binds.first().unwrap();
         assert_eq!(action.bindings.len(), 2);
     }
 
