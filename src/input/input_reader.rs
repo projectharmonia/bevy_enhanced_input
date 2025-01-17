@@ -655,6 +655,7 @@ mod tests {
         world.init_resource::<Axis<GamepadAxis>>();
         world.init_resource::<AccumulatedMouseMotion>();
         world.init_resource::<AccumulatedMouseScroll>();
+        world.init_resource::<ResetInput>();
 
         let state = SystemState::<InputReader>::new(&mut world);
 
