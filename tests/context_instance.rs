@@ -42,16 +42,14 @@ fn rebuild() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<DummyAction>();
-    assert_eq!(action.state(), ActionState::Fired);
+    assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     app.world_mut().trigger(RebuildInputContexts);
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<DummyAction>();
     assert_eq!(
-        action.state(),
+        ctx.action::<DummyAction>().state(),
         ActionState::None,
         "state should reset on rebuild"
     );

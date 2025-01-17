@@ -20,14 +20,12 @@ fn consume() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.context::<ConsumeOnly>(entity1);
-    let action = ctx.action::<Consume>();
-    assert_eq!(action.state(), ActionState::Fired);
+    let entity1_ctx = instances.context::<ConsumeOnly>(entity1);
+    assert_eq!(entity1_ctx.action::<Consume>().state(), ActionState::Fired);
 
-    let ctx = instances.context::<ConsumeOnly>(entity2);
-    let action = ctx.action::<Consume>();
+    let entity2_ctx = instances.context::<ConsumeOnly>(entity2);
     assert_eq!(
-        action.state(),
+        entity2_ctx.action::<Consume>().state(),
         ActionState::None,
         "only first entity with the same mappings that consume inputs should receive them"
     );
@@ -52,14 +50,15 @@ fn passthrough() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.context::<PassthroughOnly>(entity1);
-    let action = ctx.action::<Passthrough>();
-    assert_eq!(action.state(), ActionState::Fired);
-
-    let ctx = instances.context::<PassthroughOnly>(entity2);
-    let action = ctx.action::<Passthrough>();
+    let entity1_ctx = instances.context::<PassthroughOnly>(entity1);
     assert_eq!(
-        action.state(),
+        entity1_ctx.action::<Passthrough>().state(),
+        ActionState::Fired
+    );
+
+    let entity2_ctx = instances.context::<PassthroughOnly>(entity2);
+    assert_eq!(
+        entity2_ctx.action::<Passthrough>().state(),
         ActionState::Fired,
         "actions that doesn't consume inputs should still fire"
     );
@@ -83,13 +82,9 @@ fn consume_then_passthrough() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<ConsumeThenPassthrough>(entity);
-
-    let action = ctx.action::<Consume>();
-    assert_eq!(action.state(), ActionState::Fired);
-
-    let action = ctx.action::<Passthrough>();
+    assert_eq!(ctx.action::<Consume>().state(), ActionState::Fired);
     assert_eq!(
-        action.state(),
+        ctx.action::<Passthrough>().state(),
         ActionState::None,
         "action should be consumed"
     );
@@ -113,12 +108,8 @@ fn passthrough_then_consume() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<PassthroughThenConsume>(entity);
-
-    let action = ctx.action::<Consume>();
-    assert_eq!(action.state(), ActionState::Fired);
-
-    let action = ctx.action::<Passthrough>();
-    assert_eq!(action.state(), ActionState::Fired);
+    assert_eq!(ctx.action::<Consume>().state(), ActionState::Fired);
+    assert_eq!(ctx.action::<Passthrough>().state(), ActionState::Fired);
 }
 
 #[derive(Debug, Component)]

@@ -31,9 +31,8 @@ fn keys() {
 
         let instances = app.world().resource::<ContextInstances>();
         let ctx = instances.context::<DummyContext>(entity);
-        let action = ctx.action::<DummyAction>();
         assert_eq!(
-            action.value(),
+            ctx.action::<DummyAction>().value(),
             dir.into(),
             "`{key:?}` should result in `{dir}`"
         );
@@ -70,9 +69,8 @@ fn dpad() {
 
         let instances = app.world().resource::<ContextInstances>();
         let ctx = instances.context::<DummyContext>(context_entity);
-        let action = ctx.action::<DummyAction>();
         assert_eq!(
-            action.value(),
+            ctx.action::<DummyAction>().value(),
             dir.into(),
             "`{button:?}` should result in `{dir}`"
         );
@@ -109,9 +107,8 @@ fn sticks() {
 
             let instances = app.world().resource::<ContextInstances>();
             let ctx = instances.context::<DummyContext>(context_entity);
-            let action = ctx.action::<DummyAction>();
             assert_eq!(
-                action.value(),
+                ctx.action::<DummyAction>().value(),
                 dir.into(),
                 "`{axis:?}` should result in `{dir}`"
             );

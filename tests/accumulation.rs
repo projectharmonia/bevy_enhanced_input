@@ -19,8 +19,7 @@ fn max_abs() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<MaxAbs>();
-    assert_eq!(action.value(), Vec2::Y.into());
+    assert_eq!(ctx.action::<MaxAbs>().value(), Vec2::Y.into());
 }
 
 #[test]
@@ -41,9 +40,8 @@ fn cumulative() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Cumulative>();
     assert_eq!(
-        action.value(),
+        ctx.action::<Cumulative>().value(),
         Vec2::ZERO.into(),
         "up and down should cancel each other"
     );

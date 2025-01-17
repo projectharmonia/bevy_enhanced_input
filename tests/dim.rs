@@ -19,8 +19,7 @@ fn bool() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Bool>();
-    assert_eq!(action.value(), true.into());
+    assert_eq!(ctx.action::<Bool>().value(), true.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -30,8 +29,7 @@ fn bool() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Bool>();
-    assert_eq!(action.value(), false.into());
+    assert_eq!(ctx.action::<Bool>().value(), false.into());
 }
 
 #[test]
@@ -52,8 +50,7 @@ fn axis1d() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Axis1D>();
-    assert_eq!(action.value(), 1.0.into());
+    assert_eq!(ctx.action::<Axis1D>().value(), 1.0.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -63,8 +60,7 @@ fn axis1d() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Axis1D>();
-    assert_eq!(action.value(), 0.0.into());
+    assert_eq!(ctx.action::<Axis1D>().value(), 0.0.into());
 }
 
 #[test]
@@ -85,8 +81,7 @@ fn axis2d() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Axis2D>();
-    assert_eq!(action.value(), (1.0, 0.0).into());
+    assert_eq!(ctx.action::<Axis2D>().value(), (1.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -96,8 +91,7 @@ fn axis2d() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Axis2D>();
-    assert_eq!(action.value(), Vec2::ZERO.into());
+    assert_eq!(ctx.action::<Axis2D>().value(), Vec2::ZERO.into());
 }
 
 #[test]
@@ -118,8 +112,7 @@ fn axis3d() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Axis3D>();
-    assert_eq!(action.value(), (1.0, 0.0, 0.0).into());
+    assert_eq!(ctx.action::<Axis3D>().value(), (1.0, 0.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -129,8 +122,7 @@ fn axis3d() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
-    let action = ctx.action::<Axis3D>();
-    assert_eq!(action.value(), Vec3::ZERO.into());
+    assert_eq!(ctx.action::<Axis3D>().value(), Vec3::ZERO.into());
 }
 
 #[derive(Debug, Component)]

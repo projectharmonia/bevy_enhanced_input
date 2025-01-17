@@ -20,26 +20,21 @@ fn prioritization() {
 
     let instances = app.world().resource::<ContextInstances>();
 
-    let ctx = instances.context::<First>(entity);
-
-    let action = ctx.action::<FirstConsume>();
-    assert_eq!(action.state(), ActionState::Fired);
-
-    let action = ctx.action::<FirstPassthrough>();
-    assert_eq!(action.state(), ActionState::Fired);
-
-    let ctx = instances.context::<Second>(entity);
-
-    let action = ctx.action::<SecondConsume>();
+    let first = instances.context::<First>(entity);
+    assert_eq!(first.action::<FirstConsume>().state(), ActionState::Fired);
     assert_eq!(
-        action.state(),
+        first.action::<FirstPassthrough>().state(),
+        ActionState::Fired
+    );
+
+    let second = instances.context::<Second>(entity);
+    assert_eq!(
+        second.action::<SecondConsume>().state(),
         ActionState::None,
         "action should be consumed by context with a higher priority"
     );
-
-    let action = ctx.action::<SecondPassthrough>();
     assert_eq!(
-        action.state(),
+        second.action::<SecondPassthrough>().state(),
         ActionState::Fired,
         "actions that doesn't consume inputs should still be triggered"
     );

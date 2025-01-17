@@ -21,8 +21,7 @@ fn any() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<AnyGamepad>(context_entity);
-    let action = ctx.action::<DummyAction>();
-    assert_eq!(action.state(), ActionState::Fired);
+    assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
     gamepad1.digital_mut().release(DummyAction::BUTTON);
@@ -34,8 +33,7 @@ fn any() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<AnyGamepad>(context_entity);
-    let action = ctx.action::<DummyAction>();
-    assert_eq!(action.state(), ActionState::Fired);
+    assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 }
 
 #[test]
@@ -58,8 +56,7 @@ fn by_id() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<SingleGamepad>(context_entity);
-    let action = ctx.action::<DummyAction>();
-    assert_eq!(action.state(), ActionState::Fired);
+    assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
     gamepad1.digital_mut().release(DummyAction::BUTTON);
@@ -71,8 +68,7 @@ fn by_id() {
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<SingleGamepad>(context_entity);
-    let action = ctx.action::<DummyAction>();
-    assert_eq!(action.state(), ActionState::None);
+    assert_eq!(ctx.action::<DummyAction>().state(), ActionState::None);
 }
 
 #[derive(Debug, Component)]
