@@ -97,8 +97,7 @@ impl InputReader<'_, '_> {
                     return Vec2::ZERO.into();
                 }
 
-                let value = self.mouse_motion.delta;
-                value.into()
+                self.mouse_motion.delta.into()
             }
             Input::MouseWheel { mod_keys } => {
                 if self.consumed.ui_wants_mouse
@@ -108,8 +107,7 @@ impl InputReader<'_, '_> {
                     return Vec2::ZERO.into();
                 }
 
-                let value = self.mouse_scroll.delta;
-                value.into()
+                self.mouse_scroll.delta.into()
             }
             Input::GamepadButton(button) => {
                 let input = GamepadInput {
