@@ -14,7 +14,7 @@ use std::{
 
 use bevy::prelude::*;
 
-use crate::input::input_reader::InputReader;
+use crate::input::input_reader::{InputReader, ResetInput};
 use context_instance::ContextInstance;
 
 /// An extension trait for [`App`] to register contexts.
@@ -64,22 +64,25 @@ fn add_instance<C: InputContext>(
 
 fn rebuild_instance<C: InputContext>(
     _trigger: Trigger<RebuildInputContexts>,
-    mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
+    mut set: ParamSet<(&World, ResMut<ContextInstances>, ResMut<ResetInput>)>,
     mut commands: Commands,
     time: Res<Time<Virtual>>,
 ) {
     let mut instances = mem::take(&mut *set.p1());
-    instances.rebuild::<C>(set.p0(), &mut commands, &time);
+    let mut reset_input = mem::take(&mut *set.p2());
+    instances.rebuild::<C>(set.p0(), &mut commands, &mut reset_input, &time);
     *set.p1() = instances;
+    *set.p2() = reset_input;
 }
 
 fn remove_instance<C: InputContext>(
     trigger: Trigger<OnRemove, C>,
     mut commands: Commands,
+    mut reset_input: ResMut<ResetInput>,
     mut instances: ResMut<ContextInstances>,
     time: Res<Time<Virtual>>,
 ) {
-    instances.remove::<C>(&mut commands, &time, trigger.entity());
+    instances.remove::<C>(&mut commands, &mut reset_input, &time, trigger.entity());
 }
 
 /// Stores instantiated [`InputContext`]s.
@@ -113,6 +116,7 @@ impl ContextInstances {
         &mut self,
         world: &World,
         commands: &mut Commands,
+        reset_input: &mut ResetInput,
         time: &Time<Virtual>,
     ) {
         if let Some(group) = self
@@ -122,7 +126,7 @@ impl ContextInstances {
         {
             debug!("rebuilding `{}`", any::type_name::<C>());
             for (entity, ctx) in &mut group.instances {
-                ctx.trigger_removed(commands, time, *entity);
+                ctx.trigger_removed(commands, reset_input, time, *entity);
                 *ctx = C::context_instance(world, *entity);
             }
         }
@@ -131,6 +135,7 @@ impl ContextInstances {
     fn remove<C: InputContext>(
         &mut self,
         commands: &mut Commands,
+        reset_input: &mut ResetInput,
         time: &Time<Virtual>,
         entity: Entity,
     ) {
@@ -150,7 +155,7 @@ impl ContextInstances {
             .expect("entity should be inserted before removal");
 
         let (_, mut ctx) = group.instances.swap_remove(entity_index);
-        ctx.trigger_removed(commands, time, entity);
+        ctx.trigger_removed(commands, reset_input, time, entity);
 
         if group.instances.is_empty() {
             // Remove the group if no entity references it.

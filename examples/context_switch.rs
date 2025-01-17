@@ -110,8 +110,12 @@ struct Move;
 #[input_action(output = bool)]
 struct Rotate;
 
+/// Switches context to [`InCar`].
+///
+/// We set `require_reset` to `true` because [`ExitCar`] action uses the same input,
+/// and we want it to be triggerable only after the button is released.
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+#[input_action(output = bool, require_reset = true)]
 struct EnterCar;
 
 #[derive(Component)]
@@ -134,6 +138,9 @@ impl InputContext for InCar {
     }
 }
 
+/// Switches context to [`OnFoot`].
+///
+/// See [`EnterCar`] for details about `require_reset`.
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+#[input_action(output = bool, require_reset = true)]
 struct ExitCar;

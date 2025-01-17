@@ -141,6 +141,10 @@ impl InputContext for Swimming {
 #[input_action(output = bool)]
 struct Dive;
 
+/// Adds [`Swimming`] context on top of [`PlayerBox`].
+///
+/// We set `require_reset` to `true` because [`EnterWater`] action uses the same input,
+/// and we want it to be triggerable only after the button is released.
 #[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+#[input_action(output = bool, require_reset = true)]
 struct ExitWater;

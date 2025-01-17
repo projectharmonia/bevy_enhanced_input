@@ -82,6 +82,13 @@ pub trait InputAction: Debug + Send + Sync + 'static {
 
     /// Associated accumulation behavior.
     const ACCUMULATION: Accumulation = Accumulation::Cumulative;
+
+    /// Require inputs to be zero before the first activation and continue to consume them
+    /// even after context removal until inputs become zero again.
+    ///
+    /// This is useful for context switching or layering to prevent actions to immediately
+    /// react previously held inputs.
+    const REQUIRE_RESET: bool = false;
 }
 
 /// Marks a type which can be used as [`InputAction::Output`].

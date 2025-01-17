@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `InputAction::REQUIRE_RESET` switch to require inputs to be zero before the first activation and continue to consume them even after context removal until inputs become zero again. Previously, this behavior was always enabled but applied only to the first activation. Now it’s disabled by default and also applies to removals. I believe this new default behavior is more intuitive.
+
 ### Changed
 
 - Snap to the target in `SmoothNudge` when the current value is close enough.

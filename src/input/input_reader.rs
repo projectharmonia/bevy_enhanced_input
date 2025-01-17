@@ -21,6 +21,7 @@ pub(crate) struct InputReader<'w, 's> {
     mouse_scroll: Res<'w, AccumulatedMouseScroll>,
     gamepads: Query<'w, 's, &'static Gamepad>,
     consumed: Local<'s, ConsumedInput>,
+    reset_input: ResMut<'w, ResetInput>,
     gamepad_device: Local<'s, GamepadDevice>,
     #[cfg(feature = "ui_priority")]
     interactions: Query<'w, 's, &'static Interaction>,
@@ -34,6 +35,18 @@ impl InputReader<'_, '_> {
     /// Resets all consumed values and reads mouse events.
     pub(crate) fn update_state(&mut self) {
         self.consumed.reset();
+
+        // Temporary take the original value to avoid issues with the borrow checker.
+        let mut reset_input = std::mem::take(&mut *self.reset_input);
+        reset_input.retain(|&input| {
+            if self.value(input).as_bool() {
+                self.consume(input);
+                true
+            } else {
+                false
+            }
+        });
+        *self.reset_input = reset_input;
 
         #[cfg(feature = "ui_priority")]
         if self
@@ -251,6 +264,12 @@ struct GamepadInput<T: Hash + Eq> {
     gamepad: GamepadDevice,
     input: T,
 }
+
+/// Stores inputs that will be ignored until they return zero.
+///
+/// Once the input becomes zero, it will be automatically removed and no longer ignored.
+#[derive(Resource, Default, Deref, DerefMut)]
+pub(crate) struct ResetInput(Vec<Input>);
 
 #[cfg(test)]
 mod tests {

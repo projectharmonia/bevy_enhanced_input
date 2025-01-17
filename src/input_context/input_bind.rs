@@ -13,12 +13,13 @@ pub struct InputBind {
     pub modifiers: Vec<Box<dyn InputModifier>>,
     pub conditions: Vec<Box<dyn InputCondition>>,
 
-    /// Newly created mappings are ignored by default until until a zero
-    /// value is read for them.
+    /// Whether the input output a non-zero value.
     ///
-    /// This prevents newly created contexts from reacting to currently
+    /// Needed to prevent newly created contexts from reacting to currently
     /// held inputs until they are released.
-    pub(super) ignored: bool,
+    ///
+    /// Used only if [`ActionBind`](super::context_instance::ActionBind::require_reset) is set.
+    pub(super) first_activation: bool,
 }
 
 impl InputBind {
@@ -28,7 +29,7 @@ impl InputBind {
             input: input.into(),
             modifiers: Default::default(),
             conditions: Default::default(),
-            ignored: true,
+            first_activation: true,
         }
     }
 }

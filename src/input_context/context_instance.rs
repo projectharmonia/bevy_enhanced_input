@@ -20,7 +20,10 @@ use super::{
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
-    input::{input_reader::InputReader, GamepadDevice, Input},
+    input::{
+        input_reader::{InputReader, ResetInput},
+        GamepadDevice, Input,
+    },
 };
 use trigger_tracker::TriggerTracker;
 
@@ -126,6 +129,7 @@ impl ContextInstance {
     pub(super) fn trigger_removed(
         &mut self,
         commands: &mut Commands,
+        reset_input: &mut ResetInput,
         time: &Time<Virtual>,
         entity: Entity,
     ) {
@@ -136,6 +140,9 @@ impl ContextInstance {
                 .expect("actions and bindings should have matching type IDs");
             action.update(time, ActionState::None, ActionValue::zero(action_bind.dim));
             action.trigger_events(commands, entity);
+            if action_bind.require_reset {
+                reset_input.extend(action_bind.bindings.iter().map(|binding| binding.input));
+            }
         }
     }
 }
@@ -149,6 +156,7 @@ pub struct ActionBind {
     action_name: &'static str,
     consume_input: bool,
     accumulation: Accumulation,
+    require_reset: bool,
     dim: ActionValueDim,
 
     modifiers: Vec<Box<dyn InputModifier>>,
@@ -168,6 +176,7 @@ impl ActionBind {
             dim: A::Output::DIM,
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
+            require_reset: A::REQUIRE_RESET,
             modifiers: Default::default(),
             conditions: Default::default(),
             bindings: Default::default(),
@@ -374,12 +383,12 @@ impl ActionBind {
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for binding in &mut self.bindings {
             let value = reader.value(binding.input);
-            if binding.ignored {
+            if self.require_reset && binding.first_activation {
                 // Ignore until we read zero for this mapping.
                 if value.as_bool() {
                     continue;
                 } else {
-                    binding.ignored = false;
+                    binding.first_activation = false;
                 }
             }
 

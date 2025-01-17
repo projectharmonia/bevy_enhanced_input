@@ -11,6 +11,8 @@ struct InputActionOpts {
     accumulation: Option<Ident>,
     #[darling(default)]
     consume_input: Option<bool>,
+    #[darling(default)]
+    require_reset: Option<bool>,
 }
 
 #[proc_macro_derive(InputAction, attributes(input_action))]
@@ -46,6 +48,13 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
     } else {
         Default::default()
     };
+    let require_reset = if let Some(reset) = opts.require_reset {
+        quote! {
+            const REQUIRE_RESET: bool = #reset;
+        }
+    } else {
+        Default::default()
+    };
 
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
 
@@ -54,6 +63,7 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
             type Output = #output;
             #accumulation
             #consume_input
+            #require_reset
         }
     })
 }

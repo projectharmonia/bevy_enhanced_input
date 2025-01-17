@@ -94,7 +94,7 @@ pub mod prelude {
 
 use bevy::{input::InputSystem, prelude::*};
 
-use input::input_reader::InputReader;
+use input::input_reader::{InputReader, ResetInput};
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
@@ -103,6 +103,7 @@ pub struct EnhancedInputPlugin;
 impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ContextInstances>()
+            .init_resource::<ResetInput>()
             .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem))
             .add_systems(PreUpdate, Self::update.in_set(EnhancedInputSystem));
     }

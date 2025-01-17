@@ -2,7 +2,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn context_removal() {
+fn removal() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
@@ -11,8 +11,8 @@ fn context_removal() {
 
     app.update();
 
-    let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-    keys.press(DummyAction::KEY);
+    let instances = app.world().resource::<ContextInstances>();
+    assert!(instances.get_context::<DummyContext>(entity).is_some());
 
     app.update();
 
@@ -25,7 +25,7 @@ fn context_removal() {
 }
 
 #[test]
-fn context_rebuild() {
+fn rebuild() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
@@ -34,19 +34,27 @@ fn context_rebuild() {
 
     app.update();
 
-    let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-    keys.press(DummyAction::KEY);
-
-    app.update();
-
-    app.world_mut().trigger(RebuildInputContexts);
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(DummyAction::KEY);
 
     app.update();
 
     let instances = app.world().resource::<ContextInstances>();
     let ctx = instances.context::<DummyContext>(entity);
     let action = ctx.action::<DummyAction>();
-    assert_eq!(action.state(), ActionState::None);
+    assert_eq!(action.state(), ActionState::Fired);
+
+    app.world_mut().trigger(RebuildInputContexts);
+
+    let instances = app.world().resource::<ContextInstances>();
+    let ctx = instances.context::<DummyContext>(entity);
+    let action = ctx.action::<DummyAction>();
+    assert_eq!(
+        action.state(),
+        ActionState::None,
+        "state should reset on rebuild"
+    );
 }
 
 #[derive(Debug, Component)]
