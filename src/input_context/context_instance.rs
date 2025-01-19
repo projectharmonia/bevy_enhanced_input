@@ -87,6 +87,29 @@ impl ContextInstance {
         }
     }
 
+    /// Returns associated bindings for action `A` if exists.
+    ///
+    /// For panicking version see [`Self::action_bind`].
+    /// For assigning bindings use [`Self::bind`].
+    pub fn get_action_bind<A: InputAction>(&self) -> Option<&ActionBind> {
+        self.action_binds
+            .iter()
+            .find(|action_bind| action_bind.type_id == TypeId::of::<A>())
+    }
+
+    /// Returns associated bindings for action `A`.
+    ///
+    /// For non-panicking version see [`Self::get_action_bind`].
+    /// For assigning bindings use [`Self::bind`].
+    pub fn action_bind<A: InputAction>(&self) -> &ActionBind {
+        self.get_action_bind::<A>().unwrap_or_else(|| {
+            panic!(
+                "action `{}` should be binded before access",
+                any::type_name::<A>()
+            )
+        })
+    }
+
     /// Returns associated state for action `A` if exists.
     ///
     /// For panicking version see [`Self::action`].
@@ -182,6 +205,13 @@ impl ActionBind {
             bindings: Default::default(),
             consume_buffer: Default::default(),
         }
+    }
+
+    /// Returns associated input bindings.
+    ///
+    /// See also [`Self::to`].
+    pub fn bindings(&self) -> &[InputBind] {
+        &self.bindings
     }
 
     /// Adds action-level modifiers.
@@ -663,7 +693,7 @@ mod tests {
         ctx.bind::<DummyAction>().to(KeyCode::KeyB);
         assert_eq!(ctx.action_binds.len(), 1);
 
-        let action = ctx.action_binds.first().unwrap();
+        let action = ctx.action_bind::<DummyAction>();
         assert_eq!(action.bindings.len(), 2);
     }
 
