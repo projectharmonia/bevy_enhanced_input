@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ContextInstance::get_action_bind` and `ContextInstance::action_bind` to access action bindings.
+- `ActionBind::bindings` to access input bindings.
+
 ## [0.7.0] - 2025-01-19
 
 ### Added
