@@ -42,11 +42,73 @@ impl<I: Into<Input>> From<I> for InputBind {
 
 /// A trait to ergonomically add modifiers or conditions to any type that can be converted into a binding.
 pub trait InputBindModCond {
-    /// Adds modifiers.
+    /// Adds input-level modifiers.
+    ///
+    /// For action-level conditions see
+    /// [`ActionBind::with_modifiers`](super::context_instance::ActionBind::with_modifiers).
+    ///
+    /// # Examples
+    ///
+    /// Single modifier:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_modifiers(Scale::splat(2.0)));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Multiple modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_modifiers((Scale::splat(2.0), Negate::all())));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Jump;
+    /// ```
     #[must_use]
     fn with_modifiers(self, set: impl InputModifierSet) -> InputBind;
 
-    /// Adds conditions.
+    /// Adds input-level conditions.
+    ///
+    /// For action-level conditions see
+    /// [`ActionBind::with_conditions`](super::context_instance::ActionBind::with_conditions).
+    ///
+    /// # Examples
+    ///
+    /// Single condition:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_conditions(Release::default()));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Multiple conditions:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut ctx = ContextInstance::default();
+    /// ctx.bind::<Jump>()
+    ///     .to(KeyCode::Space.with_conditions((Release::default(), JustPress::default())));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
     #[must_use]
     fn with_conditions(self, set: impl InputConditionSet) -> InputBind;
 }

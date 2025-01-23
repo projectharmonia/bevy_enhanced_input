@@ -302,7 +302,7 @@ impl InstanceGroup {
 ///         ctx.bind::<Move>()
 ///             .to((GamepadStick::Left, Cardinal::wasd_keys()));
 ///         ctx.bind::<Jump>()
-///             .to((KeyCode::Space, GamepadButton::South));
+///             .to((settings.keyboard.jump, GamepadButton::South));
 ///
 ///         ctx
 ///     }
@@ -314,7 +314,12 @@ impl InstanceGroup {
 /// # #[input_action(output = bool)]
 /// # struct Jump;
 /// # #[derive(Resource)]
-/// # struct AppSettings;
+/// # struct AppSettings {
+/// #     keyboard: KeyboardSettings,
+/// # }
+/// # struct KeyboardSettings {
+/// #     jump: KeyCode,
+/// # }
 /// ```
 pub trait InputContext: Component {
     /// Determines the evaluation order of [`ContextInstance`]s produced

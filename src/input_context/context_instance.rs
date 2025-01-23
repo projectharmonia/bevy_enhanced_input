@@ -216,6 +216,9 @@ impl ActionBind {
 
     /// Adds action-level modifiers.
     ///
+    /// For input-level modifiers see
+    /// [`InputBindModCond::with_modifiers`](super::input_bind::InputBindModCond::with_modifiers).
+    ///
     /// # Examples
     ///
     /// Single modifier:
@@ -225,7 +228,8 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .to(KeyCode::Space.with_modifiers(Scale::splat(2.0)));
+    ///     .to(KeyCode::Space)
+    ///     .with_modifiers(Scale::splat(2.0));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -238,7 +242,8 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .to(KeyCode::Space.with_modifiers((Scale::splat(2.0), Negate::all())));
+    ///     .to(KeyCode::Space)
+    ///     .with_modifiers((Scale::splat(2.0), Negate::all()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -254,6 +259,9 @@ impl ActionBind {
 
     /// Adds action-level conditions.
     ///
+    /// For input-level conditions see
+    /// [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
+    ///
     /// # Examples
     ///
     /// Single condition:
@@ -263,7 +271,8 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .to(KeyCode::Space.with_conditions(Release::default()));
+    ///     .to(KeyCode::Space)
+    ///     .with_conditions(Release::default());
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -276,7 +285,8 @@ impl ActionBind {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut ctx = ContextInstance::default();
     /// ctx.bind::<Jump>()
-    ///     .to(KeyCode::Space.with_conditions((Release::default(), JustPress::default())));
+    ///     .to(KeyCode::Space)
+    ///     .with_conditions((Release::default(), JustPress::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
