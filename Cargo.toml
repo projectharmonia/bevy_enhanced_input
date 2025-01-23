@@ -1,6 +1,6 @@
 [package]
 name = "bevy_enhanced_input"
-version = "0.7.1"
+version = "0.7.2"
 authors = ["Hennadii Chernyshchyk <genaloner@gmail.com>"]
 edition = "2021"
 description = "Dynamic and contextual input mappings for Bevy"
