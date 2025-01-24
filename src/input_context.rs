@@ -294,32 +294,32 @@ impl InstanceGroup {
 ///         let settings = world.resource::<AppSettings>();
 ///
 ///         // To can also access the context
-///         // component itself from the entity.
-///         let player = world.get::<Self>(entity).unwrap();
+///         // component itself (or other components) from the entity.
+///         let _player = world.get::<Self>(entity).unwrap();
 ///
 ///         let mut ctx = ContextInstance::default();
 ///
-///         ctx.bind::<Move>()
-///             .to((GamepadStick::Left, Cardinal::wasd_keys()));
+///         // When you change your bindings, you can trigger `RebuildInputContexts`
+///         // to call this function again to rebuild the context with the the updated bindings.
 ///         ctx.bind::<Jump>()
 ///             .to((settings.keyboard.jump, GamepadButton::South));
 ///
 ///         ctx
 ///     }
 /// }
-/// # #[derive(Debug, InputAction)]
-/// # #[input_action(output = Vec2)]
-/// # struct Move;
-/// # #[derive(Debug, InputAction)]
-/// # #[input_action(output = bool)]
-/// # struct Jump;
-/// # #[derive(Resource)]
-/// # struct AppSettings {
-/// #     keyboard: KeyboardSettings,
-/// # }
-/// # struct KeyboardSettings {
-/// #     jump: KeyCode,
-/// # }
+///
+/// #[derive(Debug, InputAction)]
+/// #[input_action(output = bool)]
+/// struct Jump;
+///
+/// #[derive(Resource)]
+/// struct AppSettings {
+///     keyboard: KeyboardSettings,
+/// }
+///
+/// struct KeyboardSettings {
+///     jump: KeyCode,
+/// }
 /// ```
 pub trait InputContext: Component {
     /// Determines the evaluation order of [`ContextInstance`]s produced

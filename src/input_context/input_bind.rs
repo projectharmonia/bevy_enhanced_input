@@ -79,6 +79,8 @@ pub trait InputBindModCond {
 
     /// Adds input-level conditions.
     ///
+    /// You can also apply modifiers to multiple inputs using [`InputBindSet::with_modifiers_each`]
+    ///
     /// For action-level conditions see
     /// [`ActionBind::with_conditions`](super::context_instance::ActionBind::with_conditions).
     ///
