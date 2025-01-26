@@ -79,16 +79,14 @@ impl GamePlugin {
     }
 
     fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-        let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += event.value.extend(0.0);
+        transform.translation += trigger.value.extend(0.0);
     }
 
     fn zoom(trigger: Trigger<Fired<Zoom>>, mut players: Query<&mut Transform>) {
         // Scale entity to fake zoom.
-        let event = trigger.event();
         let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.scale += Vec3::splat(event.value);
+        transform.scale += Vec3::splat(trigger.value);
     }
 }
 

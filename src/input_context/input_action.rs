@@ -22,12 +22,11 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// use bevy_enhanced_input::prelude::*;
 ///
 /// fn move_character(trigger: Trigger<Fired<Move>>, mut transforms: Query<&mut Transform>) {
-///    let event = trigger.event();
 ///    let mut transform = transforms.get_mut(trigger.entity()).unwrap();
 ///
 ///    // Since `Move` has `output = Vec2`, the value is `Vec2`.
 ///    // The value of the Z axis will be zero.
-///    transform.translation += event.value.extend(0.0);
+///    transform.translation += trigger.value.extend(0.0);
 /// }
 ///
 /// #[derive(Debug, InputAction)]
