@@ -13,7 +13,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
 /// [`ActionValue::convert`](crate::action_value::ActionValue::convert).
-#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Reflect)]
 pub enum Input {
     /// Keyboard button, will be captured as
     /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
@@ -122,10 +122,12 @@ impl<I: Into<Input>> InputModKeys for I {
     }
 }
 
+/// Keyboard modifiers for both left and right keys.
+#[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, Reflect)]
+pub struct ModKeys(u8);
+
 bitflags! {
-    /// Keyboard modifiers for both left and right keys.
-    #[derive(Default, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
-    pub struct ModKeys: u8 {
+    impl ModKeys: u8 {
         /// Corresponds to [`KeyCode::AltLeft`] and [`KeyCode::AltRight`].
         const ALT = 0b00000001;
         /// Corresponds to [`KeyCode::ControlLeft`] and [`KeyCode::ControlRight`].
