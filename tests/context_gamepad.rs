@@ -4,7 +4,7 @@ use bevy_enhanced_input::prelude::*;
 #[test]
 fn any() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<AnyGamepad>();
 
     let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();
@@ -39,7 +39,7 @@ fn any() {
 #[test]
 fn by_id() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<SingleGamepad>();
 
     let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();

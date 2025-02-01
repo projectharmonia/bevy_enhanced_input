@@ -4,7 +4,7 @@ use bevy_enhanced_input::prelude::*;
 #[test]
 fn consume() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<ConsumeOnly>();
 
     let entity1 = app.world_mut().spawn(ConsumeOnly).id();
@@ -34,7 +34,7 @@ fn consume() {
 #[test]
 fn passthrough() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<PassthroughOnly>();
 
     let entity1 = app.world_mut().spawn(PassthroughOnly).id();
@@ -67,7 +67,7 @@ fn passthrough() {
 #[test]
 fn consume_then_passthrough() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<ConsumeThenPassthrough>();
 
     let entity = app.world_mut().spawn(ConsumeThenPassthrough).id();
@@ -93,7 +93,7 @@ fn consume_then_passthrough() {
 #[test]
 fn passthrough_then_consume() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<PassthroughThenConsume>();
 
     let entity = app.world_mut().spawn(PassthroughThenConsume).id();

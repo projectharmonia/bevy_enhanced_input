@@ -7,10 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ModKeys::pressed` to get currently active modifiers.
+- `EnhancedInputPlugins` that contains all plugins. Use it instead of the `EnhancedInputPlugin`.
+- `InputEventPlugin` that adds `InputEvent`. Can be used to display appropriate button icons or bind any input sources to actions in settings.
+
 ### Changed
 
 - Derive `Reflect` for `Input` and `ModKeys`.
 - Derive `PartialEq` for `Input`.
+- Rename `EnhancedInputPlugin` into `InputContextPlugin`.
+- Replace `EnhancedInputSystem` struct with `EnhancedInputSet` enum.
 
 ## [0.7.2] - 2025-01-24
 

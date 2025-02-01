@@ -4,7 +4,7 @@ use bevy_enhanced_input::prelude::*;
 #[test]
 fn max_abs() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
@@ -25,7 +25,7 @@ fn max_abs() {
 #[test]
 fn cumulative() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();

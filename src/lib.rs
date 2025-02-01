@@ -27,7 +27,7 @@ like [`DeadZone`], [`Negate`], etc., but you can add your own by implementing [`
 
 We provide a [`prelude`] module, which exports most of the typically used traits and types.
 
-1. Add [`EnhancedInputPlugin`] to your app.
+1. Add [`EnhancedInputPlugins`] to your app.
 2. Define gameplay actions as unit structs and implement [`InputAction`] for them.
 3. Define context components and assign actions to them by implementing [`InputContext`].
 4. Register contexts using [`ContextAppExt::add_input_context`].
@@ -65,6 +65,7 @@ extern crate self as bevy_enhanced_input;
 pub mod action_value;
 pub mod input;
 pub mod input_context;
+pub mod input_event;
 
 pub mod prelude {
     pub use super::{
@@ -85,42 +86,45 @@ pub mod prelude {
                 scale::*, smooth_nudge::*, swizzle_axis::*, InputModifier,
             },
             preset::{Bidirectional, Cardinal, GamepadStick},
-            ContextAppExt, ContextInstances, InputContext, RebuildInputContexts,
+            ContextAppExt, ContextInstances, InputContext, InputContextPlugin,
+            RebuildInputContexts,
         },
-        EnhancedInputPlugin, EnhancedInputSystem,
+        input_event::{InputEvent, InputEventPlugin},
+        EnhancedInputPlugins, EnhancedInputSet,
     };
     pub use bevy_enhanced_input_macros::InputAction;
 }
 
-use bevy::{input::InputSystem, prelude::*};
+use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use input_context::actions_input_state::{ActionsInputState, ResetInput};
 use prelude::*;
 
-/// Initializes contexts and feeds inputs to them.
-pub struct EnhancedInputPlugin;
+/// Plugin group for all enhanced input plugins.
+///
+/// Contains the following:
+/// * [`InputContextPlugin`].
+/// * [`InputEventPlugin`].
+pub struct EnhancedInputPlugins;
 
-impl Plugin for EnhancedInputPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<ContextInstances>()
-            .init_resource::<ResetInput>()
-            .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem))
-            .add_systems(PreUpdate, update.in_set(EnhancedInputSystem));
+impl PluginGroup for EnhancedInputPlugins {
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
+            .add(InputContextPlugin)
+            .add(InputEventPlugin)
     }
 }
 
-fn update(
-    mut commands: Commands,
-    mut input_state: ActionsInputState,
-    time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
-    mut instances: ResMut<ContextInstances>,
-) {
-    input_state.update_state();
-    instances.update(&mut commands, &mut input_state, &time);
-}
-
-/// Label for the system that updates input context instances.
+/// Labels for enhanced input systems.
 ///
-/// Runs in [`PreUpdate`].
+/// Use it if you need to explicitly order your systems.
 #[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
-pub struct EnhancedInputSystem;
+pub enum EnhancedInputSet {
+    /// System that updates input context instances.
+    ///
+    /// Runs in [`PreUpdate`].
+    UpdateContexts,
+    /// System that sends [`InputEvent`]s.
+    ///
+    /// Runs in [`PreUpdate`].
+    SendEvents,
+}

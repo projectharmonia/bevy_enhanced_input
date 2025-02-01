@@ -4,7 +4,7 @@ use bevy_enhanced_input::prelude::*;
 #[test]
 fn keys() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
@@ -48,7 +48,7 @@ fn keys() {
 #[test]
 fn dpad() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<DummyContext>();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
@@ -85,7 +85,7 @@ fn dpad() {
 #[test]
 fn sticks() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
         .add_input_context::<DummyContext>();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
