@@ -105,20 +105,18 @@ impl Plugin for EnhancedInputPlugin {
         app.init_resource::<ContextInstances>()
             .init_resource::<ResetInput>()
             .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem))
-            .add_systems(PreUpdate, Self::update.in_set(EnhancedInputSystem));
+            .add_systems(PreUpdate, update.in_set(EnhancedInputSystem));
     }
 }
 
-impl EnhancedInputPlugin {
-    fn update(
-        mut commands: Commands,
-        mut reader: InputReader,
-        time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
-        mut instances: ResMut<ContextInstances>,
-    ) {
-        reader.update_state();
-        instances.update(&mut commands, &mut reader, &time);
-    }
+fn update(
+    mut commands: Commands,
+    mut reader: InputReader,
+    time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
+    mut instances: ResMut<ContextInstances>,
+) {
+    reader.update_state();
+    instances.update(&mut commands, &mut reader, &time);
 }
 
 /// Label for the system that updates input context instances.

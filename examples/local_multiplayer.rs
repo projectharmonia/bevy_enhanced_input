@@ -29,62 +29,59 @@ struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>()
-            .add_observer(Self::apply_movement)
-            .add_observer(Self::rotate)
-            .add_systems(Startup, Self::spawn)
-            .add_systems(Update, Self::update_gamepads);
+            .add_observer(apply_movement)
+            .add_observer(rotate)
+            .add_systems(Startup, spawn)
+            .add_systems(Update, update_gamepads);
     }
 }
 
-impl GamePlugin {
-    fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2d);
+fn spawn(mut commands: Commands) {
+    commands.spawn(Camera2d);
 
-        // Spawn two players with different assigned indices.
-        commands.spawn((
-            PlayerBox,
-            Transform::from_translation(Vec3::X * 50.0),
-            PlayerColor(RED_600.into()),
-            Player::First,
-        ));
-        commands.spawn((
-            PlayerBox,
-            Transform::from_translation(-Vec3::X * 50.0),
-            PlayerColor(BLUE_600.into()),
-            Player::Second,
-        ));
-    }
+    // Spawn two players with different assigned indices.
+    commands.spawn((
+        PlayerBox,
+        Transform::from_translation(Vec3::X * 50.0),
+        PlayerColor(RED_600.into()),
+        Player::First,
+    ));
+    commands.spawn((
+        PlayerBox,
+        Transform::from_translation(-Vec3::X * 50.0),
+        PlayerColor(BLUE_600.into()),
+        Player::Second,
+    ));
+}
 
-    fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += trigger.value.extend(0.0);
-    }
+fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    transform.translation += trigger.value.extend(0.0);
+}
 
-    fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.rotate_z(FRAC_PI_4);
-    }
+fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    transform.rotate_z(FRAC_PI_4);
+}
 
-    fn update_gamepads(
-        mut commands: Commands,
-        mut connect_events: EventReader<GamepadConnectionEvent>,
-        mut gamepads: ResMut<Gamepads>,
-    ) {
-        for event in connect_events.read() {
-            match event.connection {
-                GamepadConnection::Connected { .. } => gamepads.push(event.gamepad),
-                GamepadConnection::Disconnected => {
-                    if let Some(index) = gamepads.iter().position(|&entity| entity == event.gamepad)
-                    {
-                        gamepads.swap_remove(index);
-                    }
+fn update_gamepads(
+    mut commands: Commands,
+    mut connect_events: EventReader<GamepadConnectionEvent>,
+    mut gamepads: ResMut<Gamepads>,
+) {
+    for event in connect_events.read() {
+        match event.connection {
+            GamepadConnection::Connected { .. } => gamepads.push(event.gamepad),
+            GamepadConnection::Disconnected => {
+                if let Some(index) = gamepads.iter().position(|&entity| entity == event.gamepad) {
+                    gamepads.swap_remove(index);
                 }
             }
         }
-
-        // Trigger contexts rebuild to update associated gamepads.
-        commands.trigger(RebuildInputContexts);
     }
+
+    // Trigger contexts rebuild to update associated gamepads.
+    commands.trigger(RebuildInputContexts);
 }
 
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]

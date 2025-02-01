@@ -23,14 +23,12 @@ struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<DummyContext>()
-            .add_systems(Startup, Self::spawn);
+            .add_systems(Startup, spawn);
     }
 }
 
-impl GamePlugin {
-    fn spawn(mut commands: Commands) {
-        commands.spawn(DummyContext);
-    }
+fn spawn(mut commands: Commands) {
+    commands.spawn(DummyContext);
 }
 
 #[derive(Component)]

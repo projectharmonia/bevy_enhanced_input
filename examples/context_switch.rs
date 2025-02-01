@@ -26,58 +26,56 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<OnFoot>()
             .add_input_context::<InCar>()
-            .add_systems(Startup, Self::spawn)
-            .add_observer(Self::apply_movement)
-            .add_observer(Self::rotate)
-            .add_observer(Self::enter_car)
-            .add_observer(Self::exit_car);
+            .add_systems(Startup, spawn)
+            .add_observer(apply_movement)
+            .add_observer(rotate)
+            .add_observer(enter_car)
+            .add_observer(exit_car);
     }
 }
 
-impl GamePlugin {
-    fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2d);
-        commands.spawn((PlayerBox, OnFoot));
-    }
+fn spawn(mut commands: Commands) {
+    commands.spawn(Camera2d);
+    commands.spawn((PlayerBox, OnFoot));
+}
 
-    fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += trigger.value.extend(0.0);
-    }
+fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    transform.translation += trigger.value.extend(0.0);
+}
 
-    fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.rotate_z(FRAC_PI_4);
-    }
+fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    transform.rotate_z(FRAC_PI_4);
+}
 
-    fn enter_car(
-        trigger: Trigger<Started<EnterCar>>,
-        mut commands: Commands,
-        mut players: Query<&mut PlayerColor>,
-    ) {
-        // Change color for visibility.
-        let mut color = players.get_mut(trigger.entity()).unwrap();
-        **color = FUCHSIA_400.into();
+fn enter_car(
+    trigger: Trigger<Started<EnterCar>>,
+    mut commands: Commands,
+    mut players: Query<&mut PlayerColor>,
+) {
+    // Change color for visibility.
+    let mut color = players.get_mut(trigger.entity()).unwrap();
+    **color = FUCHSIA_400.into();
 
-        commands
-            .entity(trigger.entity())
-            .remove::<OnFoot>()
-            .insert(InCar);
-    }
+    commands
+        .entity(trigger.entity())
+        .remove::<OnFoot>()
+        .insert(InCar);
+}
 
-    fn exit_car(
-        trigger: Trigger<Started<ExitCar>>,
-        mut commands: Commands,
-        mut players: Query<&mut PlayerColor>,
-    ) {
-        let mut color = players.get_mut(trigger.entity()).unwrap();
-        **color = Default::default();
+fn exit_car(
+    trigger: Trigger<Started<ExitCar>>,
+    mut commands: Commands,
+    mut players: Query<&mut PlayerColor>,
+) {
+    let mut color = players.get_mut(trigger.entity()).unwrap();
+    **color = Default::default();
 
-        commands
-            .entity(trigger.entity())
-            .remove::<InCar>()
-            .insert(OnFoot);
-    }
+    commands
+        .entity(trigger.entity())
+        .remove::<InCar>()
+        .insert(OnFoot);
 }
 
 #[derive(Component)]
