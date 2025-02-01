@@ -1,5 +1,3 @@
-pub(super) mod input_reader;
-
 use std::hash::Hash;
 
 use bevy::prelude::*;
