@@ -138,6 +138,18 @@ bitflags! {
 }
 
 impl ModKeys {
+    /// Returns an instance with currently active modifiers.
+    pub fn pressed(keys: &ButtonInput<KeyCode>) -> Self {
+        let mut mod_keys = Self::empty();
+        for [key1, key2] in Self::all().iter_keys() {
+            if keys.any_pressed([key1, key2]) {
+                mod_keys |= key1.into();
+            }
+        }
+
+        mod_keys
+    }
+
     /// Returns an iterator over the key codes corresponding to the set modifier bits.
     ///
     /// Each item contains left and right key codes.
@@ -195,5 +207,21 @@ impl GamepadDevice {
 impl From<Entity> for GamepadDevice {
     fn from(value: Entity) -> Self {
         Self::Single(value)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pressed_mod_keys() {
+        let mut keys = ButtonInput::default();
+        keys.press(KeyCode::ControlLeft);
+        keys.press(KeyCode::ShiftLeft);
+        keys.press(KeyCode::KeyC);
+
+        let mod_keys = ModKeys::pressed(&keys);
+        assert_eq!(mod_keys, ModKeys::CONTROL | ModKeys::SHIFT);
     }
 }
