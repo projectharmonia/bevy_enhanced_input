@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
 /// [`ActionValue::convert`](crate::action_value::ActionValue::convert).
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, Reflect)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Reflect, PartialEq)]
 pub enum Input {
     /// Keyboard button, will be captured as
     /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Derive `Reflect` for `Input` and `ModKeys`.
+- Derive `PartialEq` for `Input`.
 
 ## [0.7.2] - 2025-01-24
 
