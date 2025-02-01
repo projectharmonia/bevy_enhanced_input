@@ -26,68 +26,66 @@ struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>()
-            .add_systems(Startup, Self::spawn)
-            .add_systems(Update, Self::draw_egui)
-            .add_observer(Self::apply_movement)
-            .add_observer(Self::zoom);
+            .add_systems(Startup, spawn)
+            .add_systems(Update, draw_egui)
+            .add_observer(apply_movement)
+            .add_observer(zoom);
     }
 }
 
-impl GamePlugin {
-    fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2d);
-        commands.spawn(PlayerBox);
+fn spawn(mut commands: Commands) {
+    commands.spawn(Camera2d);
+    commands.spawn(PlayerBox);
 
-        // Setup simple node with text using Bevy UI.
-        commands
-            .spawn(Node {
-                width: Val::Percent(100.0),
-                height: Val::Percent(100.0),
-                align_items: AlignItems::Start,
-                justify_content: JustifyContent::End,
-                ..Default::default()
-            })
-            .with_children(|parent| {
-                parent
-                    .spawn((
-                        Node {
-                            margin: UiRect::all(Val::Px(15.0)),
-                            padding: UiRect::all(Val::Px(15.0)),
+    // Setup simple node with text using Bevy UI.
+    commands
+        .spawn(Node {
+            width: Val::Percent(100.0),
+            height: Val::Percent(100.0),
+            align_items: AlignItems::Start,
+            justify_content: JustifyContent::End,
+            ..Default::default()
+        })
+        .with_children(|parent| {
+            parent
+                .spawn((
+                    Node {
+                        margin: UiRect::all(Val::Px(15.0)),
+                        padding: UiRect::all(Val::Px(15.0)),
+                        ..Default::default()
+                    },
+                    BackgroundColor(NEUTRAL_900.into()),
+                ))
+                .with_children(|parent| {
+                    parent.spawn((
+                        Interaction::default(), // All UI nodes with `Interaction` component will intercept all mouse input.
+                        Text::new("Bevy UI"),
+                        TextColor(Color::WHITE),
+                        TextFont {
+                            font_size: 30.0,
                             ..Default::default()
                         },
-                        BackgroundColor(NEUTRAL_900.into()),
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn((
-                            Interaction::default(), // All UI nodes with `Interaction` component will intercept all mouse input.
-                            Text::new("Bevy UI"),
-                            TextColor(Color::WHITE),
-                            TextFont {
-                                font_size: 30.0,
-                                ..Default::default()
-                            },
-                        ));
-                    });
-            });
-    }
-
-    fn draw_egui(mut text_edit: Local<String>, mut contexts: EguiContexts) {
-        Window::new("Egui").show(contexts.ctx_mut(), |ui| {
-            ui.label("Type text:");
-            ui.text_edit_singleline(&mut *text_edit);
+                    ));
+                });
         });
-    }
+}
 
-    fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.translation += trigger.value.extend(0.0);
-    }
+fn draw_egui(mut text_edit: Local<String>, mut contexts: EguiContexts) {
+    Window::new("Egui").show(contexts.ctx_mut(), |ui| {
+        ui.label("Type text:");
+        ui.text_edit_singleline(&mut *text_edit);
+    });
+}
 
-    fn zoom(trigger: Trigger<Fired<Zoom>>, mut players: Query<&mut Transform>) {
-        // Scale entity to fake zoom.
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.scale += Vec3::splat(trigger.value);
-    }
+fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    transform.translation += trigger.value.extend(0.0);
+}
+
+fn zoom(trigger: Trigger<Fired<Zoom>>, mut players: Query<&mut Transform>) {
+    // Scale entity to fake zoom.
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    transform.scale += Vec3::splat(trigger.value);
 }
 
 impl InputContext for PlayerBox {

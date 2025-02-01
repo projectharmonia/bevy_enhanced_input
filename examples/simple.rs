@@ -25,30 +25,28 @@ struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>() // All input contexts should be registered inside the app.
-            .add_systems(Startup, Self::spawn)
-            .add_observer(Self::apply_movement)
-            .add_observer(Self::rotate);
+            .add_systems(Startup, spawn)
+            .add_observer(apply_movement)
+            .add_observer(rotate);
     }
 }
 
-impl GamePlugin {
-    fn spawn(mut commands: Commands) {
-        commands.spawn(Camera2d);
+fn spawn(mut commands: Commands) {
+    commands.spawn(Camera2d);
 
-        // Spawn an entity with a component that implements `InputContext`.
-        commands.spawn(PlayerBox);
-    }
+    // Spawn an entity with a component that implements `InputContext`.
+    commands.spawn(PlayerBox);
+}
 
-    fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        // The value has already been preprocessed by defined modifiers.
-        transform.translation += trigger.value.extend(0.0);
-    }
+fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    // The value has already been preprocessed by defined modifiers.
+    transform.translation += trigger.value.extend(0.0);
+}
 
-    fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-        let mut transform = players.get_mut(trigger.entity()).unwrap();
-        transform.rotate_z(FRAC_PI_4);
-    }
+fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
+    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    transform.rotate_z(FRAC_PI_4);
 }
 
 // To define mappings for actions, implement the context trait.

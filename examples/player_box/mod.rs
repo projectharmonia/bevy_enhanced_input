@@ -6,24 +6,19 @@ pub(super) struct PlayerBoxPlugin;
 
 impl Plugin for PlayerBoxPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(PostUpdate, Self::update_position);
+        app.add_systems(PostUpdate, update_position);
     }
 }
 
-impl PlayerBoxPlugin {
-    fn update_position(
-        mut gizmos: Gizmos,
-        players: Query<(&Visibility, &Transform, &PlayerColor)>,
-    ) {
-        for (visibility, transform, color) in &players {
-            if visibility != Visibility::Hidden {
-                const DEFAULT_SCALE: Vec2 = Vec2::splat(50.0);
-                gizmos.rect(
-                    Isometry3d::new(transform.translation, transform.rotation),
-                    DEFAULT_SCALE + transform.scale.xy(),
-                    color.0,
-                );
-            }
+fn update_position(mut gizmos: Gizmos, players: Query<(&Visibility, &Transform, &PlayerColor)>) {
+    for (visibility, transform, color) in &players {
+        if visibility != Visibility::Hidden {
+            const DEFAULT_SCALE: Vec2 = Vec2::splat(50.0);
+            gizmos.rect(
+                Isometry3d::new(transform.translation, transform.rotation),
+                DEFAULT_SCALE + transform.scale.xy(),
+                color.0,
+            );
         }
     }
 }
