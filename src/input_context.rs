@@ -1,10 +1,10 @@
-pub(super) mod actions_input_state;
 pub mod context_instance;
 pub mod events;
 pub mod input_action;
 pub mod input_bind;
 pub mod input_condition;
 pub mod input_modifier;
+pub(super) mod input_reader;
 pub mod preset;
 
 use std::{
@@ -15,8 +15,8 @@ use std::{
 
 use bevy::prelude::*;
 
-use actions_input_state::{ActionsInputState, ResetInput};
 use context_instance::ContextInstance;
+use input_reader::{InputReader, ResetInput};
 
 /// An extension trait for [`App`] to register contexts.
 ///
@@ -168,12 +168,12 @@ impl ContextInstances {
     pub(crate) fn update(
         &mut self,
         commands: &mut Commands,
-        input_state: &mut ActionsInputState,
+        reader: &mut InputReader,
         time: &Time<Virtual>,
     ) {
         for group in &mut self.0 {
             for (entity, ctx) in &mut group.instances {
-                ctx.update(commands, input_state, time, *entity);
+                ctx.update(commands, reader, time, *entity);
             }
         }
     }
