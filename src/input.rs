@@ -1,4 +1,7 @@
-use std::hash::Hash;
+use std::{
+    fmt::{self, Display, Formatter},
+    hash::Hash,
+};
 
 use bevy::prelude::*;
 use bitflags::bitflags;
@@ -53,6 +56,18 @@ impl Input {
         }
     }
 
+    /// Returns associated keyboard modifiers.
+    #[must_use]
+    pub const fn mod_keys(self) -> ModKeys {
+        match self {
+            Input::Keyboard { mod_keys, .. }
+            | Input::MouseButton { mod_keys, .. }
+            | Input::MouseMotion { mod_keys }
+            | Input::MouseWheel { mod_keys } => mod_keys,
+            Input::GamepadButton(_) | Input::GamepadAxis(_) => ModKeys::empty(),
+        }
+    }
+
     /// Returns new instance without any keyboard modifiers.
     ///
     /// # Panics
@@ -61,6 +76,24 @@ impl Input {
     #[must_use]
     pub fn without_mod_keys(self) -> Self {
         self.with_mod_keys(ModKeys::empty())
+    }
+}
+
+impl Display for Input {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        let mod_keys = self.mod_keys();
+        if !mod_keys.is_empty() {
+            write!(f, "{mod_keys} + ")?;
+        }
+
+        match self {
+            Input::Keyboard { key, .. } => write!(f, "{key:?}"),
+            Input::MouseButton { button, .. } => write!(f, "Mouse {button:?}"),
+            Input::MouseMotion { .. } => write!(f, "Mouse Motion"),
+            Input::MouseWheel { .. } => write!(f, "Scroll Wheel"),
+            Input::GamepadButton(gamepad_button) => write!(f, "{gamepad_button:?}"),
+            Input::GamepadAxis(gamepad_axis) => write!(f, "{gamepad_axis:?}"),
+        }
     }
 }
 
@@ -134,6 +167,25 @@ bitflags! {
         const ALT = 0b00000100;
         /// Corresponds to [`KeyCode::SuperLeft`] and [`KeyCode::SuperRight`].
         const SUPER = 0b00001000;
+    }
+}
+
+impl Display for ModKeys {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        for (index, (_, mod_key)) in self.iter_names().enumerate() {
+            if index != 0 {
+                write!(f, " + ")?;
+            }
+            match mod_key {
+                ModKeys::CONTROL => write!(f, "Ctrl")?,
+                ModKeys::SHIFT => write!(f, "Shift")?,
+                ModKeys::ALT => write!(f, "Alt")?,
+                ModKeys::SUPER => write!(f, "Super")?,
+                _ => unreachable!("iteration should yield only named flags"),
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -224,5 +276,62 @@ mod tests {
 
         let mod_keys = ModKeys::pressed(&keys);
         assert_eq!(mod_keys, ModKeys::CONTROL | ModKeys::SHIFT);
+    }
+
+    #[test]
+    fn mod_keys_display() {
+        assert_eq!(ModKeys::CONTROL.to_string(), "Ctrl");
+        assert_eq!(ModKeys::all().to_string(), "Ctrl + Shift + Alt + Super");
+        assert_eq!(ModKeys::empty().to_string(), "");
+    }
+
+    #[test]
+    fn input_display() {
+        assert_eq!(
+            Input::Keyboard {
+                key: KeyCode::KeyA,
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "KeyA"
+        );
+        assert_eq!(
+            Input::Keyboard {
+                key: KeyCode::KeyA,
+                mod_keys: ModKeys::CONTROL
+            }
+            .to_string(),
+            "Ctrl + KeyA"
+        );
+        assert_eq!(
+            Input::MouseButton {
+                button: MouseButton::Left,
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "Mouse Left"
+        );
+        assert_eq!(
+            Input::MouseMotion {
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "Mouse Motion"
+        );
+        assert_eq!(
+            Input::MouseWheel {
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "Scroll Wheel"
+        );
+        assert_eq!(
+            Input::GamepadAxis(GamepadAxis::LeftStickX).to_string(),
+            "LeftStickX"
+        );
+        assert_eq!(
+            Input::GamepadButton(GamepadButton::North).to_string(),
+            "North"
+        );
     }
 }
