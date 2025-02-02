@@ -45,5 +45,8 @@ required-features = [
   "bevy/default_font",
 ]
 
+[lints.clippy]
+too_many_arguments = "allow"
+
 [workspace]
 members = ["macros"]
