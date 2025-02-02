@@ -4,7 +4,7 @@ use bevy_enhanced_input::prelude::*;
 #[test]
 fn removal() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
@@ -27,7 +27,7 @@ fn removal() {
 #[test]
 fn rebuild() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();

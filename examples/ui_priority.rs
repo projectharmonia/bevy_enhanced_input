@@ -14,7 +14,7 @@ fn main() {
         .add_plugins((
             DefaultPlugins,
             EguiPlugin,
-            EnhancedInputPlugins,
+            EnhancedInputPlugin,
             PlayerBoxPlugin,
             GamePlugin,
         ))

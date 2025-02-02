@@ -6,7 +6,7 @@ use bevy_enhanced_input::prelude::*;
 #[test]
 fn input_level() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
@@ -94,7 +94,7 @@ fn input_level() {
 #[test]
 fn action_level() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();
@@ -182,7 +182,7 @@ fn action_level() {
 #[test]
 fn both_levels() {
     let mut app = App::new();
-    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugins))
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<DummyContext>();
 
     let entity = app.world_mut().spawn(DummyContext).id();

@@ -12,7 +12,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins.set(log_plugin),
-            EnhancedInputPlugins,
+            EnhancedInputPlugin,
             GamePlugin,
         ))
         .run();
