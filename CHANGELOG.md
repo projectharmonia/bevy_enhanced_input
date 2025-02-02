@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Reorder constants in `ModeKeys`.
 - Derive `Reflect` for `Input` and `ModKeys`.
 - Derive `PartialEq` for `Input`.
 - Rename `EnhancedInputPlugin` into `InputContextPlugin`.
