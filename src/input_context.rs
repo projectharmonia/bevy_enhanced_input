@@ -13,10 +13,36 @@ use std::{
     mem,
 };
 
-use bevy::prelude::*;
+use bevy::{input::InputSystem, prelude::*};
 
+use super::EnhancedInputSet;
 use actions_input_state::{ActionsInputState, ResetInput};
 use context_instance::ContextInstance;
+
+/// Initializes context instances and feeds inputs to them.
+pub struct InputContextPlugin;
+
+impl Plugin for InputContextPlugin {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<ContextInstances>()
+            .init_resource::<ResetInput>()
+            .configure_sets(
+                PreUpdate,
+                EnhancedInputSet::UpdateContexts.after(InputSystem),
+            )
+            .add_systems(PreUpdate, update.in_set(EnhancedInputSet::UpdateContexts));
+    }
+}
+
+fn update(
+    mut commands: Commands,
+    mut input_state: ActionsInputState,
+    time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
+    mut instances: ResMut<ContextInstances>,
+) {
+    input_state.update_state();
+    instances.update(&mut commands, &mut input_state, &time);
+}
 
 /// An extension trait for [`App`] to register contexts.
 ///

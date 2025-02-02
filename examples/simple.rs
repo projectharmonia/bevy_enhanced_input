@@ -13,7 +13,7 @@ fn main() {
     App::new()
         .add_plugins((
             DefaultPlugins,
-            EnhancedInputPlugin,
+            EnhancedInputPlugins,
             PlayerBoxPlugin,
             GamePlugin,
         ))
