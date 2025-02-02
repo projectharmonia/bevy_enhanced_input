@@ -12,6 +12,7 @@ use bevy::{
 };
 
 use super::{
+    actions_input_state::{ActionsInputState, ResetInput},
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input_action::{Accumulation, ActionOutput, InputAction},
     input_bind::{InputBind, InputBindSet},
@@ -20,10 +21,7 @@ use super::{
 };
 use crate::{
     action_value::{ActionValue, ActionValueDim},
-    input::{
-        input_reader::{InputReader, ResetInput},
-        GamepadDevice, Input,
-    },
+    input::{GamepadDevice, Input},
 };
 use trigger_tracker::TriggerTracker;
 
@@ -138,13 +136,13 @@ impl ContextInstance {
     pub(super) fn update(
         &mut self,
         commands: &mut Commands,
-        reader: &mut InputReader,
+        input_state: &mut ActionsInputState,
         time: &Time<Virtual>,
         entity: Entity,
     ) {
-        reader.set_gamepad(self.gamepad);
+        input_state.set_gamepad(self.gamepad);
         for action_bind in &mut self.action_binds {
-            action_bind.update(commands, reader, &mut self.actions, time, entity);
+            action_bind.update(commands, input_state, &mut self.actions, time, entity);
         }
     }
 
@@ -413,7 +411,7 @@ impl ActionBind {
     fn update(
         &mut self,
         commands: &mut Commands,
-        reader: &mut InputReader,
+        input_state: &mut ActionsInputState,
         actions: &mut ActionsData,
         time: &Time<Virtual>,
         entity: Entity,
@@ -422,7 +420,7 @@ impl ActionBind {
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for binding in &mut self.bindings {
-            let value = reader.value(binding.input);
+            let value = input_state.value(binding.input);
             if self.require_reset && binding.first_activation {
                 // Ignore until we read zero for this mapping.
                 if value.as_bool() {
@@ -475,7 +473,7 @@ impl ActionBind {
         if self.consume_input {
             if state != ActionState::None {
                 for &input in &self.consume_buffer {
-                    reader.consume(input);
+                    input_state.consume(input);
                 }
             }
             self.consume_buffer.clear();

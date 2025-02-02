@@ -9,12 +9,16 @@ use bevy::{
 #[cfg(feature = "egui_priority")]
 use bevy_egui::EguiContext;
 
-use super::{GamepadDevice, Input, ModKeys};
-use crate::action_value::ActionValue;
+use crate::{
+    action_value::ActionValue,
+    input::{GamepadDevice, Input, ModKeys},
+};
 
-/// Reads input from multiple sources.
+/// Input state for actions.
+///
+/// Actions can read input values and optionally consume them without affecting Bevy input resources.
 #[derive(SystemParam)]
-pub(crate) struct InputReader<'w, 's> {
+pub(crate) struct ActionsInputState<'w, 's> {
     keys: Res<'w, ButtonInput<KeyCode>>,
     mouse_buttons: Res<'w, ButtonInput<MouseButton>>,
     mouse_motion: Res<'w, AccumulatedMouseMotion>,
@@ -31,7 +35,7 @@ pub(crate) struct InputReader<'w, 's> {
     egui: Query<'w, 's, &'static mut EguiContext>,
 }
 
-impl InputReader<'_, '_> {
+impl ActionsInputState<'_, '_> {
     /// Resets all consumed values and reads mouse events.
     pub(crate) fn update_state(&mut self) {
         self.consumed.reset();
@@ -645,7 +649,7 @@ mod tests {
         );
     }
 
-    fn init_world<'w, 's>() -> (World, SystemState<InputReader<'w, 's>>) {
+    fn init_world<'w, 's>() -> (World, SystemState<ActionsInputState<'w, 's>>) {
         let mut world = World::new();
         world.init_resource::<ButtonInput<KeyCode>>();
         world.init_resource::<ButtonInput<MouseButton>>();
@@ -657,7 +661,7 @@ mod tests {
         world.init_resource::<AccumulatedMouseScroll>();
         world.init_resource::<ResetInput>();
 
-        let state = SystemState::<InputReader>::new(&mut world);
+        let state = SystemState::<ActionsInputState>::new(&mut world);
 
         (world, state)
     }
