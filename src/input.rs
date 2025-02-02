@@ -139,6 +139,7 @@ bitflags! {
 
 impl ModKeys {
     /// Returns an instance with currently active modifiers.
+    #[must_use]
     pub fn pressed(keys: &ButtonInput<KeyCode>) -> Self {
         let mut mod_keys = Self::empty();
         for [key1, key2] in Self::all().iter_keys() {
