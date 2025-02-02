@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use bevy::{input::ButtonState, prelude::*};
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// Value for [`Input`](crate::input::Input).
@@ -131,12 +131,6 @@ pub enum ActionValueDim {
     Axis1D,
     Axis2D,
     Axis3D,
-}
-
-impl From<ButtonState> for ActionValue {
-    fn from(value: ButtonState) -> Self {
-        value.is_pressed().into()
-    }
 }
 
 impl From<bool> for ActionValue {
