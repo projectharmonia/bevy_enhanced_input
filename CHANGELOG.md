@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Implement `Display` for `Input` and `ModKeys`.
 - `ModKeys::pressed` to get currently active modifiers.
 
 ### Changed
