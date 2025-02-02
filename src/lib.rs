@@ -94,7 +94,7 @@ pub mod prelude {
 
 use bevy::{input::InputSystem, prelude::*};
 
-use input_context::actions_input_state::{ActionsInputState, ResetInput};
+use input_context::input_reader::{InputReader, ResetInput};
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
@@ -111,12 +111,12 @@ impl Plugin for EnhancedInputPlugin {
 
 fn update(
     mut commands: Commands,
-    mut input_state: ActionsInputState,
+    mut reader: InputReader,
     time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
     mut instances: ResMut<ContextInstances>,
 ) {
-    input_state.update_state();
-    instances.update(&mut commands, &mut input_state, &time);
+    reader.update_state();
+    instances.update(&mut commands, &mut reader, &time);
 }
 
 /// Label for the system that updates input context instances.
