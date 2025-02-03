@@ -46,5 +46,8 @@ required-features = [
   "bevy_egui/default_fonts",
 ]
 
+[lints.clippy]
+type_complexity = "allow"
+
 [workspace]
 members = ["macros"]
