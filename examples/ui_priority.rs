@@ -1,5 +1,5 @@
 //! Inputs consumed by UI and not propagated to actions.
-//! In order to run this example pass `--features egui_priority,bevy_egui/render,bevy_egui/default_fonts,bevy/default_font` to cargo.
+//! In order to run this example pass `--features egui_priority,bevy_egui/render,bevy_egui/default_fonts` to cargo.
 
 mod player_box;
 

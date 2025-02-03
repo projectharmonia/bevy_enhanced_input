@@ -23,8 +23,10 @@ bevy = { version = "0.15", default-features = false, features = [
   "bevy_gilrs",
   "bevy_gizmos",
   "bevy_window",
+  "default_font",
   "x11",
 ] }
+ron = "0.8"
 
 [features]
 default = ["ui_priority"]
@@ -42,7 +44,6 @@ required-features = [
   "egui_priority",
   "bevy_egui/render",
   "bevy_egui/default_fonts",
-  "bevy/default_font",
 ]
 
 [workspace]
