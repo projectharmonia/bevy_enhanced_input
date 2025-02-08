@@ -12,7 +12,7 @@ use crate::{
 /// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
 #[derive(Clone, Copy, Debug)]
 pub struct HoldAndRelease {
-    // How long does the input have to be held to cause trigger.
+    /// How long does the input have to be held to cause trigger.
     pub hold_time: f32,
 
     /// Trigger threshold.

@@ -13,10 +13,10 @@ use crate::{
 /// May optionally fire once, or repeatedly fire.
 #[derive(Clone, Copy, Debug)]
 pub struct Hold {
-    // How long does the input have to be held to cause trigger.
+    /// How long does the input have to be held to cause trigger.
     pub hold_time: f32,
 
-    // Should this trigger fire only once, or fire every frame once the hold time threshold is met?
+    /// Should this trigger fire only once, or fire every frame once the hold time threshold is met?
     pub one_shot: bool,
 
     /// Trigger threshold.

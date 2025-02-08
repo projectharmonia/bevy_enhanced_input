@@ -17,7 +17,7 @@ pub struct Pulse {
     /// Time in seconds between each triggering while input is held.
     pub interval: f32,
 
-    // Number of times the condition can be triggered (0 means no limit).
+    /// Number of times the condition can be triggered (0 means no limit).
     pub trigger_limit: u32,
 
     /// Whether to trigger when the input first exceeds the actuation threshold or wait for the first interval.
