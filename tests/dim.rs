@@ -5,7 +5,8 @@ use bevy_enhanced_input::prelude::*;
 fn bool() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>().add_observer(binding);
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -36,7 +37,8 @@ fn bool() {
 fn axis1d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>().add_observer(binding);
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -67,7 +69,8 @@ fn axis1d() {
 fn axis2d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>().add_observer(binding);
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -98,7 +101,8 @@ fn axis2d() {
 fn axis3d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>().add_observer(binding);
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
