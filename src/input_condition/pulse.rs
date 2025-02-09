@@ -3,15 +3,15 @@ use bevy::prelude::*;
 use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::context_instance::{ActionState, ActionsData},
+    input_context::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
 /// each [`Self::interval`] seconds.
 ///
-/// Note: [`Completed`](crate::input_context::events::Completed) only fires
+/// Note: [`Completed`](crate::events::Completed) only fires
 /// when the repeat limit is reached or when input is released immediately after being triggered.
-/// Otherwise, [`Canceled`](crate::input_context::events::Canceled) is fired when input is released.
+/// Otherwise, [`Canceled`](crate::events::Canceled) is fired when input is released.
 #[derive(Clone, Copy, Debug)]
 pub struct Pulse {
     /// Time in seconds between each triggering while input is held.
@@ -112,7 +112,7 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::input_context::context_instance::ActionsData;
+    use crate::input_context::ActionsData;
 
     #[test]
     fn tap() {

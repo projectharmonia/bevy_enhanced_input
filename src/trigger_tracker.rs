@@ -1,13 +1,11 @@
 use bevy::prelude::*;
 
-use super::{ActionState, ActionsData};
 use crate::{
     action_value::ActionValue,
-    input_context::{
-        input_action::Accumulation,
-        input_condition::{ConditionKind, InputCondition},
-        input_modifier::InputModifier,
-    },
+    input_action::Accumulation,
+    input_condition::{ConditionKind, InputCondition},
+    input_context::{ActionState, ActionsData},
+    input_modifier::InputModifier,
 };
 
 /// Helper to calculate [`ActionState`] based on its modifiers and conditions.

@@ -6,7 +6,7 @@ use super::{
 };
 use crate::input::Input;
 
-/// Associated input for [`ActionBind`](super::context_instance::ActionBind).
+/// Associated input for [`ActionBind`](super::input_context::ActionBind).
 #[derive(Debug)]
 pub struct InputBind {
     pub input: Input,
@@ -18,7 +18,7 @@ pub struct InputBind {
     /// Needed to prevent newly created contexts from reacting to currently
     /// held inputs until they are released.
     ///
-    /// Used only if [`ActionBind`](super::context_instance::ActionBind::require_reset) is set.
+    /// Used only if [`ActionBind`](super::input_context::ActionBind::require_reset) is set.
     pub(super) first_activation: bool,
 }
 
@@ -45,7 +45,7 @@ pub trait InputBindModCond {
     /// Adds input-level modifiers.
     ///
     /// For action-level conditions see
-    /// [`ActionBind::with_modifiers`](super::context_instance::ActionBind::with_modifiers).
+    /// [`ActionBind::with_modifiers`](super::input_context::ActionBind::with_modifiers).
     ///
     /// # Examples
     ///
@@ -54,8 +54,8 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>()
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers(Scale::splat(2.0)));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
@@ -67,8 +67,8 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>()
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers((Scale::splat(2.0), Negate::all())));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
@@ -82,7 +82,7 @@ pub trait InputBindModCond {
     /// You can also apply modifiers to multiple inputs using [`InputBindSet::with_modifiers_each`]
     ///
     /// For action-level conditions see
-    /// [`ActionBind::with_conditions`](super::context_instance::ActionBind::with_conditions).
+    /// [`ActionBind::with_conditions`](super::input_context::ActionBind::with_conditions).
     ///
     /// # Examples
     ///
@@ -91,8 +91,8 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>()
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
     ///     .to(KeyCode::Space.with_conditions(Release::default()));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -104,8 +104,8 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Jump>()
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
     ///     .to(KeyCode::Space.with_conditions((Release::default(), JustPress::default())));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -130,7 +130,7 @@ impl<T: Into<InputBind>> InputBindModCond for T {
 }
 
 /// Represents collection of bindings that could be passed into
-/// [`ActionBind::to`](super::context_instance::ActionBind::to).
+/// [`ActionBind::to`](super::input_context::ActionBind::to).
 ///
 /// Can be manually implemented to provide custom modifiers or conditions.
 /// See [`preset`](super::preset) for examples.
@@ -154,8 +154,8 @@ pub trait InputBindSet {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut ctx = ContextInstance::default();
-    /// ctx.bind::<Move>()
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Move>()
     ///     .to((
     ///         Input::mouse_motion(),
     ///         GamepadStick::Left.with_modifiers_each(Negate::all()), // Will be applied to each axis.

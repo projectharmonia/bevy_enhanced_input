@@ -5,7 +5,7 @@ use bevy_enhanced_input::prelude::*;
 fn bool() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>().add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -17,8 +17,8 @@ fn bool() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Bool>().value(), true.into());
 
     app.world_mut()
@@ -27,8 +27,8 @@ fn bool() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Bool>().value(), false.into());
 }
 
@@ -36,7 +36,7 @@ fn bool() {
 fn axis1d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>().add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -48,8 +48,8 @@ fn axis1d() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Axis1D>().value(), 1.0.into());
 
     app.world_mut()
@@ -58,8 +58,8 @@ fn axis1d() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Axis1D>().value(), 0.0.into());
 }
 
@@ -67,7 +67,7 @@ fn axis1d() {
 fn axis2d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>().add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -79,8 +79,8 @@ fn axis2d() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Axis2D>().value(), (1.0, 0.0).into());
 
     app.world_mut()
@@ -89,8 +89,8 @@ fn axis2d() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Axis2D>().value(), Vec2::ZERO.into());
 }
 
@@ -98,7 +98,7 @@ fn axis2d() {
 fn axis3d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>().add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -110,8 +110,8 @@ fn axis3d() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Axis3D>().value(), (1.0, 0.0, 0.0).into());
 
     app.world_mut()
@@ -120,26 +120,20 @@ fn axis3d() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<Axis3D>().value(), Vec3::ZERO.into());
+}
+
+fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
+    trigger.bind::<Bool>().to(Bool::KEY);
+    trigger.bind::<Axis1D>().to(Axis1D::KEY);
+    trigger.bind::<Axis2D>().to(Axis2D::KEY);
+    trigger.bind::<Axis3D>().to(Axis3D::KEY);
 }
 
 #[derive(Debug, Component)]
 struct DummyContext;
-
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Bool>().to(Bool::KEY);
-        ctx.bind::<Axis1D>().to(Axis1D::KEY);
-        ctx.bind::<Axis2D>().to(Axis2D::KEY);
-        ctx.bind::<Axis3D>().to(Axis3D::KEY);
-
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]

@@ -24,10 +24,19 @@ use super::{
 /// use bevy::prelude::*;
 /// use bevy_enhanced_input::prelude::*;
 ///
+/// fn binding(mut trigger: Trigger<Binding<Player>>, settings: Res<KeyboardSettings>) {
+///     trigger.bind::<Move>().to(Cardinal {
+///         north: &settings.forward,
+///         east: &settings.right,
+///         south: &settings.backward,
+///         west: &settings.left,
+///     });
+/// }
+///
 /// // We use `KeyCode` here because we are only interested in key presses.
 /// // But you can also use `Input` if you want to e.g.
 /// // combine mouse and keyboard input sources.
-/// #[derive(Debug, Resource)]
+/// #[derive(Resource)]
 /// struct KeyboardSettings {
 ///     forward: Vec<KeyCode>,
 ///     right: Vec<KeyCode>,
@@ -35,25 +44,8 @@ use super::{
 ///     left: Vec<KeyCode>,
 /// }
 ///
-/// #[derive(Debug, Component)]
+/// #[derive(Component)]
 /// struct Player;
-///
-/// impl InputContext for Player {
-///     fn context_instance(world: &World, _entity: Entity) -> ContextInstance {
-///         let settings = world.resource::<KeyboardSettings>();
-///
-///         let mut ctx = ContextInstance::default();
-///
-///         ctx.bind::<Move>().to(Cardinal {
-///             north: &settings.forward,
-///             east: &settings.right,
-///             south: &settings.backward,
-///             west: &settings.left,
-///         });
-///
-///         ctx
-///     }
-/// }
 ///
 /// #[derive(Debug, InputAction)]
 /// #[input_action(output = Vec2)]
