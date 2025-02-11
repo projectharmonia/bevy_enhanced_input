@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::{InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::context_instance::{ActionState, ActionsData},
+    input_context::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Fired`] when the input exceeds the actuation threshold.
@@ -44,7 +44,7 @@ impl InputCondition for Press {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input_context::context_instance::ActionsData;
+    use crate::input_context::ActionsData;
 
     #[test]
     fn down() {

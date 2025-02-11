@@ -24,10 +24,11 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<PlayerBox>() // All input contexts should be registered inside the app.
-            .add_systems(Startup, spawn)
+        app.add_input_context::<PlayerBox>() // Attach input context to a component.
+            .add_observer(binding) // Add observer to setup bindings.
             .add_observer(apply_movement)
-            .add_observer(rotate);
+            .add_observer(rotate)
+            .add_systems(Startup, spawn);
     }
 }
 
@@ -36,6 +37,30 @@ fn spawn(mut commands: Commands) {
 
     // Spawn an entity with a component that implements `InputContext`.
     commands.spawn(PlayerBox);
+}
+
+// To define mappings for actions, write an observer for `Binding`.
+// You can implement it for your character component directly, as
+// shown in this example, if you don't plan to switch contexts.
+fn binding(mut trigger: Trigger<Binding<PlayerBox>>) {
+    // Mappings like WASD or sticks are very common,
+    // so we provide built-ins to assign all keys/axes at once.
+    // We don't assign any conditions and in this case the action will
+    // be triggered with any non-zero value.
+    trigger
+        .bind::<Move>()
+        .to((Cardinal::wasd_keys(), GamepadStick::Left))
+        .with_modifiers((
+            DeadZone::default(), // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
+            SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
+            Scale::splat(DEFAULT_SPEED), // Additionally multiply by a constant to achieve the desired speed.
+        ));
+
+    // Multiple inputs can be assigned to a single action,
+    // and the action will respond to any of them.
+    trigger
+        .bind::<Rotate>()
+        .to((KeyCode::Space, GamepadButton::South));
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
@@ -47,35 +72,6 @@ fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transfo
 fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
     let mut transform = players.get_mut(trigger.entity()).unwrap();
     transform.rotate_z(FRAC_PI_4);
-}
-
-// To define mappings for actions, implement the context trait.
-// You can implement it for your character component directly, as
-// shown in this example, if you don't plan to switch contexts.
-impl InputContext for PlayerBox {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        // Create a context and start defining bindings.
-        // Multiple inputs can be assigned to a single action,
-        // and the action will respond to any of them.
-        let mut ctx = ContextInstance::default();
-
-        // Mappings like WASD or sticks are very common,
-        // so we provide built-ins to assign all keys/axes at once.
-        // We don't assign any conditions and in this case the action will
-        // be triggered with any non-zero value.
-        ctx.bind::<Move>()
-            .to((Cardinal::wasd_keys(), GamepadStick::Left))
-            .with_modifiers((
-                DeadZone::default(), // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
-                SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
-                Scale::splat(DEFAULT_SPEED), // Additionally multiply by a constant to achieve the desired speed.
-            ));
-
-        ctx.bind::<Rotate>()
-            .to((KeyCode::Space, GamepadButton::South));
-
-        ctx
-    }
 }
 
 // All actions should implement the `InputAction` trait.

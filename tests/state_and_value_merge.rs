@@ -7,7 +7,8 @@ use bevy_enhanced_input::prelude::*;
 fn input_level() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -19,8 +20,8 @@ fn input_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
@@ -31,8 +32,8 @@ fn input_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -43,8 +44,8 @@ fn input_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::NEG_Y.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -55,8 +56,8 @@ fn input_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -67,8 +68,8 @@ fn input_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::ZERO.into());
     assert_eq!(
@@ -84,8 +85,8 @@ fn input_level() {
     panic_on_action_events::<InputLevel>(app.world_mut());
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<InputLevel>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -95,7 +96,8 @@ fn input_level() {
 fn action_level() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -107,8 +109,8 @@ fn action_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
@@ -119,8 +121,8 @@ fn action_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -131,8 +133,8 @@ fn action_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -143,8 +145,8 @@ fn action_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -155,8 +157,8 @@ fn action_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(
@@ -172,8 +174,8 @@ fn action_level() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ActionLevel>();
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -183,7 +185,8 @@ fn action_level() {
 fn both_levels() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -195,8 +198,8 @@ fn both_levels() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
@@ -207,8 +210,8 @@ fn both_levels() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -219,8 +222,8 @@ fn both_levels() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::NEG_Y.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -231,8 +234,8 @@ fn both_levels() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -243,8 +246,8 @@ fn both_levels() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(
@@ -260,54 +263,50 @@ fn both_levels() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<BothLevels>();
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 }
 
+fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
+    let down = Press::default();
+    let release = Release::default();
+    let chord = Chord::<ChordMember>::default();
+    let block_by = BlockBy::<Blocker>::default();
+    let block_events_by = BlockBy::<EventsBlocker>::events_only();
+    let swizzle_axis = SwizzleAxis::YXZ;
+    let negate = Negate::all();
+    let scale = Scale::splat(2.0);
+
+    trigger.bind::<ChordMember>().to(ChordMember::KEY);
+    trigger.bind::<Blocker>().to(Blocker::KEY);
+    trigger.bind::<EventsBlocker>().to(EventsBlocker::KEY);
+    trigger.bind::<InputLevel>().to((
+        InputLevel::KEY1.with_modifiers(scale),
+        InputLevel::KEY2.with_modifiers(negate),
+    )
+        .with_modifiers_each(swizzle_axis)
+        .with_conditions_each((chord, block_by, block_events_by, down, release)));
+    trigger
+        .bind::<ActionLevel>()
+        .to((ActionLevel::KEY1, ActionLevel::KEY2))
+        .with_conditions((down, release, chord, block_by, block_events_by))
+        .with_modifiers((swizzle_axis, negate, scale));
+    trigger
+        .bind::<BothLevels>()
+        .to((
+            BothLevels::KEY1.with_modifiers(scale),
+            BothLevels::KEY2.with_modifiers(negate),
+        )
+            .with_conditions_each(down))
+        .with_conditions((release, chord, block_by, block_events_by))
+        .with_modifiers(swizzle_axis);
+}
+
 #[derive(Debug, Component)]
 struct DummyContext;
-
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        let down = Press::default();
-        let release = Release::default();
-        let chord = Chord::<ChordMember>::default();
-        let block_by = BlockBy::<Blocker>::default();
-        let block_events_by = BlockBy::<EventsBlocker>::events_only();
-        let swizzle_axis = SwizzleAxis::YXZ;
-        let negate = Negate::all();
-        let scale = Scale::splat(2.0);
-
-        ctx.bind::<ChordMember>().to(ChordMember::KEY);
-        ctx.bind::<Blocker>().to(Blocker::KEY);
-        ctx.bind::<EventsBlocker>().to(EventsBlocker::KEY);
-        ctx.bind::<InputLevel>().to((
-            InputLevel::KEY1.with_modifiers(scale),
-            InputLevel::KEY2.with_modifiers(negate),
-        )
-            .with_modifiers_each(swizzle_axis)
-            .with_conditions_each((chord, block_by, block_events_by, down, release)));
-        ctx.bind::<ActionLevel>()
-            .to((ActionLevel::KEY1, ActionLevel::KEY2))
-            .with_conditions((down, release, chord, block_by, block_events_by))
-            .with_modifiers((swizzle_axis, negate, scale));
-        ctx.bind::<BothLevels>()
-            .to((
-                BothLevels::KEY1.with_modifiers(scale),
-                BothLevels::KEY2.with_modifiers(negate),
-            )
-                .with_conditions_each(down))
-            .with_conditions((release, chord, block_by, block_events_by))
-            .with_modifiers(swizzle_axis);
-
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]

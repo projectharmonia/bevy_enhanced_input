@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, input_context::context_instance::ActionsData};
+use crate::{action_value::ActionValue, input_context::ActionsData};
 
 /// Swizzle axis components of an input value.
 ///

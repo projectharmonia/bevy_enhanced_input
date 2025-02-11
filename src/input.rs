@@ -8,9 +8,9 @@ use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
 /// Inputs that can be associated with an
-/// [`InputAction`](super::input_context::input_action::InputAction).
+/// [`InputAction`](super::input_action::InputAction).
 ///
-/// [Input modifiers](super::input_context::input_modifier) can change the captured dimension.
+/// [Input modifiers](super::input_modifier) can change the captured dimension.
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
 /// [`ActionValue::convert`](crate::action_value::ActionValue::convert).
