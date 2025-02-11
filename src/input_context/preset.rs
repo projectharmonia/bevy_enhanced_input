@@ -137,7 +137,7 @@ impl<I: InputBindSet> InputBindSet for Cardinal<I> {
     }
 }
 
-/// A preset to map buttons as 2-dimensional input.
+/// A preset to map buttons as 1-dimensional input.
 ///
 /// Positive binding will be passed as is and negative will be reversed using [`Negate`].
 ///
@@ -160,7 +160,7 @@ impl<I: InputBindSet> InputBindSet for Bidirectional<I> {
     }
 }
 
-/// A preset to map a stick as 2-dimensional input.
+/// A preset to map a stick as 1-dimensional input.
 ///
 /// Represents the side of a gamepad's analog stick.
 #[derive(Debug, Clone, Copy)]
