@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Derive `Reflect` for `Input` and `ModKeys`.
 - Derive `PartialEq` for `Input`.
 
+### Fixed
+
+- Reversed `west` and `east` directions for `Cardinal`.
+
 ## [0.7.2] - 2025-01-24
 
 ### Changed
