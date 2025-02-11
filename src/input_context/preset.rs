@@ -75,9 +75,9 @@ impl Cardinal<KeyCode> {
     pub fn wasd_keys() -> Self {
         Self {
             north: KeyCode::KeyW,
-            east: KeyCode::KeyA,
+            east: KeyCode::KeyD,
             south: KeyCode::KeyS,
-            west: KeyCode::KeyD,
+            west: KeyCode::KeyA,
         }
     }
 
@@ -88,9 +88,9 @@ impl Cardinal<KeyCode> {
     pub fn arrow_keys() -> Self {
         Self {
             north: KeyCode::ArrowUp,
-            east: KeyCode::ArrowLeft,
+            east: KeyCode::ArrowRight,
             south: KeyCode::ArrowDown,
-            west: KeyCode::ArrowRight,
+            west: KeyCode::ArrowLeft,
         }
     }
 }
@@ -103,9 +103,9 @@ impl Cardinal<GamepadButton> {
     pub fn dpad_buttons() -> Self {
         Self {
             north: GamepadButton::DPadUp,
-            east: GamepadButton::DPadLeft,
+            east: GamepadButton::DPadRight,
             south: GamepadButton::DPadDown,
-            west: GamepadButton::DPadRight,
+            west: GamepadButton::DPadLeft,
         }
     }
 }
@@ -118,11 +118,8 @@ impl<I: InputBindSet> InputBindSet for Cardinal<I> {
             .bindings()
             .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
 
-        // -X
-        let east = self
-            .east
-            .bindings()
-            .map(|binding| binding.with_modifiers(Negate::all()));
+        // X
+        let east = self.east.bindings();
 
         // -Y
         let south = self
@@ -130,8 +127,11 @@ impl<I: InputBindSet> InputBindSet for Cardinal<I> {
             .bindings()
             .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::YXZ)));
 
-        // X
-        let west = self.west.bindings();
+        // -X
+        let west = self
+            .west
+            .bindings()
+            .map(|binding| binding.with_modifiers(Negate::all()));
 
         north.chain(east).chain(south).chain(west)
     }
