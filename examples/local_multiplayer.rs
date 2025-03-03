@@ -29,6 +29,7 @@ struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>()
+            .add_observer(binding)
             .add_observer(apply_movement)
             .add_observer(rotate)
             .add_systems(Startup, spawn)
@@ -51,6 +52,52 @@ fn spawn(mut commands: Commands) {
         Transform::from_translation(-Vec3::X * 50.0),
         PlayerColor(BLUE_600.into()),
         Player::Second,
+    ));
+}
+
+fn binding(
+    mut trigger: Trigger<Binding<PlayerBox>>,
+    gamepads: Res<Gamepads>,
+    players: Query<&Player>,
+) {
+    // Could be stored in the context itself, but it's usually
+    // better to have a separate component that is shared
+    // across all contexts.
+    let player = *players.get(trigger.entity()).unwrap();
+
+    // By default context read inputs from all gamepads,
+    // but for local multiplayer we need assign specific
+    // gamepad index.
+    if let Some(&entity) = gamepads.get(player as usize) {
+        trigger.set_gamepad(entity);
+    }
+
+    // Assign different mappings based player index.
+    match player {
+        Player::First => {
+            trigger
+                .bind::<Move>()
+                .to((Cardinal::wasd_keys(), GamepadStick::Left));
+            trigger
+                .bind::<Rotate>()
+                .to((KeyCode::Space, GamepadButton::South));
+        }
+        Player::Second => {
+            trigger
+                .bind::<Move>()
+                .to((Cardinal::arrow_keys(), GamepadStick::Left));
+            trigger
+                .bind::<Rotate>()
+                .to((KeyCode::Numpad0, GamepadButton::South));
+        }
+    }
+
+    // Can be called multiple times extend bindings.
+    // In our case we add modifiers for all players.
+    trigger.bind::<Move>().with_modifiers((
+        DeadZone::default(),
+        SmoothNudge::default(),
+        Scale::splat(DEFAULT_SPEED),
     ));
 }
 
@@ -80,8 +127,8 @@ fn update_gamepads(
         }
     }
 
-    // Trigger contexts rebuild to update associated gamepads.
-    commands.trigger(RebuildInputContexts);
+    // Update associated gamepads.
+    commands.trigger(RebuildBindings);
 }
 
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
@@ -93,51 +140,6 @@ enum Player {
 /// A resource that tracks all connected gamepads to pick them by index.
 #[derive(Resource, Default, Deref, DerefMut)]
 struct Gamepads(Vec<Entity>);
-
-impl InputContext for PlayerBox {
-    fn context_instance(world: &World, entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        // Could be stored in the context itself, but it's usually
-        // better to have a separate component that is shared
-        // across all contexts.
-        let player = *world.get::<Player>(entity).unwrap();
-
-        // By default context read inputs from all gamepads,
-        // but for local multiplayer we need assign specific
-        // gamepad index.
-        let gamepads = world.resource::<Gamepads>();
-        if let Some(&entity) = gamepads.get(player as usize) {
-            ctx.set_gamepad(entity);
-        }
-
-        // Assign different mappings based player index.
-        match player {
-            Player::First => {
-                ctx.bind::<Move>()
-                    .to((Cardinal::wasd_keys(), GamepadStick::Left));
-                ctx.bind::<Rotate>()
-                    .to((KeyCode::Space, GamepadButton::South));
-            }
-            Player::Second => {
-                ctx.bind::<Move>()
-                    .to((Cardinal::arrow_keys(), GamepadStick::Left));
-                ctx.bind::<Rotate>()
-                    .to((KeyCode::Numpad0, GamepadButton::South));
-            }
-        }
-
-        // Can be called multiple times extend bindings.
-        // In our case we cant to add modifiers for all players.
-        ctx.bind::<Move>().with_modifiers((
-            DeadZone::default(),
-            SmoothNudge::default(),
-            Scale::splat(DEFAULT_SPEED),
-        ));
-
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]

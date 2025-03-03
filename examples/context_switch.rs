@@ -26,17 +26,44 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<OnFoot>()
             .add_input_context::<InCar>()
-            .add_systems(Startup, spawn)
+            .add_observer(foot_binding)
+            .add_observer(car_binding)
             .add_observer(apply_movement)
             .add_observer(rotate)
             .add_observer(enter_car)
-            .add_observer(exit_car);
+            .add_observer(exit_car)
+            .add_systems(Startup, spawn);
     }
 }
 
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
     commands.spawn((PlayerBox, OnFoot));
+}
+
+fn foot_binding(mut trigger: Trigger<Binding<OnFoot>>) {
+    trigger
+        .bind::<Move>()
+        .to(Cardinal::wasd_keys())
+        .with_modifiers((
+            DeadZone::default(),
+            SmoothNudge::default(),
+            Scale::splat(DEFAULT_SPEED),
+        ));
+    trigger.bind::<Rotate>().to(KeyCode::Space);
+    trigger.bind::<EnterCar>().to(KeyCode::Enter);
+}
+
+fn car_binding(mut trigger: Trigger<Binding<InCar>>) {
+    trigger
+        .bind::<Move>()
+        .to(Cardinal::wasd_keys())
+        .with_modifiers((
+            DeadZone::default(),
+            SmoothNudge::default(),
+            Scale::splat(DEFAULT_SPEED + 20.0), // Make car faster.
+        ));
+    trigger.bind::<ExitCar>().to(KeyCode::Enter);
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
@@ -81,24 +108,6 @@ fn exit_car(
 #[derive(Component)]
 struct OnFoot;
 
-impl InputContext for OnFoot {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Move>()
-            .to(Cardinal::wasd_keys())
-            .with_modifiers((
-                DeadZone::default(),
-                SmoothNudge::default(),
-                Scale::splat(DEFAULT_SPEED),
-            ));
-        ctx.bind::<Rotate>().to(KeyCode::Space);
-        ctx.bind::<EnterCar>().to(KeyCode::Enter);
-
-        ctx
-    }
-}
-
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]
 struct Move;
@@ -117,23 +126,6 @@ struct EnterCar;
 
 #[derive(Component)]
 struct InCar;
-
-impl InputContext for InCar {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Move>()
-            .to(Cardinal::wasd_keys())
-            .with_modifiers((
-                DeadZone::default(),
-                SmoothNudge::default(),
-                Scale::splat(DEFAULT_SPEED + 20.0), // Make car faster.
-            ));
-        ctx.bind::<ExitCar>().to(KeyCode::Enter);
-
-        ctx
-    }
-}
 
 /// Switches context to [`OnFoot`].
 ///

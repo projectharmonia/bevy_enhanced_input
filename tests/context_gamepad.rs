@@ -5,7 +5,8 @@ use bevy_enhanced_input::prelude::*;
 fn any() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<AnyGamepad>();
+        .add_input_context::<AnyGamepad>()
+        .add_observer(any_gamepad_binding);
 
     let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();
     let gamepad_entity2 = app.world_mut().spawn(Gamepad::default()).id();
@@ -19,8 +20,8 @@ fn any() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<AnyGamepad>(context_entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<AnyGamepad>(context_entity);
     assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
@@ -31,8 +32,8 @@ fn any() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<AnyGamepad>(context_entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<AnyGamepad>(context_entity);
     assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 }
 
@@ -40,7 +41,8 @@ fn any() {
 fn by_id() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<SingleGamepad>();
+        .add_input_context::<SingleGamepad>()
+        .add_observer(single_gamepad_binding);
 
     let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();
     let gamepad_entity2 = app.world_mut().spawn(Gamepad::default()).id();
@@ -54,8 +56,8 @@ fn by_id() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<SingleGamepad>(context_entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<SingleGamepad>(context_entity);
     assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
@@ -66,36 +68,29 @@ fn by_id() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<SingleGamepad>(context_entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<SingleGamepad>(context_entity);
     assert_eq!(ctx.action::<DummyAction>().state(), ActionState::None);
+}
+
+fn any_gamepad_binding(mut trigger: Trigger<Binding<AnyGamepad>>) {
+    trigger.bind::<DummyAction>().to(DummyAction::BUTTON);
+}
+
+fn single_gamepad_binding(
+    mut trigger: Trigger<Binding<SingleGamepad>>,
+    gamepads: Query<&SingleGamepad>,
+) {
+    let gamepad_entity = **gamepads.get(trigger.entity()).unwrap();
+    trigger.set_gamepad(gamepad_entity);
+    trigger.bind::<DummyAction>().to(DummyAction::BUTTON);
 }
 
 #[derive(Debug, Component)]
 struct AnyGamepad;
 
-impl InputContext for AnyGamepad {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<DummyAction>().to(DummyAction::BUTTON);
-        ctx
-    }
-}
-
 #[derive(Debug, Component, Deref)]
 struct SingleGamepad(Entity);
-
-impl InputContext for SingleGamepad {
-    fn context_instance(world: &World, entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        let gamepad_entity = **world.get::<Self>(entity).unwrap();
-        ctx.set_gamepad(gamepad_entity);
-        ctx.bind::<DummyAction>().to(DummyAction::BUTTON);
-
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]

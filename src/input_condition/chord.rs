@@ -5,57 +5,36 @@ use bevy::prelude::*;
 use super::{ConditionKind, InputCondition};
 use crate::{
     action_value::ActionValue,
-    input_context::{
-        context_instance::{ActionState, ActionsData},
-        input_action::InputAction,
-    },
+    input_action::InputAction,
+    input_context::{ActionState, ActionsData},
 };
 
-/// Requires another action to not be fired within the same context.
+/// Requires action `A` to be fired within the same context.
+///
+/// Inherits [`ActionState`] from the specified action.
 #[derive(Debug)]
-pub struct BlockBy<A: InputAction> {
-    /// Action that blocks this condition when active.
+pub struct Chord<A: InputAction> {
+    /// Required action.
     marker: PhantomData<A>,
-
-    /// Whether to block the state or only the events.
-    ///
-    /// By default set to false.
-    pub events_only: bool,
 }
 
-impl<A: InputAction> BlockBy<A> {
-    /// Block only events.
-    ///
-    /// For details, see [`ConditionKind::Blocker::events_only`].
-    ///
-    /// This can be used for chords to avoid triggering required actions.
-    /// Otherwise, the chord will register the release and cancel itself.
-    pub fn events_only() -> Self {
-        Self {
-            marker: PhantomData,
-            events_only: true,
-        }
-    }
-}
-
-impl<A: InputAction> Default for BlockBy<A> {
+impl<A: InputAction> Default for Chord<A> {
     fn default() -> Self {
         Self {
             marker: PhantomData,
-            events_only: false,
         }
     }
 }
 
-impl<A: InputAction> Clone for BlockBy<A> {
+impl<A: InputAction> Clone for Chord<A> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<A: InputAction> Copy for BlockBy<A> {}
+impl<A: InputAction> Copy for Chord<A> {}
 
-impl<A: InputAction> InputCondition for BlockBy<A> {
+impl<A: InputAction> InputCondition for Chord<A> {
     fn evaluate(
         &mut self,
         actions: &ActionsData,
@@ -63,23 +42,19 @@ impl<A: InputAction> InputCondition for BlockBy<A> {
         _value: ActionValue,
     ) -> ActionState {
         if let Some(action) = actions.action::<A>() {
-            if action.state() == ActionState::Fired {
-                return ActionState::None;
-            }
+            // Inherit state from the chorded action.
+            action.state()
         } else {
             warn_once!(
                 "action `{}` is not present in context",
                 any::type_name::<A>()
             );
+            ActionState::None
         }
-
-        ActionState::Fired
     }
 
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Blocker {
-            events_only: self.events_only,
-        }
+        ConditionKind::Implicit
     }
 }
 
@@ -88,11 +63,11 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::input_context::context_instance::ActionData;
+    use crate::input_context::{ActionData, ActionsData};
 
     #[test]
-    fn block() {
-        let mut condition = BlockBy::<DummyAction>::default();
+    fn chord() {
+        let mut condition = Chord::<DummyAction>::default();
         let mut action = ActionData::new::<DummyAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
@@ -101,19 +76,19 @@ mod tests {
 
         assert_eq!(
             condition.evaluate(&actions, &time, true.into()),
-            ActionState::None,
+            ActionState::Fired,
         );
     }
 
     #[test]
     fn missing_action() {
-        let mut condition = BlockBy::<DummyAction>::default();
+        let mut condition = Chord::<DummyAction>::default();
         let actions = ActionsData::default();
         let time = Time::default();
 
         assert_eq!(
             condition.evaluate(&actions, &time, true.into()),
-            ActionState::Fired,
+            ActionState::None,
         );
     }
 

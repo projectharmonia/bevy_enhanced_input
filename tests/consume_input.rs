@@ -5,7 +5,8 @@ use bevy_enhanced_input::prelude::*;
 fn consume() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<ConsumeOnly>();
+        .add_input_context::<ConsumeOnly>()
+        .add_observer(consume_only_binding);
 
     let entity1 = app.world_mut().spawn(ConsumeOnly).id();
     let entity2 = app.world_mut().spawn(ConsumeOnly).id();
@@ -18,12 +19,12 @@ fn consume() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let entity1_ctx = instances.context::<ConsumeOnly>(entity1);
+    let entity1_ctx = registry.context::<ConsumeOnly>(entity1);
     assert_eq!(entity1_ctx.action::<Consume>().state(), ActionState::Fired);
 
-    let entity2_ctx = instances.context::<ConsumeOnly>(entity2);
+    let entity2_ctx = registry.context::<ConsumeOnly>(entity2);
     assert_eq!(
         entity2_ctx.action::<Consume>().state(),
         ActionState::None,
@@ -35,7 +36,8 @@ fn consume() {
 fn passthrough() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<PassthroughOnly>();
+        .add_input_context::<PassthroughOnly>()
+        .add_observer(passthrough_only_binding);
 
     let entity1 = app.world_mut().spawn(PassthroughOnly).id();
     let entity2 = app.world_mut().spawn(PassthroughOnly).id();
@@ -48,15 +50,15 @@ fn passthrough() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let entity1_ctx = instances.context::<PassthroughOnly>(entity1);
+    let entity1_ctx = registry.context::<PassthroughOnly>(entity1);
     assert_eq!(
         entity1_ctx.action::<Passthrough>().state(),
         ActionState::Fired
     );
 
-    let entity2_ctx = instances.context::<PassthroughOnly>(entity2);
+    let entity2_ctx = registry.context::<PassthroughOnly>(entity2);
     assert_eq!(
         entity2_ctx.action::<Passthrough>().state(),
         ActionState::Fired,
@@ -68,7 +70,8 @@ fn passthrough() {
 fn consume_then_passthrough() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<ConsumeThenPassthrough>();
+        .add_input_context::<ConsumeThenPassthrough>()
+        .add_observer(consume_then_passthrough_binding);
 
     let entity = app.world_mut().spawn(ConsumeThenPassthrough).id();
 
@@ -80,8 +83,8 @@ fn consume_then_passthrough() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<ConsumeThenPassthrough>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<ConsumeThenPassthrough>(entity);
     assert_eq!(ctx.action::<Consume>().state(), ActionState::Fired);
     assert_eq!(
         ctx.action::<Passthrough>().state(),
@@ -94,7 +97,8 @@ fn consume_then_passthrough() {
 fn passthrough_then_consume() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<PassthroughThenConsume>();
+        .add_input_context::<PassthroughThenConsume>()
+        .add_observer(passthrough_then_consume_binding);
 
     let entity = app.world_mut().spawn(PassthroughThenConsume).id();
 
@@ -106,61 +110,41 @@ fn passthrough_then_consume() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<PassthroughThenConsume>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<PassthroughThenConsume>(entity);
     assert_eq!(ctx.action::<Consume>().state(), ActionState::Fired);
     assert_eq!(ctx.action::<Passthrough>().state(), ActionState::Fired);
+}
+
+fn consume_only_binding(mut trigger: Trigger<Binding<ConsumeOnly>>) {
+    trigger.bind::<Consume>().to(KEY);
+}
+
+fn passthrough_only_binding(mut trigger: Trigger<Binding<PassthroughOnly>>) {
+    trigger.bind::<Passthrough>().to(KEY);
+}
+
+fn consume_then_passthrough_binding(mut trigger: Trigger<Binding<ConsumeThenPassthrough>>) {
+    trigger.bind::<Consume>().to(KEY);
+    trigger.bind::<Passthrough>().to(KEY);
+}
+
+fn passthrough_then_consume_binding(mut trigger: Trigger<Binding<PassthroughThenConsume>>) {
+    trigger.bind::<Passthrough>().to(KEY);
+    trigger.bind::<Consume>().to(KEY);
 }
 
 #[derive(Debug, Component)]
 struct PassthroughOnly;
 
-impl InputContext for PassthroughOnly {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<Passthrough>().to(KEY);
-        ctx
-    }
-}
-
 #[derive(Debug, Component)]
 struct ConsumeOnly;
-
-impl InputContext for ConsumeOnly {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<Consume>().to(KEY);
-        ctx
-    }
-}
 
 #[derive(Debug, Component)]
 struct PassthroughThenConsume;
 
-impl InputContext for PassthroughThenConsume {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Passthrough>().to(KEY);
-        ctx.bind::<Consume>().to(KEY);
-
-        ctx
-    }
-}
-
 #[derive(Debug, Component)]
 struct ConsumeThenPassthrough;
-
-impl InputContext for ConsumeThenPassthrough {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Consume>().to(KEY);
-        ctx.bind::<Passthrough>().to(KEY);
-
-        ctx
-    }
-}
 
 /// A key used by both [`Consume`] and [`Passthrough`] actions.
 const KEY: KeyCode = KeyCode::KeyA;

@@ -26,10 +26,11 @@ struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>()
-            .add_systems(Startup, spawn)
-            .add_systems(Update, draw_egui)
+            .add_observer(binding)
             .add_observer(apply_movement)
-            .add_observer(zoom);
+            .add_observer(zoom)
+            .add_systems(Startup, spawn)
+            .add_systems(Update, draw_egui);
     }
 }
 
@@ -70,6 +71,21 @@ fn spawn(mut commands: Commands) {
         });
 }
 
+fn binding(mut trigger: Trigger<Binding<PlayerBox>>) {
+    trigger
+        .bind::<Move>()
+        .to(Cardinal::wasd_keys())
+        .with_modifiers((
+            DeadZone::default(),
+            SmoothNudge::default(),
+            Scale::splat(DEFAULT_SPEED),
+        ));
+    trigger
+        .bind::<Zoom>()
+        .to(Input::mouse_wheel().with_modifiers(SwizzleAxis::YXZ))
+        .with_modifiers(Scale::splat(3.0));
+}
+
 fn draw_egui(mut text_edit: Local<String>, mut contexts: EguiContexts) {
     Window::new("Egui").show(contexts.ctx_mut(), |ui| {
         ui.label("Type text:");
@@ -86,25 +102,6 @@ fn zoom(trigger: Trigger<Fired<Zoom>>, mut players: Query<&mut Transform>) {
     // Scale entity to fake zoom.
     let mut transform = players.get_mut(trigger.entity()).unwrap();
     transform.scale += Vec3::splat(trigger.value);
-}
-
-impl InputContext for PlayerBox {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Move>()
-            .to(Cardinal::wasd_keys())
-            .with_modifiers((
-                DeadZone::default(),
-                SmoothNudge::default(),
-                Scale::splat(DEFAULT_SPEED),
-            ));
-        ctx.bind::<Zoom>()
-            .to(Input::mouse_wheel().with_modifiers(SwizzleAxis::YXZ))
-            .with_modifiers(Scale::splat(3.0));
-
-        ctx
-    }
 }
 
 #[derive(Debug, InputAction)]

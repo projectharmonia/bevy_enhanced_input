@@ -26,19 +26,43 @@ impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<PlayerBox>()
             .add_input_context::<Swimming>()
-            .add_systems(Startup, spawn)
+            .add_observer(regular_binding)
+            .add_observer(swimming_binding)
             .add_observer(apply_movement)
             .add_observer(rotate)
             .add_observer(exit_water)
             .add_observer(enter_water)
             .add_observer(start_diving)
-            .add_observer(end_diving);
+            .add_observer(end_diving)
+            .add_systems(Startup, spawn);
     }
 }
 
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
     commands.spawn(PlayerBox);
+}
+
+fn regular_binding(mut trigger: Trigger<Binding<PlayerBox>>) {
+    trigger
+        .bind::<Move>()
+        .to(Cardinal::wasd_keys())
+        .with_modifiers((
+            DeadZone::default(),
+            SmoothNudge::default(),
+            Scale::splat(DEFAULT_SPEED),
+        ));
+    trigger.bind::<Rotate>().to(KeyCode::Space);
+    trigger.bind::<EnterWater>().to(KeyCode::Enter);
+}
+
+fn swimming_binding(mut trigger: Trigger<Binding<Swimming>>) {
+    // `PlayerBox` has lower priority, so `Dive` and `ExitWater` consume inputs first,
+    // preventing `Rotate` and `EnterWater` from being triggered.
+    // The consuming behavior can be configured in the `InputAction` trait.
+    trigger.set_priority(1);
+    trigger.bind::<Dive>().to(KeyCode::Space);
+    trigger.bind::<ExitWater>().to(KeyCode::Enter);
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
@@ -84,24 +108,6 @@ fn exit_water(
     commands.entity(trigger.entity()).remove::<Swimming>();
 }
 
-impl InputContext for PlayerBox {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<Move>()
-            .to(Cardinal::wasd_keys())
-            .with_modifiers((
-                DeadZone::default(),
-                SmoothNudge::default(),
-                Scale::splat(DEFAULT_SPEED),
-            ));
-        ctx.bind::<Rotate>().to(KeyCode::Space);
-        ctx.bind::<EnterWater>().to(KeyCode::Enter);
-
-        ctx
-    }
-}
-
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]
 struct Move;
@@ -110,6 +116,7 @@ struct Move;
 #[input_action(output = bool)]
 struct Rotate;
 
+/// Adds [`Swimming`].
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]
 struct EnterWater;
@@ -118,27 +125,11 @@ struct EnterWater;
 #[derive(Component)]
 struct Swimming;
 
-impl InputContext for Swimming {
-    const PRIORITY: isize = 1; // Set higher priority to execute its actions first.
-
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        // `PlayerBox` has lower priority, so `Dive` and `ExitWater` consume inputs first,
-        // preventing `Rotate` and `EnterWater` from being triggered.
-        // The consuming behavior can be configured in the `InputAction` trait.
-        ctx.bind::<Dive>().to(KeyCode::Space);
-        ctx.bind::<ExitWater>().to(KeyCode::Enter);
-
-        ctx
-    }
-}
-
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]
 struct Dive;
 
-/// Adds [`Swimming`] context on top of [`PlayerBox`].
+/// Removes [`Swimming`].
 ///
 /// We set `require_reset` to `true` because [`EnterWater`] action uses the same input,
 /// and we want it to be triggerable only after the button is released.

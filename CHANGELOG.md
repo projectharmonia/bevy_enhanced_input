@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Rename `ContextInstance` into `InputContext`. `InputContext` is no longer a trait. Bindings now configured via observer on `Bindings<C>` (see docs on `InputContextAppExt::add_input_context` for details). Priority now set at runtime via `InputContext::set_priority`. 
+- Move all child modules from `input_context` under crate root (one level upper). 
+- Rename `input_context` module into `registry` and `context_instance` into `input_context`.
+- Rename `ContextAppExt` into `InputContextAppExt`.
+- Rename `ContextInstances` into `InputContextRegistry`.
+- Rename `RebuildInputContexts` into `RebuildBindings`.
 - Reorder constants in `ModeKeys`.
 - Derive `Reflect` for `Input` and `ModKeys`.
 - Derive `PartialEq` for `Input`.

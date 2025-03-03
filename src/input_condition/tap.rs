@@ -3,31 +3,33 @@ use bevy::prelude::*;
 use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
 use crate::{
     action_value::ActionValue,
-    input_context::context_instance::{ActionState, ActionsData},
+    input_context::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
-/// when the input is released after having been actuated for [`Self::hold_time`] seconds.
+/// when the input is released within the [`Self::release_time`] seconds.
 ///
-/// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
+/// Returns [`ActionState::None`] when the input is actuated more than [`Self::release_time`] seconds.
 #[derive(Clone, Copy, Debug)]
-pub struct HoldAndRelease {
-    /// How long does the input have to be held to cause trigger.
-    pub hold_time: f32,
+pub struct Tap {
+    /// Time window within which the action must be released to register as a tap.
+    pub release_time: f32,
 
     /// Trigger threshold.
     pub actuation: f32,
 
     timer: ConditionTimer,
+    actuated: bool,
 }
 
-impl HoldAndRelease {
+impl Tap {
     #[must_use]
-    pub fn new(hold_time: f32) -> Self {
+    pub fn new(release_time: f32) -> Self {
         Self {
-            hold_time,
+            release_time,
             actuation: DEFAULT_ACTUATION,
             timer: Default::default(),
+            actuated: false,
         }
     }
 
@@ -45,29 +47,32 @@ impl HoldAndRelease {
     }
 }
 
-impl InputCondition for HoldAndRelease {
+impl InputCondition for Tap {
     fn evaluate(
         &mut self,
         _actions: &ActionsData,
         time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
-        // Evaluate the updated held duration prior to checking for actuation.
-        // This stops us failing to trigger if the input is released on the
-        // threshold frame due to held duration being 0.
-        self.timer.update(time);
-        let held_duration = self.timer.duration();
-
-        if value.is_actuated(self.actuation) {
-            ActionState::Ongoing
+        let last_actuated = self.actuated;
+        let last_held_duration = self.timer.duration();
+        self.actuated = value.is_actuated(self.actuation);
+        if self.actuated {
+            self.timer.update(time);
         } else {
             self.timer.reset();
-            // Trigger if we've passed the threshold and released.
-            if held_duration >= self.hold_time {
-                ActionState::Fired
-            } else {
-                ActionState::None
-            }
+        }
+
+        if last_actuated && !self.actuated && last_held_duration <= self.release_time {
+            // Only trigger if pressed then released quickly enough.
+            ActionState::Fired
+        } else if self.timer.duration() >= self.release_time {
+            // Once we pass the threshold halt all triggering until released.
+            ActionState::None
+        } else if self.actuated {
+            ActionState::Ongoing
+        } else {
+            ActionState::None
         }
     }
 }
@@ -77,11 +82,10 @@ mod tests {
     use std::time::Duration;
 
     use super::*;
-    use crate::input_context::context_instance::ActionsData;
 
     #[test]
-    fn hold_and_release() {
-        let mut condition = HoldAndRelease::new(1.0);
+    fn tap() {
+        let mut condition = Tap::new(1.0);
         let actions = ActionsData::default();
         let mut time = Time::default();
 
@@ -93,16 +97,18 @@ mod tests {
         time.advance_by(Duration::from_secs(1));
         assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
-            ActionState::Fired
+            ActionState::Fired,
         );
 
         time.advance_by(Duration::ZERO);
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
-            ActionState::Ongoing,
-        );
-        assert_eq!(
             condition.evaluate(&actions, &time, 0.0.into()),
+            ActionState::None
+        );
+
+        time.advance_by(Duration::from_secs(2));
+        assert_eq!(
+            condition.evaluate(&actions, &time, 1.0.into()),
             ActionState::None
         );
     }
