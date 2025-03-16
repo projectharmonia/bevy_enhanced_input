@@ -1,4 +1,4 @@
-use std::any;
+use core::any;
 
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
