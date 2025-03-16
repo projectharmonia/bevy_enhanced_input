@@ -92,7 +92,7 @@ impl InputCondition for Hold {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use core::time::Duration;
 
     use super::*;
     use crate::input_context::ActionsData;

@@ -9,7 +9,7 @@ pub mod pulse;
 pub mod release;
 pub mod tap;
 
-use std::{fmt::Debug, iter};
+use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;
 
@@ -97,7 +97,7 @@ macro_rules! impl_tuple_condition {
             #[allow(non_snake_case)]
             fn conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>> {
                 let ($($name,)+) = self;
-                std::iter::empty()
+                core::iter::empty()
                     $(.chain(iter::once(Box::new($name) as Box<dyn InputCondition>)))+
             }
         }

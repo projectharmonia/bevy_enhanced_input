@@ -1,4 +1,4 @@
-use std::{any, marker::PhantomData};
+use core::{any, marker::PhantomData};
 
 use bevy::prelude::*;
 

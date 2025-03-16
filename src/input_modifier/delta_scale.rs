@@ -30,7 +30,7 @@ impl InputModifier for DeltaScale {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use core::time::Duration;
 
     use super::*;
 

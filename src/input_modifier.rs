@@ -7,7 +7,7 @@ pub mod scale;
 pub mod smooth_nudge;
 pub mod swizzle_axis;
 
-use std::{fmt::Debug, iter};
+use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;
 
@@ -56,7 +56,7 @@ macro_rules! impl_tuple_modifiers {
             #[allow(non_snake_case)]
             fn modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>> {
                 let ($($name,)+) = self;
-                std::iter::empty()
+                core::iter::empty()
                     $(.chain(iter::once(Box::new($name) as Box<dyn InputModifier>)))+
             }
         }

@@ -1,4 +1,4 @@
-use std::{
+use core::{
     any::{self, TypeId},
     cmp::Ordering,
     fmt::Debug,
