@@ -15,7 +15,7 @@ include = ["/src", "/tests", "/examples", "/LICENSE*"]
 bevy_enhanced_input_macros = { path = "macros", version = "0.7.0" }
 bevy = { version = "0.15", default-features = false, features = ["serialize"] }
 bevy_egui = { version = "0.33", default-features = false, optional = true }
-serde = "1.0"
+serde = { version = "1.0", default-features = false, features = ["derive"] }
 bitflags = { version = "2.6", features = ["serde"] }
 
 [dev-dependencies]
@@ -48,6 +48,9 @@ required-features = [
 
 [lints.clippy]
 type_complexity = "allow"
+alloc_instead_of_core = "warn"
+std_instead_of_alloc = "warn"
+std_instead_of_core = "warn"
 
 [workspace]
 members = ["macros"]

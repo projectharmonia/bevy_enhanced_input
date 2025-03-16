@@ -35,7 +35,7 @@ impl ConditionTimer {
 
 #[cfg(test)]
 mod tests {
-    use std::time::Duration;
+    use core::time::Duration;
 
     use super::*;
 

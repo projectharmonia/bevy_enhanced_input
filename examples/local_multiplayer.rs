@@ -2,7 +2,7 @@
 
 mod player_box;
 
-use std::f32::consts::FRAC_PI_4;
+use core::f32::consts::FRAC_PI_4;
 
 use bevy::{
     color::palettes::tailwind::{BLUE_600, RED_600},

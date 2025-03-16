@@ -1,4 +1,4 @@
-use std::{
+use core::{
     fmt::{self, Display, Formatter},
     hash::Hash,
 };
@@ -265,6 +265,8 @@ impl From<Entity> for GamepadDevice {
 
 #[cfg(test)]
 mod tests {
+    use alloc::string::ToString;
+
     use super::*;
 
     #[test]

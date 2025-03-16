@@ -1,4 +1,5 @@
-use std::iter;
+use alloc::{boxed::Box, vec::Vec};
+use core::iter;
 
 use super::{
     input_condition::{InputCondition, InputConditionSet},
@@ -228,7 +229,7 @@ macro_rules! impl_tuple_binds {
             #[allow(non_snake_case)]
             fn bindings(self) -> impl Iterator<Item = InputBind> {
                 let ($($name,)+) = self;
-                std::iter::empty()
+                core::iter::empty()
                     $(.chain($name.bindings()))+
             }
         }

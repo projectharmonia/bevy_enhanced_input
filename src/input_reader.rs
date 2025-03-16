@@ -1,4 +1,5 @@
-use std::hash::Hash;
+use alloc::vec::Vec;
+use core::hash::Hash;
 
 use bevy::{
     ecs::system::SystemParam,
@@ -41,7 +42,7 @@ impl InputReader<'_, '_> {
         self.consumed.reset();
 
         // Temporary take the original value to avoid issues with the borrow checker.
-        let mut reset_input = std::mem::take(&mut *self.reset_input);
+        let mut reset_input = core::mem::take(&mut *self.reset_input);
         reset_input.retain(|&input| {
             if self.value(input).as_bool() {
                 self.consume(input);

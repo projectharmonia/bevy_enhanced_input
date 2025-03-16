@@ -1,4 +1,5 @@
-use std::{error::Error, fmt::Write, fs};
+use core::{error::Error, fmt::Write};
+use std::fs;
 
 use bevy::{
     input::{common_conditions::*, keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
