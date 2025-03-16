@@ -9,6 +9,7 @@ pub mod pulse;
 pub mod release;
 pub mod tap;
 
+use alloc::boxed::Box;
 use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;

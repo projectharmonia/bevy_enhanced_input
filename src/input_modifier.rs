@@ -7,6 +7,7 @@ pub mod scale;
 pub mod smooth_nudge;
 pub mod swizzle_axis;
 
+use alloc::boxed::Box;
 use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;

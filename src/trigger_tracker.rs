@@ -1,3 +1,5 @@
+use alloc::boxed::Box;
+
 use bevy::prelude::*;
 
 use crate::{
