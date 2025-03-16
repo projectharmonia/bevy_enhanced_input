@@ -5,7 +5,8 @@ use bevy_enhanced_input::prelude::*;
 fn max_abs() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -17,8 +18,8 @@ fn max_abs() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(ctx.action::<MaxAbs>().value(), Vec2::Y.into());
 }
 
@@ -26,7 +27,8 @@ fn max_abs() {
 fn cumulative() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -38,8 +40,8 @@ fn cumulative() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     assert_eq!(
         ctx.action::<Cumulative>().value(),
         Vec2::ZERO.into(),
@@ -47,19 +49,13 @@ fn cumulative() {
     );
 }
 
+fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
+    trigger.bind::<MaxAbs>().to(Cardinal::wasd_keys());
+    trigger.bind::<Cumulative>().to(Cardinal::arrow_keys());
+}
+
 #[derive(Debug, Component)]
 struct DummyContext;
-
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<MaxAbs>().to(Cardinal::wasd_keys());
-        ctx.bind::<Cumulative>().to(Cardinal::arrow_keys());
-
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2, accumulation = MaxAbs)]

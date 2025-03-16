@@ -7,14 +7,15 @@ use bevy_enhanced_input::prelude::*;
 fn explicit() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Explicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
@@ -25,8 +26,8 @@ fn explicit() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Explicit>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -37,8 +38,8 @@ fn explicit() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<DummyContext>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Explicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
@@ -48,20 +49,21 @@ fn explicit() {
 fn implicit() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
@@ -72,14 +74,14 @@ fn implicit() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Ongoing);
@@ -90,28 +92,28 @@ fn implicit() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Implicit>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
@@ -121,20 +123,21 @@ fn implicit() {
 fn blocker() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
@@ -145,14 +148,14 @@ fn blocker() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -163,28 +166,28 @@ fn blocker() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::None);
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<Blocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -194,20 +197,21 @@ fn blocker() {
 fn events_blocker() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
@@ -218,14 +222,14 @@ fn events_blocker() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -237,14 +241,14 @@ fn events_blocker() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
@@ -255,44 +259,43 @@ fn events_blocker() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<ReleaseAction>();
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
-    let ctx = instances.context::<DummyContext>(entity);
+    let ctx = registry.context::<DummyContext>(entity);
     let action = ctx.action::<EventsBlocker>();
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 }
 
+fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
+    trigger
+        .bind::<ReleaseAction>()
+        .to(ReleaseAction::KEY)
+        .with_conditions(Release::default());
+    trigger
+        .bind::<Explicit>()
+        .with_conditions(Press::default())
+        .to(Explicit::KEY);
+    trigger
+        .bind::<Implicit>()
+        .with_conditions(Chord::<ReleaseAction>::default());
+    trigger
+        .bind::<Blocker>()
+        .to(Blocker::KEY)
+        .with_conditions(BlockBy::<ReleaseAction>::default());
+    trigger
+        .bind::<EventsBlocker>()
+        .to(EventsBlocker::KEY)
+        .with_conditions(BlockBy::<ReleaseAction>::events_only());
+}
+
 #[derive(Debug, Component)]
 struct DummyContext;
-
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<ReleaseAction>()
-            .to(ReleaseAction::KEY)
-            .with_conditions(Release::default());
-        ctx.bind::<Explicit>()
-            .with_conditions(Press::default())
-            .to(Explicit::KEY);
-        ctx.bind::<Implicit>()
-            .with_conditions(Chord::<ReleaseAction>::default());
-        ctx.bind::<Blocker>()
-            .to(Blocker::KEY)
-            .with_conditions(BlockBy::<ReleaseAction>::default());
-        ctx.bind::<EventsBlocker>()
-            .to(EventsBlocker::KEY)
-            .with_conditions(BlockBy::<ReleaseAction>::events_only());
-
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]

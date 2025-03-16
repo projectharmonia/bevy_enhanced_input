@@ -1,351 +1,725 @@
-pub mod context_instance;
-pub mod events;
-pub mod input_action;
-pub mod input_bind;
-pub mod input_condition;
-pub mod input_modifier;
-pub(super) mod input_reader;
-pub mod preset;
-
 use std::{
     any::{self, TypeId},
-    cmp::Reverse,
-    mem,
+    cmp::Ordering,
+    fmt::Debug,
 };
 
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    utils::{Entry, HashMap},
+};
 
-use context_instance::ContextInstance;
-use input_reader::{InputReader, ResetInput};
+use super::{
+    action_value::{ActionValue, ActionValueDim},
+    events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
+    input::{GamepadDevice, Input},
+    input_action::{Accumulation, ActionOutput, InputAction},
+    input_bind::{InputBind, InputBindSet},
+    input_condition::{InputCondition, InputConditionSet},
+    input_modifier::{InputModifier, InputModifierSet},
+    input_reader::{InputReader, ResetInput},
+    trigger_tracker::TriggerTracker,
+};
 
-/// An extension trait for [`App`] to register contexts.
+/// Instance for [`InputContext`].
 ///
-/// # Examples
+/// Stores [`InputAction`]s and evaluates their [`ActionState`] in the order they are bound.
 ///
-/// ```
-/// # use bevy::prelude::*;
-/// # use bevy_enhanced_input::prelude::*;
-/// let mut app = App::new();
-/// app.add_input_context::<Player>();
-/// # #[derive(Component)]
-/// # struct Player;
-/// # impl InputContext for Player {
-/// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
-/// # }
-/// ```
-pub trait ContextAppExt {
-    /// Registers an input context.
-    fn add_input_context<C: InputContext>(&mut self) -> &mut Self;
+/// Each action can have multiple associated [`Input`]s, any of which can trigger the action.
+///
+/// Additionally, you can assign [`InputModifier`]s and [`InputCondition`]s at both the action
+/// and input levels.
+///
+/// Action evaluation follows these steps:
+///
+/// 1. Iterate over each [`ActionValue`] from the associated [`Input`]s:
+///    1.1. Apply input-level [`InputModifier`]s.
+///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
+/// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
+///    Combined value be converted into [`ActionOutput::DIM`] using [`ActionValue::convert`].
+/// 3. Apply action level [`InputModifier`]s.
+/// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
+/// 5. Set the final [`ActionState`] based on the results.
+///    Final value be converted into [`InputAction::Output`] using [`ActionValue::convert`].
+#[derive(Default)]
+pub struct InputContext {
+    priority: usize,
+    gamepad: GamepadDevice,
+    action_binds: Vec<ActionBind>,
+    actions: ActionsData,
 }
 
-impl ContextAppExt for App {
-    fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
-        debug!("registering context `{}`", any::type_name::<C>());
-
-        self.add_observer(add_instance::<C>)
-            .add_observer(rebuild_instance::<C>)
-            .add_observer(remove_instance::<C>);
-
-        self
-    }
-}
-
-fn add_instance<C: InputContext>(
-    trigger: Trigger<OnAdd, C>,
-    mut set: ParamSet<(&World, ResMut<ContextInstances>)>,
-) {
-    // We need to borrow both the world and contexts,
-    // but we can't use `resource_scope` because observers
-    // don't provide mutable access to the world.
-    // So we just move it from the resource and put it back.
-    let mut instances = mem::take(&mut *set.p1());
-    instances.add::<C>(set.p0(), trigger.entity());
-    *set.p1() = instances;
-}
-
-fn rebuild_instance<C: InputContext>(
-    _trigger: Trigger<RebuildInputContexts>,
-    mut set: ParamSet<(&World, ResMut<ContextInstances>, ResMut<ResetInput>)>,
-    mut commands: Commands,
-    time: Res<Time<Virtual>>,
-) {
-    let mut instances = mem::take(&mut *set.p1());
-    let mut reset_input = mem::take(&mut *set.p2());
-    instances.rebuild::<C>(set.p0(), &mut commands, &mut reset_input, &time);
-    *set.p1() = instances;
-    *set.p2() = reset_input;
-}
-
-fn remove_instance<C: InputContext>(
-    trigger: Trigger<OnRemove, C>,
-    mut commands: Commands,
-    mut reset_input: ResMut<ResetInput>,
-    mut instances: ResMut<ContextInstances>,
-    time: Res<Time<Virtual>>,
-) {
-    instances.remove::<C>(&mut commands, &mut reset_input, &time, trigger.entity());
-}
-
-/// Stores instantiated [`InputContext`]s.
-#[derive(Resource, Default)]
-pub struct ContextInstances(Vec<InstanceGroup>);
-
-impl ContextInstances {
-    fn add<C: InputContext>(&mut self, world: &World, entity: Entity) {
-        debug!("adding `{}` to `{entity}`", any::type_name::<C>());
-
-        if let Some(group) = self
-            .0
-            .iter_mut()
-            .find(|group| group.type_id == TypeId::of::<C>())
-        {
-            let ctx = C::context_instance(world, entity);
-            group.instances.push((entity, ctx));
-        } else {
-            let priority = Reverse(C::PRIORITY);
-            let index = self
-                .0
-                .binary_search_by_key(&priority, |group| Reverse(group.priority))
-                .unwrap_or_else(|e| e);
-
-            let group = InstanceGroup::new::<C>(world, entity);
-            self.0.insert(index, group);
-        }
+impl InputContext {
+    /// Sets priority.
+    ///
+    /// See also [`Self::priority`]
+    pub fn set_priority(&mut self, priority: usize) {
+        self.priority = priority;
     }
 
-    fn rebuild<C: InputContext>(
-        &mut self,
-        world: &World,
-        commands: &mut Commands,
-        reset_input: &mut ResetInput,
-        time: &Time<Virtual>,
-    ) {
-        if let Some(group) = self
-            .0
-            .iter_mut()
-            .find(|group| group.type_id == TypeId::of::<C>())
-        {
-            debug!("rebuilding `{}`", any::type_name::<C>());
-            for (entity, ctx) in &mut group.instances {
-                ctx.trigger_removed(commands, reset_input, time, *entity);
-                *ctx = C::context_instance(world, *entity);
+    /// Determines the evaluation order.
+    ///
+    /// Ordering is global.
+    /// Components with higher priority evaluated first.
+    ///
+    /// By default the value is set to 0.
+    pub fn priority(&self) -> usize {
+        self.priority
+    }
+
+    /// Associates context with gamepad.
+    ///
+    /// By default it's [`GamepadDevice::Any`].
+    pub fn set_gamepad(&mut self, gamepad: impl Into<GamepadDevice>) {
+        self.gamepad = gamepad.into();
+    }
+
+    /// Starts binding an action.
+    ///
+    /// This method can be called multiple times for the same action to extend its mappings.
+    pub fn bind<A: InputAction>(&mut self) -> &mut ActionBind {
+        let type_id = TypeId::of::<A>();
+        match self.actions.entry(type_id) {
+            Entry::Occupied(_entry) => self
+                .action_binds
+                .iter_mut()
+                .find(|action_bind| action_bind.type_id == type_id)
+                .expect("actions and bindings should have matching type IDs"),
+            Entry::Vacant(entry) => {
+                entry.insert(ActionData::new::<A>());
+                self.action_binds.push(ActionBind::new::<A>());
+                self.action_binds.last_mut().unwrap()
             }
         }
     }
 
-    fn remove<C: InputContext>(
+    /// Returns associated bindings for action `A` if exists.
+    ///
+    /// For panicking version see [`Self::action_bind`].
+    /// For assigning bindings use [`Self::bind`].
+    pub fn get_action_bind<A: InputAction>(&self) -> Option<&ActionBind> {
+        self.action_binds
+            .iter()
+            .find(|action_bind| action_bind.type_id == TypeId::of::<A>())
+    }
+
+    /// Returns associated bindings for action `A`.
+    ///
+    /// For non-panicking version see [`Self::get_action_bind`].
+    /// For assigning bindings use [`Self::bind`].
+    pub fn action_bind<A: InputAction>(&self) -> &ActionBind {
+        self.get_action_bind::<A>().unwrap_or_else(|| {
+            panic!(
+                "action `{}` should be binded before access",
+                any::type_name::<A>()
+            )
+        })
+    }
+
+    /// Returns associated state for action `A` if exists.
+    ///
+    /// For panicking version see [`Self::action`].
+    /// For usage example see [`InputContextRegistry::context`](super::InputContextRegistry::context).
+    pub fn get_action<A: InputAction>(&self) -> Option<&ActionData> {
+        self.actions.action::<A>()
+    }
+
+    /// Returns associated state for action `A`.
+    ///
+    /// For non-panicking version see [`Self::get_action`].
+    /// For usage example see [`InputContextRegistry::context`](super::InputContextRegistry::context).
+    ///
+    /// # Panics
+    ///
+    /// Panics if the action `A` was not bound beforehand.
+    pub fn action<A: InputAction>(&self) -> &ActionData {
+        self.get_action::<A>().unwrap_or_else(|| {
+            panic!(
+                "action `{}` should be binded before access",
+                any::type_name::<A>()
+            )
+        })
+    }
+
+    pub(super) fn update(
+        &mut self,
+        commands: &mut Commands,
+        reader: &mut InputReader,
+        time: &Time<Virtual>,
+        entity: Entity,
+    ) {
+        reader.set_gamepad(self.gamepad);
+        for action_bind in &mut self.action_binds {
+            action_bind.update(commands, reader, &mut self.actions, time, entity);
+        }
+    }
+
+    /// Sets the state for each action to [`ActionState::None`]  and triggers transitions with zero value.
+    ///
+    /// Resets the input.
+    pub(super) fn reset(
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
         time: &Time<Virtual>,
         entity: Entity,
     ) {
-        debug!("removing `{}` from `{entity}`", any::type_name::<C>());
+        for action_bind in self.action_binds.drain(..) {
+            let action = self
+                .actions
+                .get_mut(&action_bind.type_id)
+                .expect("actions and bindings should have matching type IDs");
+            action.update(time, ActionState::None, ActionValue::zero(action_bind.dim));
+            action.trigger_events(commands, entity);
+            if action_bind.require_reset {
+                reset_input.extend(action_bind.bindings.iter().map(|binding| binding.input));
+            }
+        }
 
-        let group_index = self
-            .0
-            .iter()
-            .position(|group| group.type_id == TypeId::of::<C>())
-            .expect("context should be instantiated before removal");
+        self.priority = 0;
+        self.gamepad = Default::default();
+        self.actions.clear();
+    }
+}
 
-        let group = &mut self.0[group_index];
-        let entity_index = group
-            .instances
-            .iter()
-            .position(|&(mapped_entity, _)| mapped_entity == entity)
-            .expect("entity should be inserted before removal");
+/// Bindings of [`InputAction`] for [`InputContext`].
+///
+/// These bindings are stored separately from [`ActionsData`] to allow a currently
+/// evaluating action to access the state of other actions.
+pub struct ActionBind {
+    type_id: TypeId,
+    action_name: &'static str,
+    consume_input: bool,
+    accumulation: Accumulation,
+    require_reset: bool,
+    dim: ActionValueDim,
 
-        let (_, mut ctx) = group.instances.swap_remove(entity_index);
-        ctx.trigger_removed(commands, reset_input, time, entity);
+    modifiers: Vec<Box<dyn InputModifier>>,
+    conditions: Vec<Box<dyn InputCondition>>,
+    bindings: Vec<InputBind>,
 
-        if group.instances.is_empty() {
-            // Remove the group if no entity references it.
-            debug!("removing empty `{}`", any::type_name::<C>());
-            self.0.remove(group_index);
+    /// Consumed inputs during state evaluation.
+    consume_buffer: Vec<Input>,
+}
+
+impl ActionBind {
+    #[must_use]
+    fn new<A: InputAction>() -> Self {
+        Self {
+            type_id: TypeId::of::<A>(),
+            action_name: any::type_name::<A>(),
+            dim: A::Output::DIM,
+            consume_input: A::CONSUME_INPUT,
+            accumulation: A::ACCUMULATION,
+            require_reset: A::REQUIRE_RESET,
+            modifiers: Default::default(),
+            conditions: Default::default(),
+            bindings: Default::default(),
+            consume_buffer: Default::default(),
         }
     }
 
-    pub(crate) fn update(
-        &mut self,
-        commands: &mut Commands,
-        reader: &mut InputReader,
-        time: &Time<Virtual>,
-    ) {
-        for group in &mut self.0 {
-            for (entity, ctx) in &mut group.instances {
-                ctx.update(commands, reader, time, *entity);
-            }
-        }
+    /// Returns associated input bindings.
+    ///
+    /// See also [`Self::to`].
+    pub fn bindings(&self) -> &[InputBind] {
+        &self.bindings
     }
 
-    #[deprecated = "use `ContextInstances::get_context` instead"]
-    pub fn get<C: InputContext>(&self, instance_entity: Entity) -> Option<&ContextInstance> {
-        self.get_context::<C>(instance_entity)
-    }
-
-    /// Returns a context instance for an entity, if it exists.
+    /// Adds action-level modifiers.
     ///
-    /// For panicking version see [`Self::context`].
-    pub fn get_context<C: InputContext>(
-        &self,
-        instance_entity: Entity,
-    ) -> Option<&ContextInstance> {
-        let group = self
-            .0
-            .iter()
-            .find(|group| group.type_id == TypeId::of::<C>())?;
-
-        group.instances.iter().find_map(|(entity, ctx)| {
-            if *entity == instance_entity {
-                Some(ctx)
-            } else {
-                None
-            }
-        })
-    }
-
-    /// Returns a context instance for an entity.
-    ///
-    /// For a more ergonomic API, it's recommended to react on [`events`].
-    /// within observers.
-    ///
-    /// The complexity is `O(n+m)`, where `n` is the number of contexts and `m` is the number of entities,
-    /// since the storage is optimized for iteration. However, there are usually only a few contexts that are instantiated.
-    ///
-    /// For non-panicking version see [`Self::get_context`].
-    ///
-    /// # Panics
-    ///
-    /// Panics if `C` is not registered as an input context or the entity doesn't have this component.
+    /// For input-level modifiers see
+    /// [`InputBindModCond::with_modifiers`](super::input_bind::InputBindModCond::with_modifiers).
     ///
     /// # Examples
+    ///
+    /// Single modifier:
     ///
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// fn observer(trigger: Trigger<Attacked>, instances: Res<ContextInstances>) {
-    ///     let ctx = instances.context::<Player>(trigger.entity());
-    ///     let action = ctx.action::<Dodge>();
-    ///     if action.events().contains(ActionEvents::FIRED) {
-    ///         // ..
-    ///     }
-    /// }
-    /// # #[derive(Event)]
-    /// # struct Attacked;
-    /// # #[derive(Component)]
-    /// # struct Player;
-    /// # impl InputContext for Player {
-    /// # fn context_instance(_world: &World, _entity: Entity) -> ContextInstance { Default::default() }
-    /// # }
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
+    ///     .to(KeyCode::Space)
+    ///     .with_modifiers(Scale::splat(2.0));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Multiple modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
+    ///     .to(KeyCode::Space)
+    ///     .with_modifiers((Scale::splat(2.0), Negate::all()));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Jump;
+    /// ```
+    pub fn with_modifiers(&mut self, set: impl InputModifierSet) -> &mut Self {
+        for modifier in set.modifiers() {
+            debug!("adding `{modifier:?}` to `{}`", self.action_name);
+            self.modifiers.push(modifier);
+        }
+
+        self
+    }
+
+    /// Adds action-level conditions.
+    ///
+    /// For input-level conditions see
+    /// [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
+    ///
+    /// # Examples
+    ///
+    /// Single condition:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
+    ///     .to(KeyCode::Space)
+    ///     .with_conditions(Release::default());
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
-    /// # struct Dodge;
+    /// # struct Jump;
     /// ```
-    pub fn context<C: InputContext>(&self, instance_entity: Entity) -> &ContextInstance {
-        self.get_context::<C>(instance_entity).unwrap_or_else(|| {
-            panic!(
-                "entity `{instance_entity}` should have component `{}` registered as input context",
-                any::type_name::<C>()
-            )
-        })
+    ///
+    /// Multiple conditions:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
+    ///     .to(KeyCode::Space)
+    ///     .with_conditions((Release::default(), JustPress::default()));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
+    pub fn with_conditions(&mut self, set: impl InputConditionSet) -> &mut Self {
+        for condition in set.conditions() {
+            debug!("adding `{condition:?}` to `{}`", self.action_name);
+            self.conditions.push(condition);
+        }
+
+        self
     }
-}
 
-/// Instances of [`InputContext`] for the same type.
-struct InstanceGroup {
-    type_id: TypeId,
-    priority: isize,
-    instances: Vec<(Entity, ContextInstance)>,
-}
+    /// Adds input mapping.
+    ///
+    /// The action can be triggered by any input mapping. If multiple input mappings
+    /// return [`ActionState`], the behavior is determined by [`InputAction::ACCUMULATION`].
+    ///
+    /// Thanks to traits, this function can be called with multiple types:
+    ///
+    /// 1. Raw input types.
+    /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
+    /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
+    /// 4. [`InputBindSet`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
+    ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
+    ///
+    /// # Examples
+    ///
+    /// Raw input:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>()
+    ///     .to((KeyCode::Space, GamepadButton::South));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Raw input with keyboard modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// ```
+    ///
+    /// Raw input with input conditions or modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Jump>().to(KeyCode::Space.with_conditions(Release::default()));
+    /// trigger.bind::<Attack>().to(MouseButton::Left.with_modifiers(Scale::splat(10.0)));
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Jump;
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = f32)]
+    /// # struct Attack;
+    /// ```
+    ///
+    /// [`Input`] type directly:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Zoom>().to(Input::mouse_wheel());
+    /// trigger.bind::<Move>().to(Input::mouse_motion());
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = bool)]
+    /// # struct Zoom;
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Move;
+    /// ```
+    ///
+    /// Convenience preset which consists of multiple inputs
+    /// with predefined conditions and modifiers:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// trigger.bind::<Move>().to(Cardinal::wasd_keys());
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Move;
+    /// ```
+    ///
+    /// Multiple buttons from settings:
+    ///
+    /// ```
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut trigger = InputContext::default();
+    /// # let mut settings = KeyboardSettings::default();
+    /// trigger.bind::<Inspect>().to(&settings.inspect);
+    ///
+    /// # #[derive(Default)]
+    /// struct KeyboardSettings {
+    ///     inspect: Vec<KeyCode>,
+    /// }
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Inspect;
+    /// ```
+    pub fn to(&mut self, set: impl InputBindSet) -> &mut Self {
+        for binding in set.bindings() {
+            debug!("adding `{binding:?}` to `{}`", self.action_name);
+            self.bindings.push(binding);
+        }
+        self
+    }
 
-impl InstanceGroup {
-    #[must_use]
-    fn new<C: InputContext>(world: &World, entity: Entity) -> Self {
-        let type_id = TypeId::of::<C>();
-        let ctx = C::context_instance(world, entity);
-        Self {
-            type_id,
-            priority: C::PRIORITY,
-            instances: vec![(entity, ctx)],
+    fn update(
+        &mut self,
+        commands: &mut Commands,
+        reader: &mut InputReader,
+        actions: &mut ActionsData,
+        time: &Time<Virtual>,
+        entity: Entity,
+    ) {
+        trace!("updating action `{}`", self.action_name);
+
+        let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
+        for binding in &mut self.bindings {
+            let value = reader.value(binding.input);
+            if self.require_reset && binding.first_activation {
+                // Ignore until we read zero for this mapping.
+                if value.as_bool() {
+                    continue;
+                } else {
+                    binding.first_activation = false;
+                }
+            }
+
+            let mut current_tracker = TriggerTracker::new(value);
+            current_tracker.apply_modifiers(actions, time, &mut binding.modifiers);
+            current_tracker.apply_conditions(actions, time, &mut binding.conditions);
+
+            let current_state = current_tracker.state();
+            if current_state == ActionState::None {
+                // Ignore non-active trackers to allow the action to fire even if all
+                // input-level conditions return `ActionState::None`. This ensures that an
+                // action-level condition or modifier can still trigger the action.
+                continue;
+            }
+
+            match current_state.cmp(&tracker.state()) {
+                Ordering::Less => (),
+                Ordering::Equal => {
+                    tracker.combine(current_tracker, self.accumulation);
+                    if self.consume_input {
+                        self.consume_buffer.push(binding.input);
+                    }
+                }
+                Ordering::Greater => {
+                    tracker.overwrite(current_tracker);
+                    if self.consume_input {
+                        self.consume_buffer.clear();
+                        self.consume_buffer.push(binding.input);
+                    }
+                }
+            }
+        }
+
+        tracker.apply_modifiers(actions, time, &mut self.modifiers);
+        tracker.apply_conditions(actions, time, &mut self.conditions);
+
+        let action = actions
+            .get_mut(&self.type_id)
+            .expect("actions and bindings should have matching type IDs");
+
+        let state = tracker.state();
+        let value = tracker.value().convert(self.dim);
+
+        if self.consume_input {
+            if state != ActionState::None {
+                for &input in &self.consume_buffer {
+                    reader.consume(input);
+                }
+            }
+            self.consume_buffer.clear();
+        }
+
+        action.update(time, state, value);
+        if !tracker.events_blocked() {
+            action.trigger_events(commands, entity);
         }
     }
 }
 
-/// Contexts are components that associate entities with [`InputAction`](input_action::InputAction)s.
+/// Map for actions to their data.
 ///
-/// Inserting this component associates [`ContextInstance`] for this
-/// entity in a resource.
-///
-/// Removing deactivates [`ContextInstance`] for the entity and trigger
-/// transitions for all actions to [`ActionState::None`](crate::input_context::context_instance::ActionState::None).
-///
-/// Each context should be registered using [`ContextAppExt::add_input_context`].
-///
-/// # Examples
-///
-/// ```
-/// # use bevy::prelude::*;
-/// # use bevy_enhanced_input::prelude::*;
-/// #[derive(Component)]
-/// struct Player;
-///
-/// impl InputContext for Player {
-///     fn context_instance(world: &World, entity: Entity) -> ContextInstance {
-///         // You can use world to access the necessary data.
-///         let settings = world.resource::<AppSettings>();
-///
-///         // To can also access the context
-///         // component itself (or other components) from the entity.
-///         let _player = world.get::<Self>(entity).unwrap();
-///
-///         let mut ctx = ContextInstance::default();
-///
-///         // When you change your bindings, you can trigger `RebuildInputContexts`
-///         // to call this function again to rebuild the context with the the updated bindings.
-///         ctx.bind::<Jump>()
-///             .to((settings.keyboard.jump, GamepadButton::South));
-///
-///         ctx
-///     }
-/// }
-///
-/// #[derive(Debug, InputAction)]
-/// #[input_action(output = bool)]
-/// struct Jump;
-///
-/// #[derive(Resource)]
-/// struct AppSettings {
-///     keyboard: KeyboardSettings,
-/// }
-///
-/// struct KeyboardSettings {
-///     jump: KeyCode,
-/// }
-/// ```
-pub trait InputContext: Component {
-    /// Determines the evaluation order of [`ContextInstance`]s produced
-    /// by this component.
-    ///
-    /// Ordering is global.
-    /// Contexts with a higher priority evaluated first.
-    const PRIORITY: isize = 0;
+/// Can be accessed from [`InputCondition::evaluate`]
+/// or [`InputContextRegistry::context`](super::InputContextRegistry::context).
+#[derive(Default, Deref, DerefMut)]
+pub struct ActionsData(pub HashMap<TypeId, ActionData>);
 
-    /// Creates a new instance for the given entity.
+impl ActionsData {
+    /// Returns associated state for action `A`.
+    pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
+        self.get(&TypeId::of::<A>())
+    }
+
+    /// Inserts a state for action `A`.
     ///
-    /// In the implementation you need call [`ContextInstance::bind`]
-    /// to associate it with [`InputAction`](input_action::InputAction)s.
-    ///
-    /// The function is called on each context instantiation.
-    /// You can also rebuild all contexts by triggering [`RebuildInputContexts`].
-    #[must_use]
-    fn context_instance(world: &World, entity: Entity) -> ContextInstance;
+    /// Returns previously associated state if present.
+    pub fn insert_action<A: InputAction>(&mut self, action: ActionData) -> Option<ActionData> {
+        self.insert(TypeId::of::<A>(), action)
+    }
 }
 
-/// A trigger that causes the reconstruction of all active context maps.
+/// Tracker for action state.
 ///
-/// Use it when you change your application settings and want to reload the mappings.
+/// Stored inside [`ActionsData`].
+#[derive(Clone, Copy)]
+pub struct ActionData {
+    state: ActionState,
+    events: ActionEvents,
+    value: ActionValue,
+    elapsed_secs: f32,
+    fired_secs: f32,
+    trigger_events: fn(&Self, &mut Commands, Entity),
+}
+
+impl ActionData {
+    /// Creates a new instance associated with action `A`.
+    ///
+    /// [`Self::trigger_events`] will trigger events for `A`.
+    #[must_use]
+    pub fn new<A: InputAction>() -> Self {
+        Self {
+            state: Default::default(),
+            events: ActionEvents::empty(),
+            value: ActionValue::zero(A::Output::DIM),
+            elapsed_secs: 0.0,
+            fired_secs: 0.0,
+            trigger_events: Self::trigger_events_typed::<A>,
+        }
+    }
+
+    /// Updates internal state.
+    pub fn update(
+        &mut self,
+        time: &Time<Virtual>,
+        state: ActionState,
+        value: impl Into<ActionValue>,
+    ) {
+        match self.state {
+            ActionState::None => {
+                self.elapsed_secs = 0.0;
+                self.fired_secs = 0.0;
+            }
+            ActionState::Ongoing => {
+                self.elapsed_secs += time.delta_secs();
+                self.fired_secs = 0.0;
+            }
+            ActionState::Fired => {
+                self.elapsed_secs += time.delta_secs();
+                self.fired_secs += time.delta_secs();
+            }
+        }
+
+        self.events = ActionEvents::new(self.state, state);
+        self.state = state;
+        self.value = value.into();
+    }
+
+    /// Triggers events resulting from a state transition after [`Self::update`].
+    ///
+    /// See also [`Self::new`].
+    pub fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
+        (self.trigger_events)(self, commands, entity);
+    }
+
+    /// A typed version of [`Self::trigger_events`].
+    fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entity: Entity) {
+        for (_, event) in self.events.iter_names() {
+            match event {
+                ActionEvents::STARTED => {
+                    trigger_and_log::<A, _>(
+                        commands,
+                        entity,
+                        Started::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                        },
+                    );
+                }
+                ActionEvents::ONGOING => {
+                    trigger_and_log::<A, _>(
+                        commands,
+                        entity,
+                        Ongoing::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::FIRED => {
+                    trigger_and_log::<A, _>(
+                        commands,
+                        entity,
+                        Fired::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::CANCELED => {
+                    trigger_and_log::<A, _>(
+                        commands,
+                        entity,
+                        Canceled::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                ActionEvents::COMPLETED => {
+                    trigger_and_log::<A, _>(
+                        commands,
+                        entity,
+                        Completed::<A> {
+                            value: A::Output::as_output(self.value),
+                            state: self.state,
+                            fired_secs: self.fired_secs,
+                            elapsed_secs: self.elapsed_secs,
+                        },
+                    );
+                }
+                _ => unreachable!("iteration should yield only named flags"),
+            }
+        }
+    }
+
+    /// Returns the current state.
+    pub fn state(&self) -> ActionState {
+        self.state
+    }
+
+    /// Returns events triggered by a transition of [`Self::state`] since the last update.
+    pub fn events(&self) -> ActionEvents {
+        self.events
+    }
+
+    /// Returns the value since the last update.
+    pub fn value(&self) -> ActionValue {
+        self.value
+    }
+
+    /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
+    pub fn elapsed_secs(&self) -> f32 {
+        self.elapsed_secs
+    }
+
+    /// Time the action was in [`ActionState::Fired`] state.
+    pub fn fired_secs(&self) -> f32 {
+        self.fired_secs
+    }
+}
+
+fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity, event: E) {
+    debug!(
+        "triggering `{event:?}` for `{}` for `{entity}`",
+        any::type_name::<A>()
+    );
+    commands.trigger_targets(event, entity);
+}
+
+/// State for [`ActionData`].
 ///
-/// This will also reset all actions to [`ActionState::None`](crate::input_context::context_instance::ActionState::None)
-/// and trigger the corresponding events.
-#[derive(Event)]
-pub struct RebuildInputContexts;
+/// States are ordered by their significance.
+///
+/// See also [`ActionEvents`].
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ActionState {
+    /// Condition is not triggered.
+    #[default]
+    None,
+    /// Condition has started triggering, but has not yet finished.
+    ///
+    /// For example, [`Hold`](super::input_condition::hold::Hold) condition
+    /// requires its state to be maintained over several frames.
+    Ongoing,
+    /// The condition has been met.
+    Fired,
+}
+
+#[cfg(test)]
+mod tests {
+    use bevy_enhanced_input_macros::InputAction;
+
+    use super::*;
+
+    #[test]
+    fn bind() {
+        let mut ctx = InputContext::default();
+        ctx.bind::<DummyAction>().to(KeyCode::KeyA);
+        ctx.bind::<DummyAction>().to(KeyCode::KeyB);
+        assert_eq!(ctx.action_binds.len(), 1);
+
+        let action = ctx.action_bind::<DummyAction>();
+        assert_eq!(action.bindings.len(), 2);
+    }
+
+    #[derive(Debug, InputAction)]
+    #[input_action(output = bool)]
+    struct DummyAction;
+}

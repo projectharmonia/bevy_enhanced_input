@@ -5,7 +5,8 @@ use bevy_enhanced_input::prelude::*;
 fn keys() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let entity = app.world_mut().spawn(DummyContext).id();
 
@@ -29,8 +30,8 @@ fn keys() {
 
         app.update();
 
-        let instances = app.world().resource::<ContextInstances>();
-        let ctx = instances.context::<DummyContext>(entity);
+        let registry = app.world().resource::<InputContextRegistry>();
+        let ctx = registry.context::<DummyContext>(entity);
         assert_eq!(
             ctx.action::<DummyAction>().value(),
             dir.into(),
@@ -49,7 +50,8 @@ fn keys() {
 fn dpad() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
     let context_entity = app.world_mut().spawn(DummyContext).id();
@@ -67,8 +69,8 @@ fn dpad() {
 
         app.update();
 
-        let instances = app.world().resource::<ContextInstances>();
-        let ctx = instances.context::<DummyContext>(context_entity);
+        let registry = app.world().resource::<InputContextRegistry>();
+        let ctx = registry.context::<DummyContext>(context_entity);
         assert_eq!(
             ctx.action::<DummyAction>().value(),
             dir.into(),
@@ -86,7 +88,8 @@ fn dpad() {
 fn sticks() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>();
+        .add_input_context::<DummyContext>()
+        .add_observer(binding);
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
     let context_entity = app.world_mut().spawn(DummyContext).id();
@@ -105,8 +108,8 @@ fn sticks() {
 
             app.update();
 
-            let instances = app.world().resource::<ContextInstances>();
-            let ctx = instances.context::<DummyContext>(context_entity);
+            let registry = app.world().resource::<InputContextRegistry>();
+            let ctx = registry.context::<DummyContext>(context_entity);
             assert_eq!(
                 ctx.action::<DummyAction>().value(),
                 dir.into(),
@@ -126,28 +129,22 @@ const LEFT: Vec2 = Vec2::new(-1.0, 0.0);
 const DOWN: Vec2 = Vec2::new(0.0, -1.0);
 const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
 
+fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
+    trigger.bind::<DummyAction>().to((
+        Cardinal::wasd_keys(),
+        Cardinal::arrow_keys(),
+        Cardinal::dpad_buttons(),
+        Bidirectional {
+            positive: KeyCode::NumpadAdd,
+            negative: KeyCode::NumpadSubtract,
+        },
+        GamepadStick::Left,
+        GamepadStick::Right,
+    ));
+}
+
 #[derive(Debug, Component)]
 struct DummyContext;
-
-impl InputContext for DummyContext {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<DummyAction>().to((
-            Cardinal::wasd_keys(),
-            Cardinal::arrow_keys(),
-            Cardinal::dpad_buttons(),
-            Bidirectional {
-                positive: KeyCode::NumpadAdd,
-                negative: KeyCode::NumpadSubtract,
-            },
-            GamepadStick::Left,
-            GamepadStick::Right,
-        ));
-
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2, consume_input = true)]

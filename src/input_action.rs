@@ -6,11 +6,10 @@ use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Marker for a gameplay-related action.
 ///
-/// Needs to be bind inside
-/// [`InputContext::context_instance`](super::InputContext::context_instance)
+/// Needs to be bind inside observer for [`Binding`](super::registry::Binding).
 ///
-/// Each binded action will have [`ActionState`](super::context_instance::ActionState).
-/// When it updates during [`ContextInstance`](super::context_instance::ContextInstance)
+/// Each binded action will have [`ActionState`](super::input_context::ActionState).
+/// When it updates during [`InputContext`](super::input_context::InputContext)
 /// evaluation, [`events`](super::events) are triggered.
 ///
 /// # Examples
@@ -34,8 +33,8 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// struct Move;
 /// ```
 ///
-/// You can also obtain the state directly from [`ActionData`](super::context_instance::ActionData),
-/// see [`ContextInstances::context`](super::ContextInstances::context).
+/// You can also obtain the state directly from [`ActionData`](super::input_context::ActionData),
+/// see [`InputContextRegistry::context`](super::registry::InputContextRegistry::context).
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:
@@ -73,8 +72,8 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// bound to it or allow them to pass through to affect other actions.
     ///
     /// Inputs are consumed only if the action state is not equal to
-    /// [`ActionState::None`](super::context_instance::ActionState::None).
-    /// For details, see [`ContextInstance`](super::context_instance::ContextInstance).
+    /// [`ActionState::None`](super::input_context::ActionState::None).
+    /// For details, see [`InputContext`](super::input_context::InputContext).
     ///
     /// Consuming is global and affect actions in all contexts.
     const CONSUME_INPUT: bool = true;
@@ -85,8 +84,9 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// Require inputs to be zero before the first activation and continue to consume them
     /// even after context removal until inputs become zero again.
     ///
-    /// This is useful for context switching or layering to prevent actions to immediately
-    /// react previously held inputs.
+    /// This way new instances won't react to currently held inputs until they are released.
+    /// This prevents unintended behavior where switching or layering contexts using the same key
+    /// could cause an immediate switch back, as buttons are rarely pressed for only a single frame.
     const REQUIRE_RESET: bool = false;
 }
 
@@ -148,8 +148,8 @@ impl ActionOutput for Vec3 {
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
-/// same most significant [`ActionState`](super::context_instance::ActionState)
-/// (excluding [`ActionState::None`](super::context_instance::ActionState::None)).
+/// same most significant [`ActionState`](super::input_context::ActionState)
+/// (excluding [`ActionState::None`](super::input_context::ActionState::None)).
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.

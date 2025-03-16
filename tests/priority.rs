@@ -6,7 +6,9 @@ fn prioritization() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
-        .add_input_context::<Second>();
+        .add_input_context::<Second>()
+        .add_observer(first_binding)
+        .add_observer(second_binding);
 
     let entity = app.world_mut().spawn((First, Second)).id();
 
@@ -18,20 +20,20 @@ fn prioritization() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let first = instances.context::<First>(entity);
+    let first = registry.context::<First>(entity);
     assert_eq!(first.action::<FirstConsume>().state(), ActionState::Fired);
     assert_eq!(
         first.action::<FirstPassthrough>().state(),
         ActionState::Fired
     );
 
-    let second = instances.context::<Second>(entity);
+    let second = registry.context::<Second>(entity);
     assert_eq!(
         second.action::<SecondConsume>().state(),
         ActionState::None,
-        "action should be consumed by context with a higher priority"
+        "action should be consumed by component input with a higher priority"
     );
     assert_eq!(
         second.action::<SecondPassthrough>().state(),
@@ -40,35 +42,22 @@ fn prioritization() {
     );
 }
 
+fn first_binding(mut trigger: Trigger<Binding<First>>) {
+    trigger.set_priority(1);
+    trigger.bind::<FirstConsume>().to(CONSUME_KEY);
+    trigger.bind::<FirstPassthrough>().to(PASSTHROUGH_KEY);
+}
+
+fn second_binding(mut trigger: Trigger<Binding<Second>>) {
+    trigger.bind::<SecondConsume>().to(CONSUME_KEY);
+    trigger.bind::<SecondPassthrough>().to(PASSTHROUGH_KEY);
+}
+
 #[derive(Debug, Component)]
 struct First;
 
-impl InputContext for First {
-    const PRIORITY: isize = Second::PRIORITY + 1;
-
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<FirstConsume>().to(CONSUME_KEY);
-        ctx.bind::<FirstPassthrough>().to(PASSTHROUGH_KEY);
-
-        ctx
-    }
-}
-
 #[derive(Debug, Component)]
 struct Second;
-
-impl InputContext for Second {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-
-        ctx.bind::<SecondConsume>().to(CONSUME_KEY);
-        ctx.bind::<SecondPassthrough>().to(PASSTHROUGH_KEY);
-
-        ctx
-    }
-}
 
 /// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.
 const CONSUME_KEY: KeyCode = KeyCode::KeyA;

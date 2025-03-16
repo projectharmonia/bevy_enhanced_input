@@ -6,7 +6,9 @@ fn layering() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
-        .add_input_context::<Second>();
+        .add_input_context::<Second>()
+        .add_observer(first_binding)
+        .add_observer(second_binding);
 
     let entity = app.world_mut().spawn((First, Second)).id();
 
@@ -18,20 +20,20 @@ fn layering() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
+    let registry = app.world().resource::<InputContextRegistry>();
 
-    let first = instances.context::<First>(entity);
+    let first = registry.context::<First>(entity);
     assert_eq!(first.action::<DummyAction>().state(), ActionState::Fired);
 
-    let second = instances.context::<Second>(entity);
+    let second = registry.context::<Second>(entity);
     assert_eq!(second.action::<DummyAction>().state(), ActionState::None);
 
     app.world_mut().entity_mut(entity).remove::<First>();
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let second = instances.context::<Second>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let second = registry.context::<Second>(entity);
     assert_eq!(
         second.action::<DummyAction>().state(),
         ActionState::None,
@@ -50,8 +52,8 @@ fn layering() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let second = instances.context::<Second>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let second = registry.context::<Second>(entity);
     assert_eq!(second.action::<DummyAction>().state(), ActionState::Fired);
 }
 
@@ -60,7 +62,9 @@ fn switching() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
-        .add_input_context::<Second>();
+        .add_input_context::<Second>()
+        .add_observer(first_binding)
+        .add_observer(second_binding);
 
     let entity = app.world_mut().spawn(First).id();
 
@@ -72,8 +76,8 @@ fn switching() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let ctx = instances.context::<First>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let ctx = registry.context::<First>(entity);
     assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     app.world_mut()
@@ -83,8 +87,8 @@ fn switching() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let second = instances.context::<Second>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let second = registry.context::<Second>(entity);
     assert_eq!(
         second.action::<DummyAction>().state(),
         ActionState::None,
@@ -103,34 +107,25 @@ fn switching() {
 
     app.update();
 
-    let instances = app.world().resource::<ContextInstances>();
-    let second = instances.context::<Second>(entity);
+    let registry = app.world().resource::<InputContextRegistry>();
+    let second = registry.context::<Second>(entity);
     assert_eq!(second.action::<DummyAction>().state(), ActionState::Fired);
+}
+
+fn first_binding(mut trigger: Trigger<Binding<First>>) {
+    trigger.set_priority(1);
+    trigger.bind::<DummyAction>().to(DummyAction::KEY);
+}
+
+fn second_binding(mut trigger: Trigger<Binding<Second>>) {
+    trigger.bind::<DummyAction>().to(DummyAction::KEY);
 }
 
 #[derive(Debug, Component)]
 struct First;
 
-impl InputContext for First {
-    const PRIORITY: isize = Second::PRIORITY + 1;
-
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<DummyAction>().to(DummyAction::KEY);
-        ctx
-    }
-}
-
 #[derive(Debug, Component)]
 struct Second;
-
-impl InputContext for Second {
-    fn context_instance(_world: &World, _entity: Entity) -> ContextInstance {
-        let mut ctx = ContextInstance::default();
-        ctx.bind::<DummyAction>().to(DummyAction::KEY);
-        ctx
-    }
-}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, require_reset = true)]
