@@ -32,7 +32,7 @@ pub enum Input {
     /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
     MouseWheel { mod_keys: ModKeys },
     /// Gamepad button, will be captured as
-    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
+    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
     GamepadButton(GamepadButton),
     /// Gamepad stick axis, will be captured as
     /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
