@@ -1,6 +1,6 @@
 [package]
 name = "bevy_enhanced_input"
-version = "0.7.2"
+version = "0.8.0"
 authors = ["Hennadii Chernyshchyk <genaloner@gmail.com>"]
 edition = "2021"
 description = "Dynamic and contextual input mappings for Bevy"
@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 include = ["/src", "/tests", "/examples", "/LICENSE*"]
 
 [dependencies]
-bevy_enhanced_input_macros = { path = "macros", version = "0.7.0" }
+bevy_enhanced_input_macros = { path = "macros", version = "0.8.0" }
 bevy = { version = "0.15", default-features = false, features = ["serialize"] }
 bevy_egui = { version = "0.33", default-features = false, optional = true }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
