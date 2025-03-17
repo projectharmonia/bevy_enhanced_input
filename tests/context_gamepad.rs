@@ -16,7 +16,7 @@ fn any() {
     app.update();
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.digital_mut().press(DummyAction::BUTTON);
+    gamepad1.analog_mut().set(DummyAction::BUTTON, 1.0);
 
     app.update();
 
@@ -25,10 +25,10 @@ fn any() {
     assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.digital_mut().release(DummyAction::BUTTON);
+    gamepad1.analog_mut().set(DummyAction::BUTTON, 0.0);
 
     let mut gamepad2 = app.world_mut().get_mut::<Gamepad>(gamepad_entity2).unwrap();
-    gamepad2.digital_mut().press(DummyAction::BUTTON);
+    gamepad2.analog_mut().set(DummyAction::BUTTON, 1.0);
 
     app.update();
 
@@ -52,7 +52,7 @@ fn by_id() {
     app.update();
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.digital_mut().press(DummyAction::BUTTON);
+    gamepad1.analog_mut().set(DummyAction::BUTTON, 1.0);
 
     app.update();
 
@@ -61,10 +61,10 @@ fn by_id() {
     assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.digital_mut().release(DummyAction::BUTTON);
+    gamepad1.analog_mut().set(DummyAction::BUTTON, 0.0);
 
     let mut gamepad2 = app.world_mut().get_mut::<Gamepad>(gamepad_entity2).unwrap();
-    gamepad2.digital_mut().press(DummyAction::BUTTON);
+    gamepad2.analog_mut().set(DummyAction::BUTTON, 1.0);
 
     app.update();
 

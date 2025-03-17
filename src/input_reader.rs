@@ -134,20 +134,23 @@ impl InputReader<'_, '_> {
                 };
 
                 if self.consumed.gamepad_buttons.contains(&input) {
-                    return false.into();
+                    return 0.0.into();
                 }
 
-                let pressed = match *self.gamepad_device {
-                    GamepadDevice::Any => {
-                        self.gamepads.iter().any(|gamepad| gamepad.pressed(button))
-                    }
+                let value = match *self.gamepad_device {
+                    GamepadDevice::Any => self
+                        .gamepads
+                        .iter()
+                        .filter_map(|gamepad| gamepad.get(button))
+                        .find(|&value| value != 0.0),
                     GamepadDevice::Single(entity) => self
                         .gamepads
                         .get(entity)
-                        .is_ok_and(|gamepad| gamepad.pressed(button)),
+                        .ok()
+                        .and_then(|gamepad| gamepad.get(button)),
                 };
 
-                pressed.into()
+                value.unwrap_or_default().into()
             }
             Input::GamepadAxis(axis) => {
                 let input = GamepadInput {
@@ -373,54 +376,56 @@ mod tests {
     fn gamepad_button() {
         let (mut world, mut state) = init_world();
 
+        let value = 1.0;
         let button1 = GamepadButton::South;
         let mut gamepad1 = Gamepad::default();
-        gamepad1.digital_mut().press(button1);
+        gamepad1.analog_mut().set(button1, value);
         let gamepad_entity = world.spawn(gamepad1).id();
 
         let button2 = GamepadButton::East;
         let mut gamepad2 = Gamepad::default();
-        gamepad2.digital_mut().press(button2);
+        gamepad2.analog_mut().set(button2, value);
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
         reader.set_gamepad(gamepad_entity);
-        assert_eq!(reader.value(button1), ActionValue::Bool(true));
+        assert_eq!(reader.value(button1), ActionValue::Axis1D(value));
         assert_eq!(
             reader.value(button2),
-            ActionValue::Bool(false),
+            ActionValue::Axis1D(0.0),
             "should read only from `{gamepad_entity:?}`"
         );
-        assert_eq!(reader.value(GamepadButton::North), ActionValue::Bool(false));
+        assert_eq!(reader.value(GamepadButton::North), ActionValue::Axis1D(0.0));
 
         reader.consume(button1);
-        assert_eq!(reader.value(button1), ActionValue::Bool(false));
+        assert_eq!(reader.value(button1), ActionValue::Axis1D(0.0));
     }
 
     #[test]
     fn any_gamepad_button() {
         let (mut world, mut state) = init_world();
 
+        let value = 1.0;
         let button1 = GamepadButton::South;
         let mut gamepad1 = Gamepad::default();
-        gamepad1.digital_mut().press(button1);
+        gamepad1.analog_mut().set(button1, value);
         world.spawn(gamepad1);
 
         let button2 = GamepadButton::East;
         let mut gamepad2 = Gamepad::default();
-        gamepad2.digital_mut().press(button2);
+        gamepad2.analog_mut().set(button2, value);
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(button1), ActionValue::Bool(true));
-        assert_eq!(reader.value(button2), ActionValue::Bool(true));
-        assert_eq!(reader.value(GamepadButton::North), ActionValue::Bool(false));
+        assert_eq!(reader.value(button1), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(button2), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(GamepadButton::North), ActionValue::Axis1D(0.0));
 
         reader.consume(button1);
-        assert_eq!(reader.value(button1), ActionValue::Bool(false));
+        assert_eq!(reader.value(button1), ActionValue::Axis1D(0.0));
 
         reader.consume(button2);
-        assert_eq!(reader.value(button2), ActionValue::Bool(false));
+        assert_eq!(reader.value(button2), ActionValue::Axis1D(0.0));
     }
 
     #[test]
@@ -428,7 +433,6 @@ mod tests {
         let (mut world, mut state) = init_world();
 
         let value = 1.0;
-
         let axis1 = GamepadAxis::LeftStickX;
         let mut gamepad1 = Gamepad::default();
         gamepad1.analog_mut().set(axis1, value);
@@ -441,7 +445,7 @@ mod tests {
 
         let mut reader = state.get_mut(&mut world);
         reader.set_gamepad(gamepad_entity);
-        assert_eq!(reader.value(axis1), ActionValue::Axis1D(1.0));
+        assert_eq!(reader.value(axis1), ActionValue::Axis1D(value));
         assert_eq!(
             reader.value(axis2),
             ActionValue::Axis1D(0.0),
@@ -461,7 +465,6 @@ mod tests {
         let (mut world, mut state) = init_world();
 
         let value = 1.0;
-
         let axis1 = GamepadAxis::LeftStickX;
         let mut gamepad1 = Gamepad::default();
         gamepad1.analog_mut().set(axis1, value);
@@ -473,8 +476,8 @@ mod tests {
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(axis1), ActionValue::Axis1D(1.0));
-        assert_eq!(reader.value(axis2), ActionValue::Axis1D(1.0));
+        assert_eq!(reader.value(axis1), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis2), ActionValue::Axis1D(value));
         assert_eq!(
             reader.value(GamepadAxis::RightStickX),
             ActionValue::Axis1D(0.0)

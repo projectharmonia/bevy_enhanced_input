@@ -65,7 +65,7 @@ fn dpad() {
         (GamepadButton::DPadRight, RIGHT),
     ] {
         let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
-        gamepad.digital_mut().press(button);
+        gamepad.analog_mut().set(button, 1.0);
 
         app.update();
 
@@ -78,7 +78,7 @@ fn dpad() {
         );
 
         let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
-        gamepad.digital_mut().release(button);
+        gamepad.analog_mut().set(button, 0.0);
 
         app.update();
     }
