@@ -7,7 +7,7 @@ use core::f32::consts::FRAC_PI_4;
 use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
 
-use player_box::{PlayerBox, PlayerBoxPlugin, DEFAULT_SPEED};
+use player_box::{DEFAULT_SPEED, PlayerBox, PlayerBoxPlugin};
 
 fn main() {
     App::new()

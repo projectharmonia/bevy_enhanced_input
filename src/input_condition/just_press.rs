@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{InputCondition, DEFAULT_ACTUATION};
+use super::{DEFAULT_ACTUATION, InputCondition};
 use crate::{
     action_value::ActionValue,
     input_context::{ActionState, ActionsData},

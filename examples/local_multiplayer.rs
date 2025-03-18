@@ -11,7 +11,7 @@ use bevy::{
 };
 use bevy_enhanced_input::prelude::*;
 
-use player_box::{PlayerBox, PlayerBoxPlugin, PlayerColor, DEFAULT_SPEED};
+use player_box::{DEFAULT_SPEED, PlayerBox, PlayerBoxPlugin, PlayerColor};
 
 fn main() {
     App::new()

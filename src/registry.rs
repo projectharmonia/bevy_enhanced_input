@@ -9,8 +9,8 @@ use core::{
 use bevy::prelude::*;
 
 use super::{
-    input_reader::{InputReader, ResetInput},
     InputContext,
+    input_reader::{InputReader, ResetInput},
 };
 
 /// An extension trait for [`App`] to assign input to components.
