@@ -287,7 +287,7 @@ mod tests {
     };
 
     use super::*;
-    use crate::{input::InputModKeys, Input};
+    use crate::{Input, input::InputModKeys};
 
     #[test]
     fn keyboard() {

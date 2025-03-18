@@ -2,7 +2,7 @@ use core::{error::Error, fmt::Write};
 use std::fs;
 
 use bevy::{
-    input::{common_conditions::*, keyboard::KeyboardInput, mouse::MouseButtonInput, ButtonState},
+    input::{ButtonState, common_conditions::*, keyboard::KeyboardInput, mouse::MouseButtonInput},
     prelude::*,
     ui::FocusPolicy,
 };
@@ -51,7 +51,9 @@ fn setup(mut commands: Commands) {
             settings
         }
         Err(e) => {
-            info!("switching unable to load settings from '{SETTINGS_PATH}', switching to defaults: {e}");
+            info!(
+                "switching unable to load settings from '{SETTINGS_PATH}', switching to defaults: {e}"
+            );
             Default::default()
         }
     };

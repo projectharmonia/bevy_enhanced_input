@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{condition_timer::ConditionTimer, InputCondition, DEFAULT_ACTUATION};
+use super::{DEFAULT_ACTUATION, InputCondition, condition_timer::ConditionTimer};
 use crate::{
     action_value::ActionValue,
     input_context::{ActionState, ActionsData},

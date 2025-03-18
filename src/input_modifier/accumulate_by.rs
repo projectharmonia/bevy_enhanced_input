@@ -4,9 +4,9 @@ use bevy::prelude::*;
 
 use super::InputModifier;
 use crate::{
+    InputAction,
     action_value::ActionValue,
     input_context::{ActionState, ActionsData},
-    InputAction,
 };
 
 /// Produces accumulated value when another action is fired within the same context.

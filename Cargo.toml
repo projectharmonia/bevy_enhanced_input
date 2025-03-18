@@ -2,7 +2,7 @@
 name = "bevy_enhanced_input"
 version = "0.8.0"
 authors = ["Hennadii Chernyshchyk <genaloner@gmail.com>"]
-edition = "2021"
+edition = "2024"
 description = "Dynamic and contextual input mappings for Bevy"
 readme = "README.md"
 repository = "https://github.com/projectharmonia/bevy_enhanced_input"

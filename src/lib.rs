@@ -81,23 +81,23 @@ mod trigger_tracker;
 
 pub mod prelude {
     pub use super::{
+        EnhancedInputPlugin, EnhancedInputSystem,
         action_value::{ActionValue, ActionValueDim},
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_action::{Accumulation, InputAction},
         input_bind::{InputBind, InputBindModCond, InputBindSet},
         input_condition::{
-            block_by::*, chord::*, condition_timer::*, hold::*, hold_and_release::*, just_press::*,
-            press::*, pulse::*, release::*, tap::*, ConditionKind, InputCondition,
+            ConditionKind, InputCondition, block_by::*, chord::*, condition_timer::*, hold::*,
+            hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,
         },
         input_context::{ActionBind, ActionData, ActionState, InputContext},
         input_modifier::{
-            accumulate_by::*, dead_zone::*, delta_scale::*, exponential_curve::*, negate::*,
-            scale::*, smooth_nudge::*, swizzle_axis::*, InputModifier,
+            InputModifier, accumulate_by::*, dead_zone::*, delta_scale::*, exponential_curve::*,
+            negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
         },
         preset::{Bidirectional, Cardinal, GamepadStick},
         registry::{Binding, InputContextAppExt, InputContextRegistry, RebuildBindings},
-        EnhancedInputPlugin, EnhancedInputSystem,
     };
     pub use bevy_enhanced_input_macros::InputAction;
 }
