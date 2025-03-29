@@ -12,7 +12,7 @@ use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;
 
-use crate::{action_value::ActionValue, input_context::ActionsData};
+use crate::{action_value::ActionValue, actions::ActionsData};
 
 /// Pre-processor that alter the raw input values.
 ///
@@ -20,7 +20,7 @@ use crate::{action_value::ActionValue, input_context::ActionsData};
 /// or changing how input maps to axes.
 ///
 /// Can be applied both to inputs and actions.
-/// See [`ActionBind::with_modifiers`](super::input_context::ActionBind::with_modifiers)
+/// See [`ActionBind::with_modifiers`](super::actions::ActionBind::with_modifiers)
 /// and [`InputBindModCond::with_modifiers`](super::input_bind::InputBindModCond::with_modifiers).
 pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
@@ -35,7 +35,7 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
 }
 
 /// Represents collection of bindings that could be passed into
-/// [`ActionBind::with_modifiers`](super::input_context::ActionBind::with_modifiers)
+/// [`ActionBind::with_modifiers`](super::actions::ActionBind::with_modifiers)
 /// and [`InputBindModCond::with_modifiers`](super::input_bind::InputBindModCond::with_modifiers).
 pub trait InputModifierSet {
     /// Returns an iterator over modifiers.

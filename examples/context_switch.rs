@@ -24,8 +24,8 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<OnFoot>()
-            .add_input_context::<InCar>()
+        app.add_actions_marker::<OnFoot>()
+            .add_actions_marker::<InCar>()
             .add_observer(foot_binding)
             .add_observer(car_binding)
             .add_observer(apply_movement)
@@ -38,11 +38,12 @@ impl Plugin for GamePlugin {
 
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
-    commands.spawn((PlayerBox, OnFoot));
+    commands.spawn((PlayerBox, Actions::<OnFoot>::default()));
 }
 
-fn foot_binding(mut trigger: Trigger<Binding<OnFoot>>) {
-    trigger
+fn foot_binding(trigger: Trigger<Binding<OnFoot>>, mut players: Query<&mut Actions<OnFoot>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
         .with_modifiers((
@@ -50,12 +51,13 @@ fn foot_binding(mut trigger: Trigger<Binding<OnFoot>>) {
             SmoothNudge::default(),
             Scale::splat(DEFAULT_SPEED),
         ));
-    trigger.bind::<Rotate>().to(KeyCode::Space);
-    trigger.bind::<EnterCar>().to(KeyCode::Enter);
+    actions.bind::<Rotate>().to(KeyCode::Space);
+    actions.bind::<EnterCar>().to(KeyCode::Enter);
 }
 
-fn car_binding(mut trigger: Trigger<Binding<InCar>>) {
-    trigger
+fn car_binding(trigger: Trigger<Binding<InCar>>, mut players: Query<&mut Actions<InCar>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
         .with_modifiers((
@@ -63,7 +65,7 @@ fn car_binding(mut trigger: Trigger<Binding<InCar>>) {
             SmoothNudge::default(),
             Scale::splat(DEFAULT_SPEED + 20.0), // Make car faster.
         ));
-    trigger.bind::<ExitCar>().to(KeyCode::Enter);
+    actions.bind::<ExitCar>().to(KeyCode::Enter);
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
@@ -87,8 +89,8 @@ fn enter_car(
 
     commands
         .entity(trigger.entity())
-        .remove::<OnFoot>()
-        .insert(InCar);
+        .remove::<Actions<OnFoot>>()
+        .insert(Actions::<InCar>::default());
 }
 
 fn exit_car(
@@ -101,11 +103,11 @@ fn exit_car(
 
     commands
         .entity(trigger.entity())
-        .remove::<InCar>()
-        .insert(OnFoot);
+        .remove::<Actions<InCar>>()
+        .insert(Actions::<OnFoot>::default());
 }
 
-#[derive(Component)]
+#[derive(ActionsMarker)]
 struct OnFoot;
 
 #[derive(Debug, InputAction)]
@@ -124,7 +126,7 @@ struct Rotate;
 #[input_action(output = bool, require_reset = true)]
 struct EnterCar;
 
-#[derive(Component)]
+#[derive(ActionsMarker)]
 struct InCar;
 
 /// Switches context to [`OnFoot`].

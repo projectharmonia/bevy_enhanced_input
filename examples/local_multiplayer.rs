@@ -28,7 +28,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<PlayerBox>()
+        app.add_actions_marker::<Player>()
             .add_observer(binding)
             .add_observer(apply_movement)
             .add_observer(rotate)
@@ -46,47 +46,46 @@ fn spawn(mut commands: Commands) {
         Transform::from_translation(Vec3::X * 50.0),
         PlayerColor(RED_600.into()),
         Player::First,
+        Actions::<Player>::default(),
     ));
     commands.spawn((
         PlayerBox,
         Transform::from_translation(-Vec3::X * 50.0),
         PlayerColor(BLUE_600.into()),
         Player::Second,
+        Actions::<Player>::default(),
     ));
 }
 
 fn binding(
-    mut trigger: Trigger<Binding<PlayerBox>>,
+    trigger: Trigger<Binding<Player>>,
     gamepads: Res<Gamepads>,
-    players: Query<&Player>,
+    mut players: Query<(&Player, &mut Actions<Player>)>,
 ) {
-    // Could be stored in the context itself, but it's usually
-    // better to have a separate component that is shared
-    // across all contexts.
-    let player = *players.get(trigger.entity()).unwrap();
+    let (&player, mut actions) = players.get_mut(trigger.entity()).unwrap();
 
     // By default context read inputs from all gamepads,
     // but for local multiplayer we need assign specific
     // gamepad index.
     if let Some(&entity) = gamepads.get(player as usize) {
-        trigger.set_gamepad(entity);
+        actions.set_gamepad(entity);
     }
 
     // Assign different mappings based player index.
     match player {
         Player::First => {
-            trigger
+            actions
                 .bind::<Move>()
                 .to((Cardinal::wasd_keys(), GamepadStick::Left));
-            trigger
+            actions
                 .bind::<Rotate>()
                 .to((KeyCode::Space, GamepadButton::South));
         }
         Player::Second => {
-            trigger
+            actions
                 .bind::<Move>()
                 .to((Cardinal::arrow_keys(), GamepadStick::Left));
-            trigger
+            actions
                 .bind::<Rotate>()
                 .to((KeyCode::Numpad0, GamepadButton::South));
         }
@@ -94,7 +93,7 @@ fn binding(
 
     // Can be called multiple times extend bindings.
     // In our case we add modifiers for all players.
-    trigger.bind::<Move>().with_modifiers((
+    actions.bind::<Move>().with_modifiers((
         DeadZone::default(),
         SmoothNudge::default(),
         Scale::splat(DEFAULT_SPEED),
@@ -131,7 +130,8 @@ fn update_gamepads(
     commands.trigger(RebuildBindings);
 }
 
-#[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
+/// Used as both input context and component.
+#[derive(ActionsMarker, Component, Clone, Copy, PartialEq, Eq, Hash)]
 enum Player {
     First,
     Second,

@@ -15,6 +15,13 @@ struct InputActionOpts {
     require_reset: Option<bool>,
 }
 
+#[derive(FromDeriveInput)]
+#[darling(attributes(input_action))]
+struct InputContextOpts {
+    #[darling(default)]
+    priority: Option<usize>,
+}
+
 #[proc_macro_derive(InputAction, attributes(input_action))]
 pub fn input_action_derive(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
@@ -64,6 +71,38 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
             #accumulation
             #consume_input
             #require_reset
+        }
+    })
+}
+
+#[proc_macro_derive(ActionsMarker, attributes(actions_marker))]
+pub fn input_context_derive(item: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(item as DeriveInput);
+
+    #[expect(non_snake_case, reason = "item shortcuts")]
+    let ActionsMarker = quote! { ::bevy_enhanced_input::prelude::ActionsMarker };
+
+    let opts = match InputContextOpts::from_derive_input(&input) {
+        Ok(value) => value,
+        Err(e) => {
+            return e.write_errors().into();
+        }
+    };
+
+    let struct_name = input.ident;
+    let priority = if let Some(priority) = opts.priority {
+        quote! {
+            const PRIORITY: usize = #priority;
+        }
+    } else {
+        Default::default()
+    };
+
+    let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
+
+    TokenStream::from(quote! {
+        impl #impl_generics #ActionsMarker for #struct_name #type_generics #where_clause {
+            #priority
         }
     })
 }

@@ -6,10 +6,10 @@ use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Marker for a gameplay-related action.
 ///
-/// Needs to be bind inside observer for [`Binding`](super::registry::Binding).
+/// Needs to be bind inside observer for [`Binding`](super::action_instances::Binding).
 ///
-/// Each binded action will have [`ActionState`](super::input_context::ActionState).
-/// When it updates during [`InputContext`](super::input_context::InputContext)
+/// Each binded action will have [`ActionState`](super::actions::ActionState).
+/// When it updates during [`Actions`](super::actions::Actions)
 /// evaluation, [`events`](super::events) are triggered.
 ///
 /// # Examples
@@ -33,8 +33,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// struct Move;
 /// ```
 ///
-/// You can also obtain the state directly from [`ActionData`](super::input_context::ActionData),
-/// see [`InputContextRegistry::context`](super::registry::InputContextRegistry::context).
+/// You can also obtain the state directly from [`Actions`](super::actions::Actions) component.
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:
@@ -72,8 +71,8 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// bound to it or allow them to pass through to affect other actions.
     ///
     /// Inputs are consumed only if the action state is not equal to
-    /// [`ActionState::None`](super::input_context::ActionState::None).
-    /// For details, see [`InputContext`](super::input_context::InputContext).
+    /// [`ActionState::None`](super::actions::ActionState::None).
+    /// For details, see [`Actions`](super::actions::Actions).
     ///
     /// Consuming is global and affect actions in all contexts.
     const CONSUME_INPUT: bool = true;
@@ -148,8 +147,8 @@ impl ActionOutput for Vec3 {
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
-/// same most significant [`ActionState`](super::input_context::ActionState)
-/// (excluding [`ActionState::None`](super::input_context::ActionState::None)).
+/// same most significant [`ActionState`](super::actions::ActionState)
+/// (excluding [`ActionState::None`](super::actions::ActionState::None)).
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.

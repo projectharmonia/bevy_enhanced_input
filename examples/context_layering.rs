@@ -24,8 +24,8 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<PlayerBox>()
-            .add_input_context::<Swimming>()
+        app.add_actions_marker::<Player>()
+            .add_actions_marker::<Swimming>()
             .add_observer(regular_binding)
             .add_observer(swimming_binding)
             .add_observer(apply_movement)
@@ -40,11 +40,12 @@ impl Plugin for GamePlugin {
 
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
-    commands.spawn(PlayerBox);
+    commands.spawn((PlayerBox, Actions::<Player>::default()));
 }
 
-fn regular_binding(mut trigger: Trigger<Binding<PlayerBox>>) {
-    trigger
+fn regular_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
         .with_modifiers((
@@ -52,17 +53,17 @@ fn regular_binding(mut trigger: Trigger<Binding<PlayerBox>>) {
             SmoothNudge::default(),
             Scale::splat(DEFAULT_SPEED),
         ));
-    trigger.bind::<Rotate>().to(KeyCode::Space);
-    trigger.bind::<EnterWater>().to(KeyCode::Enter);
+    actions.bind::<Rotate>().to(KeyCode::Space);
+    actions.bind::<EnterWater>().to(KeyCode::Enter);
 }
 
-fn swimming_binding(mut trigger: Trigger<Binding<Swimming>>) {
-    // `PlayerBox` has lower priority, so `Dive` and `ExitWater` consume inputs first,
+fn swimming_binding(trigger: Trigger<Binding<Swimming>>, mut players: Query<&mut Actions<Player>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    // `Player` has lower priority, so `Dive` and `ExitWater` consume inputs first,
     // preventing `Rotate` and `EnterWater` from being triggered.
     // The consuming behavior can be configured in the `InputAction` trait.
-    trigger.set_priority(1);
-    trigger.bind::<Dive>().to(KeyCode::Space);
-    trigger.bind::<ExitWater>().to(KeyCode::Enter);
+    actions.bind::<Dive>().to(KeyCode::Space);
+    actions.bind::<ExitWater>().to(KeyCode::Enter);
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
@@ -84,7 +85,9 @@ fn enter_water(
     let mut color = players.get_mut(trigger.entity()).unwrap();
     **color = INDIGO_600.into();
 
-    commands.entity(trigger.entity()).insert(Swimming);
+    commands
+        .entity(trigger.entity())
+        .insert(Actions::<Swimming>::default());
 }
 
 fn start_diving(trigger: Trigger<Started<Dive>>, mut players: Query<&mut Visibility>) {
@@ -105,8 +108,13 @@ fn exit_water(
     let mut color = players.get_mut(trigger.entity()).unwrap();
     **color = Default::default();
 
-    commands.entity(trigger.entity()).remove::<Swimming>();
+    commands
+        .entity(trigger.entity())
+        .remove::<Actions<Swimming>>();
 }
+
+#[derive(ActionsMarker)]
+struct Player;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]
@@ -121,8 +129,9 @@ struct Rotate;
 #[input_action(output = bool)]
 struct EnterWater;
 
-/// Context that overrides some actions from [`PlayerBox`].
-#[derive(Component)]
+/// Overrides some actions from [`Player`].
+#[derive(ActionsMarker)]
+#[actions_marker(priority = 1)]
 struct Swimming;
 
 #[derive(Debug, InputAction)]

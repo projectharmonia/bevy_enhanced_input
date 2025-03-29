@@ -22,66 +22,67 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<DummyContext>()
+        app.add_actions_marker::<Dummy>()
             .add_observer(binding)
             .add_systems(Startup, spawn);
     }
 }
 
 fn spawn(mut commands: Commands) {
-    commands.spawn(DummyContext);
+    commands.spawn(Actions::<Dummy>::default());
 }
 
-fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
-    trigger
+fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions
         .bind::<PressAction>()
         .to(PressAction::KEY)
         .with_conditions(Press::default());
-    trigger
+    actions
         .bind::<JustPressAction>()
         .to(JustPressAction::KEY)
         .with_conditions(JustPress::default());
-    trigger
+    actions
         .bind::<HoldAction>()
         .to(HoldAction::KEY)
         .with_conditions(Hold::new(1.0));
-    trigger
+    actions
         .bind::<HoldAndReleaseAction>()
         .to(HoldAndReleaseAction::KEY)
         .with_conditions(HoldAndRelease::new(1.0));
-    trigger
+    actions
         .bind::<PulseAction>()
         .to(PulseAction::KEY)
         .with_conditions(Pulse::new(1.0));
-    trigger
+    actions
         .bind::<ReleaseAction>()
         .to(ReleaseAction::KEY)
         .with_conditions(Release::default());
-    trigger
+    actions
         .bind::<TapAction>()
         .to(TapAction::KEY)
         .with_conditions(Tap::new(0.5));
-    trigger
+    actions
         .bind::<ChordMember1>()
         .to(ChordMember1::KEY)
         .with_conditions(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
-    trigger
+    actions
         .bind::<ChordMember2>()
         .to(ChordMember2::KEY)
         .with_conditions(BlockBy::<ChordAction>::events_only());
-    trigger.bind::<ChordAction>().with_conditions((
+    actions.bind::<ChordAction>().with_conditions((
         Chord::<ChordMember1>::default(),
         Chord::<ChordMember2>::default(),
     ));
-    trigger.bind::<BlockerAction>().to(BlockerAction::KEY);
-    trigger
+    actions.bind::<BlockerAction>().to(BlockerAction::KEY);
+    actions
         .bind::<BlockByAction>()
         .to(BlockByAction::KEY)
         .with_conditions(BlockBy::<BlockerAction>::default());
 }
 
-#[derive(Component)]
-struct DummyContext;
+#[derive(ActionsMarker)]
+struct Dummy;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]

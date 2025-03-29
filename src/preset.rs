@@ -24,8 +24,13 @@ use super::{
 /// use bevy::prelude::*;
 /// use bevy_enhanced_input::prelude::*;
 ///
-/// fn binding(mut trigger: Trigger<Binding<Player>>, settings: Res<KeyboardSettings>) {
-///     trigger.bind::<Move>().to(Cardinal {
+/// fn binding(
+///     trigger: Trigger<Binding<Player>>,
+///     settings: Res<KeyboardSettings>,
+///     mut players: Query<&mut Actions<Player>>,
+/// ) {
+///     let mut actions = players.get_mut(trigger.entity()).unwrap();
+///     actions.bind::<Move>().to(Cardinal {
 ///         north: &settings.forward,
 ///         east: &settings.right,
 ///         south: &settings.backward,
@@ -44,7 +49,7 @@ use super::{
 ///     left: Vec<KeyCode>,
 /// }
 ///
-/// #[derive(Component)]
+/// #[derive(ActionsMarker)]
 /// struct Player;
 ///
 /// #[derive(Debug, InputAction)]

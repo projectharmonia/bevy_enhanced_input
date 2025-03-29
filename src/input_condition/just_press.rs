@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::{DEFAULT_ACTUATION, InputCondition};
 use crate::{
     action_value::ActionValue,
-    input_context::{ActionState, ActionsData},
+    actions::{ActionState, ActionsData},
 };
 
 /// Like [`super::press::Press`] but returns [`ActionState::Fired`] only once until the next actuation.
@@ -53,7 +53,7 @@ impl InputCondition for JustPress {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::input_context::ActionsData;
+    use crate::actions::ActionsData;
 
     #[test]
     fn press() {

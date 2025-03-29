@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Rename `InputContext` into `Actions<M>` with its module. Now it's a component. Since a single entity could have multiple actions, the struct now have associated marker `M`. This marker needs to implement `ActionsMarker` trait. We provide a derive macro for it.
+- Input contexts no longer associated with a component. Users need to manually insert `Actions`.
+- Replace `InputContextAppExt::add_input_context` with `ActionsMarkerAppExt::add_actions_marker` that accepts markers instead of components.
+- `Binding` trigger no longer stores bindings. Just get `Actions` using `Query` and mutate it directly.
+
+### Removed
+
+- `InputContextRegistry`. Directly access `Actions` from entities.
+
+### Fixed
+
+- Crash on context switch due to unpredictable observers ordering.
+
 ## [0.8.0] - 2025-03-17
 
 ### Added
