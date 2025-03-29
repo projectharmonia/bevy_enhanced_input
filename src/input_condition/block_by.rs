@@ -5,8 +5,8 @@ use bevy::prelude::*;
 use super::{ConditionKind, InputCondition};
 use crate::{
     action_value::ActionValue,
-    input_action::InputAction,
     actions::{ActionState, ActionsData},
+    input_action::InputAction,
 };
 
 /// Requires another action to not be fired within the same context.

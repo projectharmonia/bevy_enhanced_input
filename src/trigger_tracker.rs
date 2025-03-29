@@ -4,9 +4,9 @@ use bevy::prelude::*;
 
 use crate::{
     action_value::ActionValue,
+    actions::{ActionState, ActionsData},
     input_action::Accumulation,
     input_condition::{ConditionKind, InputCondition},
-    actions::{ActionState, ActionsData},
     input_modifier::InputModifier,
 };
 
