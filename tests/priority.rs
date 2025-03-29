@@ -5,12 +5,16 @@ use bevy_enhanced_input::prelude::*;
 fn prioritization() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<First>()
-        .add_input_context::<Second>()
+        .add_actions_marker::<First>()
+        .add_actions_marker::<Second>()
         .add_observer(first_binding)
-        .add_observer(second_binding);
+        .add_observer(second_binding)
+        .finish();
 
-    let entity = app.world_mut().spawn((First, Second)).id();
+    let entity = app
+        .world_mut()
+        .spawn((Actions::<First>::default(), Actions::<Second>::default()))
+        .id();
 
     app.update();
 
@@ -20,16 +24,14 @@ fn prioritization() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-
-    let first = registry.context::<First>(entity);
+    let first = app.world().get::<Actions<First>>(entity).unwrap();
     assert_eq!(first.action::<FirstConsume>().state(), ActionState::Fired);
     assert_eq!(
         first.action::<FirstPassthrough>().state(),
         ActionState::Fired
     );
 
-    let second = registry.context::<Second>(entity);
+    let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
         second.action::<SecondConsume>().state(),
         ActionState::None,
@@ -42,21 +44,23 @@ fn prioritization() {
     );
 }
 
-fn first_binding(mut trigger: Trigger<Binding<First>>) {
-    trigger.set_priority(1);
-    trigger.bind::<FirstConsume>().to(CONSUME_KEY);
-    trigger.bind::<FirstPassthrough>().to(PASSTHROUGH_KEY);
+fn first_binding(trigger: Trigger<Binding<First>>, mut actions: Query<&mut Actions<First>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<FirstConsume>().to(CONSUME_KEY);
+    actions.bind::<FirstPassthrough>().to(PASSTHROUGH_KEY);
 }
 
-fn second_binding(mut trigger: Trigger<Binding<Second>>) {
-    trigger.bind::<SecondConsume>().to(CONSUME_KEY);
-    trigger.bind::<SecondPassthrough>().to(PASSTHROUGH_KEY);
+fn second_binding(trigger: Trigger<Binding<Second>>, mut actions: Query<&mut Actions<Second>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<SecondConsume>().to(CONSUME_KEY);
+    actions.bind::<SecondPassthrough>().to(PASSTHROUGH_KEY);
 }
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
+#[actions_marker(priority = 1)]
 struct First;
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
 struct Second;
 
 /// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.

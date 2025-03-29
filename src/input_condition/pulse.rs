@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::{DEFAULT_ACTUATION, InputCondition, condition_timer::ConditionTimer};
 use crate::{
     action_value::ActionValue,
-    input_context::{ActionState, ActionsData},
+    actions::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
@@ -112,7 +112,7 @@ mod tests {
     use core::time::Duration;
 
     use super::*;
-    use crate::input_context::ActionsData;
+    use crate::actions::ActionsData;
 
     #[test]
     fn tap() {

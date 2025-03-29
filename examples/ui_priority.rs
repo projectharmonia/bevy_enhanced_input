@@ -25,7 +25,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<PlayerBox>()
+        app.add_actions_marker::<Player>()
             .add_observer(binding)
             .add_observer(apply_movement)
             .add_observer(zoom)
@@ -36,7 +36,7 @@ impl Plugin for GamePlugin {
 
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
-    commands.spawn(PlayerBox);
+    commands.spawn((PlayerBox, Actions::<Player>::default()));
 
     // Setup simple node with text using Bevy UI.
     commands
@@ -71,8 +71,9 @@ fn spawn(mut commands: Commands) {
         });
 }
 
-fn binding(mut trigger: Trigger<Binding<PlayerBox>>) {
-    trigger
+fn binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
         .with_modifiers((
@@ -80,7 +81,7 @@ fn binding(mut trigger: Trigger<Binding<PlayerBox>>) {
             SmoothNudge::default(),
             Scale::splat(DEFAULT_SPEED),
         ));
-    trigger
+    actions
         .bind::<Zoom>()
         .to(Input::mouse_wheel().with_modifiers(SwizzleAxis::YXZ))
         .with_modifiers(Scale::splat(3.0));
@@ -103,6 +104,9 @@ fn zoom(trigger: Trigger<Fired<Zoom>>, mut players: Query<&mut Transform>) {
     let mut transform = players.get_mut(trigger.entity()).unwrap();
     transform.scale += Vec3::splat(trigger.value);
 }
+
+#[derive(ActionsMarker)]
+struct Player;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]

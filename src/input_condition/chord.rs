@@ -6,7 +6,7 @@ use super::{ConditionKind, InputCondition};
 use crate::{
     action_value::ActionValue,
     input_action::InputAction,
-    input_context::{ActionState, ActionsData},
+    actions::{ActionState, ActionsData},
 };
 
 /// Requires action `A` to be fired within the same context.
@@ -63,7 +63,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::input_context::{ActionData, ActionsData};
+    use crate::actions::{ActionData, ActionsData};
 
     #[test]
     fn chord() {

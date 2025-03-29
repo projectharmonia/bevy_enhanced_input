@@ -7,7 +7,7 @@ use super::{
 };
 use crate::input::Input;
 
-/// Associated input for [`ActionBind`](super::input_context::ActionBind).
+/// Associated input for [`ActionBind`](super::actions::ActionBind).
 #[derive(Debug)]
 pub struct InputBind {
     pub input: Input,
@@ -19,7 +19,7 @@ pub struct InputBind {
     /// Needed to prevent newly created contexts from reacting to currently
     /// held inputs until they are released.
     ///
-    /// Used only if [`ActionBind`](super::input_context::ActionBind::require_reset) is set.
+    /// Used only if [`ActionBind`](super::actions::ActionBind::require_reset) is set.
     pub(super) first_activation: bool,
 }
 
@@ -46,7 +46,7 @@ pub trait InputBindModCond {
     /// Adds input-level modifiers.
     ///
     /// For action-level conditions see
-    /// [`ActionBind::with_modifiers`](super::input_context::ActionBind::with_modifiers).
+    /// [`ActionBind::with_modifiers`](super::actions::ActionBind::with_modifiers).
     ///
     /// # Examples
     ///
@@ -55,9 +55,11 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers(Scale::splat(2.0)));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -68,9 +70,11 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers((Scale::splat(2.0), Negate::all())));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -83,7 +87,7 @@ pub trait InputBindModCond {
     /// You can also apply modifiers to multiple inputs using [`InputBindSet::with_modifiers_each`]
     ///
     /// For action-level conditions see
-    /// [`ActionBind::with_conditions`](super::input_context::ActionBind::with_conditions).
+    /// [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions).
     ///
     /// # Examples
     ///
@@ -92,9 +96,11 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_conditions(Release::default()));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -105,12 +111,14 @@ pub trait InputBindModCond {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_conditions((Release::default(), JustPress::default())));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// ```
     #[must_use]
     fn with_conditions(self, set: impl InputConditionSet) -> InputBind;
@@ -131,7 +139,7 @@ impl<T: Into<InputBind>> InputBindModCond for T {
 }
 
 /// Represents collection of bindings that could be passed into
-/// [`ActionBind::to`](super::input_context::ActionBind::to).
+/// [`ActionBind::to`](super::actions::ActionBind::to).
 ///
 /// Can be manually implemented to provide custom modifiers or conditions.
 /// See [`preset`](super::preset) for examples.
@@ -155,13 +163,15 @@ pub trait InputBindSet {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Move>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Move>()
     ///     .to((
     ///         Input::mouse_motion(),
     ///         GamepadStick::Left.with_modifiers_each(Negate::all()), // Will be applied to each axis.
     ///     ))
     ///     .with_modifiers(DeadZone::default()); // Modifiers like `DeadZone` need to be applied at the action level!
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Move;

@@ -3,6 +3,7 @@ use core::{
     any::{self, TypeId},
     cmp::Ordering,
     fmt::Debug,
+    marker::PhantomData,
 };
 
 use bevy::{
@@ -22,7 +23,7 @@ use super::{
     trigger_tracker::TriggerTracker,
 };
 
-/// Instance for [`InputContext`].
+/// Instance for [`ActionsMarker`].
 ///
 /// Stores [`InputAction`]s and evaluates their [`ActionState`] in the order they are bound.
 ///
@@ -30,6 +31,13 @@ use super::{
 ///
 /// Additionally, you can assign [`InputModifier`]s and [`InputCondition`]s at both the action
 /// and input levels.
+///
+/// You can define bindings before the insertion, but it's recommended to create an observer
+/// for [`Binding`](crate::action_instances::Binding). To setup bindings, register an observer
+/// an obtain this component. This way you can conveniently reload bindings when you settings
+/// change using [`RebuildBindings`](crate::action_instances::RebuildBindings).
+///
+/// Until the component is exists on the entity, actions will be evaluated and trigger [`events`](super::events).
 ///
 /// Action evaluation follows these steps:
 ///
@@ -42,32 +50,15 @@ use super::{
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
 ///    Final value be converted into [`InputAction::Output`] using [`ActionValue::convert`].
-#[derive(Default)]
-pub struct InputContext {
-    priority: usize,
+#[derive(Component)]
+pub struct Actions<M: ActionsMarker> {
     gamepad: GamepadDevice,
     action_binds: Vec<ActionBind>,
     actions: ActionsData,
+    marker: PhantomData<M>,
 }
 
-impl InputContext {
-    /// Sets priority.
-    ///
-    /// See also [`Self::priority`]
-    pub fn set_priority(&mut self, priority: usize) {
-        self.priority = priority;
-    }
-
-    /// Determines the evaluation order.
-    ///
-    /// Ordering is global.
-    /// Components with higher priority evaluated first.
-    ///
-    /// By default the value is set to 0.
-    pub fn priority(&self) -> usize {
-        self.priority
-    }
-
+impl<M: ActionsMarker> Actions<M> {
     /// Associates context with gamepad.
     ///
     /// By default it's [`GamepadDevice::Any`].
@@ -120,7 +111,6 @@ impl InputContext {
     /// Returns associated state for action `A` if exists.
     ///
     /// For panicking version see [`Self::action`].
-    /// For usage example see [`InputContextRegistry::context`](super::InputContextRegistry::context).
     pub fn get_action<A: InputAction>(&self) -> Option<&ActionData> {
         self.actions.action::<A>()
     }
@@ -128,7 +118,6 @@ impl InputContext {
     /// Returns associated state for action `A`.
     ///
     /// For non-panicking version see [`Self::get_action`].
-    /// For usage example see [`InputContextRegistry::context`](super::InputContextRegistry::context).
     ///
     /// # Panics
     ///
@@ -177,13 +166,54 @@ impl InputContext {
             }
         }
 
-        self.priority = 0;
         self.gamepad = Default::default();
         self.actions.clear();
     }
 }
 
-/// Bindings of [`InputAction`] for [`InputContext`].
+impl<M: ActionsMarker> Default for Actions<M> {
+    fn default() -> Self {
+        Self {
+            gamepad: Default::default(),
+            action_binds: Default::default(),
+            actions: Default::default(),
+            marker: PhantomData,
+        }
+    }
+}
+
+/// Marker for [`Actions`].
+///
+/// # Examples
+///
+/// To implement the trait you can use the [`ActionsMarker`](bevy_enhanced_input_macros::ActionsMarker)
+/// derive to reduce boilerplate:
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// #[derive(ActionsMarker)]
+/// struct Player;
+/// ```
+///
+/// Optionally you can pass `priority`:
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// #[derive(ActionsMarker)]
+/// #[actions_marker(priority = 1)]
+/// struct Player;
+/// ```
+pub trait ActionsMarker: Send + Sync + 'static {
+    /// Determines the evaluation order of [`Actions<Self>`].
+    ///
+    /// Ordering is global.
+    /// Contexts with a higher priority evaluated first.
+    const PRIORITY: usize = 0;
+}
+
+/// Bindings of [`InputAction`] for [`ActionsMarker`].
 ///
 /// These bindings are stored separately from [`ActionsData`] to allow a currently
 /// evaluating action to access the state of other actions.
@@ -239,10 +269,12 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_modifiers(Scale::splat(2.0));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -253,10 +285,12 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_modifiers((Scale::splat(2.0), Negate::all()));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -282,10 +316,12 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_conditions(Release::default());
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -296,10 +332,12 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_conditions((Release::default(), JustPress::default()));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -333,9 +371,11 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>()
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>()
     ///     .to((KeyCode::Space, GamepadButton::South));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -346,8 +386,10 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -358,9 +400,11 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Jump>().to(KeyCode::Space.with_conditions(Release::default()));
-    /// trigger.bind::<Attack>().to(MouseButton::Left.with_modifiers(Scale::splat(10.0)));
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Jump>().to(KeyCode::Space.with_conditions(Release::default()));
+    /// actions.bind::<Attack>().to(MouseButton::Left.with_modifiers(Scale::splat(10.0)));
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -374,9 +418,11 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Zoom>().to(Input::mouse_wheel());
-    /// trigger.bind::<Move>().to(Input::mouse_motion());
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Zoom>().to(Input::mouse_wheel());
+    /// actions.bind::<Move>().to(Input::mouse_motion());
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Zoom;
@@ -391,8 +437,10 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
-    /// trigger.bind::<Move>().to(Cardinal::wasd_keys());
+    /// # let mut actions = Actions::<Dummy>::default();
+    /// actions.bind::<Move>().to(Cardinal::wasd_keys());
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = Vec2)]
     /// # struct Move;
@@ -403,14 +451,16 @@ impl ActionBind {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut trigger = InputContext::default();
+    /// # let mut actions = Actions::<Dummy>::default();
     /// # let mut settings = KeyboardSettings::default();
-    /// trigger.bind::<Inspect>().to(&settings.inspect);
+    /// actions.bind::<Inspect>().to(&settings.inspect);
     ///
     /// # #[derive(Default)]
     /// struct KeyboardSettings {
     ///     inspect: Vec<KeyCode>,
     /// }
+    /// # #[derive(ActionsMarker)]
+    /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = Vec2)]
     /// # struct Inspect;
@@ -503,8 +553,7 @@ impl ActionBind {
 
 /// Map for actions to their data.
 ///
-/// Can be accessed from [`InputCondition::evaluate`]
-/// or [`InputContextRegistry::context`](super::InputContextRegistry::context).
+/// Can be accessed from [`InputCondition::evaluate`] or [`Actions`].
 #[derive(Default, Deref, DerefMut)]
 pub struct ActionsData(pub HashMap<TypeId, ActionData>);
 
@@ -705,22 +754,25 @@ pub enum ActionState {
 
 #[cfg(test)]
 mod tests {
-    use bevy_enhanced_input_macros::InputAction;
+    use bevy_enhanced_input_macros::{ActionsMarker, InputAction};
 
     use super::*;
 
     #[test]
     fn bind() {
-        let mut ctx = InputContext::default();
-        ctx.bind::<DummyAction>().to(KeyCode::KeyA);
-        ctx.bind::<DummyAction>().to(KeyCode::KeyB);
-        assert_eq!(ctx.action_binds.len(), 1);
+        let mut actions = Actions::<Dummy>::default();
+        actions.bind::<DummyAction>().to(KeyCode::KeyA);
+        actions.bind::<DummyAction>().to(KeyCode::KeyB);
+        assert_eq!(actions.action_binds.len(), 1);
 
-        let action = ctx.action_bind::<DummyAction>();
+        let action = actions.action_bind::<DummyAction>();
         assert_eq!(action.bindings.len(), 2);
     }
 
     #[derive(Debug, InputAction)]
     #[input_action(output = bool)]
     struct DummyAction;
+
+    #[derive(ActionsMarker)]
+    struct Dummy;
 }

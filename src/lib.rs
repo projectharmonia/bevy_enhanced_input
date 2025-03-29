@@ -28,8 +28,8 @@ We provide a [`prelude`] module, which exports most of the typically used traits
 1. Add [`EnhancedInputPlugin`] to your app.
 2. Define gameplay actions as unit structs and implement [`InputAction`] for them.
 3. Define context components and assign actions to them by writing observers for [`Binding`]
-4. Register contexts using [`InputContextAppExt::add_input_context`].
-5. Insert contexts to entities you want to control.
+4. Register markers using [`ActionsMarkerAppExt::add_actions_marker`].
+5. Insert actions to entities you want to control.
 6. Create observers to react on [`events`] for each action.
 
 For more details, see the documentation on relevant types. You can also find examples in the repository.
@@ -66,23 +66,25 @@ extern crate alloc;
 // Required for the derive macro to work within the crate.
 extern crate self as bevy_enhanced_input;
 
+pub mod action_instances;
 pub mod action_value;
+pub mod actions;
 pub mod events;
 pub mod input;
 pub mod input_action;
 pub mod input_bind;
 pub mod input_condition;
-pub mod input_context;
 pub mod input_modifier;
 mod input_reader;
 pub mod preset;
-pub mod registry;
 mod trigger_tracker;
 
 pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
+        action_instances::{ActionsMarkerAppExt, Binding, RebuildBindings},
         action_value::{ActionValue, ActionValueDim},
+        actions::{ActionBind, ActionData, ActionState, Actions, ActionsMarker},
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_action::{Accumulation, InputAction},
@@ -91,19 +93,25 @@ pub mod prelude {
             ConditionKind, InputCondition, block_by::*, chord::*, condition_timer::*, hold::*,
             hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,
         },
-        input_context::{ActionBind, ActionData, ActionState, InputContext},
         input_modifier::{
             InputModifier, accumulate_by::*, dead_zone::*, delta_scale::*, exponential_curve::*,
             negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
         },
         preset::{Bidirectional, Cardinal, GamepadStick},
-        registry::{Binding, InputContextAppExt, InputContextRegistry, RebuildBindings},
     };
-    pub use bevy_enhanced_input_macros::InputAction;
+    pub use bevy_enhanced_input_macros::{ActionsMarker, InputAction};
 }
 
-use bevy::{input::InputSystem, prelude::*};
+use bevy::{
+    ecs::{
+        system::{ParamBuilder, QueryParamBuilder},
+        world::FilteredEntityMut,
+    },
+    input::InputSystem,
+    prelude::*,
+};
 
+use action_instances::{ActionInstances, ActionsRegistry};
 use input_reader::{InputReader, ResetInput};
 use prelude::*;
 
@@ -114,9 +122,51 @@ pub struct EnhancedInputPlugin;
 
 impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<InputContextRegistry>()
+        app.init_resource::<ActionInstances>()
+            .init_resource::<ActionsRegistry>()
             .init_resource::<ResetInput>()
-            .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem))
+            .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem));
+    }
+
+    fn finish(&self, app: &mut App) {
+        let registry = app
+            .world_mut()
+            .remove_resource::<ActionsRegistry>()
+            .expect("registry should be inserted in `build`");
+
+        let update = (
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            QueryParamBuilder::new(|builder| {
+                builder.optional(|builder| {
+                    for &id in registry.iter() {
+                        builder.mut_id(id);
+                    }
+                });
+            }),
+        )
+            .build_state(&mut app.world_mut())
+            .build_system(update);
+
+        let rebuild = (
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            QueryParamBuilder::new(|builder| {
+                builder.optional(|builder| {
+                    for &id in registry.iter() {
+                        builder.mut_id(id);
+                    }
+                });
+            }),
+        )
+            .build_state(&mut app.world_mut())
+            .build_any_system(rebuild);
+
+        app.add_observer(rebuild)
             .add_systems(PreUpdate, update.in_set(EnhancedInputSystem));
     }
 }
@@ -125,10 +175,22 @@ fn update(
     mut commands: Commands,
     mut reader: InputReader,
     time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
-    mut registry: ResMut<InputContextRegistry>,
+    mut instances: ResMut<ActionInstances>,
+    mut actions: Query<FilteredEntityMut>,
 ) {
     reader.update_state();
-    registry.update(&mut commands, &mut reader, &time);
+    instances.update(&mut commands, &mut reader, &time, &mut actions);
+}
+
+fn rebuild(
+    _trigger: Trigger<RebuildBindings>,
+    mut commands: Commands,
+    mut reset_input: ResMut<ResetInput>,
+    mut instances: ResMut<ActionInstances>,
+    time: Res<Time<Virtual>>,
+    mut actions: Query<FilteredEntityMut>,
+) {
+    instances.rebuild(&mut commands, &mut reset_input, &time, &mut actions);
 }
 
 /// Label for the system that updates input context instances.

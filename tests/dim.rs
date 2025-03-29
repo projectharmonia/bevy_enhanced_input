@@ -5,10 +5,11 @@ use bevy_enhanced_input::prelude::*;
 fn bool() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -18,9 +19,8 @@ fn bool() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Bool>().value(), true.into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Bool>().value(), true.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -28,19 +28,19 @@ fn bool() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Bool>().value(), false.into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Bool>().value(), false.into());
 }
 
 #[test]
 fn axis1d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -50,9 +50,8 @@ fn axis1d() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Axis1D>().value(), 1.0.into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Axis1D>().value(), 1.0.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -60,19 +59,19 @@ fn axis1d() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Axis1D>().value(), 0.0.into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Axis1D>().value(), 0.0.into());
 }
 
 #[test]
 fn axis2d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -82,9 +81,8 @@ fn axis2d() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Axis2D>().value(), (1.0, 0.0).into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Axis2D>().value(), (1.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -92,19 +90,19 @@ fn axis2d() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Axis2D>().value(), Vec2::ZERO.into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Axis2D>().value(), Vec2::ZERO.into());
 }
 
 #[test]
 fn axis3d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -114,9 +112,8 @@ fn axis3d() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Axis3D>().value(), (1.0, 0.0, 0.0).into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Axis3D>().value(), (1.0, 0.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -124,20 +121,20 @@ fn axis3d() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<Axis3D>().value(), Vec3::ZERO.into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<Axis3D>().value(), Vec3::ZERO.into());
 }
 
-fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
-    trigger.bind::<Bool>().to(Bool::KEY);
-    trigger.bind::<Axis1D>().to(Axis1D::KEY);
-    trigger.bind::<Axis2D>().to(Axis2D::KEY);
-    trigger.bind::<Axis3D>().to(Axis3D::KEY);
+fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<Bool>().to(Bool::KEY);
+    actions.bind::<Axis1D>().to(Axis1D::KEY);
+    actions.bind::<Axis2D>().to(Axis2D::KEY);
+    actions.bind::<Axis3D>().to(Axis3D::KEY);
 }
 
-#[derive(Debug, Component)]
-struct DummyContext;
+#[derive(ActionsMarker)]
+struct Dummy;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]

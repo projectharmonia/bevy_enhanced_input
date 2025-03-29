@@ -16,7 +16,7 @@ use bevy::prelude::*;
 
 use crate::{
     action_value::ActionValue,
-    input_context::{ActionState, ActionsData},
+    actions::{ActionState, ActionsData},
 };
 
 pub const DEFAULT_ACTUATION: f32 = 0.5;
@@ -28,7 +28,7 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 /// or "release" events.
 ///
 /// Can be applied both to inputs and actions.
-/// See [`ActionBind::with_conditions`](super::input_context::ActionBind::with_conditions)
+/// See [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions)
 /// and [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
@@ -53,7 +53,7 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 /// on any non-zero value, functioning similarly to a [`Press`](press::Press) condition
 /// with a zero actuation threshold.
 ///
-/// For details about how actions are combined, see [`InputContext`](super::input_context::InputContext).
+/// For details about how actions are combined, see [`Actions`](super::actions::Actions).
 pub enum ConditionKind {
     /// The most significant [`ActionState`] from all explicit conditions will be the
     /// resulting state.
@@ -76,7 +76,7 @@ pub enum ConditionKind {
 }
 
 /// Represents collection of bindings that could be passed into
-/// [`ActionBind::with_conditions`](super::input_context::ActionBind::with_conditions)
+/// [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions)
 /// and [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
 pub trait InputConditionSet {
     /// Returns an iterator over conditions.

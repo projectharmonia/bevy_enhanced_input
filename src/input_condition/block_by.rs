@@ -6,7 +6,7 @@ use super::{ConditionKind, InputCondition};
 use crate::{
     action_value::ActionValue,
     input_action::InputAction,
-    input_context::{ActionState, ActionsData},
+    actions::{ActionState, ActionsData},
 };
 
 /// Requires another action to not be fired within the same context.
@@ -86,7 +86,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::input_context::ActionData;
+    use crate::actions::ActionData;
 
     #[test]
     fn block() {
