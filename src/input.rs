@@ -29,7 +29,7 @@ pub enum Input {
     /// [`ActionValue::Axis2D`](crate::action_value::ActionValue::Axis2D).
     MouseMotion { mod_keys: ModKeys },
     /// Mouse wheel, will be captured as
-    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
+    /// [`ActionValue::Axis2D`](crate::action_value::ActionValue::Axis2D).
     MouseWheel { mod_keys: ModKeys },
     /// Gamepad button, will be captured as
     /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
