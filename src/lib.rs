@@ -147,7 +147,7 @@ impl Plugin for EnhancedInputPlugin {
                 });
             }),
         )
-            .build_state(&mut app.world_mut())
+            .build_state(app.world_mut())
             .build_system(update);
 
         let rebuild = (
@@ -163,7 +163,7 @@ impl Plugin for EnhancedInputPlugin {
                 });
             }),
         )
-            .build_state(&mut app.world_mut())
+            .build_state(app.world_mut())
             .build_any_system(rebuild);
 
         app.add_observer(rebuild)
