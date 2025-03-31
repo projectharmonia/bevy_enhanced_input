@@ -5,10 +5,11 @@ use bevy_enhanced_input::prelude::*;
 fn keys() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -30,10 +31,9 @@ fn keys() {
 
         app.update();
 
-        let registry = app.world().resource::<InputContextRegistry>();
-        let ctx = registry.context::<DummyContext>(entity);
+        let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
         assert_eq!(
-            ctx.action::<DummyAction>().value(),
+            actions.action::<DummyAction>().value(),
             dir.into(),
             "`{key:?}` should result in `{dir}`"
         );
@@ -50,11 +50,12 @@ fn keys() {
 fn dpad() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
-    let context_entity = app.world_mut().spawn(DummyContext).id();
+    let ctx_entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -69,10 +70,9 @@ fn dpad() {
 
         app.update();
 
-        let registry = app.world().resource::<InputContextRegistry>();
-        let ctx = registry.context::<DummyContext>(context_entity);
+        let actions = app.world().get::<Actions<Dummy>>(ctx_entity).unwrap();
         assert_eq!(
-            ctx.action::<DummyAction>().value(),
+            actions.action::<DummyAction>().value(),
             dir.into(),
             "`{button:?}` should result in `{dir}`"
         );
@@ -88,11 +88,12 @@ fn dpad() {
 fn sticks() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
-    let context_entity = app.world_mut().spawn(DummyContext).id();
+    let ctx_entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -108,10 +109,9 @@ fn sticks() {
 
             app.update();
 
-            let registry = app.world().resource::<InputContextRegistry>();
-            let ctx = registry.context::<DummyContext>(context_entity);
+            let actions = app.world().get::<Actions<Dummy>>(ctx_entity).unwrap();
             assert_eq!(
-                ctx.action::<DummyAction>().value(),
+                actions.action::<DummyAction>().value(),
                 dir.into(),
                 "`{axis:?}` should result in `{dir}`"
             );
@@ -129,8 +129,9 @@ const LEFT: Vec2 = Vec2::new(-1.0, 0.0);
 const DOWN: Vec2 = Vec2::new(0.0, -1.0);
 const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
 
-fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
-    trigger.bind::<DummyAction>().to((
+fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<DummyAction>().to((
         Cardinal::wasd_keys(),
         Cardinal::arrow_keys(),
         Cardinal::dpad_buttons(),
@@ -143,8 +144,8 @@ fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
     ));
 }
 
-#[derive(Debug, Component)]
-struct DummyContext;
+#[derive(ActionsMarker)]
+struct Dummy;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2, consume_input = true)]

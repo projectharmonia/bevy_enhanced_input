@@ -6,7 +6,7 @@ use super::InputModifier;
 use crate::{
     InputAction,
     action_value::ActionValue,
-    input_context::{ActionState, ActionsData},
+    actions::{ActionState, ActionsData},
 };
 
 /// Produces accumulated value when another action is fired within the same context.
@@ -60,7 +60,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::input_context::ActionData;
+    use crate::actions::ActionData;
 
     #[test]
     fn accumulation_active() {

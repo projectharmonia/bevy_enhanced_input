@@ -5,10 +5,11 @@ use bevy_enhanced_input::prelude::*;
 fn max_abs() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -18,19 +19,19 @@ fn max_abs() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
-    assert_eq!(ctx.action::<MaxAbs>().value(), Vec2::Y.into());
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    assert_eq!(actions.action::<MaxAbs>().value(), Vec2::Y.into());
 }
 
 #[test]
 fn cumulative() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<DummyContext>()
-        .add_observer(binding);
+        .add_actions_marker::<Dummy>()
+        .add_observer(binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(DummyContext).id();
+    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
 
     app.update();
 
@@ -40,22 +41,22 @@ fn cumulative() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<DummyContext>(entity);
+    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
     assert_eq!(
-        ctx.action::<Cumulative>().value(),
+        actions.action::<Cumulative>().value(),
         Vec2::ZERO.into(),
         "up and down should cancel each other"
     );
 }
 
-fn binding(mut trigger: Trigger<Binding<DummyContext>>) {
-    trigger.bind::<MaxAbs>().to(Cardinal::wasd_keys());
-    trigger.bind::<Cumulative>().to(Cardinal::arrow_keys());
+fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<MaxAbs>().to(Cardinal::wasd_keys());
+    actions.bind::<Cumulative>().to(Cardinal::arrow_keys());
 }
 
-#[derive(Debug, Component)]
-struct DummyContext;
+#[derive(ActionsMarker)]
+struct Dummy;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2, accumulation = MaxAbs)]

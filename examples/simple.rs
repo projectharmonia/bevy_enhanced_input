@@ -24,7 +24,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<PlayerBox>() // Attach input context to a component.
+        app.add_actions_marker::<Player>() // All contexts should be registered.
             .add_observer(binding) // Add observer to setup bindings.
             .add_observer(apply_movement)
             .add_observer(rotate)
@@ -35,19 +35,21 @@ impl Plugin for GamePlugin {
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    // Spawn an entity with a component that implements `InputContext`.
-    commands.spawn(PlayerBox);
+    // Spawn an entity with a component that implements `ActionsMarker`.
+    commands.spawn((PlayerBox, Actions::<Player>::default()));
 }
 
 // To define mappings for actions, write an observer for `Binding`.
-// You can implement it for your character component directly, as
-// shown in this example, if you don't plan to switch contexts.
-fn binding(mut trigger: Trigger<Binding<PlayerBox>>) {
+// It's also possible to create bindings before the insertion,
+// but this way you can conveniently reload bindings when settings change.
+fn binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
+    let mut actions = players.get_mut(trigger.entity()).unwrap();
+
     // Mappings like WASD or sticks are very common,
     // so we provide built-ins to assign all keys/axes at once.
     // We don't assign any conditions and in this case the action will
     // be triggered with any non-zero value.
-    trigger
+    actions
         .bind::<Move>()
         .to((Cardinal::wasd_keys(), GamepadStick::Left))
         .with_modifiers((
@@ -58,7 +60,7 @@ fn binding(mut trigger: Trigger<Binding<PlayerBox>>) {
 
     // Multiple inputs can be assigned to a single action,
     // and the action will respond to any of them.
-    trigger
+    actions
         .bind::<Rotate>()
         .to((KeyCode::Space, GamepadButton::South));
 }
@@ -73,6 +75,11 @@ fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>)
     let mut transform = players.get_mut(trigger.entity()).unwrap();
     transform.rotate_z(FRAC_PI_4);
 }
+
+// Since it's possible to have multiple input contexts, you need
+// to define a marker and derive `ActionsMarker` trait.
+#[derive(ActionsMarker)]
+struct Player;
 
 // All actions should implement the `InputAction` trait.
 // It can be done manually, but we provide a derive for convenience.

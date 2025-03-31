@@ -5,12 +5,16 @@ use bevy_enhanced_input::prelude::*;
 fn layering() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<First>()
-        .add_input_context::<Second>()
+        .add_actions_marker::<First>()
+        .add_actions_marker::<Second>()
         .add_observer(first_binding)
-        .add_observer(second_binding);
+        .add_observer(second_binding)
+        .finish();
 
-    let entity = app.world_mut().spawn((First, Second)).id();
+    let entity = app
+        .world_mut()
+        .spawn((Actions::<First>::default(), Actions::<Second>::default()))
+        .id();
 
     app.update();
 
@@ -20,20 +24,19 @@ fn layering() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-
-    let first = registry.context::<First>(entity);
+    let first = app.world().get::<Actions<First>>(entity).unwrap();
     assert_eq!(first.action::<DummyAction>().state(), ActionState::Fired);
 
-    let second = registry.context::<Second>(entity);
+    let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(second.action::<DummyAction>().state(), ActionState::None);
 
-    app.world_mut().entity_mut(entity).remove::<First>();
+    app.world_mut()
+        .entity_mut(entity)
+        .remove::<Actions<First>>();
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let second = registry.context::<Second>(entity);
+    let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
         second.action::<DummyAction>().state(),
         ActionState::None,
@@ -52,8 +55,7 @@ fn layering() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let second = registry.context::<Second>(entity);
+    let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(second.action::<DummyAction>().state(), ActionState::Fired);
 }
 
@@ -61,12 +63,13 @@ fn layering() {
 fn switching() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<First>()
-        .add_input_context::<Second>()
+        .add_actions_marker::<First>()
+        .add_actions_marker::<Second>()
         .add_observer(first_binding)
-        .add_observer(second_binding);
+        .add_observer(second_binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(First).id();
+    let entity = app.world_mut().spawn(Actions::<First>::default()).id();
 
     app.update();
 
@@ -76,19 +79,17 @@ fn switching() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<First>(entity);
-    assert_eq!(ctx.action::<DummyAction>().state(), ActionState::Fired);
+    let actions = app.world().get::<Actions<First>>(entity).unwrap();
+    assert_eq!(actions.action::<DummyAction>().state(), ActionState::Fired);
 
     app.world_mut()
         .entity_mut(entity)
-        .remove::<First>()
-        .insert(Second);
+        .remove::<Actions<First>>()
+        .insert(Actions::<Second>::default());
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let second = registry.context::<Second>(entity);
+    let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
         second.action::<DummyAction>().state(),
         ActionState::None,
@@ -107,24 +108,25 @@ fn switching() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let second = registry.context::<Second>(entity);
+    let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(second.action::<DummyAction>().state(), ActionState::Fired);
 }
 
-fn first_binding(mut trigger: Trigger<Binding<First>>) {
-    trigger.set_priority(1);
-    trigger.bind::<DummyAction>().to(DummyAction::KEY);
+fn first_binding(trigger: Trigger<Binding<First>>, mut actions: Query<&mut Actions<First>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<DummyAction>().to(DummyAction::KEY);
 }
 
-fn second_binding(mut trigger: Trigger<Binding<Second>>) {
-    trigger.bind::<DummyAction>().to(DummyAction::KEY);
+fn second_binding(trigger: Trigger<Binding<Second>>, mut actions: Query<&mut Actions<Second>>) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<DummyAction>().to(DummyAction::KEY);
 }
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
+#[actions_marker(priority = 1)]
 struct First;
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
 struct Second;
 
 #[derive(Debug, InputAction)]

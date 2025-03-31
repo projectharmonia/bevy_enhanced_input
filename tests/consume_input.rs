@@ -5,11 +5,18 @@ use bevy_enhanced_input::prelude::*;
 fn consume() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<ConsumeOnly>()
-        .add_observer(consume_only_binding);
+        .add_actions_marker::<ConsumeOnly>()
+        .add_observer(consume_only_binding)
+        .finish();
 
-    let entity1 = app.world_mut().spawn(ConsumeOnly).id();
-    let entity2 = app.world_mut().spawn(ConsumeOnly).id();
+    let entity1 = app
+        .world_mut()
+        .spawn(Actions::<ConsumeOnly>::default())
+        .id();
+    let entity2 = app
+        .world_mut()
+        .spawn(Actions::<ConsumeOnly>::default())
+        .id();
 
     app.update();
 
@@ -19,12 +26,10 @@ fn consume() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-
-    let entity1_ctx = registry.context::<ConsumeOnly>(entity1);
+    let entity1_ctx = app.world().get::<Actions<ConsumeOnly>>(entity1).unwrap();
     assert_eq!(entity1_ctx.action::<Consume>().state(), ActionState::Fired);
 
-    let entity2_ctx = registry.context::<ConsumeOnly>(entity2);
+    let entity2_ctx = app.world().get::<Actions<ConsumeOnly>>(entity2).unwrap();
     assert_eq!(
         entity2_ctx.action::<Consume>().state(),
         ActionState::None,
@@ -36,11 +41,18 @@ fn consume() {
 fn passthrough() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<PassthroughOnly>()
-        .add_observer(passthrough_only_binding);
+        .add_actions_marker::<PassthroughOnly>()
+        .add_observer(passthrough_only_binding)
+        .finish();
 
-    let entity1 = app.world_mut().spawn(PassthroughOnly).id();
-    let entity2 = app.world_mut().spawn(PassthroughOnly).id();
+    let entity1 = app
+        .world_mut()
+        .spawn(Actions::<PassthroughOnly>::default())
+        .id();
+    let entity2 = app
+        .world_mut()
+        .spawn(Actions::<PassthroughOnly>::default())
+        .id();
 
     app.update();
 
@@ -50,15 +62,19 @@ fn passthrough() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-
-    let entity1_ctx = registry.context::<PassthroughOnly>(entity1);
+    let entity1_ctx = app
+        .world()
+        .get::<Actions<PassthroughOnly>>(entity1)
+        .unwrap();
     assert_eq!(
         entity1_ctx.action::<Passthrough>().state(),
         ActionState::Fired
     );
 
-    let entity2_ctx = registry.context::<PassthroughOnly>(entity2);
+    let entity2_ctx = app
+        .world()
+        .get::<Actions<PassthroughOnly>>(entity2)
+        .unwrap();
     assert_eq!(
         entity2_ctx.action::<Passthrough>().state(),
         ActionState::Fired,
@@ -70,10 +86,14 @@ fn passthrough() {
 fn consume_then_passthrough() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<ConsumeThenPassthrough>()
-        .add_observer(consume_then_passthrough_binding);
+        .add_actions_marker::<ConsumeThenPassthrough>()
+        .add_observer(consume_then_passthrough_binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(ConsumeThenPassthrough).id();
+    let entity = app
+        .world_mut()
+        .spawn(Actions::<ConsumeThenPassthrough>::default())
+        .id();
 
     app.update();
 
@@ -83,11 +103,13 @@ fn consume_then_passthrough() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<ConsumeThenPassthrough>(entity);
-    assert_eq!(ctx.action::<Consume>().state(), ActionState::Fired);
+    let actions = app
+        .world()
+        .get::<Actions<ConsumeThenPassthrough>>(entity)
+        .unwrap();
+    assert_eq!(actions.action::<Consume>().state(), ActionState::Fired);
     assert_eq!(
-        ctx.action::<Passthrough>().state(),
+        actions.action::<Passthrough>().state(),
         ActionState::None,
         "action should be consumed"
     );
@@ -97,10 +119,14 @@ fn consume_then_passthrough() {
 fn passthrough_then_consume() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<PassthroughThenConsume>()
-        .add_observer(passthrough_then_consume_binding);
+        .add_actions_marker::<PassthroughThenConsume>()
+        .add_observer(passthrough_then_consume_binding)
+        .finish();
 
-    let entity = app.world_mut().spawn(PassthroughThenConsume).id();
+    let entity = app
+        .world_mut()
+        .spawn(Actions::<PassthroughThenConsume>::default())
+        .id();
 
     app.update();
 
@@ -110,40 +136,58 @@ fn passthrough_then_consume() {
 
     app.update();
 
-    let registry = app.world().resource::<InputContextRegistry>();
-    let ctx = registry.context::<PassthroughThenConsume>(entity);
-    assert_eq!(ctx.action::<Consume>().state(), ActionState::Fired);
-    assert_eq!(ctx.action::<Passthrough>().state(), ActionState::Fired);
+    let actions = app
+        .world()
+        .get::<Actions<PassthroughThenConsume>>(entity)
+        .unwrap();
+    assert_eq!(actions.action::<Consume>().state(), ActionState::Fired);
+    assert_eq!(actions.action::<Passthrough>().state(), ActionState::Fired);
 }
 
-fn consume_only_binding(mut trigger: Trigger<Binding<ConsumeOnly>>) {
-    trigger.bind::<Consume>().to(KEY);
+fn consume_only_binding(
+    trigger: Trigger<Binding<ConsumeOnly>>,
+    mut actions: Query<&mut Actions<ConsumeOnly>>,
+) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<Consume>().to(KEY);
 }
 
-fn passthrough_only_binding(mut trigger: Trigger<Binding<PassthroughOnly>>) {
-    trigger.bind::<Passthrough>().to(KEY);
+fn passthrough_only_binding(
+    trigger: Trigger<Binding<PassthroughOnly>>,
+    mut actions: Query<&mut Actions<PassthroughOnly>>,
+) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<Passthrough>().to(KEY);
 }
 
-fn consume_then_passthrough_binding(mut trigger: Trigger<Binding<ConsumeThenPassthrough>>) {
-    trigger.bind::<Consume>().to(KEY);
-    trigger.bind::<Passthrough>().to(KEY);
+fn consume_then_passthrough_binding(
+    trigger: Trigger<Binding<ConsumeThenPassthrough>>,
+    mut actions: Query<&mut Actions<ConsumeThenPassthrough>>,
+) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<Consume>().to(KEY);
+    actions.bind::<Passthrough>().to(KEY);
 }
 
-fn passthrough_then_consume_binding(mut trigger: Trigger<Binding<PassthroughThenConsume>>) {
-    trigger.bind::<Passthrough>().to(KEY);
-    trigger.bind::<Consume>().to(KEY);
+fn passthrough_then_consume_binding(
+    trigger: Trigger<Binding<PassthroughThenConsume>>,
+    mut actions: Query<&mut Actions<PassthroughThenConsume>>,
+) {
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    actions.bind::<Passthrough>().to(KEY);
+    actions.bind::<Consume>().to(KEY);
 }
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
 struct PassthroughOnly;
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
 struct ConsumeOnly;
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
 struct PassthroughThenConsume;
 
-#[derive(Debug, Component)]
+#[derive(ActionsMarker)]
 struct ConsumeThenPassthrough;
 
 /// A key used by both [`Consume`] and [`Passthrough`] actions.
