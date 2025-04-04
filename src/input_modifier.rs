@@ -34,28 +34,28 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
     ) -> ActionValue;
 }
 
-/// Represents collection of bindings that could be passed into
+/// Conversion into iterator of bindings that could be passed into
 /// [`ActionBind::with_modifiers`](super::actions::ActionBind::with_modifiers)
 /// and [`InputBindModCond::with_modifiers`](super::input_binding::InputBindModCond::with_modifiers).
-pub trait InputModifierSet {
+pub trait IntoModifiers {
     /// Returns an iterator over modifiers.
-    fn modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>>;
+    fn into_modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>>;
 }
 
-impl<I: InputModifier> InputModifierSet for I {
-    fn modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>> {
+impl<I: InputModifier> IntoModifiers for I {
+    fn into_modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>> {
         iter::once(Box::new(self) as Box<dyn InputModifier>)
     }
 }
 
 macro_rules! impl_tuple_modifiers {
     ($($name:ident),+) => {
-        impl<$($name),+> InputModifierSet for ($($name,)+)
+        impl<$($name),+> IntoModifiers for ($($name,)+)
         where
             $($name: InputModifier),+
         {
             #[allow(non_snake_case)]
-            fn modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>> {
+            fn into_modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>> {
                 let ($($name,)+) = self;
                 core::iter::empty()
                     $(.chain(iter::once(Box::new($name) as Box<dyn InputModifier>)))+

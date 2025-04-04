@@ -75,28 +75,28 @@ pub enum ConditionKind {
     },
 }
 
-/// Represents collection of bindings that could be passed into
+/// Conversion into iterator of bindings that could be passed into
 /// [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions)
 /// and [`InputBindModCond::with_conditions`](super::input_binding::InputBindModCond::with_conditions).
-pub trait InputConditionSet {
+pub trait IntoConditions {
     /// Returns an iterator over conditions.
-    fn conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>>;
+    fn into_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>>;
 }
 
-impl<I: InputCondition> InputConditionSet for I {
-    fn conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>> {
+impl<I: InputCondition> IntoConditions for I {
+    fn into_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>> {
         iter::once(Box::new(self) as Box<dyn InputCondition>)
     }
 }
 
 macro_rules! impl_tuple_condition {
     ($($name:ident),+) => {
-        impl<$($name),+> InputConditionSet for ($($name,)+)
+        impl<$($name),+> IntoConditions for ($($name,)+)
         where
             $($name: InputCondition),+
         {
             #[allow(non_snake_case)]
-            fn conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>> {
+            fn into_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>> {
                 let ($($name,)+) = self;
                 core::iter::empty()
                     $(.chain(iter::once(Box::new($name) as Box<dyn InputCondition>)))+
