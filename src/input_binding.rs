@@ -42,7 +42,7 @@ impl<I: Into<Input>> From<I> for InputBinding {
 }
 
 /// A trait to ergonomically add modifiers or conditions to any type that can be converted into a binding.
-pub trait InputBindModCond {
+pub trait BindingBuilder {
     /// Adds input-level modifiers.
     ///
     /// For action-level conditions see
@@ -124,7 +124,7 @@ pub trait InputBindModCond {
     fn with_conditions(self, conditions: impl IntoConditions) -> InputBinding;
 }
 
-impl<T: Into<InputBinding>> InputBindModCond for T {
+impl<T: Into<InputBinding>> BindingBuilder for T {
     fn with_modifiers(self, modifiers: impl IntoModifiers) -> InputBinding {
         let mut binding = self.into();
         binding.modifiers.extend(modifiers.into_modifiers());
