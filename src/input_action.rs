@@ -8,7 +8,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 ///
 /// Needs to be bind inside observer for [`Binding`](super::action_instances::Binding).
 ///
-/// Each binded action will have [`ActionState`](super::actions::ActionState).
+/// Each binded action will have [`ActionState`](super::action_map::ActionState).
 /// When it updates during [`Actions`](super::actions::Actions)
 /// evaluation, [`events`](super::events) are triggered.
 ///
@@ -71,7 +71,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// bound to it or allow them to pass through to affect other actions.
     ///
     /// Inputs are consumed only if the action state is not equal to
-    /// [`ActionState::None`](super::actions::ActionState::None).
+    /// [`ActionState::None`](super::action_map::ActionState::None).
     /// For details, see [`Actions`](super::actions::Actions).
     ///
     /// Consuming is global and affect actions in all contexts.
@@ -147,8 +147,8 @@ impl ActionOutput for Vec3 {
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
-/// same most significant [`ActionState`](super::actions::ActionState)
-/// (excluding [`ActionState::None`](super::actions::ActionState::None)).
+/// same most significant [`ActionState`](super::action_map::ActionState)
+/// (excluding [`ActionState::None`](super::action_map::ActionState::None)).
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.

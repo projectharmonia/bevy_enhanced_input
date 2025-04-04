@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `InputModifierSet` into `IntoModifiers` and its `modifiers` method into `into_modifiers`.
 - Rename `InputBindModifierEach` and `InputBindConditionEach` into `WithModifiersEach` and `WithConditionsEach` respectively.
 - Rename `InputBindModCond` into `BindingBuilder`.
+- Rename `ActionsData` into `ActionMap`.
+- Rename `ActionData` into `Action`.
+- Move `ActionMap`, `Action` and `ActionState` into `action_map` module.
 
 ### Removed
 

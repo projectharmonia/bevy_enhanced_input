@@ -5,8 +5,8 @@ use bevy::prelude::*;
 use super::InputModifier;
 use crate::{
     InputAction,
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 /// Produces accumulated value when another action is fired within the same context.
@@ -34,11 +34,11 @@ impl<A: InputAction> Default for AccumulateBy<A> {
 impl<A: InputAction> InputModifier for AccumulateBy<A> {
     fn apply(
         &mut self,
-        actions: &ActionsData,
+        action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionValue {
-        if let Some(action) = actions.action::<A>() {
+        if let Some(action) = action_map.action::<A>() {
             if action.state() == ActionState::Fired {
                 self.value += value.as_axis3d();
             } else {
@@ -60,15 +60,15 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::actions::ActionData;
+    use crate::action_map::Action;
 
     #[test]
     fn accumulation_active() {
         let mut modifier = AccumulateBy::<DummyAction>::default();
-        let mut action = ActionData::new::<DummyAction>();
+        let mut action = Action::new::<DummyAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
-        let mut actions = ActionsData::default();
+        let mut actions = ActionMap::default();
         actions.insert_action::<DummyAction>(action);
 
         assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
@@ -78,9 +78,9 @@ mod tests {
     #[test]
     fn accumulation_inactive() {
         let mut modifier = AccumulateBy::<DummyAction>::default();
-        let action = ActionData::new::<DummyAction>();
+        let action = Action::new::<DummyAction>();
         let time = Time::default();
-        let mut actions = ActionsData::default();
+        let mut actions = ActionMap::default();
         actions.insert_action::<DummyAction>(action);
 
         assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn missing_action() {
         let mut modifier = AccumulateBy::<DummyAction>::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());

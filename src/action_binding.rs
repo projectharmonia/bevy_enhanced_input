@@ -7,8 +7,8 @@ use core::{
 use bevy::prelude::*;
 
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::{ActionValue, ActionValueDim},
-    actions::{ActionState, ActionsData},
     input::Input,
     input_action::{Accumulation, ActionOutput, InputAction},
     input_binding::{InputBinding, IntoBindings},
@@ -20,7 +20,7 @@ use crate::{
 
 /// Bindings of [`InputAction`] for [`Actions`](crate::actions::Actions).
 ///
-/// These bindings are stored separately from [`ActionsData`] to allow a currently
+/// These bindings are stored separately from [`ActionMap`] to allow a currently
 /// evaluating action to access the state of other actions.
 pub struct ActionBinding {
     type_id: TypeId,
@@ -282,7 +282,7 @@ impl ActionBinding {
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        actions: &mut ActionsData,
+        action_map: &mut ActionMap,
         time: &Time<Virtual>,
         entity: Entity,
     ) {
@@ -301,8 +301,8 @@ impl ActionBinding {
             }
 
             let mut current_tracker = TriggerTracker::new(value);
-            current_tracker.apply_modifiers(actions, time, &mut binding.modifiers);
-            current_tracker.apply_conditions(actions, time, &mut binding.conditions);
+            current_tracker.apply_modifiers(action_map, time, &mut binding.modifiers);
+            current_tracker.apply_conditions(action_map, time, &mut binding.conditions);
 
             let current_state = current_tracker.state();
             if current_state == ActionState::None {
@@ -330,10 +330,10 @@ impl ActionBinding {
             }
         }
 
-        tracker.apply_modifiers(actions, time, &mut self.modifiers);
-        tracker.apply_conditions(actions, time, &mut self.conditions);
+        tracker.apply_modifiers(action_map, time, &mut self.modifiers);
+        tracker.apply_conditions(action_map, time, &mut self.conditions);
 
-        let action = actions
+        let action = action_map
             .get_mut(&self.type_id)
             .expect("actions and bindings should have matching type IDs");
 

@@ -12,7 +12,7 @@ use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;
 
-use crate::{action_value::ActionValue, actions::ActionsData};
+use crate::{action_map::ActionMap, action_value::ActionValue};
 
 /// Pre-processor that alter the raw input values.
 ///
@@ -28,7 +28,7 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Called each frame.
     fn apply(
         &mut self,
-        actions: &ActionsData,
+        action_map: &ActionMap,
         time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionValue;

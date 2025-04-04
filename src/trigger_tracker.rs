@@ -3,8 +3,8 @@ use alloc::boxed::Box;
 use bevy::prelude::*;
 
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
     input_action::Accumulation,
     input_condition::{ConditionKind, InputCondition},
     input_modifier::InputModifier,
@@ -41,12 +41,12 @@ impl TriggerTracker {
 
     pub(crate) fn apply_modifiers(
         &mut self,
-        actions: &ActionsData,
+        action_map: &ActionMap,
         time: &Time<Virtual>,
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
         for modifier in modifiers {
-            let new_value = modifier.apply(actions, time, self.value);
+            let new_value = modifier.apply(action_map, time, self.value);
             trace!(
                 "`{modifier:?}` changes `{:?}` to `{new_value:?}`",
                 self.value
@@ -58,14 +58,14 @@ impl TriggerTracker {
 
     pub(crate) fn apply_conditions(
         &mut self,
-        actions: &ActionsData,
+        action_map: &ActionMap,
         time: &Time<Virtual>,
         conditions: &mut [Box<dyn InputCondition>],
     ) {
         // Note: No early outs permitted!
         // All conditions must be evaluated to update their internal state/delta time.
         for condition in conditions {
-            let state = condition.evaluate(actions, time, self.value);
+            let state = condition.evaluate(action_map, time, self.value);
             trace!("`{condition:?}` returns state `{state:?}`");
             match condition.kind() {
                 ConditionKind::Explicit => {

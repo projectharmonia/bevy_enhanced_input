@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use super::{DEFAULT_ACTUATION, InputCondition};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Fired`] when the input exceeds the actuation threshold.
@@ -29,7 +29,7 @@ impl Default for Press {
 impl InputCondition for Press {
     fn evaluate(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
@@ -44,12 +44,12 @@ impl InputCondition for Press {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::actions::ActionsData;
+    use crate::action_map::ActionMap;
 
     #[test]
     fn down() {
         let mut condition = Press::new(1.0);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(

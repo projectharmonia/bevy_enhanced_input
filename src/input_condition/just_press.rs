@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use super::{DEFAULT_ACTUATION, InputCondition};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 /// Like [`super::press::Press`] but returns [`ActionState::Fired`] only once until the next actuation.
@@ -35,7 +35,7 @@ impl Default for JustPress {
 impl InputCondition for JustPress {
     fn evaluate(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
@@ -53,12 +53,12 @@ impl InputCondition for JustPress {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::actions::ActionsData;
+    use crate::action_map::ActionMap;
 
     #[test]
     fn press() {
         let mut condition = JustPress::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(

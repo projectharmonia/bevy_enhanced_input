@@ -4,8 +4,8 @@ use bevy::prelude::*;
 
 use super::{ConditionKind, InputCondition};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
     input_action::InputAction,
 };
 
@@ -37,11 +37,11 @@ impl<A: InputAction> Copy for Chord<A> {}
 impl<A: InputAction> InputCondition for Chord<A> {
     fn evaluate(
         &mut self,
-        actions: &ActionsData,
+        action_map: &ActionMap,
         _time: &Time<Virtual>,
         _value: ActionValue,
     ) -> ActionState {
-        if let Some(action) = actions.action::<A>() {
+        if let Some(action) = action_map.action::<A>() {
             // Inherit state from the chorded action.
             action.state()
         } else {
@@ -63,15 +63,15 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::actions::{ActionData, ActionsData};
+    use crate::action_map::{Action, ActionMap};
 
     #[test]
     fn chord() {
         let mut condition = Chord::<DummyAction>::default();
-        let mut action = ActionData::new::<DummyAction>();
+        let mut action = Action::new::<DummyAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
-        let mut actions = ActionsData::default();
+        let mut actions = ActionMap::default();
         actions.insert_action::<DummyAction>(action);
 
         assert_eq!(
@@ -83,7 +83,7 @@ mod tests {
     #[test]
     fn missing_action() {
         let mut condition = Chord::<DummyAction>::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(

@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use super::{DEFAULT_ACTUATION, InputCondition, condition_timer::ConditionTimer};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when the input becomes actuated and
@@ -62,7 +62,7 @@ impl Hold {
 impl InputCondition for Hold {
     fn evaluate(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
@@ -95,12 +95,12 @@ mod tests {
     use core::time::Duration;
 
     use super::*;
-    use crate::actions::ActionsData;
+    use crate::action_map::ActionMap;
 
     #[test]
     fn hold() {
         let mut condition = Hold::new(1.0);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let mut time = Time::default();
 
         assert_eq!(
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn one_shot() {
         let mut hold = Hold::new(1.0).one_shot(true);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_secs(1));
 

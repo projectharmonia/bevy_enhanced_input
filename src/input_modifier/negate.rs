@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, actions::ActionsData};
+use crate::{action_map::ActionMap, action_value::ActionValue};
 
 /// Inverts value per axis.
 ///
@@ -72,14 +72,14 @@ impl Negate {
 impl InputModifier for Negate {
     fn apply(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionValue {
         match value {
             ActionValue::Bool(value) => {
                 let value = if value { 1.0 } else { 0.0 };
-                self.apply(_actions, _time, value.into())
+                self.apply(_action_map, _time, value.into())
             }
             ActionValue::Axis1D(value) => {
                 if self.x {
@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn x() {
         let mut modifier = Negate::x();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), (-1.0).into());
@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn y() {
         let mut modifier = Negate::y();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
@@ -158,7 +158,7 @@ mod tests {
     #[test]
     fn z() {
         let mut modifier = Negate::z();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
@@ -177,7 +177,7 @@ mod tests {
     #[test]
     fn all() {
         let mut modifier = Negate::all();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), (-1.0).into());

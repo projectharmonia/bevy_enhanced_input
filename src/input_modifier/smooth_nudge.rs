@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, actions::ActionsData};
+use crate::{action_map::ActionMap, action_value::ActionValue};
 
 /// Produces a smoothed value of the current and previous input value.
 ///
@@ -37,13 +37,13 @@ impl Default for SmoothNudge {
 impl InputModifier for SmoothNudge {
     fn apply(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionValue {
         if let ActionValue::Bool(value) = value {
             let value = if value { 1.0 } else { 0.0 };
-            return self.apply(_actions, time, value.into());
+            return self.apply(_action_map, time, value.into());
         }
 
         let target_value = value.as_axis3d();
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn lerp() {
         let mut modifier = SmoothNudge::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn bool_as_axis1d() {
         let mut modifier = SmoothNudge::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
@@ -100,7 +100,7 @@ mod tests {
     #[test]
     fn snapping() {
         let mut modifier = SmoothNudge::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
         modifier.current_value = Vec3::X * 0.99;
