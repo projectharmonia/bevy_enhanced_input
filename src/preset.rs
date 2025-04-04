@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use super::{
+use crate::{
     input_bind::{InputBind, InputBindModCond, InputBindSet},
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };

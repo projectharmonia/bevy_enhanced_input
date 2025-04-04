@@ -10,9 +10,8 @@ use bevy::{
     prelude::*,
 };
 
-use super::{
-    Actions,
-    actions::ActionsMarker,
+use crate::{
+    actions::{Actions, ActionsMarker},
     input_reader::{InputReader, ResetInput},
 };
 

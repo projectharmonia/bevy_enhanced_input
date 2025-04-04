@@ -1,11 +1,11 @@
 use alloc::{boxed::Box, vec::Vec};
 use core::iter;
 
-use super::{
+use crate::{
+    input::Input,
     input_condition::{InputCondition, InputConditionSet},
     input_modifier::{InputModifier, InputModifierSet},
 };
-use crate::input::Input;
 
 /// Associated input for [`ActionBind`](super::actions::ActionBind).
 #[derive(Debug)]
