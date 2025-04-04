@@ -7,7 +7,7 @@ use crate::{
     input_modifier::{InputModifier, IntoModifiers},
 };
 
-/// Associated input for [`ActionBind`](super::actions::ActionBind).
+/// Associated input for [`ActionBinding`](super::action_binding::ActionBinding).
 #[derive(Debug)]
 pub struct InputBinding {
     pub input: Input,
@@ -19,7 +19,7 @@ pub struct InputBinding {
     /// Needed to prevent newly created contexts from reacting to currently
     /// held inputs until they are released.
     ///
-    /// Used only if [`ActionBind`](super::actions::ActionBind::require_reset) is set.
+    /// Used only if [`ActionBinding`](super::action_binding::ActionBinding::require_reset) is set.
     pub(crate) first_activation: bool,
 }
 
@@ -46,7 +46,7 @@ pub trait BindingBuilder {
     /// Adds input-level modifiers.
     ///
     /// For action-level conditions see
-    /// [`ActionBind::with_modifiers`](super::actions::ActionBind::with_modifiers).
+    /// [`ActionBinding::with_modifiers`](super::action_binding::ActionBinding::with_modifiers).
     ///
     /// # Examples
     ///
@@ -87,7 +87,7 @@ pub trait BindingBuilder {
     /// You can also apply modifiers to multiple inputs using [`IntoBindings::with_modifiers_each`]
     ///
     /// For action-level conditions see
-    /// [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions).
+    /// [`ActionBinding::with_conditions`](super::action_binding::ActionBinding::with_conditions).
     ///
     /// # Examples
     ///
@@ -139,7 +139,7 @@ impl<T: Into<InputBinding>> BindingBuilder for T {
 }
 
 /// Conversion into iterator of bindings that could be passed into
-/// [`ActionBind::to`](super::actions::ActionBind::to).
+/// [`ActionBinding::to`](super::action_binding::ActionBinding::to).
 ///
 /// Can be manually implemented to provide custom modifiers or conditions.
 /// See [`preset`](super::preset) for examples.
