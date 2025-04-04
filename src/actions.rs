@@ -131,7 +131,7 @@ impl<M: ActionsMarker> Actions<M> {
         })
     }
 
-    pub(super) fn update(
+    pub(crate) fn update(
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
@@ -147,7 +147,7 @@ impl<M: ActionsMarker> Actions<M> {
     /// Sets the state for each action to [`ActionState::None`]  and triggers transitions with zero value.
     ///
     /// Resets the input.
-    pub(super) fn reset(
+    pub(crate) fn reset(
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,

@@ -20,7 +20,7 @@ pub struct InputBind {
     /// held inputs until they are released.
     ///
     /// Used only if [`ActionBind`](super::actions::ActionBind::require_reset) is set.
-    pub(super) first_activation: bool,
+    pub(crate) first_activation: bool,
 }
 
 impl InputBind {
