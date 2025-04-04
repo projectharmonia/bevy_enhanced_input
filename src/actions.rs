@@ -16,9 +16,9 @@ use crate::{
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input::{GamepadDevice, Input},
     input_action::{Accumulation, ActionOutput, InputAction},
-    input_binding::{InputBindSet, InputBinding},
-    input_condition::{InputCondition, InputConditionSet},
-    input_modifier::{InputModifier, InputModifierSet},
+    input_binding::{InputBinding, IntoBindings},
+    input_condition::{InputCondition, IntoConditions},
+    input_modifier::{InputModifier, IntoModifiers},
     input_reader::{InputReader, ResetInput},
     trigger_tracker::TriggerTracker,
 };
@@ -295,8 +295,8 @@ impl ActionBind {
     /// # #[input_action(output = f32)]
     /// # struct Jump;
     /// ```
-    pub fn with_modifiers(&mut self, set: impl InputModifierSet) -> &mut Self {
-        for modifier in set.modifiers() {
+    pub fn with_modifiers(&mut self, modifiers: impl IntoModifiers) -> &mut Self {
+        for modifier in modifiers.into_modifiers() {
             debug!("adding `{modifier:?}` to `{}`", self.action_name);
             self.modifiers.push(modifier);
         }
@@ -342,8 +342,8 @@ impl ActionBind {
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// ```
-    pub fn with_conditions(&mut self, set: impl InputConditionSet) -> &mut Self {
-        for condition in set.conditions() {
+    pub fn with_conditions(&mut self, conditions: impl IntoConditions) -> &mut Self {
+        for condition in conditions.into_conditions() {
             debug!("adding `{condition:?}` to `{}`", self.action_name);
             self.conditions.push(condition);
         }
@@ -361,7 +361,7 @@ impl ActionBind {
     /// 1. Raw input types.
     /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
     /// 3. [`InputBinding`] which wraps [`Input`] and can store input modifiers or conditions.
-    /// 4. [`InputBindSet`] which wraps [`InputBinding`] and can store multiple [`InputBinding`]s.
+    /// 4. [`IntoBindings`] which wraps [`InputBinding`] and can store multiple [`InputBinding`]s.
     ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
     ///
     /// # Examples
@@ -465,8 +465,8 @@ impl ActionBind {
     /// # #[input_action(output = Vec2)]
     /// # struct Inspect;
     /// ```
-    pub fn to(&mut self, set: impl InputBindSet) -> &mut Self {
-        for binding in set.bindings() {
+    pub fn to(&mut self, bindings: impl IntoBindings) -> &mut Self {
+        for binding in bindings.into_bindings() {
             debug!("adding `{binding:?}` to `{}`", self.action_name);
             self.bindings.push(binding);
         }

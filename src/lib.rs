@@ -88,7 +88,7 @@ pub mod prelude {
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_action::{Accumulation, InputAction},
-        input_binding::{InputBindModCond, InputBindSet, InputBinding},
+        input_binding::{InputBindModCond, InputBinding, IntoBindings},
         input_condition::{
             ConditionKind, InputCondition, block_by::*, chord::*, condition_timer::*, hold::*,
             hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,

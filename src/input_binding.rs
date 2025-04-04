@@ -3,8 +3,8 @@ use core::iter;
 
 use crate::{
     input::Input,
-    input_condition::{InputCondition, InputConditionSet},
-    input_modifier::{InputModifier, InputModifierSet},
+    input_condition::{InputCondition, IntoConditions},
+    input_modifier::{InputModifier, IntoModifiers},
 };
 
 /// Associated input for [`ActionBind`](super::actions::ActionBind).
@@ -80,11 +80,11 @@ pub trait InputBindModCond {
     /// # struct Jump;
     /// ```
     #[must_use]
-    fn with_modifiers(self, set: impl InputModifierSet) -> InputBinding;
+    fn with_modifiers(self, modifiers: impl IntoModifiers) -> InputBinding;
 
     /// Adds input-level conditions.
     ///
-    /// You can also apply modifiers to multiple inputs using [`InputBindSet::with_modifiers_each`]
+    /// You can also apply modifiers to multiple inputs using [`IntoBindings::with_modifiers_each`]
     ///
     /// For action-level conditions see
     /// [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions).
@@ -121,44 +121,44 @@ pub trait InputBindModCond {
     /// # struct Dummy;
     /// ```
     #[must_use]
-    fn with_conditions(self, set: impl InputConditionSet) -> InputBinding;
+    fn with_conditions(self, conditions: impl IntoConditions) -> InputBinding;
 }
 
 impl<T: Into<InputBinding>> InputBindModCond for T {
-    fn with_modifiers(self, set: impl InputModifierSet) -> InputBinding {
+    fn with_modifiers(self, modifiers: impl IntoModifiers) -> InputBinding {
         let mut binding = self.into();
-        binding.modifiers.extend(set.modifiers());
+        binding.modifiers.extend(modifiers.into_modifiers());
         binding
     }
 
-    fn with_conditions(self, set: impl InputConditionSet) -> InputBinding {
+    fn with_conditions(self, conditions: impl IntoConditions) -> InputBinding {
         let mut binding = self.into();
-        binding.conditions.extend(set.conditions());
+        binding.conditions.extend(conditions.into_conditions());
         binding
     }
 }
 
-/// Represents collection of bindings that could be passed into
+/// Conversion into iterator of bindings that could be passed into
 /// [`ActionBind::to`](super::actions::ActionBind::to).
 ///
 /// Can be manually implemented to provide custom modifiers or conditions.
 /// See [`preset`](super::preset) for examples.
-pub trait InputBindSet {
+pub trait IntoBindings {
     /// Returns an iterator over bindings.
-    fn bindings(self) -> impl Iterator<Item = InputBinding>;
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding>;
 
-    /// Adds modifiers to **each** binding in a set.
+    /// Adds modifiers to **each** binding.
     ///
     /// <div class="warning">
     ///
     /// Avoid using this with modifiers like [`DeadZone`](super::input_modifier::dead_zone::DeadZone),
-    /// as this method applies the modifier to each input **individually** rather than to the entire set.
+    /// as this method applies the modifier to each input **individually** rather than to all bindings.
     ///
     /// </div>
     ///
     /// # Examples
     ///
-    /// Negate each gamepad axis for the stick set:
+    /// Negate each gamepad axis for the stick:
     ///
     /// ```
     /// # use bevy::prelude::*;
@@ -176,71 +176,71 @@ pub trait InputBindSet {
     /// # #[input_action(output = bool)]
     /// # struct Move;
     /// ```
-    fn with_modifiers_each<I: InputModifierSet + Clone>(
+    fn with_modifiers_each<M: IntoModifiers + Clone>(
         self,
-        set: I,
-    ) -> InputBindModifierEach<Self, I>
+        modifiers: M,
+    ) -> WithModifiersEach<Self, M>
     where
         Self: Sized,
     {
-        InputBindModifierEach {
-            input_set: self,
-            modifier_set: set,
+        WithModifiersEach {
+            bindings: self,
+            modifiers,
         }
     }
 
-    /// Adds condition to **each** binding in a set.
+    /// Adds condition to **each** binding.
     ///
     /// Similar to [`Self::with_modifiers_each`].
-    fn with_conditions_each<I: InputConditionSet + Clone>(
+    fn with_conditions_each<C: IntoConditions + Clone>(
         self,
-        set: I,
-    ) -> InputBindConditionEach<Self, I>
+        conditions: C,
+    ) -> WithConditionsEach<Self, C>
     where
         Self: Sized,
     {
-        InputBindConditionEach {
-            input_set: self,
-            condition_set: set,
+        WithConditionsEach {
+            bindings: self,
+            conditions,
         }
     }
 }
 
-impl<I: Into<InputBinding>> InputBindSet for I {
-    fn bindings(self) -> impl Iterator<Item = InputBinding> {
+impl<I: Into<InputBinding>> IntoBindings for I {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
         iter::once(self.into())
     }
 }
 
-impl<I: Into<InputBinding> + Copy> InputBindSet for &Vec<I> {
-    fn bindings(self) -> impl Iterator<Item = InputBinding> {
-        self.as_slice().bindings()
+impl<I: Into<InputBinding> + Copy> IntoBindings for &Vec<I> {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
+        self.as_slice().into_bindings()
     }
 }
 
-impl<I: Into<InputBinding> + Copy, const N: usize> InputBindSet for &[I; N] {
-    fn bindings(self) -> impl Iterator<Item = InputBinding> {
-        self.as_slice().bindings()
+impl<I: Into<InputBinding> + Copy, const N: usize> IntoBindings for &[I; N] {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
+        self.as_slice().into_bindings()
     }
 }
 
-impl<I: Into<InputBinding> + Copy> InputBindSet for &[I] {
-    fn bindings(self) -> impl Iterator<Item = InputBinding> {
+impl<I: Into<InputBinding> + Copy> IntoBindings for &[I] {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
         self.iter().copied().map(Into::into)
     }
 }
 
 macro_rules! impl_tuple_binds {
     ($($name:ident),+) => {
-        impl<$($name),+> InputBindSet for ($($name,)+)
+        impl<$($name),+> IntoBindings for ($($name,)+)
         where
-            $($name: InputBindSet),+
+            $($name: IntoBindings),+
         {
             #[allow(non_snake_case)]
-            fn bindings(self) -> impl Iterator<Item = InputBinding> {
+            fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
                 let ($($name,)+) = self;
                 core::iter::empty()
-                    $(.chain($name.bindings()))+
+                    $(.chain($name.into_bindings()))+
             }
         }
     };
@@ -248,34 +248,34 @@ macro_rules! impl_tuple_binds {
 
 bevy::utils::all_tuples!(impl_tuple_binds, 1, 15, I);
 
-/// A set with assigned modifiers.
+/// Bindings with assigned modifiers.
 ///
-/// See also [`InputBindSet::with_modifiers_each`]
-pub struct InputBindModifierEach<I: InputBindSet, M: InputModifierSet + Clone> {
-    input_set: I,
-    modifier_set: M,
+/// See also [`IntoBindings::with_modifiers_each`]
+pub struct WithModifiersEach<I: IntoBindings, M: IntoModifiers + Clone> {
+    bindings: I,
+    modifiers: M,
 }
 
-impl<I: InputBindSet, M: InputModifierSet + Clone> InputBindSet for InputBindModifierEach<I, M> {
-    fn bindings(self) -> impl Iterator<Item = InputBinding> {
-        self.input_set
-            .bindings()
-            .map(move |binding| binding.with_modifiers(self.modifier_set.clone()))
+impl<I: IntoBindings, M: IntoModifiers + Clone> IntoBindings for WithModifiersEach<I, M> {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
+        self.bindings
+            .into_bindings()
+            .map(move |binding| binding.with_modifiers(self.modifiers.clone()))
     }
 }
 
-/// A set with assigned conditions.
+/// Bindings with assigned conditions.
 ///
-/// See also [`InputBindSet::with_conditions_each`]
-pub struct InputBindConditionEach<I: InputBindSet, M: InputConditionSet + Clone> {
-    input_set: I,
-    condition_set: M,
+/// See also [`IntoBindings::with_conditions_each`]
+pub struct WithConditionsEach<I: IntoBindings, C: IntoConditions + Clone> {
+    bindings: I,
+    conditions: C,
 }
 
-impl<I: InputBindSet, M: InputConditionSet + Clone> InputBindSet for InputBindConditionEach<I, M> {
-    fn bindings(self) -> impl Iterator<Item = InputBinding> {
-        self.input_set
-            .bindings()
-            .map(move |binding| binding.with_conditions(self.condition_set.clone()))
+impl<I: IntoBindings, C: IntoConditions + Clone> IntoBindings for WithConditionsEach<I, C> {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
+        self.bindings
+            .into_bindings()
+            .map(move |binding| binding.with_conditions(self.conditions.clone()))
     }
 }
