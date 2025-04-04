@@ -72,7 +72,7 @@ pub mod actions;
 pub mod events;
 pub mod input;
 pub mod input_action;
-pub mod input_bind;
+pub mod input_binding;
 pub mod input_condition;
 pub mod input_modifier;
 mod input_reader;
@@ -88,7 +88,7 @@ pub mod prelude {
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_action::{Accumulation, InputAction},
-        input_bind::{InputBind, InputBindModCond, InputBindSet},
+        input_binding::{InputBindModCond, InputBindSet, InputBinding},
         input_condition::{
             ConditionKind, InputCondition, block_by::*, chord::*, condition_timer::*, hold::*,
             hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,

@@ -21,7 +21,7 @@ use crate::{action_value::ActionValue, actions::ActionsData};
 ///
 /// Can be applied both to inputs and actions.
 /// See [`ActionBind::with_modifiers`](super::actions::ActionBind::with_modifiers)
-/// and [`InputBindModCond::with_modifiers`](super::input_bind::InputBindModCond::with_modifiers).
+/// and [`InputBindModCond::with_modifiers`](super::input_binding::InputBindModCond::with_modifiers).
 pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
     ///
@@ -36,7 +36,7 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
 
 /// Represents collection of bindings that could be passed into
 /// [`ActionBind::with_modifiers`](super::actions::ActionBind::with_modifiers)
-/// and [`InputBindModCond::with_modifiers`](super::input_bind::InputBindModCond::with_modifiers).
+/// and [`InputBindModCond::with_modifiers`](super::input_binding::InputBindModCond::with_modifiers).
 pub trait InputModifierSet {
     /// Returns an iterator over modifiers.
     fn modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>>;
