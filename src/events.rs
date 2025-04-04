@@ -3,7 +3,7 @@ use core::fmt::Debug;
 use bevy::prelude::*;
 use bitflags::bitflags;
 
-use super::{ActionState, input_action::InputAction};
+use crate::{actions::ActionState, input_action::InputAction};
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.

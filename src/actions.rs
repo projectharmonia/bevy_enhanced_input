@@ -11,7 +11,7 @@ use bevy::{
     utils::{Entry, HashMap},
 };
 
-use super::{
+use crate::{
     action_value::{ActionValue, ActionValueDim},
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input::{GamepadDevice, Input},
