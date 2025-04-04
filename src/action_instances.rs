@@ -87,7 +87,7 @@ impl ActionsMarkerAppExt for App {
 /// Used later to configure [`FilteredEntityMut`].
 /// Exists only at plugins initialization stage.
 #[derive(Resource, Default, Deref, DerefMut)]
-pub(super) struct ActionsRegistry(Vec<ComponentId>);
+pub(crate) struct ActionsRegistry(Vec<ComponentId>);
 
 fn add_context<M: ActionsMarker>(
     trigger: Trigger<OnInsert, Actions<M>>,
@@ -118,10 +118,10 @@ fn remove_context<M: ActionsMarker>(
 ///
 /// Used to iterate over them in a defined order and operate in a type-erased manner.
 #[derive(Resource, Default, Deref)]
-pub(super) struct ActionInstances(Vec<ActionsInstance>);
+pub(crate) struct ActionInstances(Vec<ActionsInstance>);
 
 impl ActionInstances {
-    pub(super) fn update(
+    pub(crate) fn update(
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
@@ -133,7 +133,7 @@ impl ActionInstances {
         }
     }
 
-    pub(super) fn rebuild(
+    pub(crate) fn rebuild(
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
@@ -194,7 +194,7 @@ impl ActionInstances {
 }
 
 /// Meta information for [`Actions`] on an entity.
-pub(super) struct ActionsInstance {
+pub(crate) struct ActionsInstance {
     entity: Entity,
     priority: usize,
     type_id: TypeId,

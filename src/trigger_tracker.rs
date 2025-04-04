@@ -13,7 +13,7 @@ use crate::{
 /// Helper to calculate [`ActionState`] based on its modifiers and conditions.
 ///
 /// Could be used to track both input-level state and action-level state.
-pub(super) struct TriggerTracker {
+pub(crate) struct TriggerTracker {
     value: ActionValue,
     found_explicit: bool,
     any_explicit_fired: bool,
@@ -26,7 +26,7 @@ pub(super) struct TriggerTracker {
 
 impl TriggerTracker {
     #[must_use]
-    pub(super) fn new(value: ActionValue) -> Self {
+    pub(crate) fn new(value: ActionValue) -> Self {
         Self {
             value,
             found_explicit: false,
@@ -39,7 +39,7 @@ impl TriggerTracker {
         }
     }
 
-    pub(super) fn apply_modifiers(
+    pub(crate) fn apply_modifiers(
         &mut self,
         actions: &ActionsData,
         time: &Time<Virtual>,
@@ -56,7 +56,7 @@ impl TriggerTracker {
         }
     }
 
-    pub(super) fn apply_conditions(
+    pub(crate) fn apply_conditions(
         &mut self,
         actions: &ActionsData,
         time: &Time<Virtual>,
@@ -90,7 +90,7 @@ impl TriggerTracker {
         }
     }
 
-    pub(super) fn state(&self) -> ActionState {
+    pub(crate) fn state(&self) -> ActionState {
         if self.blocked {
             return ActionState::None;
         }
@@ -112,18 +112,18 @@ impl TriggerTracker {
         }
     }
 
-    pub(super) fn value(&self) -> ActionValue {
+    pub(crate) fn value(&self) -> ActionValue {
         self.value
     }
 
-    pub(super) fn events_blocked(&self) -> bool {
+    pub(crate) fn events_blocked(&self) -> bool {
         self.events_blocked
     }
 
     /// Replaces the state with `other`.
     ///
     /// Preserves the value dimension.
-    pub(super) fn overwrite(&mut self, other: TriggerTracker) {
+    pub(crate) fn overwrite(&mut self, other: TriggerTracker) {
         let dim = self.value.dim();
         *self = other;
         self.value = self.value.convert(dim);
@@ -132,7 +132,7 @@ impl TriggerTracker {
     /// Merges two trackers.
     ///
     /// Preserves the value dimension.
-    pub(super) fn combine(&mut self, other: Self, accumulation: Accumulation) {
+    pub(crate) fn combine(&mut self, other: Self, accumulation: Accumulation) {
         let accumulated = match accumulation {
             Accumulation::MaxAbs => {
                 let mut value = self.value.as_axis3d().to_array();
