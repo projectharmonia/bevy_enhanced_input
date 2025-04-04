@@ -260,7 +260,7 @@ impl ActionBind {
     /// Adds action-level modifiers.
     ///
     /// For input-level modifiers see
-    /// [`InputBindModCond::with_modifiers`](super::input_binding::InputBindModCond::with_modifiers).
+    /// [`BindingBuilder::with_modifiers`](super::input_binding::BindingBuilder::with_modifiers).
     ///
     /// # Examples
     ///
@@ -307,7 +307,7 @@ impl ActionBind {
     /// Adds action-level conditions.
     ///
     /// For input-level conditions see
-    /// [`InputBindModCond::with_conditions`](super::input_binding::InputBindModCond::with_conditions).
+    /// [`BindingBuilder::with_conditions`](super::input_binding::BindingBuilder::with_conditions).
     ///
     /// # Examples
     ///

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `InputConditionSet` into `IntoConditions` and its `conditions` method into `into_conditions`.
 - Rename `InputModifierSet` into `IntoModifiers` and its `modifiers` method into `into_modifiers`.
 - Rename `InputBindModifierEach` and `InputBindConditionEach` into `WithModifiersEach` and `WithConditionsEach` respectively.
+- Rename `InputBindModCond` into `BindingBuilder`.
 
 ### Removed
 

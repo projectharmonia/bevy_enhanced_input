@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    input_binding::{InputBindModCond, InputBinding, IntoBindings},
+    input_binding::{BindingBuilder, InputBinding, IntoBindings},
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };
 
