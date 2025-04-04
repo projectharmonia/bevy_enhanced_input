@@ -1,7 +1,6 @@
-use alloc::{boxed::Box, vec::Vec};
+use alloc::vec::Vec;
 use core::{
     any::{self, TypeId},
-    cmp::Ordering,
     fmt::Debug,
     marker::PhantomData,
 };
@@ -12,15 +11,12 @@ use bevy::{
 };
 
 use crate::{
-    action_value::{ActionValue, ActionValueDim},
+    action_binding::ActionBinding,
+    action_value::ActionValue,
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
-    input::{GamepadDevice, Input},
-    input_action::{Accumulation, ActionOutput, InputAction},
-    input_binding::{InputBinding, IntoBindings},
-    input_condition::{InputCondition, IntoConditions},
-    input_modifier::{InputModifier, IntoModifiers},
+    input::GamepadDevice,
+    input_action::{ActionOutput, InputAction},
     input_reader::{InputReader, ResetInput},
-    trigger_tracker::TriggerTracker,
 };
 
 /// Instance for [`ActionsMarker`].
@@ -50,10 +46,15 @@ use crate::{
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
 ///    Final value be converted into [`InputAction::Output`] using [`ActionValue::convert`].
+///
+/// [`InputCondition`]: crate::input_condition::InputCondition
+/// [`InputCondition::kind`]: crate::input_condition::InputCondition::kind
+/// [`InputModifier`]: crate::input_modifier::InputModifier
+/// [`Input`]: crate::input::Input
 #[derive(Component)]
 pub struct Actions<M: ActionsMarker> {
     gamepad: GamepadDevice,
-    action_binds: Vec<ActionBind>,
+    bindings: Vec<ActionBinding>,
     actions: ActionsData,
     marker: PhantomData<M>,
 }
@@ -69,38 +70,38 @@ impl<M: ActionsMarker> Actions<M> {
     /// Starts binding an action.
     ///
     /// This method can be called multiple times for the same action to extend its mappings.
-    pub fn bind<A: InputAction>(&mut self) -> &mut ActionBind {
+    pub fn bind<A: InputAction>(&mut self) -> &mut ActionBinding {
         let type_id = TypeId::of::<A>();
         match self.actions.entry(type_id) {
             Entry::Occupied(_entry) => self
-                .action_binds
+                .bindings
                 .iter_mut()
-                .find(|action_bind| action_bind.type_id == type_id)
+                .find(|action_bind| action_bind.type_id() == type_id)
                 .expect("actions and bindings should have matching type IDs"),
             Entry::Vacant(entry) => {
                 entry.insert(ActionData::new::<A>());
-                self.action_binds.push(ActionBind::new::<A>());
-                self.action_binds.last_mut().unwrap()
+                self.bindings.push(ActionBinding::new::<A>());
+                self.bindings.last_mut().unwrap()
             }
         }
     }
 
     /// Returns associated bindings for action `A` if exists.
     ///
-    /// For panicking version see [`Self::action_bind`].
+    /// For panicking version see [`Self::binding`].
     /// For assigning bindings use [`Self::bind`].
-    pub fn get_action_bind<A: InputAction>(&self) -> Option<&ActionBind> {
-        self.action_binds
+    pub fn get_binding<A: InputAction>(&self) -> Option<&ActionBinding> {
+        self.bindings
             .iter()
-            .find(|action_bind| action_bind.type_id == TypeId::of::<A>())
+            .find(|binding| binding.type_id() == TypeId::of::<A>())
     }
 
     /// Returns associated bindings for action `A`.
     ///
-    /// For non-panicking version see [`Self::get_action_bind`].
+    /// For non-panicking version see [`Self::get_binding`].
     /// For assigning bindings use [`Self::bind`].
-    pub fn action_bind<A: InputAction>(&self) -> &ActionBind {
-        self.get_action_bind::<A>().unwrap_or_else(|| {
+    pub fn binding<A: InputAction>(&self) -> &ActionBinding {
+        self.get_binding::<A>().unwrap_or_else(|| {
             panic!(
                 "action `{}` should be binded before access",
                 any::type_name::<A>()
@@ -139,8 +140,8 @@ impl<M: ActionsMarker> Actions<M> {
         entity: Entity,
     ) {
         reader.set_gamepad(self.gamepad);
-        for action_bind in &mut self.action_binds {
-            action_bind.update(commands, reader, &mut self.actions, time, entity);
+        for binding in &mut self.bindings {
+            binding.update(commands, reader, &mut self.actions, time, entity);
         }
     }
 
@@ -154,15 +155,15 @@ impl<M: ActionsMarker> Actions<M> {
         time: &Time<Virtual>,
         entity: Entity,
     ) {
-        for action_bind in self.action_binds.drain(..) {
+        for binding in self.bindings.drain(..) {
             let action = self
                 .actions
-                .get_mut(&action_bind.type_id)
+                .get_mut(&binding.type_id())
                 .expect("actions and bindings should have matching type IDs");
-            action.update(time, ActionState::None, ActionValue::zero(action_bind.dim));
+            action.update(time, ActionState::None, ActionValue::zero(binding.dim()));
             action.trigger_events(commands, entity);
-            if action_bind.require_reset {
-                reset_input.extend(action_bind.bindings.iter().map(|binding| binding.input));
+            if binding.require_reset() {
+                reset_input.extend(binding.bindings().iter().map(|binding| binding.input));
             }
         }
 
@@ -175,7 +176,7 @@ impl<M: ActionsMarker> Default for Actions<M> {
     fn default() -> Self {
         Self {
             gamepad: Default::default(),
-            action_binds: Default::default(),
+            bindings: Default::default(),
             actions: Default::default(),
             marker: PhantomData,
         }
@@ -213,347 +214,10 @@ pub trait ActionsMarker: Send + Sync + 'static {
     const PRIORITY: usize = 0;
 }
 
-/// Bindings of [`InputAction`] for [`ActionsMarker`].
-///
-/// These bindings are stored separately from [`ActionsData`] to allow a currently
-/// evaluating action to access the state of other actions.
-pub struct ActionBind {
-    type_id: TypeId,
-    action_name: &'static str,
-    consume_input: bool,
-    accumulation: Accumulation,
-    require_reset: bool,
-    dim: ActionValueDim,
-
-    modifiers: Vec<Box<dyn InputModifier>>,
-    conditions: Vec<Box<dyn InputCondition>>,
-    bindings: Vec<InputBinding>,
-
-    /// Consumed inputs during state evaluation.
-    consume_buffer: Vec<Input>,
-}
-
-impl ActionBind {
-    #[must_use]
-    fn new<A: InputAction>() -> Self {
-        Self {
-            type_id: TypeId::of::<A>(),
-            action_name: any::type_name::<A>(),
-            dim: A::Output::DIM,
-            consume_input: A::CONSUME_INPUT,
-            accumulation: A::ACCUMULATION,
-            require_reset: A::REQUIRE_RESET,
-            modifiers: Default::default(),
-            conditions: Default::default(),
-            bindings: Default::default(),
-            consume_buffer: Default::default(),
-        }
-    }
-
-    /// Returns associated input bindings.
-    ///
-    /// See also [`Self::to`].
-    pub fn bindings(&self) -> &[InputBinding] {
-        &self.bindings
-    }
-
-    /// Adds action-level modifiers.
-    ///
-    /// For input-level modifiers see
-    /// [`BindingBuilder::with_modifiers`](super::input_binding::BindingBuilder::with_modifiers).
-    ///
-    /// # Examples
-    ///
-    /// Single modifier:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Jump>()
-    ///     .to(KeyCode::Space)
-    ///     .with_modifiers(Scale::splat(2.0));
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = f32)]
-    /// # struct Jump;
-    /// ```
-    ///
-    /// Multiple modifiers:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Jump>()
-    ///     .to(KeyCode::Space)
-    ///     .with_modifiers((Scale::splat(2.0), Negate::all()));
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = f32)]
-    /// # struct Jump;
-    /// ```
-    pub fn with_modifiers(&mut self, modifiers: impl IntoModifiers) -> &mut Self {
-        for modifier in modifiers.into_modifiers() {
-            debug!("adding `{modifier:?}` to `{}`", self.action_name);
-            self.modifiers.push(modifier);
-        }
-
-        self
-    }
-
-    /// Adds action-level conditions.
-    ///
-    /// For input-level conditions see
-    /// [`BindingBuilder::with_conditions`](super::input_binding::BindingBuilder::with_conditions).
-    ///
-    /// # Examples
-    ///
-    /// Single condition:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Jump>()
-    ///     .to(KeyCode::Space)
-    ///     .with_conditions(Release::default());
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = bool)]
-    /// # struct Jump;
-    /// ```
-    ///
-    /// Multiple conditions:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Jump>()
-    ///     .to(KeyCode::Space)
-    ///     .with_conditions((Release::default(), JustPress::default()));
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = bool)]
-    /// # struct Jump;
-    /// ```
-    pub fn with_conditions(&mut self, conditions: impl IntoConditions) -> &mut Self {
-        for condition in conditions.into_conditions() {
-            debug!("adding `{condition:?}` to `{}`", self.action_name);
-            self.conditions.push(condition);
-        }
-
-        self
-    }
-
-    /// Adds input mapping.
-    ///
-    /// The action can be triggered by any input mapping. If multiple input mappings
-    /// return [`ActionState`], the behavior is determined by [`InputAction::ACCUMULATION`].
-    ///
-    /// Thanks to traits, this function can be called with multiple types:
-    ///
-    /// 1. Raw input types.
-    /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
-    /// 3. [`InputBinding`] which wraps [`Input`] and can store input modifiers or conditions.
-    /// 4. [`IntoBindings`] which wraps [`InputBinding`] and can store multiple [`InputBinding`]s.
-    ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
-    ///
-    /// # Examples
-    ///
-    /// Raw input:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Jump>()
-    ///     .to((KeyCode::Space, GamepadButton::South));
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = bool)]
-    /// # struct Jump;
-    /// ```
-    ///
-    /// Raw input with keyboard modifiers:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = bool)]
-    /// # struct Jump;
-    /// ```
-    ///
-    /// Raw input with input conditions or modifiers:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Jump>().to(KeyCode::Space.with_conditions(Release::default()));
-    /// actions.bind::<Attack>().to(MouseButton::Left.with_modifiers(Scale::splat(10.0)));
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = bool)]
-    /// # struct Jump;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = f32)]
-    /// # struct Attack;
-    /// ```
-    ///
-    /// [`Input`] type directly:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Zoom>().to(Input::mouse_wheel());
-    /// actions.bind::<Move>().to(Input::mouse_motion());
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = bool)]
-    /// # struct Zoom;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = Vec2)]
-    /// # struct Move;
-    /// ```
-    ///
-    /// Convenience preset which consists of multiple inputs
-    /// with predefined conditions and modifiers:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// actions.bind::<Move>().to(Cardinal::wasd_keys());
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = Vec2)]
-    /// # struct Move;
-    /// ```
-    ///
-    /// Multiple buttons from settings:
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
-    /// # let mut settings = KeyboardSettings::default();
-    /// actions.bind::<Inspect>().to(&settings.inspect);
-    ///
-    /// # #[derive(Default)]
-    /// struct KeyboardSettings {
-    ///     inspect: Vec<KeyCode>,
-    /// }
-    /// # #[derive(ActionsMarker)]
-    /// # struct Dummy;
-    /// # #[derive(Debug, InputAction)]
-    /// # #[input_action(output = Vec2)]
-    /// # struct Inspect;
-    /// ```
-    pub fn to(&mut self, bindings: impl IntoBindings) -> &mut Self {
-        for binding in bindings.into_bindings() {
-            debug!("adding `{binding:?}` to `{}`", self.action_name);
-            self.bindings.push(binding);
-        }
-        self
-    }
-
-    fn update(
-        &mut self,
-        commands: &mut Commands,
-        reader: &mut InputReader,
-        actions: &mut ActionsData,
-        time: &Time<Virtual>,
-        entity: Entity,
-    ) {
-        trace!("updating action `{}`", self.action_name);
-
-        let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
-        for binding in &mut self.bindings {
-            let value = reader.value(binding.input);
-            if self.require_reset && binding.first_activation {
-                // Ignore until we read zero for this mapping.
-                if value.as_bool() {
-                    continue;
-                } else {
-                    binding.first_activation = false;
-                }
-            }
-
-            let mut current_tracker = TriggerTracker::new(value);
-            current_tracker.apply_modifiers(actions, time, &mut binding.modifiers);
-            current_tracker.apply_conditions(actions, time, &mut binding.conditions);
-
-            let current_state = current_tracker.state();
-            if current_state == ActionState::None {
-                // Ignore non-active trackers to allow the action to fire even if all
-                // input-level conditions return `ActionState::None`. This ensures that an
-                // action-level condition or modifier can still trigger the action.
-                continue;
-            }
-
-            match current_state.cmp(&tracker.state()) {
-                Ordering::Less => (),
-                Ordering::Equal => {
-                    tracker.combine(current_tracker, self.accumulation);
-                    if self.consume_input {
-                        self.consume_buffer.push(binding.input);
-                    }
-                }
-                Ordering::Greater => {
-                    tracker.overwrite(current_tracker);
-                    if self.consume_input {
-                        self.consume_buffer.clear();
-                        self.consume_buffer.push(binding.input);
-                    }
-                }
-            }
-        }
-
-        tracker.apply_modifiers(actions, time, &mut self.modifiers);
-        tracker.apply_conditions(actions, time, &mut self.conditions);
-
-        let action = actions
-            .get_mut(&self.type_id)
-            .expect("actions and bindings should have matching type IDs");
-
-        let state = tracker.state();
-        let value = tracker.value().convert(self.dim);
-
-        if self.consume_input {
-            if state != ActionState::None {
-                for &input in &self.consume_buffer {
-                    reader.consume(input);
-                }
-            }
-            self.consume_buffer.clear();
-        }
-
-        action.update(time, state, value);
-        if !tracker.events_blocked() {
-            action.trigger_events(commands, entity);
-        }
-    }
-}
-
 /// Map for actions to their data.
 ///
-/// Can be accessed from [`InputCondition::evaluate`] or [`Actions`].
+/// Can be accessed from [`InputCondition::evaluate`](crate::input_condition::InputCondition::evaluate)
+/// or [`Actions`].
 #[derive(Default, Deref, DerefMut)]
 pub struct ActionsData(pub HashMap<TypeId, ActionData>);
 
@@ -763,10 +427,10 @@ mod tests {
         let mut actions = Actions::<Dummy>::default();
         actions.bind::<DummyAction>().to(KeyCode::KeyA);
         actions.bind::<DummyAction>().to(KeyCode::KeyB);
-        assert_eq!(actions.action_binds.len(), 1);
+        assert_eq!(actions.bindings.len(), 1);
 
-        let action = actions.action_bind::<DummyAction>();
-        assert_eq!(action.bindings.len(), 2);
+        let action = actions.binding::<DummyAction>();
+        assert_eq!(action.bindings().len(), 2);
     }
 
     #[derive(Debug, InputAction)]

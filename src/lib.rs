@@ -66,6 +66,7 @@ extern crate alloc;
 // Required for the derive macro to work within the crate.
 extern crate self as bevy_enhanced_input;
 
+pub mod action_binding;
 pub mod action_instances;
 pub mod action_value;
 pub mod actions;
@@ -82,9 +83,10 @@ mod trigger_tracker;
 pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
+        action_binding::ActionBinding,
         action_instances::{ActionsMarkerAppExt, Binding, RebuildBindings},
         action_value::{ActionValue, ActionValueDim},
-        actions::{ActionBind, ActionData, ActionState, Actions, ActionsMarker},
+        actions::{ActionData, ActionState, Actions, ActionsMarker},
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_action::{Accumulation, InputAction},
