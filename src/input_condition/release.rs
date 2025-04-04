@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use super::{DEFAULT_ACTUATION, InputCondition};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`]` when the input exceeds the actuation threshold and
@@ -34,7 +34,7 @@ impl Default for Release {
 impl InputCondition for Release {
     fn evaluate(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn release() {
         let mut condition = Release::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(

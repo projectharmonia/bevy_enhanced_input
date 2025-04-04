@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use super::{DEFAULT_ACTUATION, InputCondition, condition_timer::ConditionTimer};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
@@ -50,7 +50,7 @@ impl Tap {
 impl InputCondition for Tap {
     fn evaluate(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
@@ -86,7 +86,7 @@ mod tests {
     #[test]
     fn tap() {
         let mut condition = Tap::new(1.0);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let mut time = Time::default();
 
         assert_eq!(

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, actions::ActionsData};
+use crate::{action_map::ActionMap, action_value::ActionValue};
 
 /// Scales input independently along each axis by a specified factor.
 ///
@@ -30,7 +30,7 @@ impl Scale {
 impl InputModifier for Scale {
     fn apply(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionValue {
@@ -53,7 +53,7 @@ mod tests {
     #[test]
     fn scaling() {
         let mut modifier = Scale::splat(2.0);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), 2.0.into());

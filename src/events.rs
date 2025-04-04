@@ -3,12 +3,12 @@ use core::fmt::Debug;
 use bevy::prelude::*;
 use bitflags::bitflags;
 
-use crate::{actions::ActionState, input_action::InputAction};
+use crate::{action_map::ActionState, input_action::InputAction};
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
     ///
-    /// Stored inside [`ActionData`](super::input_action::ActionData).
+    /// Stored inside [`Action`](super::input_action::Action).
     ///
     /// Actual events can be accessed from observers.
     /// See [`InputAction`](super::input_action::InputAction) for details.
@@ -193,7 +193,7 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::actions::ActionData;
+    use crate::action_map::Action;
 
     #[test]
     fn none_none() {
@@ -251,7 +251,7 @@ mod tests {
 
     fn transition(initial_state: ActionState, target_state: ActionState) -> ActionEvents {
         let time = Time::<Virtual>::default();
-        let mut action = ActionData::new::<DummyAction>();
+        let mut action = Action::new::<DummyAction>();
         action.update(&time, initial_state, true);
         action.update(&time, target_state, true);
 

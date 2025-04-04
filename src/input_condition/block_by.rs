@@ -4,8 +4,8 @@ use bevy::prelude::*;
 
 use super::{ConditionKind, InputCondition};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
     input_action::InputAction,
 };
 
@@ -56,11 +56,11 @@ impl<A: InputAction> Copy for BlockBy<A> {}
 impl<A: InputAction> InputCondition for BlockBy<A> {
     fn evaluate(
         &mut self,
-        actions: &ActionsData,
+        action_map: &ActionMap,
         _time: &Time<Virtual>,
         _value: ActionValue,
     ) -> ActionState {
-        if let Some(action) = actions.action::<A>() {
+        if let Some(action) = action_map.action::<A>() {
             if action.state() == ActionState::Fired {
                 return ActionState::None;
             }
@@ -86,15 +86,15 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::actions::ActionData;
+    use crate::action_map::Action;
 
     #[test]
     fn block() {
         let mut condition = BlockBy::<DummyAction>::default();
-        let mut action = ActionData::new::<DummyAction>();
+        let mut action = Action::new::<DummyAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
-        let mut actions = ActionsData::default();
+        let mut actions = ActionMap::default();
         actions.insert_action::<DummyAction>(action);
 
         assert_eq!(
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn missing_action() {
         let mut condition = BlockBy::<DummyAction>::default();
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(

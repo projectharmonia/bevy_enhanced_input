@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, actions::ActionsData};
+use crate::{action_map::ActionMap, action_value::ActionValue};
 
 /// Remaps input values within the range [Self::lower_threshold] to [Self::upper_threshold] onto the range 0 to 1.
 /// Values outside this range are clamped.
@@ -67,7 +67,7 @@ impl Default for DeadZone {
 impl InputModifier for DeadZone {
     fn apply(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionValue {
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn radial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
@@ -167,7 +167,7 @@ mod tests {
     #[test]
     fn axial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Axial);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());

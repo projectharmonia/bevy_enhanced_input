@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use super::{DEFAULT_ACTUATION, InputCondition, condition_timer::ConditionTimer};
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
@@ -73,7 +73,7 @@ impl Pulse {
 impl InputCondition for Pulse {
     fn evaluate(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState {
@@ -112,12 +112,12 @@ mod tests {
     use core::time::Duration;
 
     use super::*;
-    use crate::actions::ActionsData;
+    use crate::action_map::ActionMap;
 
     #[test]
     fn tap() {
         let mut condition = Pulse::new(1.0);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let mut time = Time::default();
 
         assert_eq!(
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn not_trigger_on_start() {
         let mut condition = Pulse::new(1.0).trigger_on_start(false);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(
@@ -161,7 +161,7 @@ mod tests {
     #[test]
     fn trigger_limit() {
         let mut condition = Pulse::new(1.0).with_trigger_limit(1);
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(

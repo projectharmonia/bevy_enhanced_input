@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use super::InputModifier;
-use crate::{action_value::ActionValue, actions::ActionsData};
+use crate::{action_map::ActionMap, action_value::ActionValue};
 
 /// Swizzle axis components of an input value.
 ///
@@ -30,14 +30,14 @@ pub enum SwizzleAxis {
 impl InputModifier for SwizzleAxis {
     fn apply(
         &mut self,
-        _actions: &ActionsData,
+        _action_map: &ActionMap,
         _time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionValue {
         match value {
             ActionValue::Bool(value) => {
                 let value = if value { 1.0 } else { 0.0 };
-                self.apply(_actions, _time, value.into())
+                self.apply(_action_map, _time, value.into())
             }
             ActionValue::Axis1D(value) => match self {
                 SwizzleAxis::YXZ | SwizzleAxis::ZXY => (Vec2::Y * value).into(),
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn yxz() {
         let mut modifier = SwizzleAxis::YXZ;
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), Vec2::Y.into());
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn zyx() {
         let mut modifier = SwizzleAxis::ZYX;
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), Vec3::Z.into());
@@ -113,7 +113,7 @@ mod tests {
     #[test]
     fn xzy() {
         let mut modifier = SwizzleAxis::XZY;
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn yzx() {
         let mut modifier = SwizzleAxis::YZX;
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), Vec3::Z.into());
@@ -154,7 +154,7 @@ mod tests {
     #[test]
     fn zxy() {
         let mut modifier = SwizzleAxis::ZXY;
-        let actions = ActionsData::default();
+        let actions = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(modifier.apply(&actions, &time, true.into()), Vec2::Y.into());

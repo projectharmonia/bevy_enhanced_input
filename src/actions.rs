@@ -1,21 +1,17 @@
 use alloc::vec::Vec;
 use core::{
     any::{self, TypeId},
-    fmt::Debug,
     marker::PhantomData,
 };
 
-use bevy::{
-    prelude::*,
-    utils::{Entry, HashMap},
-};
+use bevy::{prelude::*, utils::Entry};
 
 use crate::{
     action_binding::ActionBinding,
+    action_map::{Action, ActionMap, ActionState},
     action_value::ActionValue,
-    events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input::GamepadDevice,
-    input_action::{ActionOutput, InputAction},
+    input_action::InputAction,
     input_reader::{InputReader, ResetInput},
 };
 
@@ -41,7 +37,7 @@ use crate::{
 ///    1.1. Apply input-level [`InputModifier`]s.
 ///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
 /// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
-///    Combined value be converted into [`ActionOutput::DIM`] using [`ActionValue::convert`].
+///    Combined value be converted into [`ActionOutput::DIM`](crate::input_action::ActionOutput::DIM) using [`ActionValue::convert`].
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
@@ -55,7 +51,7 @@ use crate::{
 pub struct Actions<M: ActionsMarker> {
     gamepad: GamepadDevice,
     bindings: Vec<ActionBinding>,
-    actions: ActionsData,
+    action_map: ActionMap,
     marker: PhantomData<M>,
 }
 
@@ -72,14 +68,14 @@ impl<M: ActionsMarker> Actions<M> {
     /// This method can be called multiple times for the same action to extend its mappings.
     pub fn bind<A: InputAction>(&mut self) -> &mut ActionBinding {
         let type_id = TypeId::of::<A>();
-        match self.actions.entry(type_id) {
+        match self.action_map.entry(type_id) {
             Entry::Occupied(_entry) => self
                 .bindings
                 .iter_mut()
                 .find(|action_bind| action_bind.type_id() == type_id)
                 .expect("actions and bindings should have matching type IDs"),
             Entry::Vacant(entry) => {
-                entry.insert(ActionData::new::<A>());
+                entry.insert(Action::new::<A>());
                 self.bindings.push(ActionBinding::new::<A>());
                 self.bindings.last_mut().unwrap()
             }
@@ -112,8 +108,8 @@ impl<M: ActionsMarker> Actions<M> {
     /// Returns associated state for action `A` if exists.
     ///
     /// For panicking version see [`Self::action`].
-    pub fn get_action<A: InputAction>(&self) -> Option<&ActionData> {
-        self.actions.action::<A>()
+    pub fn get_action<A: InputAction>(&self) -> Option<&Action> {
+        self.action_map.action::<A>()
     }
 
     /// Returns associated state for action `A`.
@@ -123,7 +119,7 @@ impl<M: ActionsMarker> Actions<M> {
     /// # Panics
     ///
     /// Panics if the action `A` was not bound beforehand.
-    pub fn action<A: InputAction>(&self) -> &ActionData {
+    pub fn action<A: InputAction>(&self) -> &Action {
         self.get_action::<A>().unwrap_or_else(|| {
             panic!(
                 "action `{}` should be binded before access",
@@ -141,7 +137,7 @@ impl<M: ActionsMarker> Actions<M> {
     ) {
         reader.set_gamepad(self.gamepad);
         for binding in &mut self.bindings {
-            binding.update(commands, reader, &mut self.actions, time, entity);
+            binding.update(commands, reader, &mut self.action_map, time, entity);
         }
     }
 
@@ -157,7 +153,7 @@ impl<M: ActionsMarker> Actions<M> {
     ) {
         for binding in self.bindings.drain(..) {
             let action = self
-                .actions
+                .action_map
                 .get_mut(&binding.type_id())
                 .expect("actions and bindings should have matching type IDs");
             action.update(time, ActionState::None, ActionValue::zero(binding.dim()));
@@ -168,7 +164,7 @@ impl<M: ActionsMarker> Actions<M> {
         }
 
         self.gamepad = Default::default();
-        self.actions.clear();
+        self.action_map.clear();
     }
 }
 
@@ -177,7 +173,7 @@ impl<M: ActionsMarker> Default for Actions<M> {
         Self {
             gamepad: Default::default(),
             bindings: Default::default(),
-            actions: Default::default(),
+            action_map: Default::default(),
             marker: PhantomData,
         }
     }
@@ -212,208 +208,6 @@ pub trait ActionsMarker: Send + Sync + 'static {
     /// Ordering is global.
     /// Contexts with a higher priority evaluated first.
     const PRIORITY: usize = 0;
-}
-
-/// Map for actions to their data.
-///
-/// Can be accessed from [`InputCondition::evaluate`](crate::input_condition::InputCondition::evaluate)
-/// or [`Actions`].
-#[derive(Default, Deref, DerefMut)]
-pub struct ActionsData(pub HashMap<TypeId, ActionData>);
-
-impl ActionsData {
-    /// Returns associated state for action `A`.
-    pub fn action<A: InputAction>(&self) -> Option<&ActionData> {
-        self.get(&TypeId::of::<A>())
-    }
-
-    /// Inserts a state for action `A`.
-    ///
-    /// Returns previously associated state if present.
-    pub fn insert_action<A: InputAction>(&mut self, action: ActionData) -> Option<ActionData> {
-        self.insert(TypeId::of::<A>(), action)
-    }
-}
-
-/// Tracker for action state.
-///
-/// Stored inside [`ActionsData`].
-#[derive(Clone, Copy)]
-pub struct ActionData {
-    state: ActionState,
-    events: ActionEvents,
-    value: ActionValue,
-    elapsed_secs: f32,
-    fired_secs: f32,
-    trigger_events: fn(&Self, &mut Commands, Entity),
-}
-
-impl ActionData {
-    /// Creates a new instance associated with action `A`.
-    ///
-    /// [`Self::trigger_events`] will trigger events for `A`.
-    #[must_use]
-    pub fn new<A: InputAction>() -> Self {
-        Self {
-            state: Default::default(),
-            events: ActionEvents::empty(),
-            value: ActionValue::zero(A::Output::DIM),
-            elapsed_secs: 0.0,
-            fired_secs: 0.0,
-            trigger_events: Self::trigger_events_typed::<A>,
-        }
-    }
-
-    /// Updates internal state.
-    pub fn update(
-        &mut self,
-        time: &Time<Virtual>,
-        state: ActionState,
-        value: impl Into<ActionValue>,
-    ) {
-        match self.state {
-            ActionState::None => {
-                self.elapsed_secs = 0.0;
-                self.fired_secs = 0.0;
-            }
-            ActionState::Ongoing => {
-                self.elapsed_secs += time.delta_secs();
-                self.fired_secs = 0.0;
-            }
-            ActionState::Fired => {
-                self.elapsed_secs += time.delta_secs();
-                self.fired_secs += time.delta_secs();
-            }
-        }
-
-        self.events = ActionEvents::new(self.state, state);
-        self.state = state;
-        self.value = value.into();
-    }
-
-    /// Triggers events resulting from a state transition after [`Self::update`].
-    ///
-    /// See also [`Self::new`].
-    pub fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
-        (self.trigger_events)(self, commands, entity);
-    }
-
-    /// A typed version of [`Self::trigger_events`].
-    fn trigger_events_typed<A: InputAction>(&self, commands: &mut Commands, entity: Entity) {
-        for (_, event) in self.events.iter_names() {
-            match event {
-                ActionEvents::STARTED => {
-                    trigger_and_log::<A, _>(
-                        commands,
-                        entity,
-                        Started::<A> {
-                            value: A::Output::as_output(self.value),
-                            state: self.state,
-                        },
-                    );
-                }
-                ActionEvents::ONGOING => {
-                    trigger_and_log::<A, _>(
-                        commands,
-                        entity,
-                        Ongoing::<A> {
-                            value: A::Output::as_output(self.value),
-                            state: self.state,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                    );
-                }
-                ActionEvents::FIRED => {
-                    trigger_and_log::<A, _>(
-                        commands,
-                        entity,
-                        Fired::<A> {
-                            value: A::Output::as_output(self.value),
-                            state: self.state,
-                            fired_secs: self.fired_secs,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                    );
-                }
-                ActionEvents::CANCELED => {
-                    trigger_and_log::<A, _>(
-                        commands,
-                        entity,
-                        Canceled::<A> {
-                            value: A::Output::as_output(self.value),
-                            state: self.state,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                    );
-                }
-                ActionEvents::COMPLETED => {
-                    trigger_and_log::<A, _>(
-                        commands,
-                        entity,
-                        Completed::<A> {
-                            value: A::Output::as_output(self.value),
-                            state: self.state,
-                            fired_secs: self.fired_secs,
-                            elapsed_secs: self.elapsed_secs,
-                        },
-                    );
-                }
-                _ => unreachable!("iteration should yield only named flags"),
-            }
-        }
-    }
-
-    /// Returns the current state.
-    pub fn state(&self) -> ActionState {
-        self.state
-    }
-
-    /// Returns events triggered by a transition of [`Self::state`] since the last update.
-    pub fn events(&self) -> ActionEvents {
-        self.events
-    }
-
-    /// Returns the value since the last update.
-    pub fn value(&self) -> ActionValue {
-        self.value
-    }
-
-    /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
-    pub fn elapsed_secs(&self) -> f32 {
-        self.elapsed_secs
-    }
-
-    /// Time the action was in [`ActionState::Fired`] state.
-    pub fn fired_secs(&self) -> f32 {
-        self.fired_secs
-    }
-}
-
-fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity, event: E) {
-    debug!(
-        "triggering `{event:?}` for `{}` for `{entity}`",
-        any::type_name::<A>()
-    );
-    commands.trigger_targets(event, entity);
-}
-
-/// State for [`ActionData`].
-///
-/// States are ordered by their significance.
-///
-/// See also [`ActionEvents`].
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum ActionState {
-    /// Condition is not triggered.
-    #[default]
-    None,
-    /// Condition has started triggering, but has not yet finished.
-    ///
-    /// For example, [`Hold`](super::input_condition::hold::Hold) condition
-    /// requires its state to be maintained over several frames.
-    Ongoing,
-    /// The condition has been met.
-    Fired,
 }
 
 #[cfg(test)]

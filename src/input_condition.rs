@@ -15,8 +15,8 @@ use core::{fmt::Debug, iter};
 use bevy::prelude::*;
 
 use crate::{
+    action_map::{ActionMap, ActionState},
     action_value::ActionValue,
-    actions::{ActionState, ActionsData},
 };
 
 pub const DEFAULT_ACTUATION: f32 = 0.5;
@@ -36,7 +36,7 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
     /// `actions` is a state of other actions within the currently evaluating context.
     fn evaluate(
         &mut self,
-        actions: &ActionsData,
+        action_map: &ActionMap,
         time: &Time<Virtual>,
         value: ActionValue,
     ) -> ActionState;
@@ -70,7 +70,7 @@ pub enum ConditionKind {
     Blocker {
         /// Block only events instead of overriding the state.
         ///
-        /// Other actions will be able to see the action state in [`ActionsData`].
+        /// Other actions will be able to see the action state in [`ActionMap`].
         events_only: bool,
     },
 }
