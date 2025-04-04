@@ -159,7 +159,7 @@ impl<M: ActionsMarker> Actions<M> {
             action.update(time, ActionState::None, ActionValue::zero(binding.dim()));
             action.trigger_events(commands, entity);
             if binding.require_reset() {
-                reset_input.extend(binding.bindings().iter().map(|binding| binding.input));
+                reset_input.extend(binding.inputs().iter().map(|binding| binding.input));
             }
         }
 
@@ -224,7 +224,7 @@ mod tests {
         assert_eq!(actions.bindings.len(), 1);
 
         let action = actions.binding::<DummyAction>();
-        assert_eq!(action.bindings().len(), 2);
+        assert_eq!(action.inputs().len(), 2);
     }
 
     #[derive(Debug, InputAction)]

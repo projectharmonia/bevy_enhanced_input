@@ -32,7 +32,7 @@ pub struct ActionBinding {
 
     modifiers: Vec<Box<dyn InputModifier>>,
     conditions: Vec<Box<dyn InputCondition>>,
-    bindings: Vec<InputBinding>,
+    inputs: Vec<InputBinding>,
 
     /// Consumed inputs during state evaluation.
     consume_buffer: Vec<Input>,
@@ -50,7 +50,7 @@ impl ActionBinding {
             require_reset: A::REQUIRE_RESET,
             modifiers: Default::default(),
             conditions: Default::default(),
-            bindings: Default::default(),
+            inputs: Default::default(),
             consume_buffer: Default::default(),
         }
     }
@@ -58,8 +58,8 @@ impl ActionBinding {
     /// Returns associated input bindings.
     ///
     /// See also [`Self::to`].
-    pub fn bindings(&self) -> &[InputBinding] {
-        &self.bindings
+    pub fn inputs(&self) -> &[InputBinding] {
+        &self.inputs
     }
 
     /// Adds action-level modifiers.
@@ -273,7 +273,7 @@ impl ActionBinding {
     pub fn to(&mut self, bindings: impl IntoBindings) -> &mut Self {
         for binding in bindings.into_bindings() {
             debug!("adding `{binding:?}` to `{}`", self.action_name);
-            self.bindings.push(binding);
+            self.inputs.push(binding);
         }
         self
     }
@@ -289,7 +289,7 @@ impl ActionBinding {
         trace!("updating action `{}`", self.action_name);
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
-        for binding in &mut self.bindings {
+        for binding in &mut self.inputs {
             let value = reader.value(binding.input);
             if self.require_reset && binding.first_activation {
                 // Ignore until we read zero for this mapping.

@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replace `InputContextAppExt::add_input_context` with `ActionsMarkerAppExt::add_actions_marker` that accepts markers instead of components.
 - `Binding` trigger no longer stores bindings. Just get `Actions` using `Query` and mutate it directly.
 - Rename `ActionBind` into `ActionBinding` and move into `action_binding` module.
+- Rename `ActionBinding::bindings` into `ActionBindings::inputs`.
 - Rename `Actions::action_bind` and `Actions::get_action_bind` into `Actions::binding` and `Actions::get_binding`.
 - Rename `input_bind::InputBind` into `input_binding::InputBinding`.
 - Rename `InputBindSet` into `IntoBindings` and its `bindings` method into `into_bindings`.
