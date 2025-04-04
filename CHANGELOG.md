@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Input contexts no longer associated with a component. Users need to manually insert `Actions`.
 - Replace `InputContextAppExt::add_input_context` with `ActionsMarkerAppExt::add_actions_marker` that accepts markers instead of components.
 - `Binding` trigger no longer stores bindings. Just get `Actions` using `Query` and mutate it directly.
+- Rename `input_bind::InputBind` into `input_binding::InputBinding`.
 
 ### Removed
 

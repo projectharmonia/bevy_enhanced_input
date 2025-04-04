@@ -16,7 +16,7 @@ use crate::{
     events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
     input::{GamepadDevice, Input},
     input_action::{Accumulation, ActionOutput, InputAction},
-    input_bind::{InputBind, InputBindSet},
+    input_binding::{InputBindSet, InputBinding},
     input_condition::{InputCondition, InputConditionSet},
     input_modifier::{InputModifier, InputModifierSet},
     input_reader::{InputReader, ResetInput},
@@ -227,7 +227,7 @@ pub struct ActionBind {
 
     modifiers: Vec<Box<dyn InputModifier>>,
     conditions: Vec<Box<dyn InputCondition>>,
-    bindings: Vec<InputBind>,
+    bindings: Vec<InputBinding>,
 
     /// Consumed inputs during state evaluation.
     consume_buffer: Vec<Input>,
@@ -253,14 +253,14 @@ impl ActionBind {
     /// Returns associated input bindings.
     ///
     /// See also [`Self::to`].
-    pub fn bindings(&self) -> &[InputBind] {
+    pub fn bindings(&self) -> &[InputBinding] {
         &self.bindings
     }
 
     /// Adds action-level modifiers.
     ///
     /// For input-level modifiers see
-    /// [`InputBindModCond::with_modifiers`](super::input_bind::InputBindModCond::with_modifiers).
+    /// [`InputBindModCond::with_modifiers`](super::input_binding::InputBindModCond::with_modifiers).
     ///
     /// # Examples
     ///
@@ -307,7 +307,7 @@ impl ActionBind {
     /// Adds action-level conditions.
     ///
     /// For input-level conditions see
-    /// [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
+    /// [`InputBindModCond::with_conditions`](super::input_binding::InputBindModCond::with_conditions).
     ///
     /// # Examples
     ///
@@ -360,8 +360,8 @@ impl ActionBind {
     ///
     /// 1. Raw input types.
     /// 2. [`Input`] enum which wraps any supported raw input and can store keyboard modifiers.
-    /// 3. [`InputBind`] which wraps [`Input`] and can store input modifiers or conditions.
-    /// 4. [`InputBindSet`] which wraps [`InputBind`] and can store multiple [`InputBind`]s.
+    /// 3. [`InputBinding`] which wraps [`Input`] and can store input modifiers or conditions.
+    /// 4. [`InputBindSet`] which wraps [`InputBinding`] and can store multiple [`InputBinding`]s.
     ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
     ///
     /// # Examples

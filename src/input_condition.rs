@@ -29,7 +29,7 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 ///
 /// Can be applied both to inputs and actions.
 /// See [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions)
-/// and [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
+/// and [`InputBindModCond::with_conditions`](super::input_binding::InputBindModCond::with_conditions).
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
     ///
@@ -77,7 +77,7 @@ pub enum ConditionKind {
 
 /// Represents collection of bindings that could be passed into
 /// [`ActionBind::with_conditions`](super::actions::ActionBind::with_conditions)
-/// and [`InputBindModCond::with_conditions`](super::input_bind::InputBindModCond::with_conditions).
+/// and [`InputBindModCond::with_conditions`](super::input_binding::InputBindModCond::with_conditions).
 pub trait InputConditionSet {
     /// Returns an iterator over conditions.
     fn conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>>;

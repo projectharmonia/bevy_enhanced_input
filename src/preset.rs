@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    input_bind::{InputBind, InputBindModCond, InputBindSet},
+    input_binding::{InputBindModCond, InputBindSet, InputBinding},
     input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
 };
 
@@ -108,7 +108,7 @@ impl Cardinal<GamepadButton> {
 }
 
 impl<I: InputBindSet> InputBindSet for Cardinal<I> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
+    fn bindings(self) -> impl Iterator<Item = InputBinding> {
         // Y
         let north = self
             .north
@@ -146,7 +146,7 @@ pub struct Bidirectional<I: InputBindSet> {
 }
 
 impl<I: InputBindSet> InputBindSet for Bidirectional<I> {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
+    fn bindings(self) -> impl Iterator<Item = InputBinding> {
         let positive = self.positive.bindings();
         let negative = self
             .negative
@@ -187,7 +187,7 @@ impl GamepadStick {
 }
 
 impl InputBindSet for GamepadStick {
-    fn bindings(self) -> impl Iterator<Item = InputBind> {
+    fn bindings(self) -> impl Iterator<Item = InputBinding> {
         [self.x().into(), self.y().with_modifiers(SwizzleAxis::YXZ)].into_iter()
     }
 }
