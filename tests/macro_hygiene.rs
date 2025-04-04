@@ -15,19 +15,19 @@ struct ActionsMarker;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(output = bool, accumulation = Cumulative)]
-struct Dummy1;
+struct Action1;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(output = f32)]
-struct Dummy2;
+struct Action2;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(output = Vec2)]
-struct Dummy3;
+struct Action3;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(output = Vec3)]
-struct Dummy4;
+struct Action4;
 
 #[derive(Debug, bevy_enhanced_input::prelude::ActionsMarker)]
 struct Marker;
