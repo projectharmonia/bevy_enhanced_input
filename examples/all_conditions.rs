@@ -7,7 +7,7 @@ use bevy_enhanced_input::prelude::*;
 fn main() {
     // Setup logging to display triggered events.
     let mut log_plugin = LogPlugin::default();
-    log_plugin.filter += ",bevy_enhanced_input::input_action=trace";
+    log_plugin.filter += ",bevy_enhanced_input::action_map=trace";
 
     App::new()
         .add_plugins((
