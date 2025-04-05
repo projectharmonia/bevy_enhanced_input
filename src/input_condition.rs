@@ -63,8 +63,8 @@ pub enum ConditionKind {
     ///
     /// Otherwise, the most significant state will be capped at [`ActionState::Ongoing`].
     Implicit,
-    /// If any blocking condition fails to return [`ActionState::Fired`],
-    /// it will override the state with [`ActionState::None`] or block the events.
+    /// Any blocking condition that returns [`ActionState::None`] will override
+    /// the state with [`ActionState::None`] or block the events.
     ///
     /// Doesn't contribute to the state on its own.
     Blocker {
