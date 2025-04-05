@@ -100,31 +100,31 @@ mod tests {
     #[test]
     fn hold() {
         let mut condition = Hold::new(1.0);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
 
         time.advance_by(Duration::from_secs(1));
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
+            condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::None
         );
 
         time.advance_by(Duration::ZERO);
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
     }
@@ -132,16 +132,16 @@ mod tests {
     #[test]
     fn one_shot() {
         let mut hold = Hold::new(1.0).one_shot(true);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_secs(1));
 
         assert_eq!(
-            hold.evaluate(&actions, &time, 1.0.into()),
+            hold.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired
         );
         assert_eq!(
-            hold.evaluate(&actions, &time, 1.0.into()),
+            hold.evaluate(&action_map, &time, 1.0.into()),
             ActionState::None
         );
     }

@@ -69,21 +69,27 @@ mod tests {
     #[test]
     fn yxz() {
         let mut modifier = SwizzleAxis::YXZ;
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), Vec2::Y.into());
         assert_eq!(
-            modifier.apply(&actions, &time, false.into()),
+            modifier.apply(&action_map, &time, true.into()),
+            Vec2::Y.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, false.into()),
             Vec2::ZERO.into()
         );
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), Vec2::Y.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0).into()),
+            modifier.apply(&action_map, &time, 1.0.into()),
+            Vec2::Y.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, (0.0, 1.0).into()),
             (1.0, 0.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
             (1.0, 0.0, 2.0).into(),
         );
     }
@@ -91,21 +97,27 @@ mod tests {
     #[test]
     fn zyx() {
         let mut modifier = SwizzleAxis::ZYX;
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), Vec3::Z.into());
         assert_eq!(
-            modifier.apply(&actions, &time, false.into()),
+            modifier.apply(&action_map, &time, true.into()),
+            Vec3::Z.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, false.into()),
             Vec3::ZERO.into()
         );
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), Vec3::Z.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0).into()),
+            modifier.apply(&action_map, &time, 1.0.into()),
+            Vec3::Z.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, (0.0, 1.0).into()),
             (0.0, 1.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
             (2.0, 1.0, 0.0).into(),
         );
     }
@@ -113,18 +125,18 @@ mod tests {
     #[test]
     fn xzy() {
         let mut modifier = SwizzleAxis::XZY;
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0).into()),
+            modifier.apply(&action_map, &time, (0.0, 1.0).into()),
             (0.0, 0.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
             (0.0, 2.0, 1.0).into(),
         );
     }
@@ -132,21 +144,27 @@ mod tests {
     #[test]
     fn yzx() {
         let mut modifier = SwizzleAxis::YZX;
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), Vec3::Z.into());
         assert_eq!(
-            modifier.apply(&actions, &time, false.into()),
+            modifier.apply(&action_map, &time, true.into()),
+            Vec3::Z.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, false.into()),
             Vec3::ZERO.into()
         );
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), Vec3::Z.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0).into()),
+            modifier.apply(&action_map, &time, 1.0.into()),
+            Vec3::Z.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, (0.0, 1.0).into()),
             (1.0, 0.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
             (1.0, 2.0, 0.0).into(),
         );
     }
@@ -154,21 +172,27 @@ mod tests {
     #[test]
     fn zxy() {
         let mut modifier = SwizzleAxis::ZXY;
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), Vec2::Y.into());
         assert_eq!(
-            modifier.apply(&actions, &time, false.into()),
+            modifier.apply(&action_map, &time, true.into()),
+            Vec2::Y.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, false.into()),
             Vec2::ZERO.into()
         );
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), Vec2::Y.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0).into()),
+            modifier.apply(&action_map, &time, 1.0.into()),
+            Vec2::Y.into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, (0.0, 1.0).into()),
             (0.0, 0.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (0.0, 1.0, 2.0).into()),
+            modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
             (2.0, 0.0, 1.0).into(),
         );
     }

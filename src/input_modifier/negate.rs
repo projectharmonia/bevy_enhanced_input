@@ -120,18 +120,24 @@ mod tests {
     #[test]
     fn x() {
         let mut modifier = Negate::x();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), (-1.0).into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), (-0.5).into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.apply(&action_map, &time, true.into()),
+            (-1.0).into()
+        );
+        assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.apply(&action_map, &time, 0.5.into()),
+            (-0.5).into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, Vec2::ONE.into()),
             (-1.0, 1.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.apply(&action_map, &time, Vec3::ONE.into()),
             (-1.0, 1.0, 1.0).into(),
         );
     }
@@ -139,18 +145,18 @@ mod tests {
     #[test]
     fn y() {
         let mut modifier = Negate::y();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), 0.5.into());
+        assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 0.5.into()), 0.5.into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.apply(&action_map, &time, Vec2::ONE.into()),
             (1.0, -1.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.apply(&action_map, &time, Vec3::ONE.into()),
             (1.0, -1.0, 1.0).into(),
         );
     }
@@ -158,18 +164,18 @@ mod tests {
     #[test]
     fn z() {
         let mut modifier = Negate::z();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), 0.5.into());
+        assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 0.5.into()), 0.5.into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.apply(&action_map, &time, Vec2::ONE.into()),
             Vec2::ONE.into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.apply(&action_map, &time, Vec3::ONE.into()),
             (1.0, 1.0, -1.0).into(),
         );
     }
@@ -177,18 +183,24 @@ mod tests {
     #[test]
     fn all() {
         let mut modifier = Negate::all();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), (-1.0).into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), (-0.5).into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.apply(&action_map, &time, true.into()),
+            (-1.0).into()
+        );
+        assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.apply(&action_map, &time, 0.5.into()),
+            (-0.5).into()
+        );
+        assert_eq!(
+            modifier.apply(&action_map, &time, Vec2::ONE.into()),
             Vec2::NEG_ONE.into(),
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.apply(&action_map, &time, Vec3::ONE.into()),
             Vec3::NEG_ONE.into(),
         );
     }

@@ -68,11 +68,11 @@ mod tests {
         let mut action = Action::new::<DummyAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
-        let mut actions = ActionMap::default();
-        actions.insert_action::<DummyAction>(action);
+        let mut action_map = ActionMap::default();
+        action_map.insert_action::<DummyAction>(action);
 
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 2.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 2.0.into());
     }
 
     #[test]
@@ -80,21 +80,21 @@ mod tests {
         let mut modifier = AccumulateBy::<DummyAction>::default();
         let action = Action::new::<DummyAction>();
         let time = Time::default();
-        let mut actions = ActionMap::default();
-        actions.insert_action::<DummyAction>(action);
+        let mut action_map = ActionMap::default();
+        action_map.insert_action::<DummyAction>(action);
 
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
     }
 
     #[test]
     fn missing_action() {
         let mut modifier = AccumulateBy::<DummyAction>::default();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
     }
 
     #[derive(Debug, InputAction)]

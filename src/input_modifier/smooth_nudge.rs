@@ -69,16 +69,16 @@ mod tests {
     #[test]
     fn lerp() {
         let mut modifier = SmoothNudge::default();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
         assert_eq!(
-            modifier.apply(&actions, &time, 0.5.into()),
+            modifier.apply(&action_map, &time, 0.5.into()),
             0.27533552.into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, 1.0.into()),
+            modifier.apply(&action_map, &time, 1.0.into()),
             0.6743873.into()
         );
     }
@@ -86,13 +86,13 @@ mod tests {
     #[test]
     fn bool_as_axis1d() {
         let mut modifier = SmoothNudge::default();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
 
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
         assert_eq!(
-            modifier.apply(&actions, &time, true.into()),
+            modifier.apply(&action_map, &time, true.into()),
             0.55067104.into()
         );
     }
@@ -100,12 +100,12 @@ mod tests {
     #[test]
     fn snapping() {
         let mut modifier = SmoothNudge::default();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(100));
         modifier.current_value = Vec3::X * 0.99;
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         modifier.current_value = Vec3::X * 0.98;
-        assert_ne!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
+        assert_ne!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
     }
 }

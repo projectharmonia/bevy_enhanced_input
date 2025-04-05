@@ -82,27 +82,27 @@ mod tests {
     #[test]
     fn hold_and_release() {
         let mut condition = HoldAndRelease::new(1.0);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
 
         time.advance_by(Duration::from_secs(1));
         assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
+            condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::Fired
         );
 
         time.advance_by(Duration::ZERO);
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
+            condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::None
         );
     }

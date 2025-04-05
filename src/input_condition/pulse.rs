@@ -117,31 +117,31 @@ mod tests {
     #[test]
     fn tap() {
         let mut condition = Pulse::new(1.0);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired,
         );
 
         time.advance_by(Duration::from_millis(500));
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired,
         );
 
         time.advance_by(Duration::ZERO);
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
         assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
+            condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::None
         );
     }
@@ -149,11 +149,11 @@ mod tests {
     #[test]
     fn not_trigger_on_start() {
         let mut condition = Pulse::new(1.0).trigger_on_start(false);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
     }
@@ -161,15 +161,15 @@ mod tests {
     #[test]
     fn trigger_limit() {
         let mut condition = Pulse::new(1.0).with_trigger_limit(1);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired,
         );
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::None
         );
     }

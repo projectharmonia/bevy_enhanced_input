@@ -53,18 +53,18 @@ mod tests {
     #[test]
     fn scaling() {
         let mut modifier = Scale::splat(2.0);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 2.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 2.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, true.into()), 2.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 2.0.into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.apply(&action_map, &time, Vec2::ONE.into()),
             (2.0, 2.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.apply(&action_map, &time, Vec3::ONE.into()),
             (2.0, 2.0, 2.0).into()
         );
     }

@@ -86,29 +86,29 @@ mod tests {
     #[test]
     fn tap() {
         let mut condition = Tap::new(1.0);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
 
         time.advance_by(Duration::from_secs(1));
         assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
+            condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::Fired,
         );
 
         time.advance_by(Duration::ZERO);
         assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
+            condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::None
         );
 
         time.advance_by(Duration::from_secs(2));
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::None
         );
     }

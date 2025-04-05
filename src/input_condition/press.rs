@@ -49,15 +49,15 @@ mod tests {
     #[test]
     fn down() {
         let mut condition = Press::new(1.0);
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, 0.0.into()),
+            condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::None
         );
         assert_eq!(
-            condition.evaluate(&actions, &time, 1.0.into()),
+            condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired,
         );
     }

@@ -71,11 +71,11 @@ mod tests {
         let mut action = Action::new::<DummyAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
-        let mut actions = ActionMap::default();
-        actions.insert_action::<DummyAction>(action);
+        let mut action_map = ActionMap::default();
+        action_map.insert_action::<DummyAction>(action);
 
         assert_eq!(
-            condition.evaluate(&actions, &time, true.into()),
+            condition.evaluate(&action_map, &time, true.into()),
             ActionState::Fired,
         );
     }
@@ -83,11 +83,11 @@ mod tests {
     #[test]
     fn missing_action() {
         let mut condition = Chord::<DummyAction>::default();
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let time = Time::default();
 
         assert_eq!(
-            condition.evaluate(&actions, &time, true.into()),
+            condition.evaluate(&action_map, &time, true.into()),
             ActionState::None,
         );
     }

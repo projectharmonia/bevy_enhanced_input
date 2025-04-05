@@ -36,19 +36,28 @@ mod tests {
 
     #[test]
     fn scaling() {
-        let actions = ActionMap::default();
+        let action_map = ActionMap::default();
         let mut time = Time::default();
         time.advance_by(Duration::from_millis(500));
 
-        assert_eq!(DeltaScale.apply(&actions, &time, true.into()), 0.5.into());
-        assert_eq!(DeltaScale.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(DeltaScale.apply(&actions, &time, 0.5.into()), 0.25.into());
         assert_eq!(
-            DeltaScale.apply(&actions, &time, Vec2::ONE.into()),
+            DeltaScale.apply(&action_map, &time, true.into()),
+            0.5.into()
+        );
+        assert_eq!(
+            DeltaScale.apply(&action_map, &time, false.into()),
+            0.0.into()
+        );
+        assert_eq!(
+            DeltaScale.apply(&action_map, &time, 0.5.into()),
+            0.25.into()
+        );
+        assert_eq!(
+            DeltaScale.apply(&action_map, &time, Vec2::ONE.into()),
             (0.5, 0.5).into()
         );
         assert_eq!(
-            DeltaScale.apply(&actions, &time, Vec3::ONE.into()),
+            DeltaScale.apply(&action_map, &time, Vec3::ONE.into()),
             (0.5, 0.5, 0.5).into()
         );
     }
