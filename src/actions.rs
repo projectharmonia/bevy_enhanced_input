@@ -72,7 +72,7 @@ impl<M: ActionsMarker> Actions<M> {
             Entry::Occupied(_entry) => self
                 .bindings
                 .iter_mut()
-                .find(|action_bind| action_bind.type_id() == type_id)
+                .find(|binding| binding.type_id() == type_id)
                 .expect("actions and bindings should have matching type IDs"),
             Entry::Vacant(entry) => {
                 entry.insert(Action::new::<A>());
@@ -223,8 +223,8 @@ mod tests {
         actions.bind::<DummyAction>().to(KeyCode::KeyB);
         assert_eq!(actions.bindings.len(), 1);
 
-        let action = actions.binding::<DummyAction>();
-        assert_eq!(action.inputs().len(), 2);
+        let binding = actions.binding::<DummyAction>();
+        assert_eq!(binding.inputs().len(), 2);
     }
 
     #[derive(Debug, InputAction)]
