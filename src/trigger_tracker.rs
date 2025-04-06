@@ -81,9 +81,9 @@ impl TriggerTracker {
                 ConditionKind::Blocker { events_only } => {
                     let blocked = state == ActionState::None;
                     if events_only {
-                        self.events_blocked = blocked;
+                        self.events_blocked |= blocked;
                     } else {
-                        self.blocked = blocked;
+                        self.blocked |= blocked;
                     }
                 }
             }
