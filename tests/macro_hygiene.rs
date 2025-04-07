@@ -11,7 +11,7 @@ use bevy::prelude::{Vec2, Vec3};
 struct InputAction;
 struct Accumulation;
 struct ActionValueDim;
-struct ActionsMarker;
+struct InputContext;
 
 #[derive(Debug, bevy_enhanced_input::prelude::InputAction)]
 #[input_action(output = bool, accumulation = Cumulative)]
@@ -29,5 +29,5 @@ struct Action3;
 #[input_action(output = Vec3)]
 struct Action4;
 
-#[derive(Debug, bevy_enhanced_input::prelude::ActionsMarker)]
+#[derive(Debug, bevy_enhanced_input::prelude::InputContext)]
 struct Marker;

@@ -24,8 +24,8 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_actions_marker::<Player>()
-            .add_actions_marker::<Swimming>()
+        app.add_input_context::<Player>()
+            .add_input_context::<Swimming>()
             .add_observer(regular_binding)
             .add_observer(swimming_binding)
             .add_observer(apply_movement)
@@ -113,7 +113,7 @@ fn exit_water(
         .remove::<Actions<Swimming>>();
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Player;
 
 #[derive(Debug, InputAction)]
@@ -130,8 +130,8 @@ struct Rotate;
 struct EnterWater;
 
 /// Overrides some actions from [`Player`].
-#[derive(ActionsMarker)]
-#[actions_marker(priority = 1)]
+#[derive(InputContext)]
+#[input_context(priority = 1)]
 struct Swimming;
 
 #[derive(Debug, InputAction)]

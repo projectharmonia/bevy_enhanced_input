@@ -22,7 +22,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_actions_marker::<Dummy>()
+        app.add_input_context::<Dummy>()
             .add_observer(binding)
             .add_systems(Startup, spawn);
     }
@@ -81,7 +81,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
         .with_conditions(BlockBy::<BlockerAction>::default());
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Dummy;
 
 #[derive(Debug, InputAction)]

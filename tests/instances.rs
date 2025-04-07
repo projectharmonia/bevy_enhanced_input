@@ -5,7 +5,7 @@ use bevy_enhanced_input::prelude::*;
 fn removal() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -33,7 +33,7 @@ fn removal() {
 fn rebuild() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -55,7 +55,7 @@ fn rebuild() {
 fn rebuild_all() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -88,7 +88,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
     actions.bind::<DummyAction>().to(DummyAction::KEY);
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Dummy;
 
 #[derive(Debug, InputAction)]

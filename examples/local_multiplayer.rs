@@ -28,7 +28,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_actions_marker::<Player>()
+        app.add_input_context::<Player>()
             .add_observer(binding)
             .add_observer(apply_movement)
             .add_observer(rotate)
@@ -131,7 +131,7 @@ fn update_gamepads(
 }
 
 /// Used as both input context and component.
-#[derive(ActionsMarker, Component, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(InputContext, Component, Clone, Copy, PartialEq, Eq, Hash)]
 enum Player {
     First,
     Second,

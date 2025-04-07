@@ -5,7 +5,7 @@ use bevy_enhanced_input::prelude::*;
 fn consume() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<ConsumeOnly>()
+        .add_input_context::<ConsumeOnly>()
         .add_observer(consume_only_binding)
         .finish();
 
@@ -41,7 +41,7 @@ fn consume() {
 fn passthrough() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<PassthroughOnly>()
+        .add_input_context::<PassthroughOnly>()
         .add_observer(passthrough_only_binding)
         .finish();
 
@@ -86,7 +86,7 @@ fn passthrough() {
 fn consume_then_passthrough() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<ConsumeThenPassthrough>()
+        .add_input_context::<ConsumeThenPassthrough>()
         .add_observer(consume_then_passthrough_binding)
         .finish();
 
@@ -119,7 +119,7 @@ fn consume_then_passthrough() {
 fn passthrough_then_consume() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<PassthroughThenConsume>()
+        .add_input_context::<PassthroughThenConsume>()
         .add_observer(passthrough_then_consume_binding)
         .finish();
 
@@ -178,16 +178,16 @@ fn passthrough_then_consume_binding(
     actions.bind::<Consume>().to(KEY);
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct PassthroughOnly;
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct ConsumeOnly;
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct PassthroughThenConsume;
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct ConsumeThenPassthrough;
 
 /// A key used by both [`Consume`] and [`Passthrough`] actions.

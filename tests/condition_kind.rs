@@ -7,7 +7,7 @@ use bevy_enhanced_input::prelude::*;
 fn explicit() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Player>()
+        .add_input_context::<Player>()
         .add_observer(binding)
         .finish();
 
@@ -47,7 +47,7 @@ fn explicit() {
 fn implicit() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Player>()
+        .add_input_context::<Player>()
         .add_observer(binding)
         .finish();
 
@@ -114,7 +114,7 @@ fn implicit() {
 fn blocker() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Player>()
+        .add_input_context::<Player>()
         .add_observer(binding)
         .finish();
 
@@ -181,7 +181,7 @@ fn blocker() {
 fn events_blocker() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Player>()
+        .add_input_context::<Player>()
         .add_observer(binding)
         .finish();
 
@@ -272,7 +272,7 @@ fn binding(trigger: Trigger<Binding<Player>>, mut actions: Query<&mut Actions<Pl
         .with_conditions(BlockBy::<ReleaseAction>::events_only());
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Player;
 
 #[derive(Debug, InputAction)]

@@ -11,17 +11,17 @@ use bevy::{
 };
 
 use crate::{
-    actions::{Actions, ActionsMarker},
+    actions::{Actions, InputContext},
     input_reader::{InputReader, ResetInput},
 };
 
 /// An extension trait for [`App`] to assign input to components.
-pub trait ActionsMarkerAppExt {
+pub trait InputContextAppExt {
     /// Registers `T` an input context marker.
     ///
     /// Necessary to update [`Actions<T>`] components.
     ///
-    /// Component removal deactivates [`ActionsMarker`] for the entity and trigger transitions for all actions
+    /// Component removal deactivates [`InputContext`] for the entity and trigger transitions for all actions
     /// to [`ActionState::None`](super::ActionState::None).
     ///
     /// Component re-insertion re-triggers [`Binding`]. Use it if you want to reload bindings.
@@ -34,7 +34,7 @@ pub trait ActionsMarkerAppExt {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut app = App::new();
     /// # app.add_plugins(EnhancedInputPlugin);
-    /// app.add_actions_marker::<Player>()
+    /// app.add_input_context::<Player>()
     ///     .add_observer(player_binding);
     ///
     /// fn player_binding(
@@ -48,7 +48,7 @@ pub trait ActionsMarkerAppExt {
     ///         .to((settings.keyboard.jump, GamepadButton::South));
     /// }
     ///
-    /// #[derive(ActionsMarker)]
+    /// #[derive(InputContext)]
     /// struct Player;
     ///
     /// #[derive(Debug, InputAction)]
@@ -64,19 +64,19 @@ pub trait ActionsMarkerAppExt {
     ///     jump: KeyCode,
     /// }
     /// ```
-    fn add_actions_marker<M: ActionsMarker>(&mut self) -> &mut Self;
+    fn add_input_context<C: InputContext>(&mut self) -> &mut Self;
 }
 
-impl ActionsMarkerAppExt for App {
-    fn add_actions_marker<M: ActionsMarker>(&mut self) -> &mut Self {
-        debug!("registering context for `{}`", any::type_name::<M>());
+impl InputContextAppExt for App {
+    fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
+        debug!("registering context for `{}`", any::type_name::<C>());
 
-        let id = self.world_mut().register_component::<Actions<M>>();
+        let id = self.world_mut().register_component::<Actions<C>>();
         let mut registry = self.world_mut().resource_mut::<ActionsRegistry>();
         registry.push(id);
 
-        self.add_observer(add_context::<M>)
-            .add_observer(remove_context::<M>);
+        self.add_observer(add_context::<C>)
+            .add_observer(remove_context::<C>);
 
         self
     }
@@ -89,23 +89,23 @@ impl ActionsMarkerAppExt for App {
 #[derive(Resource, Default, Deref, DerefMut)]
 pub(crate) struct ActionsRegistry(Vec<ComponentId>);
 
-fn add_context<M: ActionsMarker>(
-    trigger: Trigger<OnInsert, Actions<M>>,
+fn add_context<C: InputContext>(
+    trigger: Trigger<OnInsert, Actions<C>>,
     mut commands: Commands,
     mut instances: ResMut<ActionInstances>,
 ) {
-    instances.add::<M>(&mut commands, trigger.entity());
+    instances.add::<C>(&mut commands, trigger.entity());
 }
 
-fn remove_context<M: ActionsMarker>(
-    trigger: Trigger<OnReplace, Actions<M>>,
+fn remove_context<C: InputContext>(
+    trigger: Trigger<OnReplace, Actions<C>>,
     mut commands: Commands,
     mut reset_input: ResMut<ResetInput>,
     mut instances: ResMut<ActionInstances>,
     time: Res<Time<Virtual>>,
-    mut actions: Query<&mut Actions<M>>,
+    mut actions: Query<&mut Actions<C>>,
 ) {
-    instances.remove::<M>(
+    instances.remove::<C>(
         &mut commands,
         &mut reset_input,
         &time,
@@ -145,22 +145,22 @@ impl ActionInstances {
         }
     }
 
-    fn add<M: ActionsMarker>(&mut self, commands: &mut Commands, entity: Entity) {
+    fn add<C: InputContext>(&mut self, commands: &mut Commands, entity: Entity) {
         debug!(
             "adding input context for `{}` to `{entity}`",
-            any::type_name::<M>(),
+            any::type_name::<C>(),
         );
 
-        commands.trigger_targets(Binding::<M>::new(), entity);
+        commands.trigger_targets(Binding::<C>::new(), entity);
 
-        let instance = ActionsInstance::new::<M>(entity);
-        match self.binary_search_by_key(&Reverse(M::PRIORITY), |inst| Reverse(inst.priority)) {
+        let instance = ActionsInstance::new::<C>(entity);
+        match self.binary_search_by_key(&Reverse(C::PRIORITY), |inst| Reverse(inst.priority)) {
             Ok(index) => {
                 // Insert last to preserve entry creation order.
                 let last_priority_index = self
                     .iter()
                     .skip(index + 1)
-                    .position(|inst| inst.priority != M::PRIORITY)
+                    .position(|inst| inst.priority != C::PRIORITY)
                     .unwrap_or_default();
                 self.0.insert(index + last_priority_index + 1, instance);
             }
@@ -168,23 +168,23 @@ impl ActionInstances {
         };
     }
 
-    fn remove<M: ActionsMarker>(
+    fn remove<C: InputContext>(
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
         time: &Time<Virtual>,
-        instances: &mut Query<&mut Actions<M>>,
+        instances: &mut Query<&mut Actions<C>>,
         entity: Entity,
     ) {
         debug!(
             "removing input context for `{}` from `{}`",
-            any::type_name::<M>(),
+            any::type_name::<C>(),
             entity
         );
 
         let index = self
             .iter()
-            .position(|inst| inst.entity == entity && inst.type_id == TypeId::of::<M>())
+            .position(|inst| inst.entity == entity && inst.type_id == TypeId::of::<C>())
             .expect("input entry should be created before removal");
         self.0.remove(index);
 
@@ -205,19 +205,19 @@ pub(crate) struct ActionsInstance {
 }
 
 impl ActionsInstance {
-    fn new<M: ActionsMarker>(entity: Entity) -> Self {
+    fn new<C: InputContext>(entity: Entity) -> Self {
         Self {
             entity,
-            priority: M::PRIORITY,
-            type_id: TypeId::of::<M>(),
+            priority: C::PRIORITY,
+            type_id: TypeId::of::<C>(),
             // Since the type is not present in the signature, we can store
             // functions for specific type without making the struct generic.
-            update: Self::update_typed::<M>,
-            rebuild: Self::rebuild_typed::<M>,
+            update: Self::update_typed::<C>,
+            rebuild: Self::rebuild_typed::<C>,
         }
     }
 
-    /// Calls [`Self::update_typed`] for `M` that was associated in [`Self::new`].
+    /// Calls [`Self::update_typed`] for `C` that was associated in [`Self::new`].
     fn update(
         &self,
         commands: &mut Commands,
@@ -228,7 +228,7 @@ impl ActionsInstance {
         (self.update)(self, commands, reader, time, actions);
     }
 
-    /// Calls [`Self::rebuild_typed`] for `M` that was associated in [`Self::new`].
+    /// Calls [`Self::rebuild_typed`] for `C` that was associated in [`Self::new`].
     fn rebuild(
         &self,
         commands: &mut Commands,
@@ -239,7 +239,7 @@ impl ActionsInstance {
         (self.rebuild)(self, commands, reset_input, time, actions);
     }
 
-    fn update_typed<M: ActionsMarker>(
+    fn update_typed<C: InputContext>(
         &self,
         commands: &mut Commands,
         reader: &mut InputReader,
@@ -248,20 +248,20 @@ impl ActionsInstance {
     ) {
         trace!(
             "updating bindings for `{}` on `{}`",
-            any::type_name::<M>(),
+            any::type_name::<C>(),
             self.entity
         );
 
         let mut actions = actions
             .get_mut(self.entity)
             .ok()
-            .and_then(FilteredEntityMut::into_mut::<Actions<M>>)
+            .and_then(FilteredEntityMut::into_mut::<Actions<C>>)
             .expect("deinitialized instances should be previously removed");
 
         actions.update(commands, reader, time, self.entity);
     }
 
-    fn rebuild_typed<M: ActionsMarker>(
+    fn rebuild_typed<C: InputContext>(
         &self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
@@ -270,18 +270,18 @@ impl ActionsInstance {
     ) {
         debug!(
             "resetting bindings for `{}` on `{}`",
-            any::type_name::<M>(),
+            any::type_name::<C>(),
             self.entity
         );
 
         let mut actions = actions
             .get_mut(self.entity)
             .ok()
-            .and_then(FilteredEntityMut::into_mut::<Actions<M>>)
+            .and_then(FilteredEntityMut::into_mut::<Actions<C>>)
             .expect("deinitialized instances should be previously removed");
 
         actions.reset(commands, reset_input, time, self.entity);
-        commands.trigger_targets(Binding::<M>::new(), self.entity);
+        commands.trigger_targets(Binding::<C>::new(), self.entity);
     }
 }
 
@@ -306,9 +306,9 @@ type RebuildFn = fn(
 /// Can't be triggered by user. If you want to reload bindings, just re-insert
 /// the component or trigger [`RebuildBindings`].
 #[derive(Event)]
-pub struct Binding<M: ActionsMarker>(PhantomData<M>);
+pub struct Binding<C: InputContext>(PhantomData<C>);
 
-impl<M: ActionsMarker> Binding<M> {
+impl<C: InputContext> Binding<C> {
     /// Creates a new instance.
     ///
     /// Not exposed to users to because we need to properly

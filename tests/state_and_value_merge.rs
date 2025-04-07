@@ -7,7 +7,7 @@ use bevy_enhanced_input::prelude::*;
 fn input_level() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -91,7 +91,7 @@ fn input_level() {
 fn action_level() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -175,7 +175,7 @@ fn action_level() {
 fn both_levels() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -292,7 +292,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
         .with_modifiers(swizzle_axis);
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Dummy;
 
 #[derive(Debug, InputAction)]

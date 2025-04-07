@@ -5,7 +5,7 @@ use bevy_enhanced_input::prelude::*;
 fn any() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<AnyGamepad>()
+        .add_input_context::<AnyGamepad>()
         .add_observer(any_gamepad_binding)
         .finish();
 
@@ -46,7 +46,7 @@ fn any() {
 fn by_id() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<SingleGamepad>()
+        .add_input_context::<SingleGamepad>()
         .add_observer(single_gamepad_binding)
         .finish();
 
@@ -106,10 +106,10 @@ fn single_gamepad_binding(
     actions.bind::<DummyAction>().to(DummyAction::BUTTON);
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct AnyGamepad;
 
-#[derive(Component, Deref, ActionsMarker)]
+#[derive(Component, Deref, InputContext)]
 struct SingleGamepad(Entity);
 
 #[derive(Debug, InputAction)]

@@ -25,7 +25,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_actions_marker::<Player>()
+        app.add_input_context::<Player>()
             .add_observer(binding)
             .add_observer(apply_movement)
             .add_observer(zoom)
@@ -105,7 +105,7 @@ fn zoom(trigger: Trigger<Fired<Zoom>>, mut players: Query<&mut Transform>) {
     transform.scale += Vec3::splat(trigger.value);
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Player;
 
 #[derive(Debug, InputAction)]
