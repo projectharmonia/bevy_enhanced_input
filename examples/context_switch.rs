@@ -24,8 +24,8 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_actions_marker::<OnFoot>()
-            .add_actions_marker::<InCar>()
+        app.add_input_context::<OnFoot>()
+            .add_input_context::<InCar>()
             .add_observer(foot_binding)
             .add_observer(car_binding)
             .add_observer(apply_movement)
@@ -107,7 +107,7 @@ fn exit_car(
         .insert(Actions::<OnFoot>::default());
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct OnFoot;
 
 #[derive(Debug, InputAction)]
@@ -126,7 +126,7 @@ struct Rotate;
 #[input_action(output = bool, require_reset = true)]
 struct EnterCar;
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct InCar;
 
 /// Switches context to [`OnFoot`].

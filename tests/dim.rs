@@ -5,7 +5,7 @@ use bevy_enhanced_input::prelude::*;
 fn bool() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -36,7 +36,7 @@ fn bool() {
 fn axis1d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -67,7 +67,7 @@ fn axis1d() {
 fn axis2d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -98,7 +98,7 @@ fn axis2d() {
 fn axis3d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -133,7 +133,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
     actions.bind::<Axis3D>().to(Axis3D::KEY);
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Dummy;
 
 #[derive(Debug, InputAction)]

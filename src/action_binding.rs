@@ -78,7 +78,7 @@ impl ActionBinding {
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_modifiers(Scale::splat(2.0));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
@@ -94,7 +94,7 @@ impl ActionBinding {
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_modifiers((Scale::splat(2.0), Negate::all()));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
@@ -125,7 +125,7 @@ impl ActionBinding {
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_conditions(Release::default());
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -141,7 +141,7 @@ impl ActionBinding {
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_conditions((Release::default(), JustPress::default()));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -179,7 +179,7 @@ impl ActionBinding {
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>()
     ///     .to((KeyCode::Space, GamepadButton::South));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -193,7 +193,7 @@ impl ActionBinding {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -208,7 +208,7 @@ impl ActionBinding {
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>().to(KeyCode::Space.with_conditions(Release::default()));
     /// actions.bind::<Attack>().to(MouseButton::Left.with_modifiers(Scale::splat(10.0)));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -226,7 +226,7 @@ impl ActionBinding {
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Zoom>().to(Input::mouse_wheel());
     /// actions.bind::<Move>().to(Input::mouse_motion());
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -244,7 +244,7 @@ impl ActionBinding {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Move>().to(Cardinal::wasd_keys());
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = Vec2)]
@@ -264,7 +264,7 @@ impl ActionBinding {
     /// struct KeyboardSettings {
     ///     inspect: Vec<KeyCode>,
     /// }
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = Vec2)]

@@ -15,7 +15,7 @@ use crate::{
     input_reader::{InputReader, ResetInput},
 };
 
-/// Instance for [`ActionsMarker`].
+/// Instance for [`InputContext`].
 ///
 /// Stores [`InputAction`]s and evaluates their [`ActionState`] in the order they are bound.
 ///
@@ -48,14 +48,14 @@ use crate::{
 /// [`InputModifier`]: crate::input_modifier::InputModifier
 /// [`Input`]: crate::input::Input
 #[derive(Component)]
-pub struct Actions<M: ActionsMarker> {
+pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
     bindings: Vec<ActionBinding>,
     action_map: ActionMap,
-    marker: PhantomData<M>,
+    marker: PhantomData<C>,
 }
 
-impl<M: ActionsMarker> Actions<M> {
+impl<C: InputContext> Actions<C> {
     /// Associates context with gamepad.
     ///
     /// By default it's [`GamepadDevice::Any`].
@@ -168,7 +168,7 @@ impl<M: ActionsMarker> Actions<M> {
     }
 }
 
-impl<M: ActionsMarker> Default for Actions<M> {
+impl<C: InputContext> Default for Actions<C> {
     fn default() -> Self {
         Self {
             gamepad: Default::default(),
@@ -183,13 +183,13 @@ impl<M: ActionsMarker> Default for Actions<M> {
 ///
 /// # Examples
 ///
-/// To implement the trait you can use the [`ActionsMarker`](bevy_enhanced_input_macros::ActionsMarker)
+/// To implement the trait you can use the [`InputContext`](bevy_enhanced_input_macros::InputContext)
 /// derive to reduce boilerplate:
 ///
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
-/// #[derive(ActionsMarker)]
+/// #[derive(InputContext)]
 /// struct Player;
 /// ```
 ///
@@ -198,11 +198,11 @@ impl<M: ActionsMarker> Default for Actions<M> {
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
-/// #[derive(ActionsMarker)]
-/// #[actions_marker(priority = 1)]
+/// #[derive(InputContext)]
+/// #[input_context(priority = 1)]
 /// struct Player;
 /// ```
-pub trait ActionsMarker: Send + Sync + 'static {
+pub trait InputContext: Send + Sync + 'static {
     /// Determines the evaluation order of [`Actions<Self>`].
     ///
     /// Ordering is global.
@@ -212,7 +212,7 @@ pub trait ActionsMarker: Send + Sync + 'static {
 
 #[cfg(test)]
 mod tests {
-    use bevy_enhanced_input_macros::{ActionsMarker, InputAction};
+    use bevy_enhanced_input_macros::{InputAction, InputContext};
 
     use super::*;
 
@@ -231,6 +231,6 @@ mod tests {
     #[input_action(output = bool)]
     struct DummyAction;
 
-    #[derive(ActionsMarker)]
+    #[derive(InputContext)]
     struct Dummy;
 }

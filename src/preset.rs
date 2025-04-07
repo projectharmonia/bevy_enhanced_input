@@ -49,7 +49,7 @@ use crate::{
 ///     left: Vec<KeyCode>,
 /// }
 ///
-/// #[derive(ActionsMarker)]
+/// #[derive(InputContext)]
 /// struct Player;
 ///
 /// #[derive(Debug, InputAction)]

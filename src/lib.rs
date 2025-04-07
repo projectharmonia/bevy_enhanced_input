@@ -28,7 +28,7 @@ We provide a [`prelude`] module, which exports most of the typically used traits
 1. Add [`EnhancedInputPlugin`] to your app.
 2. Define gameplay actions as unit structs and implement [`InputAction`] for them.
 3. Define context components and assign actions to them by writing observers for [`Binding`]
-4. Register markers using [`ActionsMarkerAppExt::add_actions_marker`].
+4. Register markers using [`InputContextAppExt::add_input_context`].
 5. Insert actions to entities you want to control.
 6. Create observers to react on [`events`] for each action.
 
@@ -85,10 +85,10 @@ pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
         action_binding::ActionBinding,
-        action_instances::{ActionsMarkerAppExt, Binding, RebuildBindings},
+        action_instances::{Binding, InputContextAppExt, RebuildBindings},
         action_map::{Action, ActionState},
         action_value::{ActionValue, ActionValueDim},
-        actions::{Actions, ActionsMarker},
+        actions::{Actions, InputContext},
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_action::{Accumulation, InputAction},
@@ -103,7 +103,7 @@ pub mod prelude {
         },
         preset::{Bidirectional, Cardinal, GamepadStick},
     };
-    pub use bevy_enhanced_input_macros::{ActionsMarker, InputAction};
+    pub use bevy_enhanced_input_macros::{InputAction, InputContext};
 }
 
 use bevy::{

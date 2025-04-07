@@ -5,8 +5,8 @@ use bevy_enhanced_input::prelude::*;
 fn prioritization() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<First>()
-        .add_actions_marker::<Second>()
+        .add_input_context::<First>()
+        .add_input_context::<Second>()
         .add_observer(first_binding)
         .add_observer(second_binding)
         .finish();
@@ -56,11 +56,11 @@ fn second_binding(trigger: Trigger<Binding<Second>>, mut actions: Query<&mut Act
     actions.bind::<SecondPassthrough>().to(PASSTHROUGH_KEY);
 }
 
-#[derive(ActionsMarker)]
-#[actions_marker(priority = 1)]
+#[derive(InputContext)]
+#[input_context(priority = 1)]
 struct First;
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Second;
 
 /// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.

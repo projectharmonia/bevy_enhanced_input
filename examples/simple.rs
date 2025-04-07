@@ -24,7 +24,7 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_actions_marker::<Player>() // All contexts should be registered.
+        app.add_input_context::<Player>() // All contexts should be registered.
             .add_observer(binding) // Add observer to setup bindings.
             .add_observer(apply_movement)
             .add_observer(rotate)
@@ -35,7 +35,7 @@ impl Plugin for GamePlugin {
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    // Spawn an entity with a component that implements `ActionsMarker`.
+    // Spawn an entity with a component that implements `InputContext`.
     commands.spawn((PlayerBox, Actions::<Player>::default()));
 }
 
@@ -77,8 +77,8 @@ fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>)
 }
 
 // Since it's possible to have multiple input contexts, you need
-// to define a marker and derive `ActionsMarker` trait.
-#[derive(ActionsMarker)]
+// to define a marker and derive `InputContext` trait.
+#[derive(InputContext)]
 struct Player;
 
 // All actions should implement the `InputAction` trait.

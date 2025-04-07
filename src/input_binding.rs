@@ -58,7 +58,7 @@ pub trait BindingBuilder {
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers(Scale::splat(2.0)));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
@@ -73,7 +73,7 @@ pub trait BindingBuilder {
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers((Scale::splat(2.0), Negate::all())));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
@@ -99,7 +99,7 @@ pub trait BindingBuilder {
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_conditions(Release::default()));
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
@@ -117,7 +117,7 @@ pub trait BindingBuilder {
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// ```
     #[must_use]
@@ -170,7 +170,7 @@ pub trait IntoBindings {
     ///         GamepadStick::Left.with_modifiers_each(Negate::all()), // Will be applied to each axis.
     ///     ))
     ///     .with_modifiers(DeadZone::default()); // Modifiers like `DeadZone` need to be applied at the action level!
-    /// # #[derive(ActionsMarker)]
+    /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]

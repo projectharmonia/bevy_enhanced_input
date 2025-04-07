@@ -5,7 +5,7 @@ use bevy_enhanced_input::prelude::*;
 fn keys() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -50,7 +50,7 @@ fn keys() {
 fn dpad() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -88,7 +88,7 @@ fn dpad() {
 fn sticks() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_actions_marker::<Dummy>()
+        .add_input_context::<Dummy>()
         .add_observer(binding)
         .finish();
 
@@ -144,7 +144,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
     ));
 }
 
-#[derive(ActionsMarker)]
+#[derive(InputContext)]
 struct Dummy;
 
 #[derive(Debug, InputAction)]
