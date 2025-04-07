@@ -215,7 +215,7 @@ pub enum ActionState {
     None,
     /// Condition has started triggering, but has not yet finished.
     ///
-    /// For example, [`Hold`](super::input_condition::hold::Hold) condition
+    /// For example, [`Hold`](crate::input_condition::hold::Hold) condition
     /// requires its state to be maintained over several frames.
     Ongoing,
     /// The condition has been met.

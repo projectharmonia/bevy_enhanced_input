@@ -284,7 +284,7 @@ impl<C: InputContext> Binding<C> {
 ///
 /// Use it when you change your application settings and want to reload the mappings.
 ///
-/// This will also reset all actions to [`ActionState::None`](super::ActionState::None)
+/// This will also reset all actions to [`ActionState::None`](crate::ActionState::None)
 /// and trigger the corresponding events.
 #[derive(Event)]
 pub struct RebuildBindings;

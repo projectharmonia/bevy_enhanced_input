@@ -79,7 +79,7 @@ impl ActionBinding {
     /// Adds action-level modifiers.
     ///
     /// For input-level modifiers see
-    /// [`BindingBuilder::with_modifiers`](super::input_binding::BindingBuilder::with_modifiers).
+    /// [`BindingBuilder::with_modifiers`](crate::input_binding::BindingBuilder::with_modifiers).
     ///
     /// # Examples
     ///
@@ -126,7 +126,7 @@ impl ActionBinding {
     /// Adds action-level conditions.
     ///
     /// For input-level conditions see
-    /// [`BindingBuilder::with_conditions`](super::input_binding::BindingBuilder::with_conditions).
+    /// [`BindingBuilder::with_conditions`](crate::input_binding::BindingBuilder::with_conditions).
     ///
     /// # Examples
     ///

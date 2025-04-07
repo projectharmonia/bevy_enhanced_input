@@ -29,8 +29,8 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 /// or "release" events.
 ///
 /// Can be applied both to inputs and actions.
-/// See [`ActionBinding::with_conditions`](super::action_binding::ActionBinding::with_conditions)
-/// and [`BindingBuilder::with_conditions`](super::input_binding::BindingBuilder::with_conditions).
+/// See [`ActionBinding::with_conditions`](crate::action_binding::ActionBinding::with_conditions)
+/// and [`BindingBuilder::with_conditions`](crate::input_binding::BindingBuilder::with_conditions).
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
     ///
@@ -54,7 +54,7 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 /// on any non-zero value, functioning similarly to a [`Press`](press::Press) condition
 /// with a zero actuation threshold.
 ///
-/// For details about how actions are combined, see [`Actions`](super::actions::Actions).
+/// For details about how actions are combined, see [`Actions`](crate::actions::Actions).
 pub enum ConditionKind {
     /// The most significant [`ActionState`] from all explicit conditions will be the
     /// resulting state.
@@ -77,8 +77,8 @@ pub enum ConditionKind {
 }
 
 /// Conversion into iterator of bindings that could be passed into
-/// [`ActionBinding::with_conditions`](super::action_binding::ActionBinding::with_conditions)
-/// and [`BindingBuilder::with_conditions`](super::input_binding::BindingBuilder::with_conditions).
+/// [`ActionBinding::with_conditions`](crate::action_binding::ActionBinding::with_conditions)
+/// and [`BindingBuilder::with_conditions`](crate::input_binding::BindingBuilder::with_conditions).
 pub trait IntoConditions {
     /// Returns an iterator over conditions.
     fn into_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>>;
