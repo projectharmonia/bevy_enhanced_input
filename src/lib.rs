@@ -63,7 +63,7 @@ No required parameters needed. See the [`InputContext`] documentation for all pa
 ## Binding actions
 
 While input contexts are defined statically at compile time, mappings must be assigned at runtime. They're stored inside the
-[`Actions<C>`] component, where `C` is an input context. Contexts becomes becomes active only when its component exists on an
+[`Actions<C>`] component, where `C` is an input context. Contexts becomes active only when its component exists on an
 entity. You can attach multiple [`Actions<C>`] components to a single entity.
 
 To bind actions, use [`Actions::bind`] followed by one or more [`ActionBinding::to`] calls to define inputs. You can pass any
@@ -103,7 +103,7 @@ Both methods also support tuple syntax for assigning multiple modifiers at once.
 # let mut actions = Actions::<OnFoot>::default();
 actions.bind::<Move>().to((
     // Keyboard keys captured as `bool`, but the output of `Move` is defined as `Vec2`,
-    // so you need to assign keys to axes using swizzle and negation.
+    // so you need to assign keys to axes using swizzle to reorder them and negation.
     KeyCode::KeyW.with_modifiers(SwizzleAxis::YXZ),
     KeyCode::KeyA.with_modifiers(Negate::all()),
     KeyCode::KeyS.with_modifiers((Negate::all(), SwizzleAxis::YXZ)),
