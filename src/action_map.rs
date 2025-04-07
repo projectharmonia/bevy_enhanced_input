@@ -11,10 +11,12 @@ use crate::{
     input_action::{ActionOutput, InputAction},
 };
 
-/// Map for actions to their data.
+/// Maps [`InputAction`] markers to their data.
 ///
-/// Can be accessed from [`InputCondition::evaluate`](crate::input_condition::InputCondition::evaluate)
-/// or [`Actions`](crate::actions::Actions).
+/// Stored inside [`Actions`](crate::actions::Actions).
+///
+/// Accessible from [`InputCondition::evaluate`](crate::input_condition::InputCondition::evaluate)
+/// and [`InputModifier::apply`](crate::input_modifier::InputModifier::apply)
 #[derive(Default, Deref, DerefMut)]
 pub struct ActionMap(pub HashMap<TypeId, Action>);
 
@@ -32,9 +34,13 @@ impl ActionMap {
     }
 }
 
-/// Tracker for action state.
+/// Data associated with an [`InputAction`] marker.
 ///
 /// Stored inside [`ActionMap`].
+///
+/// This struct could also be created manually to track state for an action
+/// with externally sourced data (e.g., network). Use [`Self::update`] to apply
+/// the data followed by [`Self::trigger_events`].
 #[derive(Clone, Copy)]
 pub struct Action {
     state: ActionState,
@@ -90,7 +96,7 @@ impl Action {
 
     /// Triggers events resulting from a state transition after [`Self::update`].
     ///
-    /// See also [`Self::new`].
+    /// See also [`Self::new`] and [`ActionEvents`].
     pub fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
         (self.trigger_events)(self, commands, entity);
     }
@@ -171,6 +177,9 @@ impl Action {
     }
 
     /// Returns the value since the last update.
+    ///
+    /// Unlike when reading values from triggers, this returns [`ActionValue`] since actions
+    /// are stored in a type-erased format.
     pub fn value(&self) -> ActionValue {
         self.value
     }
@@ -198,7 +207,7 @@ fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity,
 ///
 /// States are ordered by their significance.
 ///
-/// See also [`ActionEvents`].
+/// See also [`ActionEvents`] and [`ActionBinding`]().
 #[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ActionState {
     /// Condition is not triggered.

@@ -15,38 +15,12 @@ use crate::{
     input_reader::{InputReader, ResetInput},
 };
 
-/// Instance for [`InputContext`].
+/// Component that stores a actions with their bindings for specific [`InputContext`].
 ///
-/// Stores [`InputAction`]s and evaluates their [`ActionState`] in the order they are bound.
+/// Bindings represented by [`ActionBinding`] and can be added to specific action using [`Self::bind`].
+/// Data for each bound action is stored inside [`ActionMap`].
 ///
-/// Each action can have multiple associated [`Input`]s, any of which can trigger the action.
-///
-/// Additionally, you can assign [`InputModifier`]s and [`InputCondition`]s at both the action
-/// and input levels.
-///
-/// You can define bindings before the insertion, but it's recommended to create an observer
-/// for [`Binding`](crate::action_instances::Binding). To setup bindings, register an observer
-/// an obtain this component. This way you can conveniently reload bindings when you settings
-/// change using [`RebuildBindings`](crate::action_instances::RebuildBindings).
-///
-/// Until the component is exists on the entity, actions will be evaluated and trigger [`events`](super::events).
-///
-/// Action evaluation follows these steps:
-///
-/// 1. Iterate over each [`ActionValue`] from the associated [`Input`]s:
-///    1.1. Apply input-level [`InputModifier`]s.
-///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
-/// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
-///    Combined value be converted into [`ActionOutput::DIM`](crate::input_action::ActionOutput::DIM) using [`ActionValue::convert`].
-/// 3. Apply action level [`InputModifier`]s.
-/// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
-/// 5. Set the final [`ActionState`] based on the results.
-///    Final value be converted into [`InputAction::Output`] using [`ActionValue::convert`].
-///
-/// [`InputCondition`]: crate::input_condition::InputCondition
-/// [`InputCondition::kind`]: crate::input_condition::InputCondition::kind
-/// [`InputModifier`]: crate::input_modifier::InputModifier
-/// [`Input`]: crate::input::Input
+/// Until this component exists on the entity, actions will be evaluated and trigger [`events`](crate::events).
 #[derive(Component)]
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
@@ -58,12 +32,14 @@ pub struct Actions<C: InputContext> {
 impl<C: InputContext> Actions<C> {
     /// Associates context with gamepad.
     ///
+    /// Context will process input only from this gamepad.
+    ///
     /// By default it's [`GamepadDevice::Any`].
     pub fn set_gamepad(&mut self, gamepad: impl Into<GamepadDevice>) {
         self.gamepad = gamepad.into();
     }
 
-    /// Starts binding an action.
+    /// Adds action `A` to this input context and returns mutable reference to the action bindings.
     ///
     /// This method can be called multiple times for the same action to extend its mappings.
     pub fn bind<A: InputAction>(&mut self) -> &mut ActionBinding {
@@ -179,7 +155,12 @@ impl<C: InputContext> Default for Actions<C> {
     }
 }
 
-/// Marker for [`Actions`].
+/// Marker for a gameplay-related input context that a player can be in.
+///
+/// Used to differentiate [`Actions`] components and configure how associated actions will be evaluated.
+///
+/// All structs that implement this trait need to be registered using
+/// [`InputContextAppExt::add_input_context`](crate::action_instances::InputContextAppExt::add_input_context)
 ///
 /// # Examples
 ///
@@ -202,11 +183,14 @@ impl<C: InputContext> Default for Actions<C> {
 /// #[input_context(priority = 1)]
 /// struct Player;
 /// ```
+///
+/// All parameters match corresponding data in the trait.
 pub trait InputContext: Send + Sync + 'static {
     /// Determines the evaluation order of [`Actions<Self>`].
     ///
-    /// Ordering is global.
-    /// Contexts with a higher priority evaluated first.
+    /// Used to control how contexts are layered since some [`InputAction`]s may consume inputs.
+    ///
+    /// Ordering is global. Contexts with a higher priority evaluated first.
     const PRIORITY: usize = 0;
 }
 

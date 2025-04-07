@@ -1,4 +1,4 @@
-//! Two players that use the same context type, but with different mappings.
+//! Two players that use the same context type, but with different bindings.
 
 mod player_box;
 
@@ -64,14 +64,14 @@ fn binding(
 ) {
     let (&player, mut actions) = players.get_mut(trigger.entity()).unwrap();
 
-    // By default context read inputs from all gamepads,
+    // By default actions read inputs from all gamepads,
     // but for local multiplayer we need assign specific
     // gamepad index.
     if let Some(&entity) = gamepads.get(player as usize) {
         actions.set_gamepad(entity);
     }
 
-    // Assign different mappings based player index.
+    // Assign different bindings based player index.
     match player {
         Player::First => {
             actions

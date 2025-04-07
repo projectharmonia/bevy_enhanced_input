@@ -157,9 +157,10 @@ impl<I: IntoBindings> IntoBindings for Bidirectional<I> {
     }
 }
 
-/// A preset to map a stick as 1-dimensional input.
+/// A preset for mapping a stick as 2-dimensional input.
 ///
-/// Represents the side of a gamepad's analog stick.
+/// In Bevy, sticks are split by axes and captured as 1-dimensional inputs.
+/// This preset maps stick axes to X and Y using [`SwizzleAxis`].
 #[derive(Debug, Clone, Copy)]
 pub enum GamepadStick {
     /// Corresponds to [`GamepadAxis::LeftStickX`] and [`GamepadAxis::LeftStickY`]

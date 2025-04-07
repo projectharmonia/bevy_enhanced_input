@@ -16,8 +16,8 @@ pub struct InputBinding {
 
     /// Whether the input output a non-zero value.
     ///
-    /// Needed to prevent newly created contexts from reacting to currently
-    /// held inputs until they are released.
+    /// Prevents newly created contexts from reacting to currently held inputs
+    /// until they’re released.
     ///
     /// Used only if [`ActionBinding`](super::action_binding::ActionBinding::require_reset) is set.
     pub(crate) first_activation: bool,

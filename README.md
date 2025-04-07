@@ -10,12 +10,11 @@ Dynamic and contextual input mappings for Bevy, inspired by [Unreal Engine Enhan
 ## Features
 
 * Map inputs from various sources (keyboard, gamepad, etc.) to gameplay actions like `Jump`, `Move`, or `Attack`.
-* Assign actions to different contexts like `OnFoot` or `InCar`, which are regular components.
-* Activate or deactivate contexts by simply adding or removing components.
-* Control how actions accumulate input from sources and consume it.
+* Assign actions to different contexts like `OnFoot` or `InCar`, controlled by `Actions<C>` components.
 * Layer multiple contexts on a single entity, controlled by priority.
 * Apply modifiers to inputs, such as dead zones, inversion, scaling, etc., or create custom modifiers by implementing a trait.
 * Assign conditions for how and when an action is triggered, like "hold", "tap", "chord", etc. You can also create custom conditions by implementing a trait.
+* Control how actions accumulate input from sources and consume it.
 * React on actions with observers.
 
 ## Getting Started

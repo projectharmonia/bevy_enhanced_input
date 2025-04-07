@@ -19,6 +19,7 @@ use crate::{
     action_value::ActionValue,
 };
 
+/// Default actuation threshold for all conditions.
 pub const DEFAULT_ACTUATION: f32 = 0.5;
 
 /// Defines how input activates.

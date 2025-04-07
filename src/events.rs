@@ -8,10 +8,9 @@ use crate::{action_map::ActionState, input_action::InputAction};
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
     ///
-    /// Stored inside [`Action`](super::input_action::Action).
+    /// Stored inside [`Action`](crate::action_map::Action).
     ///
-    /// Actual events can be accessed from observers.
-    /// See [`InputAction`](super::input_action::InputAction) for details.
+    /// On transition events will be triggered with dedicated types that correspond to bitflags.
     ///
     /// Table of state transitions:
     ///
