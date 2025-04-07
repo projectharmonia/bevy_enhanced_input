@@ -62,7 +62,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Clippy
-        run: cargo clippy --all-features --tests --examples -- -D warnings
+        run: cargo clippy --tests --examples -- -D warnings
 
       - name: Rustdoc
         run: cargo rustdoc -- -D warnings
@@ -86,7 +86,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Test doc
-        run: cargo test --no-default-features --doc
+        run: cargo test --doc
 
   test:
     name: Test
@@ -113,7 +113,7 @@ jobs:
         run: cargo install cargo-tarpaulin
 
       - name: Test
-        run: cargo tarpaulin --no-default-features --engine llvm --out lcov
+        run: cargo tarpaulin --engine llvm --out lcov
 
       - name: Upload code coverage results
         if: github.actor != 'dependabot[bot]'

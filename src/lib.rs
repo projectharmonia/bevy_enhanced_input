@@ -36,11 +36,8 @@ For more details, see the documentation on relevant types. You can also find exa
 
 # Input and UI
 
-Currently, Bevy does not have a focus management API. However, to prevent actions from being triggered
-while interacting with the UI, we implement temporary workarounds enabled by specific cargo features:
-
-* If the `ui_priority` feature is enabled, we check if any [`Interaction`] component is not [`Interaction::None`] and discard all mouse inputs.
-* If the `egui_priority` feature is enabled, we check if any egui context requires keyboard or mouse input and discard those inputs accordingly.
+Currently, Bevy doesn't have focus management or navigation APIs. But we provide [`ActionSources`] resource
+that could be used to prevents actions from triggering during UI interactions. See its docs for details.
 
 # Troubleshooting
 
@@ -77,7 +74,7 @@ pub mod input_action;
 pub mod input_binding;
 pub mod input_condition;
 pub mod input_modifier;
-mod input_reader;
+pub mod input_reader;
 pub mod preset;
 mod trigger_tracker;
 
@@ -101,6 +98,7 @@ pub mod prelude {
             InputModifier, accumulate_by::*, dead_zone::*, delta_scale::*, exponential_curve::*,
             negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
         },
+        input_reader::ActionSources,
         preset::{Bidirectional, Cardinal, GamepadStick},
     };
     pub use bevy_enhanced_input_macros::{InputAction, InputContext};
@@ -116,7 +114,7 @@ use bevy::{
 };
 
 use action_instances::{ActionInstances, ActionsRegistry};
-use input_reader::{InputReader, ResetInput};
+use input_reader::{ActionSources, InputReader, ResetInput};
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
@@ -129,6 +127,7 @@ impl Plugin for EnhancedInputPlugin {
         app.init_resource::<ActionInstances>()
             .init_resource::<ActionsRegistry>()
             .init_resource::<ResetInput>()
+            .init_resource::<ActionSources>()
             .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem));
     }
 

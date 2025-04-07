@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `ActionSources` resource to control which input sources are visible to actions.
+
 ### Changed
 
 - Rename `InputContext` into `Actions<C>` with its module. Now it's a component. Since a single entity could have multiple actions, the struct now have associated marker `C`. This marker needs to implement the newly added `InputContext` trait. We provide a derive macro for it.
@@ -30,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `InputContextRegistry`. Directly access `Actions` from entities.
+- `ui_priority` and `egui_priority` features. Use `ActionSources` manually for your UI library of choice.
 
 ### Fixed
 

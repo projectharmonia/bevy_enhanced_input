@@ -7,8 +7,6 @@ use bevy::{
     prelude::*,
     utils::HashSet,
 };
-#[cfg(feature = "egui_priority")]
-use bevy_egui::EguiContext;
 
 use crate::{
     action_value::ActionValue,
@@ -25,15 +23,10 @@ pub(crate) struct InputReader<'w, 's> {
     mouse_motion: Res<'w, AccumulatedMouseMotion>,
     mouse_scroll: Res<'w, AccumulatedMouseScroll>,
     gamepads: Query<'w, 's, &'static Gamepad>,
+    action_sources: Res<'w, ActionSources>,
     consumed: Local<'s, ConsumedInput>,
     reset_input: ResMut<'w, ResetInput>,
     gamepad_device: Local<'s, GamepadDevice>,
-    #[cfg(feature = "ui_priority")]
-    interactions: Query<'w, 's, &'static Interaction>,
-    // In egui mutable reference is required to get contexts,
-    // unless `immutable_ctx` feature is enabled.
-    #[cfg(feature = "egui_priority")]
-    egui: Query<'w, 's, &'static mut EguiContext>,
 }
 
 impl InputReader<'_, '_> {
@@ -52,33 +45,6 @@ impl InputReader<'_, '_> {
             }
         });
         *self.reset_input = reset_input;
-
-        #[cfg(feature = "ui_priority")]
-        if self
-            .interactions
-            .iter()
-            .any(|&interaction| interaction != Interaction::None)
-        {
-            self.consumed.ui_wants_mouse = true;
-        }
-
-        #[cfg(feature = "egui_priority")]
-        if self
-            .egui
-            .iter_mut()
-            .any(|mut ctx| ctx.get_mut().wants_keyboard_input())
-        {
-            self.consumed.ui_wants_keyboard = true;
-        }
-
-        #[cfg(feature = "egui_priority")]
-        if self
-            .egui
-            .iter_mut()
-            .any(|mut ctx| ctx.get_mut().wants_pointer_input())
-        {
-            self.consumed.ui_wants_mouse = true;
-        }
     }
 
     /// Assigns a gamepad from which [`Self::value`] should read input.
@@ -92,7 +58,7 @@ impl InputReader<'_, '_> {
     pub(crate) fn value(&self, input: impl Into<Input>) -> ActionValue {
         match input.into() {
             Input::Keyboard { key, mod_keys } => {
-                let pressed = !self.consumed.ui_wants_keyboard
+                let pressed = self.action_sources.keyboard
                     && self.keys.pressed(key)
                     && !self.consumed.keys.contains(&key)
                     && self.mod_keys_pressed(mod_keys);
@@ -100,7 +66,7 @@ impl InputReader<'_, '_> {
                 pressed.into()
             }
             Input::MouseButton { button, mod_keys } => {
-                let pressed = !self.consumed.ui_wants_mouse
+                let pressed = self.action_sources.mouse_buttons
                     && self.mouse_buttons.pressed(button)
                     && !self.consumed.mouse_buttons.contains(&button)
                     && self.mod_keys_pressed(mod_keys);
@@ -108,7 +74,7 @@ impl InputReader<'_, '_> {
                 pressed.into()
             }
             Input::MouseMotion { mod_keys } => {
-                if self.consumed.ui_wants_mouse
+                if !self.action_sources.mouse_motion
                     || !self.mod_keys_pressed(mod_keys)
                     || self.consumed.mouse_motion
                 {
@@ -118,7 +84,7 @@ impl InputReader<'_, '_> {
                 self.mouse_motion.delta.into()
             }
             Input::MouseWheel { mod_keys } => {
-                if self.consumed.ui_wants_mouse
+                if !self.action_sources.mouse_wheel
                     || !self.mod_keys_pressed(mod_keys)
                     || self.consumed.mouse_wheel
                 {
@@ -133,7 +99,9 @@ impl InputReader<'_, '_> {
                     input: button,
                 };
 
-                if self.consumed.gamepad_buttons.contains(&input) {
+                if !self.action_sources.gamepad_button
+                    || self.consumed.gamepad_buttons.contains(&input)
+                {
                     return 0.0.into();
                 }
 
@@ -158,7 +126,8 @@ impl InputReader<'_, '_> {
                     input: axis,
                 };
 
-                if self.consumed.gamepad_axes.contains(&input) {
+                if !self.action_sources.gamepad_axis || self.consumed.gamepad_axes.contains(&input)
+                {
                     return 0.0.into();
                 }
 
@@ -180,7 +149,7 @@ impl InputReader<'_, '_> {
     }
 
     fn mod_keys_pressed(&self, mod_keys: ModKeys) -> bool {
-        if !mod_keys.is_empty() && self.consumed.ui_wants_keyboard {
+        if !mod_keys.is_empty() && !self.action_sources.keyboard {
             return false;
         }
 
@@ -238,11 +207,61 @@ impl InputReader<'_, '_> {
     }
 }
 
+/// Configures which input sources are visible to actions.
+///
+/// Defaults to `true` for all values.
+///
+/// Could be used to prevent actions from being triggered
+/// while interacting with the UI.
+///
+/// # Examples
+///
+/// Disables mouse buttons for actions when the cursor hovers a node with
+/// an `Interaction` component. It's a required component for `Button`,
+/// but you can add it to any UI node to disable specific actions on hover.
+///
+/// ```
+/// use bevy::prelude::*;
+/// use bevy_enhanced_input::prelude::*;
+///
+/// # let mut app = App::new();
+/// app.add_systems(PreUpdate, disable_mouse.before(EnhancedInputSystem));
+///
+/// fn disable_mouse(
+///     mut action_sources: ResMut<ActionSources>,
+///     interactions: Query<&Interaction>,
+/// ) {
+///     let mouse_used = interactions.iter().all(|&interaction| interaction == Interaction::None);
+///     action_sources.mouse_buttons = !mouse_used;
+///     action_sources.mouse_wheel = !mouse_used;
+/// }
+/// ```
+#[derive(Resource, Reflect)]
+pub struct ActionSources {
+    pub keyboard: bool,
+    pub mouse_buttons: bool,
+    pub mouse_motion: bool,
+    pub mouse_wheel: bool,
+    pub gamepad_button: bool,
+    pub gamepad_axis: bool,
+}
+
+impl Default for ActionSources {
+    fn default() -> Self {
+        Self {
+            keyboard: true,
+            mouse_buttons: true,
+            mouse_motion: true,
+            mouse_wheel: true,
+            gamepad_button: true,
+            gamepad_axis: true,
+        }
+    }
+}
+
 /// Tracks all consumed input from Bevy resources.
 #[derive(Resource, Default)]
 struct ConsumedInput {
-    ui_wants_keyboard: bool,
-    ui_wants_mouse: bool,
     keys: HashSet<KeyCode>,
     mod_keys: ModKeys,
     mouse_buttons: HashSet<MouseButton>,
@@ -254,8 +273,6 @@ struct ConsumedInput {
 
 impl ConsumedInput {
     fn reset(&mut self) {
-        self.ui_wants_keyboard = false;
-        self.ui_wants_mouse = false;
         self.keys.clear();
         self.mod_keys = ModKeys::empty();
         self.mouse_buttons.clear();
@@ -619,30 +636,43 @@ mod tests {
     }
 
     #[test]
-    fn ui_input() {
+    fn sources() {
         let (mut world, mut state) = init_world();
 
         let key = KeyCode::Space;
-        let button = MouseButton::Left;
+        let mouse_button = MouseButton::Left;
+        let gamepad_button = GamepadButton::South;
+        let axis = GamepadAxis::LeftStickX;
+
         world.resource_mut::<ButtonInput<KeyCode>>().press(key);
         world
             .resource_mut::<ButtonInput<MouseButton>>()
-            .press(button);
-        world.send_event(MouseMotion { delta: Vec2::ONE });
-        world.send_event(MouseWheel {
-            x: 1.0,
-            y: 1.0,
+            .press(mouse_button);
+
+        world.insert_resource(AccumulatedMouseMotion { delta: Vec2::ONE });
+        world.insert_resource(AccumulatedMouseScroll {
             unit: MouseScrollUnit::Line,
-            window: Entity::PLACEHOLDER,
+            delta: Vec2::ONE,
         });
+
+        let mut gamepad = Gamepad::default();
+        gamepad.analog_mut().set(axis, 1.0);
+        gamepad.analog_mut().set(gamepad_button, 1.0);
+        world.spawn(gamepad);
+
+        let mut action_sources = world.resource_mut::<ActionSources>();
+        action_sources.keyboard = false;
+        action_sources.mouse_buttons = false;
+        action_sources.mouse_motion = false;
+        action_sources.mouse_wheel = false;
+        action_sources.gamepad_button = false;
+        action_sources.gamepad_axis = false;
 
         let mut reader = state.get_mut(&mut world);
         reader.update_state();
-        reader.consumed.ui_wants_keyboard = true;
-        reader.consumed.ui_wants_mouse = true;
 
         assert_eq!(reader.value(key), ActionValue::Bool(false));
-        assert_eq!(reader.value(button), ActionValue::Bool(false));
+        assert_eq!(reader.value(mouse_button), ActionValue::Bool(false));
         assert_eq!(
             reader.value(Input::mouse_motion()),
             ActionValue::Axis2D(Vec2::ZERO)
@@ -651,6 +681,8 @@ mod tests {
             reader.value(Input::mouse_wheel()),
             ActionValue::Axis2D(Vec2::ZERO)
         );
+        assert_eq!(reader.value(gamepad_button), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
     }
 
     fn init_world<'w, 's>() -> (World, SystemState<InputReader<'w, 's>>) {
@@ -664,6 +696,7 @@ mod tests {
         world.init_resource::<AccumulatedMouseMotion>();
         world.init_resource::<AccumulatedMouseScroll>();
         world.init_resource::<ResetInput>();
+        world.init_resource::<ActionSources>();
 
         let state = SystemState::<InputReader>::new(&mut world);
 

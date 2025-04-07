@@ -8,7 +8,6 @@ allow = [
   "ISC",
   "MIT-0",
   "MIT",
-  "NCSA",
   "Unicode-3.0",
   "Zlib",
 ]

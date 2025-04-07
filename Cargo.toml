@@ -14,37 +14,18 @@ include = ["/src", "/LICENSE*"]
 [dependencies]
 bevy_enhanced_input_macros = { path = "macros", version = "0.8.0" }
 bevy = { version = "0.15", default-features = false, features = ["serialize"] }
-bevy_egui = { version = "0.33", default-features = false, optional = true }
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 bitflags = { version = "2.6", features = ["serde"] }
 
 [dev-dependencies]
 bevy = { version = "0.15", default-features = false, features = [
   "bevy_gilrs",
+  "bevy_ui",
   "bevy_gizmos",
   "bevy_window",
-  "default_font",
   "x11",
 ] }
 ron = "0.9"
-
-[features]
-default = ["ui_priority"]
-
-# Prioritizes 'bevy_ui' actions when processing inputs.
-ui_priority = ['bevy/bevy_ui']
-
-# Prioritizes 'egui' over actions when processing inputs.
-egui_priority = ['dep:bevy_egui']
-
-[[example]]
-name = "ui_priority"
-required-features = [
-  "ui_priority",
-  "egui_priority",
-  "bevy_egui/render",
-  "bevy_egui/default_fonts",
-]
 
 [lints.clippy]
 type_complexity = "allow"
