@@ -18,7 +18,7 @@ use crate::{
     trigger_tracker::TriggerTracker,
 };
 
-/// Bindings assoticated with an [`InputAction`] marker.
+/// Bindings associated with an [`InputAction`] marker.
 ///
 /// Stored inside [`Actions`](crate::actions::Actions).
 ///
