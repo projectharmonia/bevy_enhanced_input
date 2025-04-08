@@ -21,7 +21,7 @@ app.add_plugins((MinimalPlugins, EnhancedInputPlugin));
 
 ## Defining actions
 
-Actions represented by unit structs that implement the [`InputAction`] trait, which also requires
+Actions are represented by unit structs that implement the [`InputAction`] trait, which also requires
 [`Debug`] which we use for logging. You can use the provided derive macro for this.
 
 ```
