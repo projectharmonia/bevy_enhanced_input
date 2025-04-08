@@ -17,53 +17,10 @@ use crate::{
 
 /// An extension trait for [`App`] to assign input to components.
 pub trait InputContextAppExt {
-    /// Registers `T` an input context marker.
+    /// Registers type `C` as an input context.
     ///
-    /// Necessary to update [`Actions<T>`] components.
-    ///
-    /// Component removal deactivates [`InputContext`] for the entity and trigger transitions for all actions
-    /// to [`ActionState::None`](super::ActionState::None).
-    ///
-    /// Component re-insertion re-triggers [`Binding`]. Use it if you want to reload bindings.
-    /// You can also rebuild all component bindings by triggering [`RebuildBindings`].
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use bevy::prelude::*;
-    /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut app = App::new();
-    /// # app.add_plugins(EnhancedInputPlugin);
-    /// app.add_input_context::<Player>()
-    ///     .add_observer(player_binding);
-    ///
-    /// fn player_binding(
-    ///     trigger: Trigger<Binding<Player>>,
-    ///     settings: Res<AppSettings>,
-    ///     mut players: Query<&mut Actions<Player>>,
-    /// ) {
-    ///     let mut actions = players.get_mut(trigger.entity()).unwrap();
-    ///     actions
-    ///         .bind::<Jump>()
-    ///         .to((settings.keyboard.jump, GamepadButton::South));
-    /// }
-    ///
-    /// #[derive(InputContext)]
-    /// struct Player;
-    ///
-    /// #[derive(Debug, InputAction)]
-    /// #[input_action(output = bool)]
-    /// struct Jump;
-    ///
-    /// #[derive(Resource)]
-    /// struct AppSettings {
-    ///     keyboard: KeyboardSettings,
-    /// }
-    ///
-    /// struct KeyboardSettings {
-    ///     jump: KeyCode,
-    /// }
-    /// ```
+    /// Any struct `C` that implements [`InputContext`] must be registered,
+    /// otherwise [`Actions<C>`] won't be evaluated.
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self;
 }
 
@@ -73,6 +30,11 @@ impl InputContextAppExt for App {
 
         let id = self.world_mut().register_component::<Actions<C>>();
         let mut registry = self.world_mut().resource_mut::<ActionsRegistry>();
+        debug_assert!(
+            !registry.contains(&id),
+            "context `{}` can't be added more then once",
+            any::type_name::<C>()
+        );
         registry.push(id);
 
         self.add_observer(add_context::<C>)
@@ -147,7 +109,7 @@ impl ActionInstances {
 
     fn add<C: InputContext>(&mut self, commands: &mut Commands, entity: Entity) {
         debug!(
-            "adding input context for `{}` to `{entity}`",
+            "adding input context `{}` to `{entity}`",
             any::type_name::<C>(),
         );
 
@@ -177,7 +139,7 @@ impl ActionInstances {
         entity: Entity,
     ) {
         debug!(
-            "removing input context for `{}` from `{}`",
+            "removing input context `{}` from `{}`",
             any::type_name::<C>(),
             entity
         );
@@ -247,7 +209,7 @@ impl ActionsInstance {
         actions: &mut Query<FilteredEntityMut>,
     ) {
         trace!(
-            "updating bindings for `{}` on `{}`",
+            "updating input context `{}` on `{}`",
             any::type_name::<C>(),
             self.entity
         );
@@ -269,7 +231,7 @@ impl ActionsInstance {
         actions: &mut Query<FilteredEntityMut>,
     ) {
         debug!(
-            "resetting bindings for `{}` on `{}`",
+            "resetting input context `{}` on `{}`",
             any::type_name::<C>(),
             self.entity
         );
@@ -322,7 +284,7 @@ impl<C: InputContext> Binding<C> {
 ///
 /// Use it when you change your application settings and want to reload the mappings.
 ///
-/// This will also reset all actions to [`ActionState::None`](super::ActionState::None)
+/// This will also reset all actions to [`ActionState::None`](crate::ActionState::None)
 /// and trigger the corresponding events.
 #[derive(Event)]
 pub struct RebuildBindings;

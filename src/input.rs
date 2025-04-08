@@ -7,10 +7,9 @@ use bevy::prelude::*;
 use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
-/// Inputs that can be associated with an
-/// [`InputAction`](super::input_action::InputAction).
+/// Wraps input from any source.
 ///
-/// [Input modifiers](super::input_modifier) can change the captured dimension.
+/// [Input modifiers](crate::input_modifier) can change the captured dimension.
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
 /// [`ActionValue::convert`](crate::action_value::ActionValue::convert).
@@ -245,16 +244,6 @@ pub enum GamepadDevice {
     Any,
     /// Matches input from specific gamepad.
     Single(Entity),
-}
-
-impl GamepadDevice {
-    /// Returns `true` if this device matches the specified gamepad entity.
-    pub fn matches(self, gamepad_entity: Entity) -> bool {
-        match self {
-            GamepadDevice::Any => true,
-            GamepadDevice::Single(entity) => entity == gamepad_entity,
-        }
-    }
 }
 
 impl From<Entity> for GamepadDevice {

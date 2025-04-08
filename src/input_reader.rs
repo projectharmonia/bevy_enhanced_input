@@ -52,7 +52,7 @@ impl InputReader<'_, '_> {
         *self.gamepad_device = gamepad.into();
     }
 
-    /// Returns the [`ActionValue`] for the given [`Input`] if exists.
+    /// Returns the [`ActionValue`] for the given [`Input`].
     ///
     /// See also [`Self::consume`] and [`Self::set_gamepad`].
     pub(crate) fn value(&self, input: impl Into<Input>) -> ActionValue {

@@ -18,10 +18,23 @@ use crate::{
     trigger_tracker::TriggerTracker,
 };
 
-/// Bindings of [`InputAction`] for [`Actions`](crate::actions::Actions).
+/// Bindings associated with an [`InputAction`] marker.
 ///
-/// These bindings are stored separately from [`ActionMap`] to allow a currently
-/// evaluating action to access the state of other actions.
+/// Stored inside [`Actions`](crate::actions::Actions).
+///
+/// Bindings are stored separately from [`ActionMap`] to allow reading other actions' data during evaluation.
+///
+/// Action bindings evaluation follows these steps:
+///
+/// 1. Iterate over each [`ActionValue`] from the associated [`Input`]s:
+///    1.1. Apply input-level [`InputModifier`]s.
+///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
+/// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
+///    Combined value will be converted into [`InputAction::Output`] using [`ActionValue::convert`].
+/// 3. Apply action level [`InputModifier`]s.
+/// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
+/// 5. Set the final [`ActionState`] based on the results.
+///    Final value will be converted into [`InputAction::Output`] using [`ActionValue::convert`].
 pub struct ActionBinding {
     type_id: TypeId,
     action_name: &'static str,
@@ -65,7 +78,7 @@ impl ActionBinding {
     /// Adds action-level modifiers.
     ///
     /// For input-level modifiers see
-    /// [`BindingBuilder::with_modifiers`](super::input_binding::BindingBuilder::with_modifiers).
+    /// [`BindingBuilder::with_modifiers`](crate::input_binding::BindingBuilder::with_modifiers).
     ///
     /// # Examples
     ///
@@ -112,7 +125,7 @@ impl ActionBinding {
     /// Adds action-level conditions.
     ///
     /// For input-level conditions see
-    /// [`BindingBuilder::with_conditions`](super::input_binding::BindingBuilder::with_conditions).
+    /// [`BindingBuilder::with_conditions`](crate::input_binding::BindingBuilder::with_conditions).
     ///
     /// # Examples
     ///
@@ -158,9 +171,6 @@ impl ActionBinding {
 
     /// Adds input mapping.
     ///
-    /// The action can be triggered by any input mapping. If multiple input mappings
-    /// return [`ActionState`], the behavior is determined by [`InputAction::ACCUMULATION`].
-    ///
     /// Thanks to traits, this function can be called with multiple types:
     ///
     /// 1. Raw input types.
@@ -168,6 +178,9 @@ impl ActionBinding {
     /// 3. [`InputBinding`] which wraps [`Input`] and can store input modifiers or conditions.
     /// 4. [`IntoBindings`] which wraps [`InputBinding`] and can store multiple [`InputBinding`]s.
     ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
+    ///
+    /// All assigned inputs will be evaluated separately (equivalent to "any of").
+    /// If you're looking for a chord, see the [`Chord`](crate::input_condition::chord::Chord) condition.
     ///
     /// # Examples
     ///

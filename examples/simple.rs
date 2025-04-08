@@ -35,17 +35,17 @@ impl Plugin for GamePlugin {
 fn spawn(mut commands: Commands) {
     commands.spawn(Camera2d);
 
-    // Spawn an entity with a component that implements `InputContext`.
+    // Spawn an entity with `Actions` component.
     commands.spawn((PlayerBox, Actions::<Player>::default()));
 }
 
-// To define mappings for actions, write an observer for `Binding`.
+// To define bindings for actions, write an observer for `Binding`.
 // It's also possible to create bindings before the insertion,
 // but this way you can conveniently reload bindings when settings change.
 fn binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
     let mut actions = players.get_mut(trigger.entity()).unwrap();
 
-    // Mappings like WASD or sticks are very common,
+    // Bindings like WASD or sticks are very common,
     // so we provide built-ins to assign all keys/axes at once.
     // We don't assign any conditions and in this case the action will
     // be triggered with any non-zero value.
@@ -76,7 +76,7 @@ fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>)
     transform.rotate_z(FRAC_PI_4);
 }
 
-// Since it's possible to have multiple input contexts, you need
+// Since it's possible to have multiple `Actions` components, you need
 // to define a marker and derive `InputContext` trait.
 #[derive(InputContext)]
 struct Player;

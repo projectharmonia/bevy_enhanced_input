@@ -7,7 +7,7 @@ use crate::{
     input_modifier::{InputModifier, IntoModifiers},
 };
 
-/// Associated input for [`ActionBinding`](super::action_binding::ActionBinding).
+/// Associated input for [`ActionBinding`](crate::action_binding::ActionBinding).
 #[derive(Debug)]
 pub struct InputBinding {
     pub input: Input,
@@ -16,10 +16,10 @@ pub struct InputBinding {
 
     /// Whether the input output a non-zero value.
     ///
-    /// Needed to prevent newly created contexts from reacting to currently
-    /// held inputs until they are released.
+    /// Prevents newly created contexts from reacting to currently held inputs
+    /// until they’re released.
     ///
-    /// Used only if [`ActionBinding`](super::action_binding::ActionBinding::require_reset) is set.
+    /// Used only if [`ActionBinding`](crate::action_binding::ActionBinding::require_reset) is set.
     pub(crate) first_activation: bool,
 }
 
@@ -46,7 +46,7 @@ pub trait BindingBuilder {
     /// Adds input-level modifiers.
     ///
     /// For action-level conditions see
-    /// [`ActionBinding::with_modifiers`](super::action_binding::ActionBinding::with_modifiers).
+    /// [`ActionBinding::with_modifiers`](crate::action_binding::ActionBinding::with_modifiers).
     ///
     /// # Examples
     ///
@@ -87,7 +87,7 @@ pub trait BindingBuilder {
     /// You can also apply modifiers to multiple inputs using [`IntoBindings::with_modifiers_each`]
     ///
     /// For action-level conditions see
-    /// [`ActionBinding::with_conditions`](super::action_binding::ActionBinding::with_conditions).
+    /// [`ActionBinding::with_conditions`](crate::action_binding::ActionBinding::with_conditions).
     ///
     /// # Examples
     ///
@@ -139,10 +139,10 @@ impl<T: Into<InputBinding>> BindingBuilder for T {
 }
 
 /// Conversion into iterator of bindings that could be passed into
-/// [`ActionBinding::to`](super::action_binding::ActionBinding::to).
+/// [`ActionBinding::to`](crate::action_binding::ActionBinding::to).
 ///
 /// Can be manually implemented to provide custom modifiers or conditions.
-/// See [`preset`](super::preset) for examples.
+/// See [`preset`](crate::preset) for examples.
 pub trait IntoBindings {
     /// Returns an iterator over bindings.
     fn into_bindings(self) -> impl Iterator<Item = InputBinding>;
@@ -151,7 +151,7 @@ pub trait IntoBindings {
     ///
     /// <div class="warning">
     ///
-    /// Avoid using this with modifiers like [`DeadZone`](super::input_modifier::dead_zone::DeadZone),
+    /// Avoid using this with modifiers like [`DeadZone`](crate::input_modifier::dead_zone::DeadZone),
     /// as this method applies the modifier to each input **individually** rather than to all bindings.
     ///
     /// </div>

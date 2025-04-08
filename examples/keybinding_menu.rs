@@ -388,7 +388,7 @@ fn apply(
             // Utilize reflection to write by field name.
             let field_value = settings
                 .path_mut::<Vec<Input>>(field.0)
-                .expect("fields with mappings should be stored as Vec");
+                .expect("fields with bindings should be stored as Vec");
             field_value.push(input);
         }
     }
@@ -442,7 +442,7 @@ fn update_button_background(
 )]
 struct SettingsButton;
 
-/// Stores information about button mapping.
+/// Stores information about button binding.
 #[derive(Component)]
 #[require(SettingsButton)]
 struct InputButton {

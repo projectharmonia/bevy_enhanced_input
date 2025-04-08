@@ -1,4 +1,4 @@
-//! One context applied on top of another and overrides some of the mappings.
+//! One context applied on top of another and overrides some of the bindings.
 
 mod player_box;
 

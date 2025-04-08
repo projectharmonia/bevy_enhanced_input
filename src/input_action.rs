@@ -6,34 +6,7 @@ use crate::action_value::{ActionValue, ActionValueDim};
 
 /// Marker for a gameplay-related action.
 ///
-/// Needs to be bind inside observer for [`Binding`](super::action_instances::Binding).
-///
-/// Each binded action will have [`ActionState`](super::action_map::ActionState).
-/// When it updates during [`Actions`](super::actions::Actions)
-/// evaluation, [`events`](super::events) are triggered.
-///
-/// # Examples
-///
-/// Use observers to react on them:
-///
-/// ```
-/// use bevy::prelude::*;
-/// use bevy_enhanced_input::prelude::*;
-///
-/// fn move_character(trigger: Trigger<Fired<Move>>, mut transforms: Query<&mut Transform>) {
-///    let mut transform = transforms.get_mut(trigger.entity()).unwrap();
-///
-///    // Since `Move` has `output = Vec2`, the value is `Vec2`.
-///    // The value of the Z axis will be zero.
-///    transform.translation += trigger.value.extend(0.0);
-/// }
-///
-/// #[derive(Debug, InputAction)]
-/// #[input_action(output = Vec2)]
-/// struct Move;
-/// ```
-///
-/// You can also obtain the state directly from [`Actions`](super::actions::Actions) component.
+/// Needs to be bound to actions using [`Actions::bind`](crate::actions::Actions::bind).
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:
@@ -55,6 +28,8 @@ use crate::action_value::{ActionValue, ActionValueDim};
 /// #[input_action(output = Vec2, accumulation = Cumulative, consume_input = false)]
 /// struct Move;
 /// ```
+///
+/// All parameters match corresponding data in the trait.
 pub trait InputAction: Debug + Send + Sync + 'static {
     /// What type of value this action will output.
     ///
@@ -62,17 +37,17 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// - Use [`f32`] for single-axis actions (e.g., `Zoom`).
     /// - For multi-axis actions, like `Move`, use [`Vec2`] or [`Vec3`].
     ///
-    /// The type here will determine the type of the `value` field on events
-    /// e.g. [`Fired::value`](super::events::Fired::value),
-    /// [`Canceled::value`](super::events::Canceled::value).
+    /// This type will also be used for `value` field on events
+    /// e.g. [`Fired::value`](crate::events::Fired::value),
+    /// [`Canceled::value`](crate::events::Canceled::value).
     type Output: ActionOutput;
 
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.
     ///
-    /// Inputs are consumed only if the action state is not equal to
-    /// [`ActionState::None`](super::action_map::ActionState::None).
-    /// For details, see [`Actions`](super::actions::Actions).
+    /// Inputs are consumed when the action state is not equal to
+    /// [`ActionState::None`](crate::action_map::ActionState::None).
+    /// For details, see [`Actions`](crate::actions::Actions).
     ///
     /// Consuming is global and affect actions in all contexts.
     const CONSUME_INPUT: bool = true;
@@ -147,8 +122,8 @@ impl ActionOutput for Vec3 {
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
-/// same most significant [`ActionState`](super::action_map::ActionState)
-/// (excluding [`ActionState::None`](super::action_map::ActionState::None)).
+/// same most significant [`ActionState`](crate::action_map::ActionState)
+/// (excluding [`ActionState::None`](crate::action_map::ActionState::None)).
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.
