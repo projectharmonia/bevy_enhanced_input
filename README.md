@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/crates/l/bevy_enhanced_input)](#license)
 [![codecov](https://codecov.io/gh/projectharmonia/bevy_enhanced_input/graph/badge.svg?token=wirFEuKmMz)](https://codecov.io/gh/projectharmonia/bevy_enhanced_input)
 
-Dynamic and contextual input mappings for Bevy, inspired by [Unreal Engine Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine).
+Input manager for [Bevy](https://bevyengine.org), inspired by [Unreal Engine Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine).
 
 ## Features
 

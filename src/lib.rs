@@ -1,5 +1,6 @@
 /*!
-Input manager inspired by [Unreal Engine Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine) for Bevy.
+Input manager for [Bevy](https://bevyengine.org), inspired by
+[Unreal Engine Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine).
 
 # Quick start
 
