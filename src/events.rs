@@ -10,7 +10,7 @@ bitflags! {
     ///
     /// Stored inside [`Action`](crate::action_map::Action).
     ///
-    /// On transition events will be triggered with dedicated types that correspond to bitflags.
+    /// On transition, events will be triggered with dedicated types that correspond to bitflags.
     ///
     /// Table of state transitions:
     ///

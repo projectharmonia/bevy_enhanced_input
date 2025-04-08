@@ -15,12 +15,12 @@ use crate::{
     input_reader::{InputReader, ResetInput},
 };
 
-/// Component that stores a actions with their bindings for specific [`InputContext`].
+/// Component that stores actions with their bindings for a specific [`InputContext`].
 ///
 /// Bindings represented by [`ActionBinding`] and can be added to specific action using [`Self::bind`].
 /// Data for each bound action is stored inside [`ActionMap`].
 ///
-/// Until this component exists on the entity, actions will be evaluated and trigger [`events`](crate::events).
+/// Only when this component exists on the entity will its actions be evaluated and trigger [`events`](crate::events).
 #[derive(Component)]
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
@@ -190,7 +190,7 @@ pub trait InputContext: Send + Sync + 'static {
     ///
     /// Used to control how contexts are layered since some [`InputAction`]s may consume inputs.
     ///
-    /// Ordering is global. Contexts with a higher priority evaluated first.
+    /// Ordering is global. Contexts with a higher priority are evaluated first.
     const PRIORITY: usize = 0;
 }
 

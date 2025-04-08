@@ -45,7 +45,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
     /// bound to it or allow them to pass through to affect other actions.
     ///
-    /// Inputs are consumed only if the action state is not equal to
+    /// Inputs are consumed when the action state is not equal to
     /// [`ActionState::None`](crate::action_map::ActionState::None).
     /// For details, see [`Actions`](crate::actions::Actions).
     ///

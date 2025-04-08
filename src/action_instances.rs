@@ -19,7 +19,7 @@ use crate::{
 pub trait InputContextAppExt {
     /// Registers type `C` as an input context.
     ///
-    /// All structs that implement [`InputContext`] must be registered,
+    /// Any struct `C` that implements [`InputContext`] must be registered,
     /// otherwise [`Actions<C>`] won't be evaluated.
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self;
 }

@@ -62,7 +62,7 @@ No required parameters needed. See the [`InputContext`] documentation for all pa
 
 ## Binding actions
 
-While input contexts are defined statically at compile time, mappings must be assigned at runtime. They're stored inside the
+While input contexts are defined statically at compile time, bindings must be assigned at runtime. They're stored inside the
 [`Actions<C>`] component, where `C` is an input context. Contexts becomes active only when its component exists on an
 entity. You can attach multiple [`Actions<C>`] components to a single entity.
 
@@ -153,7 +153,7 @@ This allows to define flexible conditions, such as "hold for 1 second".
 
 Input conditions are structs that implement [`InputCondition`]. Similar to modifiers, you can use
 [`BindingBuilder::with_conditions`] for per-input conditions or [`ActionBinding::with_conditions`]
-to define a condition that applies to all action's inputs. Conditions evaluated after input modifiers.
+to define a condition that applies to all action's inputs. Conditions are evaluated after input modifiers.
 For details about how multiple conditions are merged together, see the [`ActionBinding`] documentation.
 
 ```
@@ -243,7 +243,7 @@ documentation on specific event type for more information.
 # let mut app = App::new();
 app.add_observer(apply_movement);
 
-/// Apply movemenet when `Move` action considered fired.
+/// Apply movement when `Move` action considered fired.
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
     // Read transform from the context entity.
     let mut transform = players.get_mut(trigger.entity()).unwrap();
