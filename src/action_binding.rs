@@ -23,7 +23,6 @@ use crate::{
 /// Stored inside [`Actions`](crate::actions::Actions).
 ///
 /// Bindings are stored separately from [`ActionMap`] to allow reading other actions' data during evaluation.
-/// The current action's data updates at evaluation's end.
 ///
 /// Action bindings evaluation follows these steps:
 ///
@@ -31,11 +30,11 @@ use crate::{
 ///    1.1. Apply input-level [`InputModifier`]s.
 ///    1.2. Evaluate input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
 /// 2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine based on [`InputAction::ACCUMULATION`].
-///    Combined value be converted into [`ActionOutput::DIM`] using [`ActionValue::convert`].
+///    Combined value will be converted into [`InputAction::Output`] using [`ActionValue::convert`].
 /// 3. Apply action level [`InputModifier`]s.
 /// 4. Evaluate action level [`InputCondition`]s, combining their results according to [`InputCondition::kind`].
 /// 5. Set the final [`ActionState`] based on the results.
-///    Final value be converted into [`InputAction::Output`] using [`ActionValue::convert`].
+///    Final value will be converted into [`InputAction::Output`] using [`ActionValue::convert`].
 pub struct ActionBinding {
     type_id: TypeId,
     action_name: &'static str,
@@ -180,7 +179,8 @@ impl ActionBinding {
     /// 4. [`IntoBindings`] which wraps [`InputBinding`] and can store multiple [`InputBinding`]s.
     ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
     ///
-    /// All assigned inputs will be treated as "any of".
+    /// All assigned inputs will be evaluated separately (equivalent to "any of").
+    /// If you're looking for a chord, see the [`Chord`](crate::input_condition::chord::Chord) condition.
     ///
     /// # Examples
     ///

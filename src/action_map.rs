@@ -11,7 +11,7 @@ use crate::{
     input_action::{ActionOutput, InputAction},
 };
 
-/// Maps [`InputAction`] markers to their data.
+/// Maps markers that implement [`InputAction`] to their data (state, value, etc.).
 ///
 /// Stored inside [`Actions`](crate::actions::Actions).
 ///

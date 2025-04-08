@@ -21,8 +21,12 @@ app.add_plugins((MinimalPlugins, EnhancedInputPlugin));
 
 ## Defining actions
 
-Actions are represented by unit structs that implement the [`InputAction`] trait, which also requires
-[`Debug`] which we use for logging. You can use the provided derive macro for this.
+Actions represent something that the user can do, like "Crouch" or "Fire Weapon". They are
+represented by unit structs that implement the [`InputAction`] trait. Each action has an
+associated [`InputAction::Output`] type. It’s the value the action outputs when you assign
+bindings to it. More on that later.
+
+To implement the trait, you can use the provided derive macro.
 
 ```
 # use bevy::prelude::*;
@@ -36,13 +40,15 @@ struct Jump;
 struct Move;
 ```
 
-The `output` defines the [`InputAction::Output`] type and is the only required parameter. See the [`InputAction`]
-documentation for all parameters.
+We also require [`Debug`], which we use for logging. The `output` is the only required parameter.
+you can provide additional parameters, see the [`InputAction`] documentation.
 
 ## Defining input contexts
 
-Actions are bound to input contexts. Depending on your type of game, you may have a single global context or multiple
-contexts for different gameplay states. Consider contexts as sets of gameplay actions.
+Input contexts are a collection of actions that represents a certain context that the player can be in,
+like "In car" or "On foot". They describe the rules for what triggers a given action. Contexts can be
+dynamically added, removed, or prioritized for each user. Depending on your type of game, you may have
+a single global context or multiple contexts for different gameplay states.
 
 Input contexts are represented by unit structs that implement the [`InputContext`] trait. You can use the provided derive
 macro for this. Unlike actions, all contexts need to be registered in the app using [`InputContextAppExt::add_input_context`].
@@ -58,13 +64,14 @@ app.add_input_context::<OnFoot>();
 struct OnFoot;
 ```
 
-No required parameters needed. See the [`InputContext`] documentation for all parameters.
+You can provide additional parameters, see the [`InputContext`] documentation.
 
 ## Binding actions
 
-While input contexts are defined statically at compile time, bindings must be assigned at runtime. They're stored inside the
-[`Actions<C>`] component, where `C` is an input context. Contexts becomes active only when its component exists on an
-entity. You can attach multiple [`Actions<C>`] components to a single entity.
+Actions must be bound to inputs such as gamepad or keyboard. While input contexts are defined statically at compile
+time, bindings must be assigned at runtime. They're stored inside the [`Actions<C>`] component, where `C` is an input
+context. Contexts becomes active only when its component exists on an entity. You can attach multiple [`Actions<C>`]
+components to a single entity.
 
 To bind actions, use [`Actions::bind`] followed by one or more [`ActionBinding::to`] calls to define inputs. You can pass any
 input type that implements [`IntoBindings`], including tuples for multiple inputs (similar to [`App::add_systems`] in Bevy).
@@ -85,17 +92,17 @@ actions.bind::<Jump>().to((KeyCode::Space, GamepadButton::South));
 
 ### Input modifiers
 
-Input is read as the [`ActionValue`] enum, with the variant depending on the input source. See the [`Input`] documentation for
-how each source is captured.
+Actions know nothing about input sources and simply convert raw values into the [`InputAction::Output`]. Input is read as the
+[`ActionValue`] enum, with the variant depending on the input source. For example, key inputs are captured as [`bool`], but
+if your action’s output type is [`Vec2`], the value will be assigned to the X axis. See the [`Input`] documentation for how each
+source is captured and [`ActionValue::convert`] for details about how values are converted.
 
-Actions knows nothing about input sources and simply convert values using [`ActionValue::convert`] into the dimension of the
-bound action's output type. However, you might want to apply preprocessing first. For example, invert values, apply sensitivity,
-or remap axes. This is where [input modifiers](crate::input_modifier) come in.
-
-These are structs that implement the [`InputModifier`] trait. You can attach modifiers to inputs using [`BindingBuilder::with_modifiers`].
-Thanks to traits, this works with any input type. You can also attach modifiers globally via [`ActionBinding::with_modifiers`],
-which applies to all inputs. For details about how multiple modifiers are merged together, see the [`ActionBinding`] documentation.
-Both methods also support tuple syntax for assigning multiple modifiers at once.
+However, you might want to apply preprocessing first. For example, invert values, apply sensitivity, or remap axes. This is
+where [input modifiers](crate::input_modifier) come in. They represented as structs that implement the [`InputModifier`] trait.
+You can attach modifiers to inputs using [`BindingBuilder::with_modifiers`]. Thanks to traits, this works with any input type.
+You can also attach modifiers globally via [`ActionBinding::with_modifiers`], which applies to all inputs. For details about
+how multiple modifiers are merged together, see the [`ActionBinding`] documentation. Both methods also support tuple syntax
+for assigning multiple modifiers at once.
 
 ```
 # use bevy::prelude::*;

@@ -20,7 +20,7 @@ use crate::{
 /// Bindings represented by [`ActionBinding`] and can be added to specific action using [`Self::bind`].
 /// Data for each bound action is stored inside [`ActionMap`].
 ///
-/// Only when this component exists on the entity will its actions be evaluated and trigger [`events`](crate::events).
+/// Actions are evaluated and trigger [`events`](crate::events) only when this component exists on an entity.
 #[derive(Component)]
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
