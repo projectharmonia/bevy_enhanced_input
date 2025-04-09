@@ -44,7 +44,7 @@ fn spawn(mut commands: Commands) {
 }
 
 fn regular_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
@@ -58,7 +58,7 @@ fn regular_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Ac
 }
 
 fn swimming_binding(trigger: Trigger<Binding<Swimming>>, mut players: Query<&mut Actions<Player>>) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
     // `Player` has lower priority, so `Dive` and `ExitWater` consume inputs first,
     // preventing `Rotate` and `EnterWater` from being triggered.
     // The consuming behavior can be configured in the `InputAction` trait.
@@ -67,12 +67,12 @@ fn swimming_binding(trigger: Trigger<Binding<Swimming>>, mut players: Query<&mut
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     transform.translation += trigger.value.extend(0.0);
 }
 
 fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     transform.rotate_z(FRAC_PI_4);
 }
 
@@ -82,21 +82,21 @@ fn enter_water(
     mut players: Query<&mut PlayerColor>,
 ) {
     // Change color for visibility.
-    let mut color = players.get_mut(trigger.entity()).unwrap();
+    let mut color = players.get_mut(trigger.target()).unwrap();
     **color = INDIGO_600.into();
 
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .insert(Actions::<Swimming>::default());
 }
 
 fn start_diving(trigger: Trigger<Started<Dive>>, mut players: Query<&mut Visibility>) {
-    let mut visibility = players.get_mut(trigger.entity()).unwrap();
+    let mut visibility = players.get_mut(trigger.target()).unwrap();
     *visibility = Visibility::Hidden;
 }
 
 fn end_diving(trigger: Trigger<Completed<Dive>>, mut players: Query<&mut Visibility>) {
-    let mut visibility = players.get_mut(trigger.entity()).unwrap();
+    let mut visibility = players.get_mut(trigger.target()).unwrap();
     *visibility = Visibility::Visible;
 }
 
@@ -105,11 +105,11 @@ fn exit_water(
     mut commands: Commands,
     mut players: Query<&mut PlayerColor>,
 ) {
-    let mut color = players.get_mut(trigger.entity()).unwrap();
+    let mut color = players.get_mut(trigger.target()).unwrap();
     **color = Default::default();
 
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .remove::<Actions<Swimming>>();
 }
 

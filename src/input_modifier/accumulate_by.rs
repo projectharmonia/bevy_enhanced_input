@@ -1,6 +1,7 @@
 use core::{any, marker::PhantomData};
 
 use bevy::prelude::*;
+use log::warn;
 
 use super::InputModifier;
 use crate::{
@@ -46,7 +47,8 @@ impl<A: InputAction> InputModifier for AccumulateBy<A> {
             }
             ActionValue::Axis3D(self.value).convert(value.dim())
         } else {
-            warn_once!(
+            // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
+            warn!(
                 "action `{}` is not present in context",
                 any::type_name::<A>()
             );

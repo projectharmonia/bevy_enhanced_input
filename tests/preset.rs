@@ -130,7 +130,7 @@ const DOWN: Vec2 = Vec2::new(0.0, -1.0);
 const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
 
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<DummyAction>().to((
         Cardinal::wasd_keys(),
         Cardinal::arrow_keys(),

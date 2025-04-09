@@ -56,7 +56,7 @@ impl InputModifier for ExponentialCurve {
 }
 
 fn apply_exp(value: f32, exp: f32) -> f32 {
-    value.abs().powf(exp).copysign(value)
+    ops::powf(value.abs(), exp).copysign(value)
 }
 
 #[cfg(test)]

@@ -21,8 +21,12 @@ fn removal() {
         .resource_mut::<ButtonInput<KeyCode>>()
         .press(DummyAction::KEY);
 
+    #[allow(
+        clippy::unused_unit,
+        reason = "https://github.com/rust-lang/rust-clippy/issues/14577"
+    )]
     app.world_mut()
-        .add_observer(|_: Trigger<Fired<DummyAction>>| {
+        .add_observer(|_: Trigger<Fired<DummyAction>>| -> () {
             panic!("action shouldn't trigger");
         });
 
@@ -84,7 +88,7 @@ fn rebuild_all() {
 }
 
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<DummyAction>().to(DummyAction::KEY);
 }
 

@@ -50,7 +50,7 @@ fn cumulative() {
 }
 
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<MaxAbs>().to(Cardinal::wasd_keys());
     actions.bind::<Cumulative>().to(Cardinal::arrow_keys());
 }

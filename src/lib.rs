@@ -129,7 +129,7 @@ actions.bind::<Move>().to((
 ```
 
 You can also attach modifiers to input tuples using [`IntoBindings::with_modifiers_each`]. It works similarly to
-[`IntoSystemConfigs::distributive_run_if`] in Bevy.
+[`IntoScheduleConfigs::distributive_run_if`] in Bevy.
 
 ### Presets
 
@@ -201,7 +201,7 @@ fn bind_actions(
     settings: Res<AppSettings>,
     mut actions: Query<&mut Actions<OnFoot>>
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Jump>()
         .to((settings.keyboard.jump, GamepadButton::South));
@@ -254,7 +254,7 @@ app.add_observer(apply_movement);
 /// Apply movement when `Move` action considered fired.
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
     // Read transform from the context entity.
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
 
     // We defined the output of `Move` as `Vec2`,
     // but since translation expects `Vec3`, we extend it to 3 axes.
@@ -307,12 +307,10 @@ RUST_LOG=bevy_enhanced_input=debug cargo run
 
 The exact method depends on the OS shell.
 
-Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it permanent.
+Alternatively you can configure `LogPlugin` to make it permanent.
 */
 
 #![no_std]
-
-extern crate std;
 
 extern crate alloc;
 

@@ -148,7 +148,7 @@ fn consume_only_binding(
     trigger: Trigger<Binding<ConsumeOnly>>,
     mut actions: Query<&mut Actions<ConsumeOnly>>,
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Consume>().to(KEY);
 }
 
@@ -156,7 +156,7 @@ fn passthrough_only_binding(
     trigger: Trigger<Binding<PassthroughOnly>>,
     mut actions: Query<&mut Actions<PassthroughOnly>>,
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Passthrough>().to(KEY);
 }
 
@@ -164,7 +164,7 @@ fn consume_then_passthrough_binding(
     trigger: Trigger<Binding<ConsumeThenPassthrough>>,
     mut actions: Query<&mut Actions<ConsumeThenPassthrough>>,
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Consume>().to(KEY);
     actions.bind::<Passthrough>().to(KEY);
 }
@@ -173,7 +173,7 @@ fn passthrough_then_consume_binding(
     trigger: Trigger<Binding<PassthroughThenConsume>>,
     mut actions: Query<&mut Actions<PassthroughThenConsume>>,
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Passthrough>().to(KEY);
     actions.bind::<Consume>().to(KEY);
 }

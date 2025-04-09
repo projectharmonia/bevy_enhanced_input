@@ -3,7 +3,8 @@ use core::{
     fmt::Debug,
 };
 
-use bevy::{prelude::*, utils::HashMap};
+use bevy::{platform_support::collections::HashMap, prelude::*};
+use log::debug;
 
 use crate::{
     action_value::ActionValue,
