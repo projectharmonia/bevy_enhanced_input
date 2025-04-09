@@ -1,6 +1,6 @@
 [package]
 name = "bevy_enhanced_input"
-version = "0.9.0"
+version = "0.10.0-rc.3"
 authors = ["Hennadii Chernyshchyk <genaloner@gmail.com>"]
 edition = "2024"
 description = "Input manager for Bevy, inspired by Unreal Engine Enhanced Input"
@@ -12,17 +12,24 @@ license = "MIT OR Apache-2.0"
 include = ["/src", "/LICENSE*"]
 
 [dependencies]
-bevy_enhanced_input_macros = { path = "macros", version = "0.9.0" }
-bevy = { version = "0.15", default-features = false, features = ["serialize"] }
+bevy_enhanced_input_macros = { path = "macros", version = "0.10.0-rc.3" }
+bevy = { version = "0.16.0-rc.3", default-features = false, features = [
+  "serialize",
+] }
+log = "0.4" # Directly depend on `log` like other `no_std` Bevy crates, since `bevy_log` currently requires `std`.
+variadics_please = "1.0"
 serde = { version = "1.0", default-features = false, features = ["derive"] }
 bitflags = { version = "2.6", features = ["serde"] }
 
 [dev-dependencies]
-bevy = { version = "0.15", default-features = false, features = [
+bevy = { version = "0.16.0-rc.3", default-features = false, features = [
   "bevy_gilrs",
-  "bevy_ui",
   "bevy_gizmos",
+  "bevy_log",
+  "bevy_ui_picking_backend",
+  "bevy_ui",
   "bevy_window",
+  "default_font",
   "x11",
 ] }
 ron = "0.9"

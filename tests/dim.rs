@@ -126,7 +126,7 @@ fn axis3d() {
 }
 
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Bool>().to(Bool::KEY);
     actions.bind::<Axis1D>().to(Axis1D::KEY);
     actions.bind::<Axis2D>().to(Axis2D::KEY);

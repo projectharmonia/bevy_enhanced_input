@@ -43,7 +43,7 @@ fn spawn(mut commands: Commands) {
 // It's also possible to create bindings before the insertion,
 // but this way you can conveniently reload bindings when settings change.
 fn binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
 
     // Bindings like WASD or sticks are very common,
     // so we provide built-ins to assign all keys/axes at once.
@@ -66,13 +66,13 @@ fn binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Pl
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     // The value has already been preprocessed by defined modifiers.
     transform.translation += trigger.value.extend(0.0);
 }
 
 fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     transform.rotate_z(FRAC_PI_4);
 }
 

@@ -201,7 +201,7 @@ fn bind_actions(
     settings: Res<AppSettings>,
     mut actions: Query<&mut Actions<OnFoot>>
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Jump>()
         .to((settings.keyboard.jump, GamepadButton::South));
@@ -254,7 +254,7 @@ app.add_observer(apply_movement);
 /// Apply movement when `Move` action considered fired.
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
     // Read transform from the context entity.
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
 
     // We defined the output of `Move` as `Vec2`,
     // but since translation expects `Vec3`, we extend it to 3 axes.
@@ -311,8 +311,6 @@ Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it p
 */
 
 #![no_std]
-
-extern crate std;
 
 extern crate alloc;
 

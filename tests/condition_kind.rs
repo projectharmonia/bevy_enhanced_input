@@ -250,7 +250,7 @@ fn events_blocker() {
 }
 
 fn binding(trigger: Trigger<Binding<Player>>, mut actions: Query<&mut Actions<Player>>) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<ReleaseAction>()
         .to(ReleaseAction::KEY)
