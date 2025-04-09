@@ -129,7 +129,7 @@ actions.bind::<Move>().to((
 ```
 
 You can also attach modifiers to input tuples using [`IntoBindings::with_modifiers_each`]. It works similarly to
-[`IntoSystemConfigs::distributive_run_if`] in Bevy.
+[`IntoScheduleConfigs::distributive_run_if`] in Bevy.
 
 ### Presets
 
@@ -307,7 +307,7 @@ RUST_LOG=bevy_enhanced_input=debug cargo run
 
 The exact method depends on the OS shell.
 
-Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it permanent.
+Alternatively you can configure `LogPlugin` to make it permanent.
 */
 
 #![no_std]
