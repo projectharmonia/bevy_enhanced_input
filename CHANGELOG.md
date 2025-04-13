@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Axial` preset to map any axis into 2-dimensional input.
+
+### Removed
+
+- `GamepadStick`. Use `Axial::left_stick()` or `Axial::right_stick()` instead.
+
 ## [0.9.0] - 2025-04-08
 
 ### Added
