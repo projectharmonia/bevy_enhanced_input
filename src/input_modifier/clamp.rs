@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::InputModifier;
 use crate::{action_map::ActionMap, action_value::ActionValue};
 
-/// Clamps input independently along each axis between the specified min and max.
+/// Restricts input to a certain interval independently along each axis.
 ///
 /// [`ActionValue::Bool`] will be converted into [`ActionValue::Axis1D`] before clamping.
 ///
