@@ -109,18 +109,25 @@ for assigning multiple modifiers at once.
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
 # let mut actions = Actions::<OnFoot>::default();
-actions.bind::<Move>().to((
-    // Keyboard keys captured as `bool`, but the output of `Move` is defined as `Vec2`,
-    // so you need to assign keys to axes using swizzle to reorder them and negation.
-    KeyCode::KeyW.with_modifiers(SwizzleAxis::YXZ),
-    KeyCode::KeyA.with_modifiers(Negate::all()),
-    KeyCode::KeyS.with_modifiers((Negate::all(), SwizzleAxis::YXZ)),
-    KeyCode::KeyD,
-    // In Bevy sticks split by axes and captured as 1-dimensional inputs,
-    // so Y stick needs to be sweezled into Y axis.
-    GamepadAxis::RightStickX,
-    GamepadAxis::RightStickY.with_modifiers(SwizzleAxis::YXZ),
-));
+actions
+    .bind::<Move>()
+    .to((
+        // Keyboard keys captured as `bool`, but the output of `Move` is defined as `Vec2`,
+        // so you need to assign keys to axes using swizzle to reorder them and negation.
+        KeyCode::KeyW.with_modifiers(SwizzleAxis::YXZ),
+        KeyCode::KeyA.with_modifiers(Negate::all()),
+        KeyCode::KeyS.with_modifiers((Negate::all(), SwizzleAxis::YXZ)),
+        KeyCode::KeyD,
+        // In Bevy sticks split by axes and captured as 1-dimensional inputs,
+        // so Y stick needs to be sweezled into Y axis.
+        GamepadAxis::RightStickX,
+        GamepadAxis::RightStickY.with_modifiers(SwizzleAxis::YXZ),
+    ))
+    .with_modifiers((
+        // Modifiers applied at the action level.
+        DeadZone::default(),    // Normalizes movement.
+        SmoothNudge::default(), // Smoothes movement.
+    ));
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(Debug, InputAction)]
@@ -145,7 +152,10 @@ For example, you can use [`Cardinal`] and [`GamepadStick`] presets to simplify t
 # let mut actions = Actions::<OnFoot>::default();
 // We provide a `with_wasd` method for quick prototyping, but you can
 // construct this struct with any input.
-actions.bind::<Move>().to((Cardinal::wasd_keys(), GamepadStick::Right));
+actions
+    .bind::<Move>()
+    .to((Cardinal::wasd_keys(), GamepadStick::Right))
+    .with_modifiers((DeadZone::default(), SmoothNudge::default()));
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(Debug, InputAction)]
