@@ -21,12 +21,8 @@ fn removal() {
         .resource_mut::<ButtonInput<KeyCode>>()
         .press(DummyAction::KEY);
 
-    #[allow(
-        clippy::unused_unit,
-        reason = "https://github.com/rust-lang/rust-clippy/issues/14577"
-    )]
     app.world_mut()
-        .add_observer(|_: Trigger<Fired<DummyAction>>| -> () {
+        .add_observer(|_: Trigger<Fired<DummyAction>>| {
             panic!("action shouldn't trigger");
         });
 
