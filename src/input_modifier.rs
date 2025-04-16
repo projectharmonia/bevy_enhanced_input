@@ -1,4 +1,5 @@
 pub mod accumulate_by;
+pub mod clamp;
 pub mod dead_zone;
 pub mod delta_scale;
 pub mod exponential_curve;

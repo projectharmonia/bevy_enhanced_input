@@ -351,8 +351,8 @@ pub mod prelude {
             hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,
         },
         input_modifier::{
-            InputModifier, accumulate_by::*, dead_zone::*, delta_scale::*, exponential_curve::*,
-            negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
+            InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
+            exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
         },
         input_reader::ActionSources,
         preset::{Bidirectional, Cardinal, GamepadStick},
