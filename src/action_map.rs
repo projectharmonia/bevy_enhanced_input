@@ -3,8 +3,9 @@ use core::{
     fmt::Debug,
 };
 
-use bevy::{platform_support::collections::HashMap, prelude::*};
+use bevy::{platform::collections::HashMap, prelude::*};
 use log::debug;
+use serde::{Deserialize, Serialize};
 
 use crate::{
     action_value::ActionValue,
@@ -209,7 +210,7 @@ fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity,
 /// States are ordered by their significance.
 ///
 /// See also [`ActionEvents`] and [`ActionBinding`]().
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum ActionState {
     /// Condition is not triggered.
     #[default]

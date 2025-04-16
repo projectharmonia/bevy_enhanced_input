@@ -4,9 +4,7 @@ use core::{
     marker::PhantomData,
 };
 
-use bevy::{
-    ecs::schedule::ScheduleLabel, platform_support::collections::hash_map::Entry, prelude::*,
-};
+use bevy::{ecs::schedule::ScheduleLabel, platform::collections::hash_map::Entry, prelude::*};
 
 use crate::{
     action_binding::ActionBinding,
