@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Serde derives for `ActionState`.
 - `Axial` preset to map any axis into 2-dimensional input.
 
 ### Removed
