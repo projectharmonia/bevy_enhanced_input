@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Serde derives for `ActionState`.
+- `InputContext::Schedule` to control the schedule in which the context will be evaluated.
 
 ### Changed
 

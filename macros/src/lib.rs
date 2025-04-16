@@ -16,8 +16,10 @@ struct InputActionOpts {
 }
 
 #[derive(FromDeriveInput)]
-#[darling(attributes(input_action))]
+#[darling(attributes(input_context))]
 struct InputContextOpts {
+    #[darling(default)]
+    schedule: Option<Ident>,
     #[darling(default)]
     priority: Option<usize>,
 }
@@ -97,11 +99,17 @@ pub fn input_context_derive(item: TokenStream) -> TokenStream {
     } else {
         Default::default()
     };
+    let schedule = if let Some(schedule) = opts.schedule {
+        quote! { #schedule }
+    } else {
+        quote! { ::bevy::app::PreUpdate }
+    };
 
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
 
     TokenStream::from(quote! {
         impl #impl_generics #InputContext for #struct_name #type_generics #where_clause {
+            type Schedule = #schedule;
             #priority
         }
     })
