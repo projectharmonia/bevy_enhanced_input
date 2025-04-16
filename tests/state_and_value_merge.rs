@@ -256,7 +256,7 @@ fn both_levels() {
 }
 
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
 
     let down = Press::default();
     let release = Release::default();

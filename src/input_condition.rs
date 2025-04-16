@@ -106,4 +106,4 @@ macro_rules! impl_tuple_condition {
     };
 }
 
-bevy::utils::all_tuples!(impl_tuple_condition, 1, 15, I);
+variadics_please::all_tuples!(impl_tuple_condition, 1, 15, I);

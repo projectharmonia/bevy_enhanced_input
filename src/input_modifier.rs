@@ -64,4 +64,4 @@ macro_rules! impl_tuple_modifiers {
     };
 }
 
-bevy::utils::all_tuples!(impl_tuple_modifiers, 1, 15, I);
+variadics_please::all_tuples!(impl_tuple_modifiers, 1, 15, I);

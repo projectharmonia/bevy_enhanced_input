@@ -26,10 +26,8 @@ impl Plugin for KeybindingMenuPlugin {
                 (
                     update_button_text,
                     (
-                        cancel_binding
-                            .never_param_warn()
-                            .run_if(input_just_pressed(KeyCode::Escape)),
-                        bind.never_param_warn(),
+                        cancel_binding.run_if(input_just_pressed(KeyCode::Escape)),
+                        bind,
                     )
                         .chain(),
                 ),
@@ -62,11 +60,11 @@ fn setup(mut commands: Commands) {
 
     // We use separate root node to let dialogs cover the whole UI.
     commands
-        .spawn((Node {
+        .spawn(Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
             ..Default::default()
-        },))
+        })
         .with_children(|parent| {
             parent
                 .spawn(Node {
@@ -124,7 +122,7 @@ struct SettingsField(&'static str);
 /// Number of input columns.
 const INPUTS_PER_ACTION: usize = 3;
 
-fn setup_actions(parent: &mut ChildBuilder, settings: &KeyboardSettings) -> Entity {
+fn setup_actions(parent: &mut ChildSpawnerCommands, settings: &KeyboardSettings) -> Entity {
     parent
         .spawn(Node {
             display: Display::Grid,
@@ -172,7 +170,7 @@ fn setup_actions(parent: &mut ChildBuilder, settings: &KeyboardSettings) -> Enti
 }
 
 fn setup_action_row(
-    parent: &mut ChildBuilder,
+    parent: &mut ChildSpawnerCommands,
     name: &'static str,
     inputs: &[Input],
     field: SettingsField,
@@ -210,7 +208,7 @@ fn delete_binding(
     mut input_buttons: Query<(&Name, &mut InputButton)>,
     delete_buttons: Query<&DeleteButton>,
 ) {
-    let delete_button = delete_buttons.get(trigger.entity()).unwrap();
+    let delete_button = delete_buttons.get(trigger.target()).unwrap();
     let (name, mut input_button) = input_buttons
         .get_mut(delete_button.button_entity)
         .expect("delete button should point to an input button");
@@ -221,16 +219,16 @@ fn delete_binding(
 fn show_binding_dialog(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
-    root_entity: Single<Entity, (With<Node>, Without<Parent>)>,
+    root_entity: Single<Entity, (With<Node>, Without<ChildOf>)>,
     names: Query<&Name>,
 ) {
-    let name = names.get(trigger.entity()).unwrap();
+    let name = names.get(trigger.target()).unwrap();
     info!("starting binding for '{name}'");
 
     commands.entity(*root_entity).with_children(|parent| {
         parent
             .spawn(BindingDialog {
-                button_entity: trigger.entity(),
+                button_entity: trigger.target(),
             })
             .with_children(|parent| {
                 parent
@@ -264,7 +262,7 @@ fn bind(
     mut key_events: EventReader<KeyboardInput>,
     mut mouse_button_events: EventReader<MouseButtonInput>,
     dialog: Single<(Entity, &BindingDialog)>,
-    root_entity: Single<Entity, (With<Node>, Without<Parent>)>,
+    root_entity: Single<Entity, (With<Node>, Without<ChildOf>)>,
     mut buttons: Query<(Entity, &Name, &mut InputButton)>,
 ) {
     let keys = key_events
@@ -337,12 +335,12 @@ fn bind(
         button.input = Some(input);
     }
 
-    commands.entity(dialog_entity).despawn_recursive();
+    commands.entity(dialog_entity).despawn();
 }
 
 fn cancel_binding(mut commands: Commands, dialog_entity: Single<Entity, With<BindingDialog>>) {
     info!("cancelling binding");
-    commands.entity(*dialog_entity).despawn_recursive();
+    commands.entity(*dialog_entity).despawn();
 }
 
 fn replace_binding(
@@ -364,7 +362,7 @@ fn replace_binding(
     button.input = input;
 
     info!("reassigning binding to '{name}'");
-    commands.entity(dialog_entity).despawn_recursive();
+    commands.entity(dialog_entity).despawn();
 }
 
 fn cancel_replace_binding(
@@ -373,7 +371,7 @@ fn cancel_replace_binding(
     dialog_entity: Single<Entity, With<ConflictDialog>>,
 ) {
     info!("cancelling replace binding");
-    commands.entity(*dialog_entity).despawn_recursive();
+    commands.entity(*dialog_entity).despawn();
 }
 
 fn apply(
@@ -432,13 +430,13 @@ fn update_button_background(
 #[derive(Component, Default)]
 #[require(
     Button,
-    Node(|| Node {
+    Node {
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         width: Val::Px(160.0),
         height: Val::Px(35.0),
         ..Default::default()
-    }),
+    },
 )]
 struct SettingsButton;
 
@@ -454,13 +452,13 @@ struct InputButton {
 #[derive(Component)]
 #[require(
     Button,
-    Node(|| Node {
+    Node {
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         width: Val::Px(35.0),
         height: Val::Px(35.0),
         ..Default::default()
-    }),
+    },
 )]
 struct DeleteButton {
     /// Entity with [`InputButton`].
@@ -469,16 +467,16 @@ struct DeleteButton {
 
 #[derive(Component, Default)]
 #[require(
-    Node(|| Node {
+    Node {
         position_type: PositionType::Absolute,
         width: Val::Percent(100.0),
         height: Val::Percent(100.0),
         align_items: AlignItems::Center,
         justify_content: JustifyContent::Center,
         ..Default::default()
-    }),
-    FocusPolicy(|| FocusPolicy::Block),
-    BackgroundColor(|| BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.3))),
+    },
+    FocusPolicy::Block,
+    BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.3)),
 )]
 struct Dialog;
 
