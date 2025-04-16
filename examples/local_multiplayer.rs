@@ -76,7 +76,7 @@ fn binding(
         Player::First => {
             actions
                 .bind::<Move>()
-                .to((Cardinal::wasd_keys(), GamepadStick::Left));
+                .to((Cardinal::wasd_keys(), Axial::left_stick()));
             actions
                 .bind::<Rotate>()
                 .to((KeyCode::Space, GamepadButton::South));
@@ -84,7 +84,7 @@ fn binding(
         Player::Second => {
             actions
                 .bind::<Move>()
-                .to((Cardinal::arrow_keys(), GamepadStick::Left));
+                .to((Cardinal::arrow_keys(), Axial::left_stick()));
             actions
                 .bind::<Rotate>()
                 .to((KeyCode::Numpad0, GamepadButton::South));

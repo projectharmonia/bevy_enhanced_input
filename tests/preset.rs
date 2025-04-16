@@ -139,8 +139,8 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
             positive: KeyCode::NumpadAdd,
             negative: KeyCode::NumpadSubtract,
         },
-        GamepadStick::Left,
-        GamepadStick::Right,
+        Axial::left_stick(),
+        Axial::right_stick(),
     ));
 }
 

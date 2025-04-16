@@ -118,8 +118,8 @@ actions.bind::<Move>().to((
     KeyCode::KeyD,
     // In Bevy sticks split by axes and captured as 1-dimensional inputs,
     // so Y stick needs to be sweezled into Y axis.
-    GamepadAxis::RightStickX,
-    GamepadAxis::RightStickY.with_modifiers(SwizzleAxis::YXZ),
+    GamepadAxis::LeftStickX,
+    GamepadAxis::LeftStickY.with_modifiers(SwizzleAxis::YXZ),
 ));
 # #[derive(InputContext)]
 # struct OnFoot;
@@ -137,7 +137,7 @@ Some bindings are very common. It would be inconvenient to bind WASD and sticks 
 To solve this, we provide [presets](crate::preset) - structs that store bindings and apply predefined modifiers.
 They implement [`IntoBindings`], so you can pass them directly into [`ActionBinding::to`].
 
-For example, you can use [`Cardinal`] and [`GamepadStick`] presets to simplify the example above.
+For example, you can use [`Cardinal`] and [`Axial`] presets to simplify the example above.
 
 ```
 # use bevy::prelude::*;
@@ -145,7 +145,7 @@ For example, you can use [`Cardinal`] and [`GamepadStick`] presets to simplify t
 # let mut actions = Actions::<OnFoot>::default();
 // We provide a `with_wasd` method for quick prototyping, but you can
 // construct this struct with any input.
-actions.bind::<Move>().to((Cardinal::wasd_keys(), GamepadStick::Right));
+actions.bind::<Move>().to((Cardinal::wasd_keys(), Axial::left_stick()));
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(Debug, InputAction)]
@@ -355,7 +355,7 @@ pub mod prelude {
             negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
         },
         input_reader::ActionSources,
-        preset::{Bidirectional, Cardinal, GamepadStick},
+        preset::*,
     };
     pub use bevy_enhanced_input_macros::{InputAction, InputContext};
 }
