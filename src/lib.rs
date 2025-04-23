@@ -112,7 +112,7 @@ for assigning multiple modifiers at once.
 actions
     .bind::<Move>()
     .to((
-        // Keyboard keys are captured as `bool`, but the output of `Move` is defined as `Vec2`,
+        // Keyboard keys captured as `bool`, but the output of `Move` is defined as `Vec2`,
         // so you need to assign keys to axes using swizzle to reorder them and negation.
         KeyCode::KeyW.with_modifiers(SwizzleAxis::YXZ),
         KeyCode::KeyA.with_modifiers(Negate::all()),
@@ -120,8 +120,8 @@ actions
         KeyCode::KeyD,
         // In Bevy sticks split by axes and captured as 1-dimensional inputs,
         // so Y stick needs to be sweezled into Y axis.
-        GamepadAxis::RightStickX,
-        GamepadAxis::RightStickY.with_modifiers(SwizzleAxis::YXZ),
+        GamepadAxis::LeftStickX,
+        GamepadAxis::LeftStickY.with_modifiers(SwizzleAxis::YXZ),
     ))
     .with_modifiers((
         // Modifiers applied at the action level.
@@ -144,7 +144,7 @@ Some bindings are very common. It would be inconvenient to bind WASD and sticks 
 To solve this, we provide [presets](crate::preset) - structs that store bindings and apply predefined modifiers.
 They implement [`IntoBindings`], so you can pass them directly into [`ActionBinding::to`].
 
-For example, you can use [`Cardinal`] and [`GamepadStick`] presets to simplify the example above.
+For example, you can use [`Cardinal`] and [`Axial`] presets to simplify the example above.
 
 ```
 # use bevy::prelude::*;
@@ -154,7 +154,7 @@ For example, you can use [`Cardinal`] and [`GamepadStick`] presets to simplify t
 // construct this struct with any input.
 actions
     .bind::<Move>()
-    .to((Cardinal::wasd_keys(), GamepadStick::Right))
+    .to((Cardinal::wasd_keys(), Axial::left_stick()))
     .with_modifiers((DeadZone::default(), SmoothNudge::default()));
 # #[derive(InputContext)]
 # struct OnFoot;
@@ -361,11 +361,11 @@ pub mod prelude {
             hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,
         },
         input_modifier::{
-            InputModifier, accumulate_by::*, dead_zone::*, delta_scale::*, exponential_curve::*,
-            negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
+            InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
+            exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
         },
         input_reader::ActionSources,
-        preset::{Bidirectional, Cardinal, GamepadStick},
+        preset::*,
     };
     pub use bevy_enhanced_input_macros::{InputAction, InputContext};
 }
