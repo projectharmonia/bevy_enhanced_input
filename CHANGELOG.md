@@ -9,8 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Serde derives for `ActionState`.
 - `InputContext::Schedule` to control the schedule in which the context will be evaluated.
+- `Clamp` modifier.
+- Serde derives for `ActionState`.
+- `Axial` preset to map any axis into 2-dimensional input.
+
+### Removed
+
+- `GamepadStick`. Use `Axial::left_stick()` or `Axial::right_stick()` instead.
 
 ### Changed
 

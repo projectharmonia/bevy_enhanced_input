@@ -167,7 +167,7 @@ pub trait IntoBindings {
     /// actions.bind::<Move>()
     ///     .to((
     ///         Input::mouse_motion(),
-    ///         GamepadStick::Left.with_modifiers_each(Negate::all()), // Will be applied to each axis.
+    ///         Axial::left_stick().with_modifiers_each(Negate::all()), // Will be applied to each axis.
     ///     ))
     ///     .with_modifiers(DeadZone::default()); // Modifiers like `DeadZone` need to be applied at the action level!
     /// # #[derive(InputContext)]

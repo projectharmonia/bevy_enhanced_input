@@ -7,18 +7,17 @@ use crate::{
 
 /// A preset to map buttons as 2-dimensional input.
 ///
-/// This is a convenience preset that uses [`SwizzleAxis`] and [`Negate`] to
-/// bind the buttons to X and Y axes.
+/// Uses [`SwizzleAxis`] and [`Negate`] to bind inputs to cardinal directions.
 ///
 /// In Bevy's 3D space, the -Z axis points forward and the +Z axis points
 /// toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
 /// you will need to invert Y and apply it to Z inside your observer.
 ///
-/// See also [`Bidirectional`].
+/// See also [`Axial`] and [`Bidirectional`].
 ///
 /// # Examples
 ///
-/// Map keyboard inputs into a 2D movement action
+/// Map keyboard inputs into a 2D movement action.
 ///
 /// ```
 /// use bevy::prelude::*;
@@ -134,6 +133,85 @@ impl<I: IntoBindings> IntoBindings for Cardinal<I> {
     }
 }
 
+/// A preset to map axes as 2-dimensional input.
+///
+/// Uses [`SwizzleAxis`] to bind inputs to axes.
+///
+/// See also [`Cardinal`] and [`Bidirectional`].
+///
+/// # Examples
+///
+/// Maps gamepad axes into a 2D movement action.
+///
+/// ```
+/// use bevy::prelude::*;
+/// use bevy_enhanced_input::prelude::*;
+///
+/// fn binding(
+///     trigger: Trigger<Binding<Player>>,
+///     settings: Res<GamepadSettings>,
+///     mut players: Query<&mut Actions<Player>>,
+/// ) {
+///     let mut actions = players.get_mut(trigger.target()).unwrap();
+///     actions.bind::<Move>().to(Axial {
+///         x: &settings.horizontal_movement,
+///         y: &settings.vertical_movement,
+///     });
+/// }
+///
+/// #[derive(Resource)]
+/// struct GamepadSettings {
+///     horizontal_movement: Vec<GamepadAxis>,
+///     vertical_movement: Vec<GamepadAxis>,
+/// }
+///
+/// #[derive(InputContext)]
+/// struct Player;
+///
+/// #[derive(Debug, InputAction)]
+/// #[input_action(output = Vec2)]
+/// struct Move;
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct Axial<I: IntoBindings> {
+    pub x: I,
+    pub y: I,
+}
+
+impl Axial<GamepadAxis> {
+    /// Maps left stick as 2-dimensional input.
+    ///
+    /// See also [`Self::right_stick`].
+    pub fn left_stick() -> Self {
+        Self {
+            x: GamepadAxis::LeftStickX,
+            y: GamepadAxis::LeftStickY,
+        }
+    }
+
+    /// Maps right stick as 2-dimensional input.
+    ///
+    /// See also [`Self::left_stick`].
+    pub fn right_stick() -> Self {
+        Self {
+            x: GamepadAxis::RightStickX,
+            y: GamepadAxis::RightStickY,
+        }
+    }
+}
+
+impl<I: IntoBindings> IntoBindings for Axial<I> {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
+        let x = self.x.into_bindings();
+        let y = self
+            .y
+            .into_bindings()
+            .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
+
+        x.chain(y)
+    }
+}
+
 /// A preset to map buttons as 1-dimensional input.
 ///
 /// Positive binding will be passed as is and negative will be reversed using [`Negate`].
@@ -154,41 +232,5 @@ impl<I: IntoBindings> IntoBindings for Bidirectional<I> {
             .map(|binding| binding.with_modifiers(Negate::all()));
 
         positive.chain(negative)
-    }
-}
-
-/// A preset for mapping a stick as 2-dimensional input.
-///
-/// In Bevy, sticks are split by axes and captured as 1-dimensional inputs.
-/// This preset maps stick axes to X and Y using [`SwizzleAxis`].
-#[derive(Debug, Clone, Copy)]
-pub enum GamepadStick {
-    /// Corresponds to [`GamepadAxis::LeftStickX`] and [`GamepadAxis::LeftStickY`]
-    Left,
-    /// Corresponds to [`GamepadAxis::RightStickX`] and [`GamepadAxis::RightStickY`]
-    Right,
-}
-
-impl GamepadStick {
-    /// Returns associated X axis.
-    pub fn x(self) -> GamepadAxis {
-        match self {
-            GamepadStick::Left => GamepadAxis::LeftStickX,
-            GamepadStick::Right => GamepadAxis::RightStickX,
-        }
-    }
-
-    /// Returns associated Y axis.
-    pub fn y(self) -> GamepadAxis {
-        match self {
-            GamepadStick::Left => GamepadAxis::LeftStickY,
-            GamepadStick::Right => GamepadAxis::RightStickY,
-        }
-    }
-}
-
-impl IntoBindings for GamepadStick {
-    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
-        [self.x().into(), self.y().with_modifiers(SwizzleAxis::YXZ)].into_iter()
     }
 }
