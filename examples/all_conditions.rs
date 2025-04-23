@@ -33,7 +33,7 @@ fn spawn(mut commands: Commands) {
 }
 
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
-    let mut actions = actions.get_mut(trigger.target()).unwrap();
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
     actions
         .bind::<PressAction>()
         .to(PressAction::KEY)

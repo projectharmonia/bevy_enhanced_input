@@ -3,8 +3,7 @@ use core::{
     fmt::Debug,
 };
 
-use bevy::{platform::collections::HashMap, prelude::*};
-use log::debug;
+use bevy::{prelude::*, utils::HashMap};
 use serde::{Deserialize, Serialize};
 
 use crate::{

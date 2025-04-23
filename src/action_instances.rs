@@ -9,7 +9,6 @@ use bevy::{
     ecs::{component::ComponentId, world::FilteredEntityMut},
     prelude::*,
 };
-use log::{debug, trace};
 
 use crate::{
     actions::{Actions, InputContext},
@@ -57,7 +56,7 @@ fn add_context<C: InputContext>(
     mut commands: Commands,
     mut instances: ResMut<ActionInstances>,
 ) {
-    instances.add::<C>(&mut commands, trigger.target());
+    instances.add::<C>(&mut commands, trigger.entity());
 }
 
 fn remove_context<C: InputContext>(
@@ -73,7 +72,7 @@ fn remove_context<C: InputContext>(
         &mut reset_input,
         &time,
         &mut actions,
-        trigger.target(),
+        trigger.entity(),
     );
 }
 

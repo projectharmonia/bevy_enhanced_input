@@ -4,7 +4,7 @@ use core::{
     marker::PhantomData,
 };
 
-use bevy::{platform::collections::hash_map::Entry, prelude::*};
+use bevy::{prelude::*, utils::Entry};
 
 use crate::{
     action_binding::ActionBinding,

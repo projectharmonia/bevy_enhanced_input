@@ -84,7 +84,7 @@ fn rebuild_all() {
 }
 
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
-    let mut actions = actions.get_mut(trigger.target()).unwrap();
+    let mut actions = actions.get_mut(trigger.entity()).unwrap();
     actions.bind::<DummyAction>().to(DummyAction::KEY);
 }
 

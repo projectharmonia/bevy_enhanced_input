@@ -28,7 +28,7 @@ use crate::{
 ///     settings: Res<KeyboardSettings>,
 ///     mut players: Query<&mut Actions<Player>>,
 /// ) {
-///     let mut actions = players.get_mut(trigger.target()).unwrap();
+///     let mut actions = players.get_mut(trigger.entity()).unwrap();
 ///     actions.bind::<Move>().to(Cardinal {
 ///         north: &settings.forward,
 ///         east: &settings.right,

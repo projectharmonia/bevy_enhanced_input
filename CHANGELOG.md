@@ -17,10 +17,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `GamepadStick`. Use `Axial::left_stick()` or `Axial::right_stick()` instead.
 
-### Changed
-
-- Update to Bevy 0.16.
-
 ## [0.9.0] - 2025-04-08
 
 ### Added

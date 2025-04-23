@@ -67,25 +67,6 @@ jobs:
       - name: Rustdoc
         run: cargo rustdoc -- -D warnings
 
-  no-std-portable-atomic:
-    name: Without atomics and std
-    runs-on: ubuntu-latest
-    steps:
-      - name: Clone repo
-        uses: actions/checkout@v4
-
-      # Use the same target platform as Bevy (Game Boy Advance).
-      - name: Instal stable toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: thumbv6m-none-eabi
-
-      - name: Cache crates
-        uses: Swatinem/rust-cache@v2
-
-      - name: Check compilation
-        run: cargo check --target thumbv6m-none-eabi --features bevy/critical-section
-
   doctest:
     name: Doctest
     runs-on: ubuntu-latest
@@ -144,7 +125,7 @@ jobs:
   codecov:
     name: Upload to Codecov
     if: github.actor != 'dependabot[bot]'
-    needs: [typos, format, lint, no-std-portable-atomic, doctest, test]
+    needs: [typos, format, lint, doctest, test]
     runs-on: ubuntu-latest
     steps:
       - name: Clone repo

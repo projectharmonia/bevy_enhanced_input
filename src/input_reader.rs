@@ -4,8 +4,8 @@ use core::hash::Hash;
 use bevy::{
     ecs::system::SystemParam,
     input::mouse::{AccumulatedMouseMotion, AccumulatedMouseScroll},
-    platform::collections::HashSet,
     prelude::*,
+    utils::HashSet,
 };
 
 use crate::{

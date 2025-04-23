@@ -1,7 +1,6 @@
 use alloc::boxed::Box;
 
 use bevy::prelude::*;
-use log::trace;
 
 use crate::{
     action_map::{ActionMap, ActionState},
