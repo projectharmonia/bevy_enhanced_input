@@ -112,7 +112,7 @@ for assigning multiple modifiers at once.
 actions
     .bind::<Move>()
     .to((
-        // Keyboard keys captured as `bool`, but the output of `Move` is defined as `Vec2`,
+        // Keyboard keys are captured as `bool`, but the output of `Move` is defined as `Vec2`,
         // so you need to assign keys to axes using swizzle to reorder them and negation.
         KeyCode::KeyW.with_modifiers(SwizzleAxis::YXZ),
         KeyCode::KeyA.with_modifiers(Negate::all()),
