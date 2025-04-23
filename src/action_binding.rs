@@ -315,6 +315,7 @@ impl ActionBinding {
             }
 
             let mut current_tracker = TriggerTracker::new(value);
+            trace!("reading value `{value:?}`");
             current_tracker.apply_modifiers(action_map, time, &mut binding.modifiers);
             current_tracker.apply_conditions(action_map, time, &mut binding.conditions);
 
