@@ -6,12 +6,18 @@ use core::{
 };
 
 use bevy::{
-    ecs::{component::ComponentId, world::FilteredEntityMut},
+    ecs::{
+        component::ComponentId,
+        schedule::ScheduleLabel,
+        system::{ParamBuilder, QueryParamBuilder},
+        world::FilteredEntityMut,
+    },
     prelude::*,
 };
 use log::{debug, trace};
 
 use crate::{
+    EnhancedInputSystem,
     actions::{Actions, InputContext},
     input_reader::{InputReader, ResetInput},
 };
@@ -27,16 +33,29 @@ pub trait InputContextAppExt {
 
 impl InputContextAppExt for App {
     fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
-        debug!("registering context for `{}`", any::type_name::<C>());
+        debug!(
+            "registering `{}` for `{}`",
+            any::type_name::<C>(),
+            any::type_name::<C::Schedule>(),
+        );
 
         let id = self.world_mut().register_component::<Actions<C>>();
-        let mut registry = self.world_mut().resource_mut::<ActionsRegistry>();
-        debug_assert!(
-            !registry.contains(&id),
-            "context `{}` can't be added more then once",
-            any::type_name::<C>()
-        );
-        registry.push(id);
+        let mut registry = self.world_mut().resource_mut::<ContextRegistry>();
+        if let Some(contexts) = registry
+            .iter_mut()
+            .find(|c| c.schedule_id == TypeId::of::<C::Schedule>())
+        {
+            debug_assert!(
+                !contexts.action_ids.contains(&id),
+                "context `{}` shouldn't be added more then once",
+                any::type_name::<C>()
+            );
+            contexts.action_ids.push(id);
+        } else {
+            let mut contexts = ScheduleContexts::new::<C::Schedule>();
+            contexts.action_ids.push(id);
+            registry.push(contexts);
+        }
 
         self.add_observer(add_context::<C>)
             .add_observer(remove_context::<C>);
@@ -45,17 +64,92 @@ impl InputContextAppExt for App {
     }
 }
 
-/// IDs of registered [`Actions`].
+/// Tracks registered input contexts for each [`InputContext::Schedule`].
 ///
-/// Used later to configure [`FilteredEntityMut`].
-/// Exists only at plugins initialization stage.
+/// In Bevy, it’s impossible to know which schedule is used inside a system,
+/// so we genericize update systems over schedules.
+///
+/// This resource stores registered contexts per-schedule in a type-erased way
+/// to perform the setup after all registrations in [`App::finish`].
+///
+/// Exists only during the plugin initialization.
 #[derive(Resource, Default, Deref, DerefMut)]
-pub(crate) struct ActionsRegistry(Vec<ComponentId>);
+pub(crate) struct ContextRegistry(Vec<ScheduleContexts>);
+
+pub(crate) struct ScheduleContexts {
+    /// Schedule ID for which all actions were registered.
+    schedule_id: TypeId,
+
+    /// IDs of [`Actions`]
+    action_ids: Vec<ComponentId>,
+
+    /// Configures the app for this schedule.
+    setup: fn(&Self, &mut App),
+}
+
+impl ScheduleContexts {
+    /// Creates a new instance for schedule `S`.
+    ///
+    /// [`Self::setup`] will configure the app for `S`.
+    fn new<S: ScheduleLabel + Default>() -> Self {
+        Self {
+            schedule_id: TypeId::of::<S>(),
+            action_ids: Default::default(),
+            // Since the type is not present in the function signature, we can store
+            // functions for specific type without making the struct generic.
+            setup: Self::setup_typed::<S>,
+        }
+    }
+
+    /// Calls [`Self::setup_typed`] for `S` that was associated in [`Self::new`].
+    pub(crate) fn setup(&self, app: &mut App) {
+        (self.setup)(self, app);
+    }
+
+    /// Configures the app for all contexts registered for schedule `C`.
+    pub(crate) fn setup_typed<S: ScheduleLabel + Default>(&self, app: &mut App) {
+        let update = (
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            QueryParamBuilder::new(|builder| {
+                builder.optional(|builder| {
+                    for &id in &self.action_ids {
+                        builder.mut_id(id);
+                    }
+                });
+            }),
+        )
+            .build_state(app.world_mut())
+            .build_system(update::<S>);
+
+        let rebuild = (
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            ParamBuilder,
+            QueryParamBuilder::new(|builder| {
+                builder.optional(|builder| {
+                    for &id in &self.action_ids {
+                        builder.mut_id(id);
+                    }
+                });
+            }),
+        )
+            .build_state(app.world_mut())
+            .build_any_system(rebuild::<S>);
+
+        app.init_resource::<ActionInstances<S>>()
+            .add_observer(rebuild)
+            .add_systems(S::default(), update.in_set(EnhancedInputSystem));
+    }
+}
 
 fn add_context<C: InputContext>(
     trigger: Trigger<OnInsert, Actions<C>>,
     mut commands: Commands,
-    mut instances: ResMut<ActionInstances>,
+    mut instances: ResMut<ActionInstances<C::Schedule>>,
 ) {
     instances.add::<C>(&mut commands, trigger.target());
 }
@@ -64,7 +158,7 @@ fn remove_context<C: InputContext>(
     trigger: Trigger<OnReplace, Actions<C>>,
     mut commands: Commands,
     mut reset_input: ResMut<ResetInput>,
-    mut instances: ResMut<ActionInstances>,
+    mut instances: ResMut<ActionInstances<C::Schedule>>,
     time: Res<Time<Virtual>>,
     mut actions: Query<&mut Actions<C>>,
 ) {
@@ -77,13 +171,39 @@ fn remove_context<C: InputContext>(
     );
 }
 
-/// Stores instantiated [`Actions`].
+fn update<S: ScheduleLabel>(
+    mut commands: Commands,
+    mut reader: InputReader,
+    time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
+    mut instances: ResMut<ActionInstances<S>>,
+    mut actions: Query<FilteredEntityMut>,
+) {
+    reader.update_state();
+    instances.update(&mut commands, &mut reader, &time, &mut actions);
+}
+
+fn rebuild<S: ScheduleLabel>(
+    _trigger: Trigger<RebuildBindings>,
+    mut commands: Commands,
+    mut reset_input: ResMut<ResetInput>,
+    mut instances: ResMut<ActionInstances<S>>,
+    time: Res<Time<Virtual>>,
+    mut actions: Query<FilteredEntityMut>,
+) {
+    instances.rebuild(&mut commands, &mut reset_input, &time, &mut actions);
+}
+
+/// Stores instantiated [`Actions`] for a schedule `S`.
 ///
 /// Used to iterate over them in a defined order and operate in a type-erased manner.
 #[derive(Resource, Default, Deref)]
-pub(crate) struct ActionInstances(Vec<ActionsInstance>);
+pub(crate) struct ActionInstances<S: ScheduleLabel> {
+    #[deref]
+    instances: Vec<ActionsInstance>,
+    marker: PhantomData<S>,
+}
 
-impl ActionInstances {
+impl<S: ScheduleLabel> ActionInstances<S> {
     pub(crate) fn update(
         &mut self,
         commands: &mut Commands,
@@ -91,7 +211,7 @@ impl ActionInstances {
         time: &Time<Virtual>,
         actions: &mut Query<FilteredEntityMut>,
     ) {
-        for instance in &mut self.0 {
+        for instance in &mut self.instances {
             instance.update(commands, reader, time, actions);
         }
     }
@@ -103,7 +223,7 @@ impl ActionInstances {
         time: &Time<Virtual>,
         actions: &mut Query<FilteredEntityMut>,
     ) {
-        for instance in &mut self.0 {
+        for instance in &mut self.instances {
             instance.rebuild(commands, reset_input, time, actions);
         }
     }
@@ -125,9 +245,10 @@ impl ActionInstances {
                     .skip(index + 1)
                     .position(|inst| inst.priority != C::PRIORITY)
                     .unwrap_or_default();
-                self.0.insert(index + last_priority_index + 1, instance);
+                self.instances
+                    .insert(index + last_priority_index + 1, instance);
             }
-            Err(index) => self.0.insert(index, instance),
+            Err(index) => self.instances.insert(index, instance),
         };
     }
 
@@ -149,7 +270,7 @@ impl ActionInstances {
             .iter()
             .position(|inst| inst.entity == entity && inst.type_id == TypeId::of::<C>())
             .expect("input entry should be created before removal");
-        self.0.remove(index);
+        self.instances.remove(index);
 
         let mut instance = instances.get_mut(entity).unwrap();
         instance.reset(commands, reset_input, time, entity);
@@ -173,8 +294,6 @@ impl ActionsInstance {
             entity,
             priority: C::PRIORITY,
             type_id: TypeId::of::<C>(),
-            // Since the type is not present in the signature, we can store
-            // functions for specific type without making the struct generic.
             update: Self::update_typed::<C>,
             rebuild: Self::rebuild_typed::<C>,
         }
