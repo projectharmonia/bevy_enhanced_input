@@ -62,7 +62,7 @@ fn binding(
     gamepads: Res<Gamepads>,
     mut players: Query<(&Player, &mut Actions<Player>)>,
 ) {
-    let (&player, mut actions) = players.get_mut(trigger.entity()).unwrap();
+    let (&player, mut actions) = players.get_mut(trigger.target()).unwrap();
 
     // By default actions read inputs from all gamepads,
     // but for local multiplayer we need assign specific
@@ -101,12 +101,12 @@ fn binding(
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     transform.translation += trigger.value.extend(0.0);
 }
 
 fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     transform.rotate_z(FRAC_PI_4);
 }
 
