@@ -1,7 +1,10 @@
 [package]
 name = "bevy_enhanced_input"
 version = "0.10.0"
-authors = ["Hennadii Chernyshchyk <genaloner@gmail.com>"]
+authors = [
+  "Hennadii Chernyshchyk <genaloner@gmail.com>",
+  "Alice <alice.i.cecile@gmail.com>",
+]
 edition = "2024"
 description = "Input manager for Bevy, inspired by Unreal Engine Enhanced Input"
 readme = "README.md"
