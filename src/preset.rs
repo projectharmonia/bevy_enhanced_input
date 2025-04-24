@@ -297,10 +297,10 @@ pub struct SixDOF<I: IntoBindings> {
 
 impl SixDOF<KeyCode> {
     /// Maps WASD keys as horizontal inputs.
-    /// 
+    ///
     /// Defaults for space for up and left control for down.
     /// See [`Self::qe`] and [`Self::space_lshift`] for other up/down presets.
-    /// 
+    ///
     /// See also [`Self::arrow_keys`].
     pub fn wasd() -> Self {
         SixDOF {
@@ -314,10 +314,10 @@ impl SixDOF<KeyCode> {
     }
 
     /// Maps arrow keys as horizontal inputs.
-    /// 
+    ///
     /// Defaults for space for up and left control for down.
     /// See [`Self::qe`] and [`Self::space_lshift`] for other up/down presets.
-    /// 
+    ///
     /// See also [`Self::wasd`].
     pub fn arrow_keys() -> Self {
         SixDOF {
@@ -331,7 +331,7 @@ impl SixDOF<KeyCode> {
     }
 
     /// Changes mapping to space for up and left shift for down.
-    /// 
+    ///
     /// See also [`Self::qe`].
     pub fn space_lshift(mut self) -> Self {
         self.up = KeyCode::Space;
@@ -340,7 +340,7 @@ impl SixDOF<KeyCode> {
     }
 
     /// Changes mapping to Q for up and E for down.
-    /// 
+    ///
     /// See also [`Self::qe`].
     pub fn qe(mut self) -> Self {
         self.up = KeyCode::KeyQ;
@@ -352,8 +352,10 @@ impl SixDOF<KeyCode> {
 impl<I: IntoBindings> IntoBindings for SixDOF<I> {
     fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
         // Z
-        let backward =
-            self.backward.into_bindings().map(|binding| binding.with_modifiers(SwizzleAxis::ZYX));
+        let backward = self
+            .backward
+            .into_bindings()
+            .map(|binding| binding.with_modifiers(SwizzleAxis::ZYX));
 
         // -Z
         let forward = self
@@ -365,10 +367,16 @@ impl<I: IntoBindings> IntoBindings for SixDOF<I> {
         let right = self.right.into_bindings().map(|binding| binding);
 
         // -X
-        let left = self.left.into_bindings().map(|binding| binding.with_modifiers(Negate::all()));
+        let left = self
+            .left
+            .into_bindings()
+            .map(|binding| binding.with_modifiers(Negate::all()));
 
         // Y
-        let up = self.up.into_bindings().map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
+        let up = self
+            .up
+            .into_bindings()
+            .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
 
         // -Y
         let down = self
@@ -376,6 +384,11 @@ impl<I: IntoBindings> IntoBindings for SixDOF<I> {
             .into_bindings()
             .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::YXZ)));
 
-        backward.chain(forward).chain(right).chain(left).chain(up).chain(down)
+        backward
+            .chain(forward)
+            .chain(right)
+            .chain(left)
+            .chain(up)
+            .chain(down)
     }
 }
