@@ -234,3 +234,148 @@ impl<I: IntoBindings> IntoBindings for Bidirectional<I> {
         positive.chain(negative)
     }
 }
+
+/// A preset to map buttons as 3-dimensional input.
+///
+/// Uses [`SwizzleAxis`] and [`Negate`] to bind inputs to the Y and Z directions.
+///
+/// See also [`Axial`] and [`Bidirectional`].
+///
+/// # Examples
+///
+/// Map keyboard inputs into a 3D movement action.
+///
+/// ```
+/// use bevy::prelude::*;
+/// use bevy_enhanced_input::prelude::*;
+///
+/// fn binding(
+///     trigger: Trigger<Binding<FlyCamera>>,
+///     settings: Res<KeyboardSettings>,
+///     mut cameras: Query<&mut Actions<FlyCamera>>,
+/// ) {
+///     let mut actions = cameras.get_mut(trigger.target()).unwrap();
+///     actions.bind::<Move>().to(SixDOF {
+///         forward: &settings.forward,
+///         right: &settings.right,
+///         backward: &settings.backward,
+///         left: &settings.left,
+///         up: &settings.up,
+///         down: &settings.down,
+///     });
+/// }
+///
+/// // We use `KeyCode` here because we are only interested in key presses.
+/// // But you can also use `Input` if you want to e.g.
+/// // combine mouse and keyboard input sources.
+/// #[derive(Resource)]
+/// struct KeyboardSettings {
+///     forward: Vec<KeyCode>,
+///     right: Vec<KeyCode>,
+///     backward: Vec<KeyCode>,
+///     left: Vec<KeyCode>,
+///     up: Vec<KeyCode>,
+///     down: Vec<KeyCode>,
+/// }
+///
+/// #[derive(InputContext)]
+/// struct FlyCamera;
+///
+/// #[derive(Debug, InputAction)]
+/// #[input_action(output = Vec3)]
+/// struct Move;
+/// ```
+#[derive(Debug, Clone, Copy)]
+pub struct SixDOF<I: IntoBindings> {
+    pub forward: I,
+    pub backward: I,
+    pub left: I,
+    pub right: I,
+    pub up: I,
+    pub down: I,
+}
+
+impl SixDOF<KeyCode> {
+    /// Maps WASD keys as horizontal inputs.
+    /// 
+    /// Defaults for space for up and left control for down.
+    /// See [`Self::qe`] and [`Self::space_lshift`] for other up/down presets.
+    /// 
+    /// See also [`Self::arrow_keys`].
+    pub fn wasd() -> Self {
+        SixDOF {
+            forward: KeyCode::KeyW,
+            backward: KeyCode::KeyS,
+            left: KeyCode::KeyA,
+            right: KeyCode::KeyD,
+            up: KeyCode::Space,
+            down: KeyCode::ControlLeft,
+        }
+    }
+
+    /// Maps arrow keys as horizontal inputs.
+    /// 
+    /// Defaults for space for up and left control for down.
+    /// See [`Self::qe`] and [`Self::space_lshift`] for other up/down presets.
+    /// 
+    /// See also [`Self::wasd`].
+    pub fn arrow_keys() -> Self {
+        SixDOF {
+            forward: KeyCode::ArrowUp,
+            backward: KeyCode::ArrowDown,
+            left: KeyCode::ArrowLeft,
+            right: KeyCode::ArrowRight,
+            up: KeyCode::Space,
+            down: KeyCode::ControlLeft,
+        }
+    }
+
+    /// Changes mapping to space for up and left shift for down.
+    /// 
+    /// See also [`Self::qe`].
+    pub fn space_lshift(mut self) -> Self {
+        self.up = KeyCode::Space;
+        self.down = KeyCode::ShiftLeft;
+        self
+    }
+
+    /// Changes mapping to Q for up and E for down.
+    /// 
+    /// See also [`Self::qe`].
+    pub fn qe(mut self) -> Self {
+        self.up = KeyCode::KeyQ;
+        self.down = KeyCode::KeyE;
+        self
+    }
+}
+
+impl<I: IntoBindings> IntoBindings for SixDOF<I> {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
+        // Z
+        let backward =
+            self.backward.into_bindings().map(|binding| binding.with_modifiers(SwizzleAxis::ZYX));
+
+        // -Z
+        let forward = self
+            .forward
+            .into_bindings()
+            .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::ZYX)));
+
+        // X
+        let right = self.right.into_bindings().map(|binding| binding);
+
+        // -X
+        let left = self.left.into_bindings().map(|binding| binding.with_modifiers(Negate::all()));
+
+        // Y
+        let up = self.up.into_bindings().map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
+
+        // -Y
+        let down = self
+            .down
+            .into_bindings()
+            .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::YXZ)));
+
+        backward.chain(forward).chain(right).chain(left).chain(up).chain(down)
+    }
+}
