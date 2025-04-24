@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2025-04-24
+
 ### Added
 
 - `InputContext::Schedule` to control the schedule in which the context will be evaluated.
@@ -234,7 +236,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.10.0...HEAD
+[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.7.2...v0.8.0
