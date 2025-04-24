@@ -13,7 +13,7 @@ use crate::{
 /// toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
 /// you will need to invert Y and apply it to Z inside your observer.
 ///
-/// See also [`Axial`] and [`Bidirectional`].
+/// See also [`Axial`], [`Bidirectional`] and [`SixDOF`].
 ///
 /// # Examples
 ///
@@ -137,7 +137,7 @@ impl<I: IntoBindings> IntoBindings for Cardinal<I> {
 ///
 /// Uses [`SwizzleAxis`] to bind inputs to axes.
 ///
-/// See also [`Cardinal`] and [`Bidirectional`].
+/// See also [`Cardinal`].
 ///
 /// # Examples
 ///
@@ -216,7 +216,7 @@ impl<I: IntoBindings> IntoBindings for Axial<I> {
 ///
 /// Positive binding will be passed as is and negative will be reversed using [`Negate`].
 ///
-/// See also [`Cardinal`].
+/// See also [`Cardinal`] and [`SixDOF`].
 #[derive(Debug, Clone, Copy)]
 pub struct Bidirectional<I: IntoBindings> {
     pub positive: I,
@@ -239,7 +239,7 @@ impl<I: IntoBindings> IntoBindings for Bidirectional<I> {
 ///
 /// Uses [`SwizzleAxis`] and [`Negate`] to bind inputs to the Y and Z directions.
 ///
-/// See also [`Axial`] and [`Bidirectional`].
+/// See also [`Cardinal`] and [`Bidirectional`].
 ///
 /// # Examples
 ///
