@@ -364,7 +364,7 @@ impl<I: IntoBindings> IntoBindings for SixDOF<I> {
             .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::ZYX)));
 
         // X
-        let right = self.right.into_bindings().map(|binding| binding);
+        let right = self.right.into_bindings();
 
         // -X
         let left = self
