@@ -42,7 +42,7 @@ fn spawn(mut commands: Commands) {
 }
 
 fn foot_binding(trigger: Trigger<Binding<OnFoot>>, mut players: Query<&mut Actions<OnFoot>>) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
@@ -56,7 +56,7 @@ fn foot_binding(trigger: Trigger<Binding<OnFoot>>, mut players: Query<&mut Actio
 }
 
 fn car_binding(trigger: Trigger<Binding<InCar>>, mut players: Query<&mut Actions<InCar>>) {
-    let mut actions = players.get_mut(trigger.entity()).unwrap();
+    let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Move>()
         .to(Cardinal::wasd_keys())
@@ -69,12 +69,12 @@ fn car_binding(trigger: Trigger<Binding<InCar>>, mut players: Query<&mut Actions
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     transform.translation += trigger.value.extend(0.0);
 }
 
 fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
     transform.rotate_z(FRAC_PI_4);
 }
 
@@ -84,11 +84,11 @@ fn enter_car(
     mut players: Query<&mut PlayerColor>,
 ) {
     // Change color for visibility.
-    let mut color = players.get_mut(trigger.entity()).unwrap();
+    let mut color = players.get_mut(trigger.target()).unwrap();
     **color = FUCHSIA_400.into();
 
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .remove::<Actions<OnFoot>>()
         .insert(Actions::<InCar>::default());
 }
@@ -98,11 +98,11 @@ fn exit_car(
     mut commands: Commands,
     mut players: Query<&mut PlayerColor>,
 ) {
-    let mut color = players.get_mut(trigger.entity()).unwrap();
+    let mut color = players.get_mut(trigger.target()).unwrap();
     **color = Default::default();
 
     commands
-        .entity(trigger.entity())
+        .entity(trigger.target())
         .remove::<Actions<InCar>>()
         .insert(Actions::<OnFoot>::default());
 }

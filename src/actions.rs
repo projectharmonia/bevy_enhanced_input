@@ -4,7 +4,7 @@ use core::{
     marker::PhantomData,
 };
 
-use bevy::{prelude::*, utils::Entry};
+use bevy::{ecs::schedule::ScheduleLabel, platform::collections::hash_map::Entry, prelude::*};
 
 use crate::{
     action_binding::ActionBinding,
@@ -174,18 +174,30 @@ impl<C: InputContext> Default for Actions<C> {
 /// struct Player;
 /// ```
 ///
-/// Optionally you can pass `priority`:
+/// Optionally you can pass `priority` and/or `schedule`:
 ///
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(InputContext)]
-/// #[input_context(priority = 1)]
+/// #[input_context(priority = 1, schedule = FixedPreUpdate)]
 /// struct Player;
 /// ```
 ///
 /// All parameters match corresponding data in the trait.
 pub trait InputContext: Send + Sync + 'static {
+    /// Schedule in which the context will be evaluated.
+    ///
+    /// Associated type defaults are not stabilized in Rust yet,
+    /// but the macro uses [`PreUpdate`] by default.
+    ///
+    /// Set this to [`FixedPreUpdate`] if game logic relies on actions from this context
+    /// in [`FixedUpdate`]. For example, if [`FixedMain`](bevy::app::FixedMain) runs twice
+    /// in a single frame and an action triggers, you will get [`Started`](crate::events::Started)
+    /// and [`Fired`](crate::events::Fired) on the first run and only [`Fired`](crate::events::Fired)
+    /// on the second run.
+    type Schedule: ScheduleLabel + Default;
+
     /// Determines the evaluation order of [`Actions<Self>`].
     ///
     /// Used to control how contexts are layered since some [`InputAction`]s may consume inputs.

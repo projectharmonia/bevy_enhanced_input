@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `InputContext::Schedule` to control the schedule in which the context will be evaluated.
 - `Clamp` modifier.
 - Serde derives for `ActionState`.
 - `Axial` preset to map any axis into 2-dimensional input.
@@ -18,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - `GamepadStick`. Use `Axial::left_stick()` or `Axial::right_stick()` instead.
+
+### Changed
+
+- Update to Bevy 0.16.
 
 ## [0.9.0] - 2025-04-08
 

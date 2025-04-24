@@ -2,6 +2,10 @@ use core::{error::Error, fmt::Write};
 use std::fs;
 
 use bevy::{
+    ecs::{
+        relationship::RelatedSpawner,
+        spawn::{SpawnWith, SpawnableList},
+    },
     input::{ButtonState, common_conditions::*, keyboard::KeyboardInput, mouse::MouseButtonInput},
     prelude::*,
     ui::FocusPolicy,
@@ -26,10 +30,8 @@ impl Plugin for KeybindingMenuPlugin {
                 (
                     update_button_text,
                     (
-                        cancel_binding
-                            .never_param_warn()
-                            .run_if(input_just_pressed(KeyCode::Escape)),
-                        bind.never_param_warn(),
+                        cancel_binding.run_if(input_just_pressed(KeyCode::Escape)),
+                        bind,
                     )
                         .chain(),
                 ),
@@ -61,41 +63,41 @@ fn setup(mut commands: Commands) {
     commands.spawn(Camera2d);
 
     // We use separate root node to let dialogs cover the whole UI.
-    commands
-        .spawn((Node {
+    commands.spawn((
+        Node {
             width: Val::Percent(100.0),
             height: Val::Percent(100.0),
             ..Default::default()
-        },))
-        .with_children(|parent| {
-            parent
-                .spawn(Node {
-                    flex_direction: FlexDirection::Column,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    padding: PADDING,
-                    row_gap: GAP,
-                    ..Default::default()
-                })
-                .with_children(|parent| {
-                    setup_actions(parent, &settings);
-
-                    parent
-                        .spawn(Node {
-                            align_items: AlignItems::End,
-                            width: Val::Percent(100.0),
-                            height: Val::Percent(100.0),
-                            justify_content: JustifyContent::End,
-                            ..Default::default()
-                        })
-                        .with_children(|parent| {
-                            parent
-                                .spawn(SettingsButton)
-                                .with_child(Text::new("Apply"))
-                                .observe(apply);
-                        });
-                });
-        });
+        },
+        children![(
+            Node {
+                flex_direction: FlexDirection::Column,
+                width: Val::Percent(100.0),
+                height: Val::Percent(100.0),
+                padding: PADDING,
+                row_gap: GAP,
+                ..Default::default()
+            },
+            children![
+                actions_grid(settings.clone()),
+                (
+                    Node {
+                        align_items: AlignItems::End,
+                        width: Val::Percent(100.0),
+                        height: Val::Percent(100.0),
+                        justify_content: JustifyContent::End,
+                        ..Default::default()
+                    },
+                    children![(
+                        SettingsButton,
+                        Children::spawn(SpawnWith(move |parent: &mut RelatedSpawner<_>| {
+                            parent.spawn(Text::new("Apply")).observe(apply);
+                        }))
+                    )],
+                )
+            ]
+        )],
+    ));
 
     commands.insert_resource(settings);
 }
@@ -124,85 +126,70 @@ struct SettingsField(&'static str);
 /// Number of input columns.
 const INPUTS_PER_ACTION: usize = 3;
 
-fn setup_actions(parent: &mut ChildBuilder, settings: &KeyboardSettings) -> Entity {
-    parent
-        .spawn(Node {
+fn actions_grid(settings: KeyboardSettings) -> impl Bundle {
+    (
+        Node {
             display: Display::Grid,
             column_gap: GAP,
             row_gap: GAP,
             grid_template_columns: vec![GridTrack::auto(); INPUTS_PER_ACTION + 1],
             ..Default::default()
-        })
-        .with_children(|parent| {
-            // We could utilzie reflection to iterate over fields,
-            // but in real application you most likely want to have a nice and translatable text on buttons.
-            setup_action_row(
-                parent,
+        },
+        // We could utilzie reflection to iterate over fields,
+        // but in real application you most likely want to have a nice and translatable text on buttons.
+        Children::spawn((
+            action_row(
                 "Forward",
-                &settings.forward,
                 settings_field!(settings.forward),
-            );
-            setup_action_row(
-                parent,
-                "Left",
-                &settings.left,
-                settings_field!(settings.left),
-            );
-            setup_action_row(
-                parent,
+                settings.forward,
+            ),
+            action_row("Left", settings_field!(settings.left), settings.left),
+            action_row(
                 "Backward",
-                &settings.backward,
                 settings_field!(settings.backward),
-            );
-            setup_action_row(
-                parent,
-                "Right",
-                &settings.right,
-                settings_field!(settings.right),
-            );
-            setup_action_row(
-                parent,
-                "Jump",
-                &settings.jump,
-                settings_field!(settings.jump),
-            );
-            setup_action_row(parent, "Run", &settings.run, settings_field!(settings.run));
-        })
-        .id()
+                settings.backward,
+            ),
+            action_row("Right", settings_field!(settings.right), settings.right),
+            action_row("Jump", settings_field!(settings.jump), settings.jump),
+            action_row("Run", settings_field!(settings.run), settings.run),
+        )),
+    )
 }
 
-fn setup_action_row(
-    parent: &mut ChildBuilder,
+fn action_row(
     name: &'static str,
-    inputs: &[Input],
     field: SettingsField,
-) {
-    parent.spawn((Text::new(name), DARK_TEXT));
-    for index in 0..INPUTS_PER_ACTION {
-        parent
-            .spawn(Node {
-                column_gap: GAP,
-                align_items: AlignItems::Center,
-                ..Default::default()
-            })
-            .with_children(|parent| {
-                let button_entity = parent
-                    .spawn((
-                        field,
-                        Name::new(name),
-                        InputButton {
-                            input: inputs.get(index).copied(),
-                        },
-                    ))
-                    .with_child(Text::default()) // Will be updated automatically on `InputButton` insertion
-                    .observe(show_binding_dialog)
-                    .id();
-                parent
-                    .spawn(DeleteButton { button_entity })
-                    .with_child(Text::new("X"))
-                    .observe(delete_binding);
-            });
-    }
+    inputs: Vec<Input>,
+) -> impl SpawnableList<ChildOf> {
+    (
+        Spawn((Text::new(name), DARK_TEXT)),
+        SpawnWith(move |parent: &mut RelatedSpawner<_>| {
+            for index in 0..INPUTS_PER_ACTION {
+                let input = inputs.get(index).copied();
+                parent.spawn((
+                    Node {
+                        column_gap: GAP,
+                        align_items: AlignItems::Center,
+                        ..Default::default()
+                    },
+                    Children::spawn(SpawnWith(move |parent: &mut RelatedSpawner<_>| {
+                        let button_entity = parent
+                            .spawn((
+                                field,
+                                Name::new(name),
+                                InputButton { input },
+                                children![Text::default()], // Will be updated automatically on `InputButton` insertion
+                            ))
+                            .observe(show_binding_dialog)
+                            .id();
+                        parent
+                            .spawn((DeleteButton { button_entity }, children![Text::new("X")]))
+                            .observe(delete_binding);
+                    })),
+                ));
+            }
+        }),
+    )
 }
 
 fn delete_binding(
@@ -210,7 +197,7 @@ fn delete_binding(
     mut input_buttons: Query<(&Name, &mut InputButton)>,
     delete_buttons: Query<&DeleteButton>,
 ) {
-    let delete_button = delete_buttons.get(trigger.entity()).unwrap();
+    let delete_button = delete_buttons.get(trigger.target()).unwrap();
     let (name, mut input_button) = input_buttons
         .get_mut(delete_button.button_entity)
         .expect("delete button should point to an input button");
@@ -221,42 +208,36 @@ fn delete_binding(
 fn show_binding_dialog(
     trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
-    root_entity: Single<Entity, (With<Node>, Without<Parent>)>,
+    root_entity: Single<Entity, (With<Node>, Without<ChildOf>)>,
     names: Query<&Name>,
 ) {
-    let name = names.get(trigger.entity()).unwrap();
+    let name = names.get(trigger.target()).unwrap();
     info!("starting binding for '{name}'");
 
-    commands.entity(*root_entity).with_children(|parent| {
-        parent
-            .spawn(BindingDialog {
-                button_entity: trigger.entity(),
-            })
-            .with_children(|parent| {
-                parent
-                    .spawn((
-                        Node {
-                            flex_direction: FlexDirection::Column,
-                            padding: PADDING,
-                            row_gap: GAP,
-                            ..Default::default()
-                        },
-                        PANEL_BACKGROUND,
-                    ))
-                    .with_children(|parent| {
-                        parent.spawn((
-                            TextLayout {
-                                justify: JustifyText::Center,
-                                ..Default::default()
-                            },
-                            DARK_TEXT,
-                            Text::new(format!(
-                                "Binding \"{name}\", \npress any key or Esc to cancel",
-                            )),
-                        ));
-                    });
-            });
-    });
+    commands.entity(*root_entity).with_child((
+        BindingDialog {
+            button_entity: trigger.target(),
+        },
+        children![(
+            Node {
+                flex_direction: FlexDirection::Column,
+                padding: PADDING,
+                row_gap: GAP,
+                ..Default::default()
+            },
+            PANEL_BACKGROUND,
+            children![(
+                TextLayout {
+                    justify: JustifyText::Center,
+                    ..Default::default()
+                },
+                DARK_TEXT,
+                Text::new(format!(
+                    "Binding \"{name}\", \npress any key or Esc to cancel",
+                )),
+            )]
+        )],
+    ));
 }
 
 fn bind(
@@ -264,7 +245,7 @@ fn bind(
     mut key_events: EventReader<KeyboardInput>,
     mut mouse_button_events: EventReader<MouseButtonInput>,
     dialog: Single<(Entity, &BindingDialog)>,
-    root_entity: Single<Entity, (With<Node>, Without<Parent>)>,
+    root_entity: Single<Entity, (With<Node>, Without<ChildOf>)>,
     mut buttons: Query<(Entity, &Name, &mut InputButton)>,
 ) {
     let keys = key_events
@@ -288,47 +269,42 @@ fn bind(
     {
         info!("found conflict with '{name}' for '{input}'");
 
-        commands.entity(*root_entity).with_children(|parent| {
-            parent
-                .spawn(ConflictDialog {
-                    button_entity: dialog.button_entity,
-                    conflict_entity,
-                })
-                .with_children(|parent| {
-                    parent
-                        .spawn((
-                            Node {
-                                flex_direction: FlexDirection::Column,
-                                align_items: AlignItems::Center,
-                                padding: PADDING,
-                                row_gap: GAP,
-                                ..Default::default()
-                            },
-                            PANEL_BACKGROUND,
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn((
-                                DARK_TEXT,
-                                Text::new(format!("\"{input}\" is already used by \"{name}\"",)),
-                            ));
+        commands.entity(*root_entity).with_child((
+            ConflictDialog {
+                button_entity: dialog.button_entity,
+                conflict_entity,
+            },
+            children![(
+                Node {
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    padding: PADDING,
+                    row_gap: GAP,
+                    ..Default::default()
+                },
+                PANEL_BACKGROUND,
+                children![
+                    (
+                        DARK_TEXT,
+                        Text::new(format!("\"{input}\" is already used by \"{name}\"",)),
+                    ),
+                    (
+                        Node {
+                            column_gap: GAP,
+                            ..Default::default()
+                        },
+                        Children::spawn(SpawnWith(|parent: &mut RelatedSpawner<_>| {
                             parent
-                                .spawn(Node {
-                                    column_gap: GAP,
-                                    ..Default::default()
-                                })
-                                .with_children(|parent| {
-                                    parent
-                                        .spawn(SettingsButton)
-                                        .with_child(Text::new("Replace"))
-                                        .observe(replace_binding);
-                                    parent
-                                        .spawn(SettingsButton)
-                                        .with_child(Text::new("Cancel"))
-                                        .observe(cancel_replace_binding);
-                                });
-                        });
-                });
-        });
+                                .spawn((SettingsButton, children![Text::new("Replace")]))
+                                .observe(replace_binding);
+                            parent
+                                .spawn((SettingsButton, children![Text::new("Cancel")]))
+                                .observe(cancel_replace_binding);
+                        }))
+                    )
+                ]
+            )],
+        ));
     } else {
         let (_, name, mut button) = buttons
             .get_mut(dialog.button_entity)
@@ -337,12 +313,12 @@ fn bind(
         button.input = Some(input);
     }
 
-    commands.entity(dialog_entity).despawn_recursive();
+    commands.entity(dialog_entity).despawn();
 }
 
 fn cancel_binding(mut commands: Commands, dialog_entity: Single<Entity, With<BindingDialog>>) {
     info!("cancelling binding");
-    commands.entity(*dialog_entity).despawn_recursive();
+    commands.entity(*dialog_entity).despawn();
 }
 
 fn replace_binding(
@@ -364,7 +340,7 @@ fn replace_binding(
     button.input = input;
 
     info!("reassigning binding to '{name}'");
-    commands.entity(dialog_entity).despawn_recursive();
+    commands.entity(dialog_entity).despawn();
 }
 
 fn cancel_replace_binding(
@@ -373,7 +349,7 @@ fn cancel_replace_binding(
     dialog_entity: Single<Entity, With<ConflictDialog>>,
 ) {
     info!("cancelling replace binding");
-    commands.entity(*dialog_entity).despawn_recursive();
+    commands.entity(*dialog_entity).despawn();
 }
 
 fn apply(
@@ -432,13 +408,13 @@ fn update_button_background(
 #[derive(Component, Default)]
 #[require(
     Button,
-    Node(|| Node {
+    Node {
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         width: Val::Px(160.0),
         height: Val::Px(35.0),
         ..Default::default()
-    }),
+    },
 )]
 struct SettingsButton;
 
@@ -454,13 +430,13 @@ struct InputButton {
 #[derive(Component)]
 #[require(
     Button,
-    Node(|| Node {
+    Node {
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         width: Val::Px(35.0),
         height: Val::Px(35.0),
         ..Default::default()
-    }),
+    },
 )]
 struct DeleteButton {
     /// Entity with [`InputButton`].
@@ -469,16 +445,16 @@ struct DeleteButton {
 
 #[derive(Component, Default)]
 #[require(
-    Node(|| Node {
+    Node {
         position_type: PositionType::Absolute,
         width: Val::Percent(100.0),
         height: Val::Percent(100.0),
         align_items: AlignItems::Center,
         justify_content: JustifyContent::Center,
         ..Default::default()
-    }),
-    FocusPolicy(|| FocusPolicy::Block),
-    BackgroundColor(|| BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.3))),
+    },
+    FocusPolicy::Block,
+    BackgroundColor(Color::srgba(1.0, 1.0, 1.0, 0.3)),
 )]
 struct Dialog;
 

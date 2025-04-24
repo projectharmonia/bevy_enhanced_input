@@ -136,7 +136,7 @@ actions
 ```
 
 You can also attach modifiers to input tuples using [`IntoBindings::with_modifiers_each`]. It works similarly to
-[`IntoSystemConfigs::distributive_run_if`] in Bevy.
+[`IntoScheduleConfigs::distributive_run_if`] in Bevy.
 
 ### Presets
 
@@ -211,7 +211,7 @@ fn bind_actions(
     settings: Res<AppSettings>,
     mut actions: Query<&mut Actions<OnFoot>>
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Jump>()
         .to((settings.keyboard.jump, GamepadButton::South));
@@ -264,7 +264,7 @@ app.add_observer(apply_movement);
 /// Apply movement when `Move` action considered fired.
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
     // Read transform from the context entity.
-    let mut transform = players.get_mut(trigger.entity()).unwrap();
+    let mut transform = players.get_mut(trigger.target()).unwrap();
 
     // We defined the output of `Move` as `Vec2`,
     // but since translation expects `Vec3`, we extend it to 3 axes.
@@ -317,12 +317,10 @@ RUST_LOG=bevy_enhanced_input=debug cargo run
 
 The exact method depends on the OS shell.
 
-Alternatively you can configure [`LogPlugin`](bevy::log::LogPlugin) to make it permanent.
+Alternatively you can configure `LogPlugin` to make it permanent.
 */
 
 #![no_std]
-
-extern crate std;
 
 extern crate alloc;
 
@@ -370,17 +368,10 @@ pub mod prelude {
     pub use bevy_enhanced_input_macros::{InputAction, InputContext};
 }
 
-use bevy::{
-    ecs::{
-        system::{ParamBuilder, QueryParamBuilder},
-        world::FilteredEntityMut,
-    },
-    input::InputSystem,
-    prelude::*,
-};
+use bevy::{input::InputSystem, prelude::*};
 
-use action_instances::{ActionInstances, ActionsRegistry};
-use input_reader::{ActionSources, InputReader, ResetInput};
+use action_instances::ContextRegistry;
+use input_reader::{ActionSources, ResetInput};
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
@@ -390,8 +381,7 @@ pub struct EnhancedInputPlugin;
 
 impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<ActionInstances>()
-            .init_resource::<ActionsRegistry>()
+        app.init_resource::<ContextRegistry>()
             .init_resource::<ResetInput>()
             .init_resource::<ActionSources>()
             .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem));
@@ -400,70 +390,17 @@ impl Plugin for EnhancedInputPlugin {
     fn finish(&self, app: &mut App) {
         let registry = app
             .world_mut()
-            .remove_resource::<ActionsRegistry>()
+            .remove_resource::<ContextRegistry>()
             .expect("registry should be inserted in `build`");
 
-        let update = (
-            ParamBuilder,
-            ParamBuilder,
-            ParamBuilder,
-            ParamBuilder,
-            QueryParamBuilder::new(|builder| {
-                builder.optional(|builder| {
-                    for &id in registry.iter() {
-                        builder.mut_id(id);
-                    }
-                });
-            }),
-        )
-            .build_state(app.world_mut())
-            .build_system(update);
-
-        let rebuild = (
-            ParamBuilder,
-            ParamBuilder,
-            ParamBuilder,
-            ParamBuilder,
-            QueryParamBuilder::new(|builder| {
-                builder.optional(|builder| {
-                    for &id in registry.iter() {
-                        builder.mut_id(id);
-                    }
-                });
-            }),
-        )
-            .build_state(app.world_mut())
-            .build_any_system(rebuild);
-
-        app.add_observer(rebuild)
-            .add_systems(PreUpdate, update.in_set(EnhancedInputSystem));
+        for contexts in registry.iter() {
+            contexts.setup(app);
+        }
     }
-}
-
-fn update(
-    mut commands: Commands,
-    mut reader: InputReader,
-    time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
-    mut instances: ResMut<ActionInstances>,
-    mut actions: Query<FilteredEntityMut>,
-) {
-    reader.update_state();
-    instances.update(&mut commands, &mut reader, &time, &mut actions);
-}
-
-fn rebuild(
-    _trigger: Trigger<RebuildBindings>,
-    mut commands: Commands,
-    mut reset_input: ResMut<ResetInput>,
-    mut instances: ResMut<ActionInstances>,
-    time: Res<Time<Virtual>>,
-    mut actions: Query<FilteredEntityMut>,
-) {
-    instances.rebuild(&mut commands, &mut reset_input, &time, &mut actions);
 }
 
 /// Label for the system that updates input context instances.
 ///
-/// Runs in [`PreUpdate`].
+/// Runs in each registered [`InputContext::Schedule`].
 #[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
 pub struct EnhancedInputSystem;

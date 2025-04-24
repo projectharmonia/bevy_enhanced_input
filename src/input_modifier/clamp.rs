@@ -19,7 +19,7 @@ use crate::{action_map::ActionMap, action_value::ActionValue};
 ///     trigger: Trigger<Binding<Ui>>,
 ///     mut ui: Query<&mut Actions<Ui>>,
 /// ) {
-///     let mut actions = ui.get_mut(trigger.entity()).unwrap();
+///     let mut actions = ui.get_mut(trigger.target()).unwrap();
 ///     actions
 ///         .bind::<Up>()
 ///         .to(GamepadAxis::LeftStickY)

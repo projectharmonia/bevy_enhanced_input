@@ -93,7 +93,7 @@ fn any_gamepad_binding(
     trigger: Trigger<Binding<AnyGamepad>>,
     mut actions: Query<&mut Actions<AnyGamepad>>,
 ) {
-    let mut actions = actions.get_mut(trigger.entity()).unwrap();
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<DummyAction>().to(DummyAction::BUTTON);
 }
 
@@ -101,7 +101,7 @@ fn single_gamepad_binding(
     trigger: Trigger<Binding<SingleGamepad>>,
     mut actions: Query<(&mut Actions<SingleGamepad>, &mut SingleGamepad)>,
 ) {
-    let (mut actions, gamepad) = actions.get_mut(trigger.entity()).unwrap();
+    let (mut actions, gamepad) = actions.get_mut(trigger.target()).unwrap();
     actions.set_gamepad(**gamepad);
     actions.bind::<DummyAction>().to(DummyAction::BUTTON);
 }

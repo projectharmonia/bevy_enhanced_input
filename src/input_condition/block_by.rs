@@ -1,6 +1,7 @@
 use core::{any, marker::PhantomData};
 
 use bevy::prelude::*;
+use log::warn;
 
 use super::{ConditionKind, InputCondition};
 use crate::{
@@ -65,7 +66,8 @@ impl<A: InputAction> InputCondition for BlockBy<A> {
                 return ActionState::None;
             }
         } else {
-            warn_once!(
+            // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
+            warn!(
                 "action `{}` is not present in context",
                 any::type_name::<A>()
             );

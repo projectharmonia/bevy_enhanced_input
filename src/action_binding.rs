@@ -5,6 +5,7 @@ use core::{
 };
 
 use bevy::prelude::*;
+use log::{debug, trace};
 
 use crate::{
     action_map::{ActionMap, ActionState},
