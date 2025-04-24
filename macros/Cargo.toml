@@ -1,7 +1,10 @@
 [package]
 name = "bevy_enhanced_input_macros"
 version = "0.10.0"
-authors = ["Hennadii Chernyshchyk <genaloner@gmail.com>"]
+authors = [
+  "Hennadii Chernyshchyk <genaloner@gmail.com>",
+  "Alice Cecile <alice.i.cecile@gmail.com>",
+]
 edition = "2021"
 description = "Bevy Enhanced Input Macros"
 readme = "../README.md"
