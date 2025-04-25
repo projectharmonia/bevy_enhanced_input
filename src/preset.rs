@@ -296,56 +296,32 @@ pub struct SixDOF<I: IntoBindings> {
 }
 
 impl SixDOF<KeyCode> {
-    /// Maps WASD keys as horizontal inputs.
+    /// Maps WASD keys for horizontal (XZ) inputs and takes in up/down mappings.
     ///
-    /// Defaults for space for up and left control for down.
-    /// See [`Self::qe`] and [`Self::space_lshift`] for other up/down presets.
-    ///
-    /// See also [`Self::arrow_keys`].
-    pub fn wasd() -> Self {
+    /// See also [`Self::arrows_and`].
+    pub fn wasd_and(up: KeyCode, down: KeyCode) -> Self {
         SixDOF {
             forward: KeyCode::KeyW,
             backward: KeyCode::KeyS,
             left: KeyCode::KeyA,
             right: KeyCode::KeyD,
-            up: KeyCode::Space,
-            down: KeyCode::ControlLeft,
+            up,
+            down,
         }
     }
 
-    /// Maps arrow keys as horizontal inputs.
+    /// Maps arrow keys for horizontal (XZ) inputs and takes in up/down mappings.
     ///
-    /// Defaults for space for up and left control for down.
-    /// See [`Self::qe`] and [`Self::space_lshift`] for other up/down presets.
-    ///
-    /// See also [`Self::wasd`].
-    pub fn arrow_keys() -> Self {
+    /// See also [`Self::wasd_and`].
+    pub fn arrows_and(up: KeyCode, down: KeyCode) -> Self {
         SixDOF {
             forward: KeyCode::ArrowUp,
             backward: KeyCode::ArrowDown,
             left: KeyCode::ArrowLeft,
             right: KeyCode::ArrowRight,
-            up: KeyCode::Space,
-            down: KeyCode::ControlLeft,
+            up,
+            down,
         }
-    }
-
-    /// Changes mapping to space for up and left shift for down.
-    ///
-    /// See also [`Self::qe`].
-    pub fn space_lshift(mut self) -> Self {
-        self.up = KeyCode::Space;
-        self.down = KeyCode::ShiftLeft;
-        self
-    }
-
-    /// Changes mapping to Q for up and E for down.
-    ///
-    /// See also [`Self::qe`].
-    pub fn qe(mut self) -> Self {
-        self.up = KeyCode::KeyQ;
-        self.down = KeyCode::KeyE;
-        self
     }
 }
 
