@@ -57,7 +57,10 @@ fn regular_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Ac
     actions.bind::<EnterWater>().to(KeyCode::Enter);
 }
 
-fn swimming_binding(trigger: Trigger<Binding<Swimming>>, mut players: Query<&mut Actions<Player>>) {
+fn swimming_binding(
+    trigger: Trigger<Binding<Swimming>>,
+    mut players: Query<&mut Actions<Swimming>>,
+) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
     // `Player` has lower priority, so `Dive` and `ExitWater` consume inputs first,
     // preventing `Rotate` and `EnterWater` from being triggered.
