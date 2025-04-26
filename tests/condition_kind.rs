@@ -257,7 +257,7 @@ fn binding(trigger: Trigger<Binding<Player>>, mut actions: Query<&mut Actions<Pl
         .with_conditions(Release::default());
     actions
         .bind::<Explicit>()
-        .with_conditions(Press::default())
+        .with_conditions(Down::default())
         .to(Explicit::KEY);
     actions
         .bind::<Implicit>()

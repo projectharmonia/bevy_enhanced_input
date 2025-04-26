@@ -37,11 +37,11 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
     actions
         .bind::<PressAction>()
         .to(PressAction::KEY)
-        .with_conditions(Press::default());
+        .with_conditions(Down::default());
     actions
         .bind::<JustPressAction>()
         .to(JustPressAction::KEY)
-        .with_conditions(JustPress::default());
+        .with_conditions(Press::default());
     actions
         .bind::<HoldAction>()
         .to(HoldAction::KEY)

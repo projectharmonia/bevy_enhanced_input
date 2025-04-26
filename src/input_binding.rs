@@ -113,7 +113,7 @@ pub trait BindingBuilder {
     /// # use bevy_enhanced_input::prelude::*;
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>()
-    ///     .to(KeyCode::Space.with_conditions((Release::default(), JustPress::default())));
+    ///     .to(KeyCode::Space.with_conditions((Release::default(), Press::default())));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;

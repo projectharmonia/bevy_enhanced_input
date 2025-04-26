@@ -154,7 +154,7 @@ impl ActionBinding {
     /// # let mut actions = Actions::<Dummy>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
-    ///     .with_conditions((Release::default(), JustPress::default()));
+    ///     .with_conditions((Release::default(), Press::default()));
     /// # #[derive(InputContext)]
     /// # struct Dummy;
     /// # #[derive(Debug, InputAction)]

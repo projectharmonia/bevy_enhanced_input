@@ -258,7 +258,7 @@ fn both_levels() {
 fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
 
-    let down = Press::default();
+    let down = Down::default();
     let release = Release::default();
     let chord = Chord::<ChordMember>::default();
     let block_by = BlockBy::<Blocker>::default();
