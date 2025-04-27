@@ -21,7 +21,7 @@ Input manager for [Bevy](https://bevyengine.org), inspired by [Unreal Engine Enh
 
 Check out the [quick start guide](https://docs.rs/bevy_enhanced_input) for more details.
 
-See also examples in the repo. [simple.rs](examples/simple.rs) should be a good starting point.
+See also examples in the repo. [simple_fly_cam.rs](examples/simple_fly_cam.rs) should be a good starting point.
 
 Have any questions? Feel free to ask in the dedicated [`bevy_enhanced_input` channel](https://discord.com/channels/691052431525675048/1297361733886677036) in Bevy's Discord server.
 
