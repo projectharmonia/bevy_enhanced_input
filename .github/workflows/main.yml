@@ -131,8 +131,9 @@ jobs:
       - name: Install Tarpaulin
         run: cargo install cargo-tarpaulin
 
+      # Use only a single job to prevent OOM.
       - name: Test
-        run: cargo tarpaulin --engine llvm --out lcov
+        run: cargo tarpaulin --engine llvm --out lcov --jobs 1
 
       - name: Upload code coverage results
         if: github.actor != 'dependabot[bot]'
