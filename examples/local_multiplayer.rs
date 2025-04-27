@@ -1,75 +1,77 @@
 //! Two players that use the same context type, but with different bindings.
 
-mod player_box;
-
-use core::f32::consts::FRAC_PI_4;
-
-use bevy::{
-    color::palettes::tailwind::{BLUE_600, RED_600},
-    input::gamepad::{GamepadConnection, GamepadConnectionEvent},
-    prelude::*,
-};
+use bevy::{input::gamepad::GamepadConnectionEvent, prelude::*};
 use bevy_enhanced_input::prelude::*;
-
-use player_box::{DEFAULT_SPEED, PlayerBox, PlayerBoxPlugin, PlayerColor};
 
 fn main() {
     App::new()
-        .add_plugins((
-            DefaultPlugins,
-            EnhancedInputPlugin,
-            PlayerBoxPlugin,
-            GamePlugin,
-        ))
+        .add_plugins((DefaultPlugins, EnhancedInputPlugin))
+        .init_resource::<Gamepads>()
+        .add_input_context::<Player>()
+        .add_observer(binding)
+        .add_observer(apply_movement)
+        .add_systems(Startup, spawn)
+        .add_systems(
+            Update,
+            update_gamepads.run_if(on_event::<GamepadConnectionEvent>),
+        )
         .run();
 }
 
-struct GamePlugin;
-
-impl Plugin for GamePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_input_context::<Player>()
-            .add_observer(binding)
-            .add_observer(apply_movement)
-            .add_observer(rotate)
-            .add_systems(Startup, spawn)
-            .add_systems(Update, update_gamepads);
-    }
-}
-
-fn spawn(mut commands: Commands) {
-    commands.spawn(Camera2d);
-
-    // Spawn two players with different assigned indices.
+fn spawn(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     commands.spawn((
-        PlayerBox,
-        Transform::from_translation(Vec3::X * 50.0),
-        PlayerColor(RED_600.into()),
-        Player::First,
-        Actions::<Player>::default(),
+        Camera3d::default(),
+        Transform::from_xyz(0.0, 25.0, 0.0).looking_at(-Vec3::Y, Vec3::Y),
+    ));
+
+    commands.spawn((
+        Mesh3d(meshes.add(Plane3d::new(Vec3::Y, Vec2::splat(10.0)))),
+        MeshMaterial3d(materials.add(Color::WHITE)),
     ));
     commands.spawn((
-        PlayerBox,
-        Transform::from_translation(-Vec3::X * 50.0),
-        PlayerColor(BLUE_600.into()),
-        Player::Second,
+        PointLight {
+            shadows_enabled: true,
+            ..Default::default()
+        },
+        Transform::from_xyz(4.0, 8.0, 4.0),
+    ));
+
+    // Spawn two players with different assigned indices.
+    let capsule = meshes.add(Capsule3d::new(0.5, 2.0));
+    commands.spawn((
+        Mesh3d(capsule.clone()),
+        MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
+        Transform::from_xyz(0.0, 1.5, 8.0),
         Actions::<Player>::default(),
+        Player::First,
+    ));
+
+    commands.spawn((
+        Mesh3d(capsule),
+        MeshMaterial3d(materials.add(Color::srgb_u8(220, 90, 90))),
+        Transform::from_xyz(0.0, 1.5, -8.0),
+        Actions::<Player>::default(),
+        Player::Second,
     ));
 }
 
 fn binding(
     trigger: Trigger<Binding<Player>>,
-    gamepads: Res<Gamepads>,
+    gamepads: Query<Entity, With<Gamepad>>,
     mut players: Query<(&Player, &mut Actions<Player>)>,
 ) {
     let (&player, mut actions) = players.get_mut(trigger.target()).unwrap();
 
     // By default actions read inputs from all gamepads,
     // but for local multiplayer we need assign specific
-    // gamepad index.
-    if let Some(&entity) = gamepads.get(player as usize) {
-        actions.set_gamepad(entity);
-    }
+    // gamepad index. If no gamepad with the given exists,
+    // use a placeholder to disable gamepad input.
+    let gamepad_entity = gamepads.iter().nth(player as usize);
+    actions.set_gamepad(gamepad_entity.unwrap_or(Entity::PLACEHOLDER));
 
     // Assign different bindings based player index.
     match player {
@@ -77,56 +79,34 @@ fn binding(
             actions
                 .bind::<Move>()
                 .to((Cardinal::wasd_keys(), Axial::left_stick()));
-            actions
-                .bind::<Rotate>()
-                .to((KeyCode::Space, GamepadButton::South));
         }
         Player::Second => {
             actions
                 .bind::<Move>()
                 .to((Cardinal::arrow_keys(), Axial::left_stick()));
-            actions
-                .bind::<Rotate>()
-                .to((KeyCode::Numpad0, GamepadButton::South));
         }
     }
 
     // Can be called multiple times extend bindings.
     // In our case we add modifiers for all players.
-    actions.bind::<Move>().with_modifiers((
-        DeadZone::default(),
-        SmoothNudge::default(),
-        Scale::splat(DEFAULT_SPEED),
-    ));
+    actions
+        .bind::<Move>()
+        .with_modifiers((DeadZone::default(), SmoothNudge::default()));
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
     let mut transform = players.get_mut(trigger.target()).unwrap();
-    transform.translation += trigger.value.extend(0.0);
+
+    // Adjust axes for top-down movement.
+    transform.translation.z -= trigger.value.x;
+    transform.translation.x -= trigger.value.y;
+
+    // Prevent from moving out of plane.
+    transform.translation.z = transform.translation.z.clamp(-10.0, 10.0);
+    transform.translation.x = transform.translation.x.clamp(-10.0, 10.0);
 }
 
-fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.target()).unwrap();
-    transform.rotate_z(FRAC_PI_4);
-}
-
-fn update_gamepads(
-    mut commands: Commands,
-    mut connect_events: EventReader<GamepadConnectionEvent>,
-    mut gamepads: ResMut<Gamepads>,
-) {
-    for event in connect_events.read() {
-        match event.connection {
-            GamepadConnection::Connected { .. } => gamepads.push(event.gamepad),
-            GamepadConnection::Disconnected => {
-                if let Some(index) = gamepads.iter().position(|&entity| entity == event.gamepad) {
-                    gamepads.swap_remove(index);
-                }
-            }
-        }
-    }
-
-    // Update associated gamepads.
+fn update_gamepads(mut commands: Commands) {
     commands.trigger(RebuildBindings);
 }
 
@@ -144,7 +124,3 @@ struct Gamepads(Vec<Entity>);
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]
 struct Move;
-
-#[derive(Debug, InputAction)]
-#[input_action(output = bool)]
-struct Rotate;
