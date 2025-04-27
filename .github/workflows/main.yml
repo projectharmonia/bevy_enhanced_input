@@ -133,7 +133,7 @@ jobs:
 
       # Use only a single job to prevent OOM.
       - name: Test
-        run: cargo tarpaulin --engine llvm --out lcov --jobs 1
+        run: cargo tarpaulin --engine llvm --out lcov --jobs 2
 
       - name: Upload code coverage results
         if: github.actor != 'dependabot[bot]'
