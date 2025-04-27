@@ -133,7 +133,7 @@ jobs:
 
       # Use less job to prevent OOM while compiling.
       - name: Test
-        run: cargo tarpaulin --engine llvm --out lcov --jobs 4
+        run: cargo tarpaulin --engine llvm --out lcov --jobs 3
 
       - name: Upload code coverage results
         if: github.actor != 'dependabot[bot]'
