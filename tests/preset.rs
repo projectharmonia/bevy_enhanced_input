@@ -149,7 +149,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
         },
         Axial::left_stick(),
         Axial::right_stick(),
-        SixDOF {
+        Spatial {
             forward: KeyCode::Digit0,
             backward: KeyCode::Digit1,
             left: KeyCode::Digit2,

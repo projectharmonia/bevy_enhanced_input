@@ -13,7 +13,7 @@ use crate::{
 /// toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
 /// you will need to invert Y and apply it to Z inside your observer.
 ///
-/// See also [`Axial`], [`Bidirectional`] and [`SixDOF`].
+/// See also [`Axial`], [`Bidirectional`] and [`Spatial`].
 ///
 /// # Examples
 ///
@@ -216,7 +216,7 @@ impl<I: IntoBindings> IntoBindings for Axial<I> {
 ///
 /// Positive binding will be passed as is and negative will be reversed using [`Negate`].
 ///
-/// See also [`Cardinal`] and [`SixDOF`].
+/// See also [`Cardinal`] and [`Spatial`].
 #[derive(Debug, Clone, Copy)]
 pub struct Bidirectional<I: IntoBindings> {
     pub positive: I,
@@ -255,7 +255,7 @@ impl<I: IntoBindings> IntoBindings for Bidirectional<I> {
 ///     mut cameras: Query<&mut Actions<FlyCamera>>,
 /// ) {
 ///     let mut actions = cameras.get_mut(trigger.target()).unwrap();
-///     actions.bind::<Move>().to(SixDOF {
+///     actions.bind::<Move>().to(Spatial {
 ///         forward: &settings.forward,
 ///         right: &settings.right,
 ///         backward: &settings.backward,
@@ -286,7 +286,7 @@ impl<I: IntoBindings> IntoBindings for Bidirectional<I> {
 /// struct Move;
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct SixDOF<I: IntoBindings> {
+pub struct Spatial<I: IntoBindings> {
     pub forward: I,
     pub backward: I,
     pub left: I,
@@ -295,12 +295,12 @@ pub struct SixDOF<I: IntoBindings> {
     pub down: I,
 }
 
-impl SixDOF<KeyCode> {
+impl Spatial<KeyCode> {
     /// Maps WASD keys for horizontal (XZ) inputs and takes in up/down mappings.
     ///
     /// See also [`Self::arrows_and`].
     pub fn wasd_and(up: KeyCode, down: KeyCode) -> Self {
-        SixDOF {
+        Spatial {
             forward: KeyCode::KeyW,
             backward: KeyCode::KeyS,
             left: KeyCode::KeyA,
@@ -314,7 +314,7 @@ impl SixDOF<KeyCode> {
     ///
     /// See also [`Self::wasd_and`].
     pub fn arrows_and(up: KeyCode, down: KeyCode) -> Self {
-        SixDOF {
+        Spatial {
             forward: KeyCode::ArrowUp,
             backward: KeyCode::ArrowDown,
             left: KeyCode::ArrowLeft,
@@ -325,7 +325,7 @@ impl SixDOF<KeyCode> {
     }
 }
 
-impl<I: IntoBindings> IntoBindings for SixDOF<I> {
+impl<I: IntoBindings> IntoBindings for Spatial<I> {
     fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
         // Z
         let backward = self
