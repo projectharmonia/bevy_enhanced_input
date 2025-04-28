@@ -8,22 +8,22 @@ fn once_in_two_frames() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
-        .add_input_context::<Dummy>()
+        .add_input_context::<Test>()
         .add_observer(binding)
         .finish();
 
-    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(DummyAction::KEY);
+        .press(TestAction::KEY);
 
     for frame in 0..2 {
         app.update();
 
-        let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+        let actions = app.world().get::<Actions<Test>>(entity).unwrap();
         assert!(
-            actions.action::<DummyAction>().events().is_empty(),
+            actions.action::<TestAction>().events().is_empty(),
             "shouldn't fire on frame {frame}"
         );
     }
@@ -31,8 +31,8 @@ fn once_in_two_frames() {
     for frame in 2..4 {
         app.update();
 
-        let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
-        let action = actions.action::<DummyAction>();
+        let actions = app.world().get::<Actions<Test>>(entity).unwrap();
+        let action = actions.action::<TestAction>();
         assert_eq!(
             action.events(),
             ActionEvents::STARTED | ActionEvents::FIRED,
@@ -48,28 +48,28 @@ fn twice_in_one_frame() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
-        .add_input_context::<Dummy>()
+        .add_input_context::<Test>()
         .add_observer(binding)
         .finish();
 
-    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(DummyAction::KEY);
+        .press(TestAction::KEY);
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert!(
-        actions.action::<DummyAction>().events().is_empty(),
+        actions.action::<TestAction>().events().is_empty(),
         "`FixedMain` should never run on the first frame"
     );
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
-    let action = actions.action::<DummyAction>();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
+    let action = actions.action::<TestAction>();
     assert_eq!(
         action.events(),
         ActionEvents::FIRED,
@@ -77,19 +77,19 @@ fn twice_in_one_frame() {
     );
 }
 
-fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<DummyAction>().to(DummyAction::KEY);
+    actions.bind::<TestAction>().to(TestAction::KEY);
 }
 
 #[derive(InputContext)]
 #[input_context(schedule = FixedPreUpdate)]
-struct Dummy;
+struct Test;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]
-struct DummyAction;
+struct TestAction;
 
-impl DummyAction {
+impl TestAction {
     const KEY: KeyCode = KeyCode::KeyA;
 }

@@ -22,17 +22,17 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<Dummy>()
+        app.add_input_context::<Test>()
             .add_observer(binding)
             .add_systems(Startup, spawn);
     }
 }
 
 fn spawn(mut commands: Commands) {
-    commands.spawn(Actions::<Dummy>::default());
+    commands.spawn(Actions::<Test>::default());
 }
 
-fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<PressAction>()
@@ -82,7 +82,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
 }
 
 #[derive(InputContext)]
-struct Dummy;
+struct Test;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]

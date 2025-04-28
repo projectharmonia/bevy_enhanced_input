@@ -17,7 +17,7 @@ fn any() {
     app.update();
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.analog_mut().set(DummyAction::BUTTON, 1.0);
+    gamepad1.analog_mut().set(TestAction::BUTTON, 1.0);
 
     app.update();
 
@@ -25,13 +25,13 @@ fn any() {
         .world()
         .get::<Actions<AnyGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<DummyAction>().state(), ActionState::Fired);
+    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.analog_mut().set(DummyAction::BUTTON, 0.0);
+    gamepad1.analog_mut().set(TestAction::BUTTON, 0.0);
 
     let mut gamepad2 = app.world_mut().get_mut::<Gamepad>(gamepad_entity2).unwrap();
-    gamepad2.analog_mut().set(DummyAction::BUTTON, 1.0);
+    gamepad2.analog_mut().set(TestAction::BUTTON, 1.0);
 
     app.update();
 
@@ -39,7 +39,7 @@ fn any() {
         .world()
         .get::<Actions<AnyGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<DummyAction>().state(), ActionState::Fired);
+    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
 }
 
 #[test]
@@ -64,7 +64,7 @@ fn by_id() {
     app.update();
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.analog_mut().set(DummyAction::BUTTON, 1.0);
+    gamepad1.analog_mut().set(TestAction::BUTTON, 1.0);
 
     app.update();
 
@@ -72,13 +72,13 @@ fn by_id() {
         .world()
         .get::<Actions<SingleGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<DummyAction>().state(), ActionState::Fired);
+    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
-    gamepad1.analog_mut().set(DummyAction::BUTTON, 0.0);
+    gamepad1.analog_mut().set(TestAction::BUTTON, 0.0);
 
     let mut gamepad2 = app.world_mut().get_mut::<Gamepad>(gamepad_entity2).unwrap();
-    gamepad2.analog_mut().set(DummyAction::BUTTON, 1.0);
+    gamepad2.analog_mut().set(TestAction::BUTTON, 1.0);
 
     app.update();
 
@@ -86,7 +86,7 @@ fn by_id() {
         .world()
         .get::<Actions<SingleGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<DummyAction>().state(), ActionState::None);
+    assert_eq!(actions.action::<TestAction>().state(), ActionState::None);
 }
 
 fn any_gamepad_binding(
@@ -94,7 +94,7 @@ fn any_gamepad_binding(
     mut actions: Query<&mut Actions<AnyGamepad>>,
 ) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<DummyAction>().to(DummyAction::BUTTON);
+    actions.bind::<TestAction>().to(TestAction::BUTTON);
 }
 
 fn single_gamepad_binding(
@@ -103,7 +103,7 @@ fn single_gamepad_binding(
 ) {
     let (mut actions, gamepad) = actions.get_mut(trigger.target()).unwrap();
     actions.set_gamepad(**gamepad);
-    actions.bind::<DummyAction>().to(DummyAction::BUTTON);
+    actions.bind::<TestAction>().to(TestAction::BUTTON);
 }
 
 #[derive(InputContext)]
@@ -114,8 +114,8 @@ struct SingleGamepad(Entity);
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]
-struct DummyAction;
+struct TestAction;
 
-impl DummyAction {
+impl TestAction {
     const BUTTON: GamepadButton = GamepadButton::South;
 }
