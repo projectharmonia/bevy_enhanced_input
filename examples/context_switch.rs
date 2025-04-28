@@ -1,114 +1,86 @@
 //! One context completely replaces another.
 
-mod player_box;
-
-use core::f32::consts::FRAC_PI_4;
-
-use bevy::{color::palettes::tailwind::FUCHSIA_400, prelude::*};
+use bevy::prelude::*;
 use bevy_enhanced_input::prelude::*;
-
-use player_box::{DEFAULT_SPEED, PlayerBox, PlayerBoxPlugin, PlayerColor};
 
 fn main() {
     App::new()
-        .add_plugins((
-            DefaultPlugins,
-            EnhancedInputPlugin,
-            PlayerBoxPlugin,
-            GamePlugin,
-        ))
+        .add_plugins((DefaultPlugins, EnhancedInputPlugin))
+        .add_input_context::<Player>()
+        .add_input_context::<Inventory>()
+        .add_observer(player_binding)
+        .add_observer(inventory_binding)
+        .add_observer(apply_movement)
+        .add_observer(attack)
+        .add_observer(open_inventory)
+        .add_observer(navigate_inventory)
+        .add_observer(close_inventory)
+        .add_systems(Startup, spawn)
         .run();
 }
 
-struct GamePlugin;
-
-impl Plugin for GamePlugin {
-    fn build(&self, app: &mut App) {
-        app.add_input_context::<OnFoot>()
-            .add_input_context::<InCar>()
-            .add_observer(foot_binding)
-            .add_observer(car_binding)
-            .add_observer(apply_movement)
-            .add_observer(rotate)
-            .add_observer(enter_car)
-            .add_observer(exit_car)
-            .add_systems(Startup, spawn);
-    }
-}
-
 fn spawn(mut commands: Commands) {
-    commands.spawn(Camera2d);
-    commands.spawn((PlayerBox, Actions::<OnFoot>::default()));
+    commands.spawn(Actions::<Player>::default());
 }
 
-fn foot_binding(trigger: Trigger<Binding<OnFoot>>, mut players: Query<&mut Actions<OnFoot>>) {
+fn player_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Move>()
-        .to(Cardinal::wasd_keys())
-        .with_modifiers((
-            DeadZone::default(),
-            SmoothNudge::default(),
-            Scale::splat(DEFAULT_SPEED),
-        ));
-    actions.bind::<Rotate>().to(KeyCode::Space);
-    actions.bind::<EnterCar>().to(KeyCode::Enter);
+        .to((Cardinal::wasd_keys(), Axial::left_stick()))
+        .with_modifiers(DeadZone::default());
+    actions
+        .bind::<Attack>()
+        .to((MouseButton::Left, GamepadButton::West));
+    actions
+        .bind::<OpenInventory>()
+        .to((KeyCode::KeyI, GamepadButton::Select));
 }
 
-fn car_binding(trigger: Trigger<Binding<InCar>>, mut players: Query<&mut Actions<InCar>>) {
+fn inventory_binding(
+    trigger: Trigger<Binding<Inventory>>,
+    mut players: Query<&mut Actions<Inventory>>,
+) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
-        .bind::<Move>()
-        .to(Cardinal::wasd_keys())
-        .with_modifiers((
-            DeadZone::default(),
-            SmoothNudge::default(),
-            Scale::splat(DEFAULT_SPEED + 20.0), // Make car faster.
-        ));
-    actions.bind::<ExitCar>().to(KeyCode::Enter);
+        .bind::<NavigateInventory>()
+        .to((Cardinal::wasd_keys(), Axial::left_stick()))
+        .with_conditions(Pulse::new(0.2)); // Avoid triggering every frame on hold for UI.
+    actions
+        .bind::<CloseInventory>()
+        .to((KeyCode::KeyI, GamepadButton::Select));
 }
 
-fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.target()).unwrap();
-    transform.translation += trigger.value.extend(0.0);
+fn apply_movement(trigger: Trigger<Fired<Move>>) {
+    info!("moving: {}", trigger.value);
 }
 
-fn rotate(trigger: Trigger<Started<Rotate>>, mut players: Query<&mut Transform>) {
-    let mut transform = players.get_mut(trigger.target()).unwrap();
-    transform.rotate_z(FRAC_PI_4);
+fn attack(_trigger: Trigger<Fired<Attack>>) {
+    info!("attacking");
 }
 
-fn enter_car(
-    trigger: Trigger<Started<EnterCar>>,
-    mut commands: Commands,
-    mut players: Query<&mut PlayerColor>,
-) {
-    // Change color for visibility.
-    let mut color = players.get_mut(trigger.target()).unwrap();
-    **color = FUCHSIA_400.into();
-
+fn open_inventory(trigger: Trigger<Started<OpenInventory>>, mut commands: Commands) {
+    info!("opening inventory");
     commands
         .entity(trigger.target())
-        .remove::<Actions<OnFoot>>()
-        .insert(Actions::<InCar>::default());
+        .remove::<Actions<Player>>()
+        .insert(Actions::<Inventory>::default());
 }
 
-fn exit_car(
-    trigger: Trigger<Started<ExitCar>>,
-    mut commands: Commands,
-    mut players: Query<&mut PlayerColor>,
-) {
-    let mut color = players.get_mut(trigger.target()).unwrap();
-    **color = Default::default();
+fn navigate_inventory(_trigger: Trigger<Fired<NavigateInventory>>) {
+    info!("navigating inventory");
+}
 
+fn close_inventory(trigger: Trigger<Started<CloseInventory>>, mut commands: Commands) {
+    info!("closing inventory");
     commands
         .entity(trigger.target())
-        .remove::<Actions<InCar>>()
-        .insert(Actions::<OnFoot>::default());
+        .remove::<Actions<Inventory>>()
+        .insert(Actions::<Player>::default());
 }
 
 #[derive(InputContext)]
-struct OnFoot;
+struct Player;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = Vec2)]
@@ -116,22 +88,26 @@ struct Move;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]
-struct Rotate;
+struct Attack;
 
-/// Switches context to [`InCar`].
+/// Switches context to [`Inventory`].
 ///
-/// We set `require_reset` to `true` because [`ExitCar`] action uses the same input,
+/// We set `require_reset` to `true` because [`CloseInventory`] action uses the same input,
 /// and we want it to be triggerable only after the button is released.
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, require_reset = true)]
-struct EnterCar;
+struct OpenInventory;
 
 #[derive(InputContext)]
-struct InCar;
+struct Inventory;
 
-/// Switches context to [`OnFoot`].
+#[derive(Debug, InputAction)]
+#[input_action(output = Vec2)]
+struct NavigateInventory;
+
+/// Switches context to [`Player`].
 ///
-/// See [`EnterCar`] for details about `require_reset`.
+/// See [`OpenInventory`] for details about `require_reset`.
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, require_reset = true)]
-struct ExitCar;
+struct CloseInventory;
