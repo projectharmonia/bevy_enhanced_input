@@ -24,6 +24,12 @@ fn keys() {
         (KeyCode::ArrowRight, RIGHT),
         (KeyCode::NumpadSubtract, LEFT),
         (KeyCode::NumpadAdd, RIGHT),
+        (KeyCode::Digit0, FORWARD),
+        (KeyCode::Digit1, BACKWARD),
+        (KeyCode::Digit2, LEFT),
+        (KeyCode::Digit3, RIGHT),
+        (KeyCode::Digit4, UP),
+        (KeyCode::Digit5, DOWN),
     ] {
         app.world_mut()
             .resource_mut::<ButtonInput<KeyCode>>()
@@ -124,10 +130,12 @@ fn sticks() {
     }
 }
 
-const UP: Vec2 = Vec2::new(0.0, 1.0);
-const LEFT: Vec2 = Vec2::new(-1.0, 0.0);
-const DOWN: Vec2 = Vec2::new(0.0, -1.0);
-const RIGHT: Vec2 = Vec2::new(1.0, 0.0);
+const RIGHT: Vec3 = Vec3::X;
+const LEFT: Vec3 = Vec3::NEG_X;
+const BACKWARD: Vec3 = Vec3::Z;
+const FORWARD: Vec3 = Vec3::NEG_Z;
+const UP: Vec3 = Vec3::Y;
+const DOWN: Vec3 = Vec3::NEG_Y;
 
 fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
@@ -141,6 +149,14 @@ fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test
         },
         Axial::left_stick(),
         Axial::right_stick(),
+        Spatial {
+            forward: KeyCode::Digit0,
+            backward: KeyCode::Digit1,
+            left: KeyCode::Digit2,
+            right: KeyCode::Digit3,
+            up: KeyCode::Digit4,
+            down: KeyCode::Digit5,
+        },
     ));
 }
 
@@ -148,5 +164,5 @@ fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test
 struct Test;
 
 #[derive(Debug, InputAction)]
-#[input_action(output = Vec2, consume_input = true)]
+#[input_action(output = Vec3, consume_input = true)]
 struct TestAction;
