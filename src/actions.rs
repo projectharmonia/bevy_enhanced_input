@@ -214,19 +214,19 @@ mod tests {
 
     #[test]
     fn bind() {
-        let mut actions = Actions::<Dummy>::default();
-        actions.bind::<DummyAction>().to(KeyCode::KeyA);
-        actions.bind::<DummyAction>().to(KeyCode::KeyB);
+        let mut actions = Actions::<Test>::default();
+        actions.bind::<TestAction>().to(KeyCode::KeyA);
+        actions.bind::<TestAction>().to(KeyCode::KeyB);
         assert_eq!(actions.bindings.len(), 1);
 
-        let binding = actions.binding::<DummyAction>();
+        let binding = actions.binding::<TestAction>();
         assert_eq!(binding.inputs().len(), 2);
     }
 
     #[derive(Debug, InputAction)]
     #[input_action(output = bool)]
-    struct DummyAction;
+    struct TestAction;
 
     #[derive(InputContext)]
-    struct Dummy;
+    struct Test;
 }

@@ -92,12 +92,12 @@ mod tests {
 
     #[test]
     fn block() {
-        let mut condition = BlockBy::<DummyAction>::default();
-        let mut action = Action::new::<DummyAction>();
+        let mut condition = BlockBy::<TestAction>::default();
+        let mut action = Action::new::<TestAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
         let mut action_map = ActionMap::default();
-        action_map.insert_action::<DummyAction>(action);
+        action_map.insert_action::<TestAction>(action);
 
         assert_eq!(
             condition.evaluate(&action_map, &time, true.into()),
@@ -107,7 +107,7 @@ mod tests {
 
     #[test]
     fn missing_action() {
-        let mut condition = BlockBy::<DummyAction>::default();
+        let mut condition = BlockBy::<TestAction>::default();
         let action_map = ActionMap::default();
         let time = Time::default();
 
@@ -119,5 +119,5 @@ mod tests {
 
     #[derive(Debug, InputAction)]
     #[input_action(output = bool)]
-    struct DummyAction;
+    struct TestAction;
 }

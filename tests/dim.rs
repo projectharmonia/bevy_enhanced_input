@@ -5,11 +5,11 @@ use bevy_enhanced_input::prelude::*;
 fn bool() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<Dummy>()
+        .add_input_context::<Test>()
         .add_observer(binding)
         .finish();
 
-    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -19,7 +19,7 @@ fn bool() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Bool>().value(), true.into());
 
     app.world_mut()
@@ -28,7 +28,7 @@ fn bool() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Bool>().value(), false.into());
 }
 
@@ -36,11 +36,11 @@ fn bool() {
 fn axis1d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<Dummy>()
+        .add_input_context::<Test>()
         .add_observer(binding)
         .finish();
 
-    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -50,7 +50,7 @@ fn axis1d() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Axis1D>().value(), 1.0.into());
 
     app.world_mut()
@@ -59,7 +59,7 @@ fn axis1d() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Axis1D>().value(), 0.0.into());
 }
 
@@ -67,11 +67,11 @@ fn axis1d() {
 fn axis2d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<Dummy>()
+        .add_input_context::<Test>()
         .add_observer(binding)
         .finish();
 
-    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -81,7 +81,7 @@ fn axis2d() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Axis2D>().value(), (1.0, 0.0).into());
 
     app.world_mut()
@@ -90,7 +90,7 @@ fn axis2d() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Axis2D>().value(), Vec2::ZERO.into());
 }
 
@@ -98,11 +98,11 @@ fn axis2d() {
 fn axis3d() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<Dummy>()
+        .add_input_context::<Test>()
         .add_observer(binding)
         .finish();
 
-    let entity = app.world_mut().spawn(Actions::<Dummy>::default()).id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -112,7 +112,7 @@ fn axis3d() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Axis3D>().value(), (1.0, 0.0, 0.0).into());
 
     app.world_mut()
@@ -121,11 +121,11 @@ fn axis3d() {
 
     app.update();
 
-    let actions = app.world().get::<Actions<Dummy>>(entity).unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.action::<Axis3D>().value(), Vec3::ZERO.into());
 }
 
-fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Bool>().to(Bool::KEY);
     actions.bind::<Axis1D>().to(Axis1D::KEY);
@@ -134,7 +134,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
 }
 
 #[derive(InputContext)]
-struct Dummy;
+struct Test;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]
