@@ -66,12 +66,12 @@ mod tests {
 
     #[test]
     fn accumulation_active() {
-        let mut modifier = AccumulateBy::<DummyAction>::default();
-        let mut action = Action::new::<DummyAction>();
+        let mut modifier = AccumulateBy::<TestAction>::default();
+        let mut action = Action::new::<TestAction>();
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
         let mut action_map = ActionMap::default();
-        action_map.insert_action::<DummyAction>(action);
+        action_map.insert_action::<TestAction>(action);
 
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 2.0.into());
@@ -79,11 +79,11 @@ mod tests {
 
     #[test]
     fn accumulation_inactive() {
-        let mut modifier = AccumulateBy::<DummyAction>::default();
-        let action = Action::new::<DummyAction>();
+        let mut modifier = AccumulateBy::<TestAction>::default();
+        let action = Action::new::<TestAction>();
         let time = Time::default();
         let mut action_map = ActionMap::default();
-        action_map.insert_action::<DummyAction>(action);
+        action_map.insert_action::<TestAction>(action);
 
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn missing_action() {
-        let mut modifier = AccumulateBy::<DummyAction>::default();
+        let mut modifier = AccumulateBy::<TestAction>::default();
         let action_map = ActionMap::default();
         let time = Time::default();
 
@@ -101,5 +101,5 @@ mod tests {
 
     #[derive(Debug, InputAction)]
     #[input_action(output = bool)]
-    struct DummyAction;
+    struct TestAction;
 }

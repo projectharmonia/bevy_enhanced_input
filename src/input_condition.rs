@@ -51,7 +51,7 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 /// Determines how a condition contributes to the final [`ActionState`].
 ///
 /// If no conditions are provided, the state will be set to [`ActionState::Fired`]
-/// on any non-zero value, functioning similarly to a [`Press`](press::Press) condition
+/// on any non-zero value, functioning similarly to a [`Down`](press::Down) condition
 /// with a zero actuation threshold.
 ///
 /// For details about how actions are combined, see [`Actions`](crate::actions::Actions).

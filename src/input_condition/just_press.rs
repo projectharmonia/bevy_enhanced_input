@@ -6,17 +6,17 @@ use crate::{
     action_value::ActionValue,
 };
 
-/// Like [`super::press::Press`] but returns [`ActionState::Fired`] only once until the next actuation.
+/// Like [`super::press::Down`] but returns [`ActionState::Fired`] only once until the next actuation.
 ///
 /// Holding the input will not cause further triggers.
 #[derive(Clone, Copy, Debug)]
-pub struct JustPress {
+pub struct Press {
     /// Trigger threshold.
     pub actuation: f32,
     actuated: bool,
 }
 
-impl JustPress {
+impl Press {
     #[must_use]
     pub fn new(actuation: f32) -> Self {
         Self {
@@ -26,13 +26,13 @@ impl JustPress {
     }
 }
 
-impl Default for JustPress {
+impl Default for Press {
     fn default() -> Self {
         Self::new(DEFAULT_ACTUATION)
     }
 }
 
-impl InputCondition for JustPress {
+impl InputCondition for Press {
     fn evaluate(
         &mut self,
         _action_map: &ActionMap,
@@ -57,7 +57,7 @@ mod tests {
 
     #[test]
     fn press() {
-        let mut condition = JustPress::default();
+        let mut condition = Press::default();
         let action_map = ActionMap::default();
         let time = Time::default();
 

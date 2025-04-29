@@ -20,15 +20,15 @@ fn layering() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(DummyAction::KEY);
+        .press(TestAction::KEY);
 
     app.update();
 
     let first = app.world().get::<Actions<First>>(entity).unwrap();
-    assert_eq!(first.action::<DummyAction>().state(), ActionState::Fired);
+    assert_eq!(first.action::<TestAction>().state(), ActionState::Fired);
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
-    assert_eq!(second.action::<DummyAction>().state(), ActionState::None);
+    assert_eq!(second.action::<TestAction>().state(), ActionState::None);
 
     app.world_mut()
         .entity_mut(entity)
@@ -38,25 +38,25 @@ fn layering() {
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
-        second.action::<DummyAction>().state(),
+        second.action::<TestAction>().state(),
         ActionState::None,
         "action should still be consumed even after removal"
     );
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .release(DummyAction::KEY);
+        .release(TestAction::KEY);
 
     app.update();
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(DummyAction::KEY);
+        .press(TestAction::KEY);
 
     app.update();
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
-    assert_eq!(second.action::<DummyAction>().state(), ActionState::Fired);
+    assert_eq!(second.action::<TestAction>().state(), ActionState::Fired);
 }
 
 #[test]
@@ -75,12 +75,12 @@ fn switching() {
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(DummyAction::KEY);
+        .press(TestAction::KEY);
 
     app.update();
 
     let actions = app.world().get::<Actions<First>>(entity).unwrap();
-    assert_eq!(actions.action::<DummyAction>().state(), ActionState::Fired);
+    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
 
     app.world_mut()
         .entity_mut(entity)
@@ -91,35 +91,35 @@ fn switching() {
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
-        second.action::<DummyAction>().state(),
+        second.action::<TestAction>().state(),
         ActionState::None,
         "action should still be consumed even after removal"
     );
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .release(DummyAction::KEY);
+        .release(TestAction::KEY);
 
     app.update();
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
-        .press(DummyAction::KEY);
+        .press(TestAction::KEY);
 
     app.update();
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
-    assert_eq!(second.action::<DummyAction>().state(), ActionState::Fired);
+    assert_eq!(second.action::<TestAction>().state(), ActionState::Fired);
 }
 
 fn first_binding(trigger: Trigger<Binding<First>>, mut actions: Query<&mut Actions<First>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<DummyAction>().to(DummyAction::KEY);
+    actions.bind::<TestAction>().to(TestAction::KEY);
 }
 
 fn second_binding(trigger: Trigger<Binding<Second>>, mut actions: Query<&mut Actions<Second>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<DummyAction>().to(DummyAction::KEY);
+    actions.bind::<TestAction>().to(TestAction::KEY);
 }
 
 #[derive(InputContext)]
@@ -131,8 +131,8 @@ struct Second;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, require_reset = true)]
-struct DummyAction;
+struct TestAction;
 
-impl DummyAction {
+impl TestAction {
     const KEY: KeyCode = KeyCode::KeyA;
 }

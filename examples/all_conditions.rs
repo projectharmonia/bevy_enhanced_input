@@ -7,7 +7,7 @@ use bevy_enhanced_input::prelude::*;
 fn main() {
     // Setup logging to display triggered events.
     let mut log_plugin = LogPlugin::default();
-    log_plugin.filter += ",bevy_enhanced_input::action_map=trace";
+    log_plugin.filter += ",bevy_enhanced_input=debug";
 
     App::new()
         .add_plugins((
@@ -22,26 +22,26 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<Dummy>()
+        app.add_input_context::<Test>()
             .add_observer(binding)
             .add_systems(Startup, spawn);
     }
 }
 
 fn spawn(mut commands: Commands) {
-    commands.spawn(Actions::<Dummy>::default());
+    commands.spawn(Actions::<Test>::default());
 }
 
-fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dummy>>) {
+fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<PressAction>()
         .to(PressAction::KEY)
-        .with_conditions(Press::default());
+        .with_conditions(Down::default());
     actions
         .bind::<JustPressAction>()
         .to(JustPressAction::KEY)
-        .with_conditions(JustPress::default());
+        .with_conditions(Press::default());
     actions
         .bind::<HoldAction>()
         .to(HoldAction::KEY)
@@ -82,7 +82,7 @@ fn binding(trigger: Trigger<Binding<Dummy>>, mut actions: Query<&mut Actions<Dum
 }
 
 #[derive(InputContext)]
-struct Dummy;
+struct Test;
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool)]

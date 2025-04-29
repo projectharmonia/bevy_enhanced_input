@@ -55,11 +55,11 @@ pub trait BindingBuilder {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers(Scale::splat(2.0)));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -70,11 +70,11 @@ pub trait BindingBuilder {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_modifiers((Scale::splat(2.0), Negate::all())));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -96,11 +96,11 @@ pub trait BindingBuilder {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space.with_conditions(Release::default()));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -111,14 +111,14 @@ pub trait BindingBuilder {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
-    ///     .to(KeyCode::Space.with_conditions((Release::default(), JustPress::default())));
+    ///     .to(KeyCode::Space.with_conditions((Release::default(), Press::default())));
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// ```
     #[must_use]
     fn with_conditions(self, conditions: impl IntoConditions) -> InputBinding;
@@ -163,7 +163,7 @@ pub trait IntoBindings {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Move>()
     ///     .to((
     ///         Input::mouse_motion(),
@@ -171,7 +171,7 @@ pub trait IntoBindings {
     ///     ))
     ///     .with_modifiers(DeadZone::default()); // Modifiers like `DeadZone` need to be applied at the action level!
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Move;

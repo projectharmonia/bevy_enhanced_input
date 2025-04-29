@@ -250,34 +250,34 @@ mod tests {
 
     fn transition(initial_state: ActionState, target_state: ActionState) -> ActionEvents {
         let time = Time::<Virtual>::default();
-        let mut action = Action::new::<DummyAction>();
+        let mut action = Action::new::<TestAction>();
         action.update(&time, initial_state, true);
         action.update(&time, target_state, true);
 
         let mut world = World::new();
         world.init_resource::<TriggeredEvents>();
         world.add_observer(
-            |_trigger: Trigger<Fired<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Fired<TestAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::FIRED);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Started<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Started<TestAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::STARTED);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Ongoing<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Ongoing<TestAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::ONGOING);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Completed<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Completed<TestAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::COMPLETED);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Canceled<DummyAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Canceled<TestAction>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::CANCELED);
             },
         );
@@ -293,5 +293,5 @@ mod tests {
 
     #[derive(Debug, InputAction)]
     #[input_action(output = bool)]
-    struct DummyAction;
+    struct TestAction;
 }

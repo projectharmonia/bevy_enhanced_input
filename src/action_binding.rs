@@ -88,12 +88,12 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_modifiers(Scale::splat(2.0));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -104,12 +104,12 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_modifiers((Scale::splat(2.0), Negate::all()));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = f32)]
     /// # struct Jump;
@@ -135,12 +135,12 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
     ///     .with_conditions(Release::default());
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -151,12 +151,12 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to(KeyCode::Space)
-    ///     .with_conditions((Release::default(), JustPress::default()));
+    ///     .with_conditions((Release::default(), Press::default()));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -190,11 +190,11 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>()
     ///     .to((KeyCode::Space, GamepadButton::South));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -205,10 +205,10 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>().to(KeyCode::Space.with_mod_keys(ModKeys::CONTROL));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -219,11 +219,11 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Jump>().to(KeyCode::Space.with_conditions(Release::default()));
     /// actions.bind::<Attack>().to(MouseButton::Left.with_modifiers(Scale::splat(10.0)));
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Jump;
@@ -237,11 +237,11 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Zoom>().to(Input::mouse_wheel());
     /// actions.bind::<Move>().to(Input::mouse_motion());
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = bool)]
     /// # struct Zoom;
@@ -256,10 +256,10 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// actions.bind::<Move>().to(Cardinal::wasd_keys());
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = Vec2)]
     /// # struct Move;
@@ -270,7 +270,7 @@ impl ActionBinding {
     /// ```
     /// # use bevy::prelude::*;
     /// # use bevy_enhanced_input::prelude::*;
-    /// # let mut actions = Actions::<Dummy>::default();
+    /// # let mut actions = Actions::<Player>::default();
     /// # let mut settings = KeyboardSettings::default();
     /// actions.bind::<Inspect>().to(&settings.inspect);
     ///
@@ -279,7 +279,7 @@ impl ActionBinding {
     ///     inspect: Vec<KeyCode>,
     /// }
     /// # #[derive(InputContext)]
-    /// # struct Dummy;
+    /// # struct Player;
     /// # #[derive(Debug, InputAction)]
     /// # #[input_action(output = Vec2)]
     /// # struct Inspect;
