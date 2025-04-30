@@ -2,7 +2,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn prioritization() {
+fn prioritization() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
@@ -25,23 +25,22 @@ fn prioritization() {
     app.update();
 
     let first = app.world().get::<Actions<First>>(entity).unwrap();
-    assert_eq!(first.action::<FirstConsume>().state(), ActionState::Fired);
-    assert_eq!(
-        first.action::<FirstPassthrough>().state(),
-        ActionState::Fired
-    );
+    assert_eq!(first.state::<FirstConsume>()?, ActionState::Fired);
+    assert_eq!(first.state::<FirstPassthrough>()?, ActionState::Fired);
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
-        second.action::<SecondConsume>().state(),
+        second.state::<SecondConsume>()?,
         ActionState::None,
         "action should be consumed by component input with a higher priority"
     );
     assert_eq!(
-        second.action::<SecondPassthrough>().state(),
+        second.state::<SecondPassthrough>()?,
         ActionState::Fired,
         "actions that doesn't consume inputs should still be triggered"
     );
+
+    Ok(())
 }
 
 fn first_binding(trigger: Trigger<Binding<First>>, mut actions: Query<&mut Actions<First>>) {

@@ -10,6 +10,7 @@ use crate::{
     action_binding::ActionBinding,
     action_map::{Action, ActionMap, ActionState},
     action_value::ActionValue,
+    events::ActionEvents,
     input::GamepadDevice,
     input_action::InputAction,
     input_reader::{InputReader, ResetInput},
@@ -58,50 +59,56 @@ impl<C: InputContext> Actions<C> {
         }
     }
 
-    /// Returns associated bindings for action `A` if exists.
+    /// Returns the associated bindings for action `A` if exists.
     ///
-    /// For panicking version see [`Self::binding`].
-    /// For assigning bindings use [`Self::bind`].
-    pub fn get_binding<A: InputAction>(&self) -> Option<&ActionBinding> {
+    /// Use [`Self::bind`] to assign bindings.
+    pub fn binding<A: InputAction>(&self) -> Result<&ActionBinding> {
         self.bindings
             .iter()
             .find(|binding| binding.type_id() == TypeId::of::<A>())
+            .ok_or_else(|| {
+                format!(
+                    "no bindings for action `{}` in context `{}`",
+                    any::type_name::<A>(),
+                    any::type_name::<C>(),
+                )
+                .into()
+            })
     }
 
-    /// Returns associated bindings for action `A`.
+    /// Returns the associated data for action `A` if it exists.
     ///
-    /// For non-panicking version see [`Self::get_binding`].
-    /// For assigning bindings use [`Self::bind`].
-    pub fn binding<A: InputAction>(&self) -> &ActionBinding {
-        self.get_binding::<A>().unwrap_or_else(|| {
-            panic!(
-                "action `{}` should be binded before access",
-                any::type_name::<A>()
+    /// Use [`Self::bind`] to associate an action with the context.
+    pub fn get<A: InputAction>(&self) -> Result<&Action> {
+        self.action_map.action::<A>().ok_or_else(|| {
+            format!(
+                "action `{}` is not present in context `{}`",
+                any::type_name::<A>(),
+                any::type_name::<C>()
             )
+            .into()
         })
     }
 
-    /// Returns associated state for action `A` if exists.
+    /// Returns the associated value for action `A` if it exists.
     ///
-    /// For panicking version see [`Self::action`].
-    pub fn get_action<A: InputAction>(&self) -> Option<&Action> {
-        self.action_map.action::<A>()
+    /// Helper for [`Self::get`] to the value directly.
+    pub fn value<A: InputAction>(&self) -> Result<ActionValue> {
+        self.get::<A>().map(|action| action.value())
     }
 
-    /// Returns associated state for action `A`.
+    /// Returns the associated state for action `A` if it exists.
     ///
-    /// For non-panicking version see [`Self::get_action`].
+    /// Helper for [`Self::get`] to the state directly.
+    pub fn state<A: InputAction>(&self) -> Result<ActionState> {
+        self.get::<A>().map(|action| action.state())
+    }
+
+    /// Returns the associated events for action `A` if it exists.
     ///
-    /// # Panics
-    ///
-    /// Panics if the action `A` was not bound beforehand.
-    pub fn action<A: InputAction>(&self) -> &Action {
-        self.get_action::<A>().unwrap_or_else(|| {
-            panic!(
-                "action `{}` should be binded before access",
-                any::type_name::<A>()
-            )
-        })
+    /// Helper for [`Self::get`] to the events directly.
+    pub fn events<A: InputAction>(&self) -> Result<ActionEvents> {
+        self.get::<A>().map(|action| action.events())
     }
 
     pub(crate) fn update(
@@ -219,7 +226,7 @@ mod tests {
         actions.bind::<TestAction>().to(KeyCode::KeyB);
         assert_eq!(actions.bindings.len(), 1);
 
-        let binding = actions.binding::<TestAction>();
+        let binding = actions.binding::<TestAction>().unwrap();
         assert_eq!(binding.inputs().len(), 2);
     }
 

@@ -287,11 +287,12 @@ current value, state, or triggered events for this tick as [`ActionEvents`] bits
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
 /// Apply movemenet when `Move` action considered fired.
-fn system(players: Single<(&Actions<OnFoot>, &mut Transform)>) {
+fn system(players: Single<(&Actions<OnFoot>, &mut Transform)>) -> Result<()> {
     let (actions, mut transform) = players.into_inner();
-    if actions.action::<Jump>().state() == ActionState::Fired {
+    if actions.state::<Jump>()? == ActionState::Fired {
         // Apply logic...
     }
+#   Ok(())
 }
 # #[derive(InputContext)]
 # struct OnFoot;

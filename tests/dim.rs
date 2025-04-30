@@ -2,7 +2,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn bool() {
+fn bool() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -20,7 +20,7 @@ fn bool() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Bool>().value(), true.into());
+    assert_eq!(actions.value::<Bool>()?, true.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -29,11 +29,13 @@ fn bool() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Bool>().value(), false.into());
+    assert_eq!(actions.value::<Bool>()?, false.into());
+
+    Ok(())
 }
 
 #[test]
-fn axis1d() {
+fn axis1d() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -51,7 +53,7 @@ fn axis1d() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Axis1D>().value(), 1.0.into());
+    assert_eq!(actions.value::<Axis1D>()?, 1.0.into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -60,11 +62,13 @@ fn axis1d() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Axis1D>().value(), 0.0.into());
+    assert_eq!(actions.value::<Axis1D>()?, 0.0.into());
+
+    Ok(())
 }
 
 #[test]
-fn axis2d() {
+fn axis2d() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -82,7 +86,7 @@ fn axis2d() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Axis2D>().value(), (1.0, 0.0).into());
+    assert_eq!(actions.value::<Axis2D>()?, (1.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -91,11 +95,13 @@ fn axis2d() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Axis2D>().value(), Vec2::ZERO.into());
+    assert_eq!(actions.value::<Axis2D>()?, Vec2::ZERO.into());
+
+    Ok(())
 }
 
 #[test]
-fn axis3d() {
+fn axis3d() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -113,7 +119,7 @@ fn axis3d() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Axis3D>().value(), (1.0, 0.0, 0.0).into());
+    assert_eq!(actions.value::<Axis3D>()?, (1.0, 0.0, 0.0).into());
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -122,7 +128,9 @@ fn axis3d() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<Axis3D>().value(), Vec3::ZERO.into());
+    assert_eq!(actions.value::<Axis3D>()?, Vec3::ZERO.into());
+
+    Ok(())
 }
 
 fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {

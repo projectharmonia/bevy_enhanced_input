@@ -2,7 +2,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn any() {
+fn any() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<AnyGamepad>()
@@ -25,7 +25,7 @@ fn any() {
         .world()
         .get::<Actions<AnyGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(actions.state::<TestAction>()?, ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
     gamepad1.analog_mut().set(TestAction::BUTTON, 0.0);
@@ -39,11 +39,13 @@ fn any() {
         .world()
         .get::<Actions<AnyGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(actions.state::<TestAction>()?, ActionState::Fired);
+
+    Ok(())
 }
 
 #[test]
-fn by_id() {
+fn by_id() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<SingleGamepad>()
@@ -72,7 +74,7 @@ fn by_id() {
         .world()
         .get::<Actions<SingleGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(actions.state::<TestAction>()?, ActionState::Fired);
 
     let mut gamepad1 = app.world_mut().get_mut::<Gamepad>(gamepad_entity1).unwrap();
     gamepad1.analog_mut().set(TestAction::BUTTON, 0.0);
@@ -86,7 +88,9 @@ fn by_id() {
         .world()
         .get::<Actions<SingleGamepad>>(context_entity)
         .unwrap();
-    assert_eq!(actions.action::<TestAction>().state(), ActionState::None);
+    assert_eq!(actions.state::<TestAction>()?, ActionState::None);
+
+    Ok(())
 }
 
 fn any_gamepad_binding(

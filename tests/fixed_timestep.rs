@@ -2,7 +2,7 @@ use bevy::{input::InputPlugin, prelude::*, time::TimeUpdateStrategy};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn once_in_two_frames() {
+fn once_in_two_frames() -> Result<()> {
     let time_step = Time::<Fixed>::default().timestep() / 2;
 
     let mut app = App::new();
@@ -23,7 +23,7 @@ fn once_in_two_frames() {
 
         let actions = app.world().get::<Actions<Test>>(entity).unwrap();
         assert!(
-            actions.action::<TestAction>().events().is_empty(),
+            actions.events::<TestAction>()?.is_empty(),
             "shouldn't fire on frame {frame}"
         );
     }
@@ -32,17 +32,18 @@ fn once_in_two_frames() {
         app.update();
 
         let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-        let action = actions.action::<TestAction>();
         assert_eq!(
-            action.events(),
+            actions.events::<TestAction>()?,
             ActionEvents::STARTED | ActionEvents::FIRED,
             "should maintain start-firing on frame {frame}"
         );
     }
+
+    Ok(())
 }
 
 #[test]
-fn twice_in_one_frame() {
+fn twice_in_one_frame() -> Result<()> {
     let time_step = Time::<Fixed>::default().timestep() * 2;
 
     let mut app = App::new();
@@ -62,19 +63,20 @@ fn twice_in_one_frame() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert!(
-        actions.action::<TestAction>().events().is_empty(),
+        actions.events::<TestAction>()?.is_empty(),
         "`FixedMain` should never run on the first frame"
     );
 
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<TestAction>();
     assert_eq!(
-        action.events(),
+        actions.events::<TestAction>()?,
         ActionEvents::FIRED,
         "should run twice, so it shouldn't be started on the second run"
     );
+
+    Ok(())
 }
 
 fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
