@@ -280,7 +280,7 @@ The event system is highly flexible. For example, you can use the [`Hold`] condi
 
 ### Pull-style
 
-You can also query for [`Actions`] within a system. Use [`Actions::action<A>`] to retrieve an [`Action`], from which you can obtain the
+You can also query for [`Actions`] within a system. Use [`Actions::get<A>`] to retrieve an [`Action`], from which you can obtain the
 current value, state, or triggered events for this tick as [`ActionEvents`] bitset.
 
 ```
