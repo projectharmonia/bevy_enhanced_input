@@ -220,6 +220,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn empty() {
+        let actions = Actions::<Test>::default();
+        assert!(actions.binding::<TestAction>().is_err());
+        assert!(actions.get::<TestAction>().is_err());
+    }
+
+    #[test]
     fn bind() {
         let mut actions = Actions::<Test>::default();
         actions.bind::<TestAction>().to(KeyCode::KeyA);
@@ -228,6 +235,7 @@ mod tests {
 
         let binding = actions.binding::<TestAction>().unwrap();
         assert_eq!(binding.inputs().len(), 2);
+        assert!(actions.binding::<TestAction>().is_ok());
     }
 
     #[derive(Debug, InputAction)]
