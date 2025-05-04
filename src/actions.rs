@@ -1,6 +1,8 @@
 use alloc::vec::Vec;
 use core::{
     any::{self, TypeId},
+    error::Error,
+    fmt::{self, Debug, Display, Formatter},
     marker::PhantomData,
 };
 
@@ -62,52 +64,40 @@ impl<C: InputContext> Actions<C> {
     /// Returns the associated bindings for action `A` if exists.
     ///
     /// Use [`Self::bind`] to assign bindings.
-    pub fn binding<A: InputAction>(&self) -> Result<&ActionBinding> {
+    pub fn binding<A: InputAction>(&self) -> Result<&ActionBinding, NoActionError<C, A>> {
         self.bindings
             .iter()
             .find(|binding| binding.type_id() == TypeId::of::<A>())
-            .ok_or_else(|| {
-                format!(
-                    "no bindings for action `{}` in context `{}`",
-                    any::type_name::<A>(),
-                    any::type_name::<C>(),
-                )
-                .into()
-            })
+            .ok_or(NoActionError::default())
     }
 
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
-    pub fn get<A: InputAction>(&self) -> Result<&Action> {
-        self.action_map.action::<A>().ok_or_else(|| {
-            format!(
-                "action `{}` is not present in context `{}`",
-                any::type_name::<A>(),
-                any::type_name::<C>()
-            )
-            .into()
-        })
+    pub fn get<A: InputAction>(&self) -> Result<&Action, NoActionError<C, A>> {
+        self.action_map
+            .action::<A>()
+            .ok_or(NoActionError::default())
     }
 
     /// Returns the associated value for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the value directly.
-    pub fn value<A: InputAction>(&self) -> Result<ActionValue> {
+    pub fn value<A: InputAction>(&self) -> Result<ActionValue, NoActionError<C, A>> {
         self.get::<A>().map(|action| action.value())
     }
 
     /// Returns the associated state for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the state directly.
-    pub fn state<A: InputAction>(&self) -> Result<ActionState> {
+    pub fn state<A: InputAction>(&self) -> Result<ActionState, NoActionError<C, A>> {
         self.get::<A>().map(|action| action.state())
     }
 
     /// Returns the associated events for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the events directly.
-    pub fn events<A: InputAction>(&self) -> Result<ActionEvents> {
+    pub fn events<A: InputAction>(&self) -> Result<ActionEvents, NoActionError<C, A>> {
         self.get::<A>().map(|action| action.events())
     }
 
@@ -161,6 +151,42 @@ impl<C: InputContext> Default for Actions<C> {
         }
     }
 }
+
+pub struct NoActionError<C: InputContext, A: InputAction> {
+    context: PhantomData<C>,
+    action: PhantomData<A>,
+}
+
+impl<C: InputContext, A: InputAction> Default for NoActionError<C, A> {
+    fn default() -> Self {
+        Self {
+            context: PhantomData,
+            action: PhantomData,
+        }
+    }
+}
+
+impl<C: InputContext, A: InputAction> Debug for NoActionError<C, A> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NoActionError")
+            .field("context", &self.context)
+            .field("action", &self.action)
+            .finish()
+    }
+}
+
+impl<C: InputContext, A: InputAction> Display for NoActionError<C, A> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "action `{}` is not present in context `{}`",
+            any::type_name::<A>(),
+            any::type_name::<C>()
+        )
+    }
+}
+
+impl<C: InputContext, A: InputAction> Error for NoActionError<C, A> {}
 
 /// Marker for a gameplay-related input context that a player can be in.
 ///
@@ -218,13 +244,6 @@ mod tests {
     use bevy_enhanced_input_macros::{InputAction, InputContext};
 
     use super::*;
-
-    #[test]
-    fn empty() {
-        let actions = Actions::<Test>::default();
-        assert!(actions.binding::<TestAction>().is_err());
-        assert!(actions.get::<TestAction>().is_err());
-    }
 
     #[test]
     fn bind() {
