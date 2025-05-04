@@ -254,7 +254,7 @@ mod tests {
 
         let binding = actions.binding::<TestAction>().unwrap();
         assert_eq!(binding.inputs().len(), 2);
-        assert!(actions.binding::<TestAction>().is_ok());
+        assert!(actions.get::<TestAction>().is_ok());
     }
 
     #[derive(Debug, InputAction)]
