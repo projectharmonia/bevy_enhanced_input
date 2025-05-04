@@ -4,7 +4,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn explicit() {
+fn explicit() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Player>()
@@ -16,7 +16,7 @@ fn explicit() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Explicit>();
+    let action = actions.get::<Explicit>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -27,7 +27,7 @@ fn explicit() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Explicit>();
+    let action = actions.get::<Explicit>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -38,13 +38,15 @@ fn explicit() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Explicit>();
+    let action = actions.get::<Explicit>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
+
+    Ok(())
 }
 
 #[test]
-fn implicit() {
+fn implicit() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Player>()
@@ -56,12 +58,12 @@ fn implicit() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Implicit>();
+    let action = actions.get::<Implicit>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -72,12 +74,12 @@ fn implicit() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Implicit>();
+    let action = actions.get::<Implicit>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -88,30 +90,32 @@ fn implicit() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Implicit>();
+    let action = actions.get::<Implicit>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Implicit>();
+    let action = actions.get::<Implicit>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
+
+    Ok(())
 }
 
 #[test]
-fn blocker() {
+fn blocker() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Player>()
@@ -123,12 +127,12 @@ fn blocker() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Blocker>();
+    let action = actions.get::<Blocker>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -139,12 +143,12 @@ fn blocker() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Blocker>();
+    let action = actions.get::<Blocker>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -155,30 +159,32 @@ fn blocker() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Blocker>();
+    let action = actions.get::<Blocker>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::None);
 
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<Blocker>();
+    let action = actions.get::<Blocker>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
+
+    Ok(())
 }
 
 #[test]
-fn events_blocker() {
+fn events_blocker() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Player>()
@@ -190,12 +196,12 @@ fn events_blocker() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<EventsBlocker>();
+    let action = actions.get::<EventsBlocker>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
@@ -206,12 +212,12 @@ fn events_blocker() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<EventsBlocker>();
+    let action = actions.get::<EventsBlocker>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -223,12 +229,12 @@ fn events_blocker() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::Fired);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<EventsBlocker>();
+    let action = actions.get::<EventsBlocker>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -239,14 +245,16 @@ fn events_blocker() {
     app.update();
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<ReleaseAction>();
+    let action = actions.get::<ReleaseAction>()?;
     assert_eq!(action.value(), false.into());
     assert_eq!(action.state(), ActionState::None);
 
     let actions = app.world().get::<Actions<Player>>(entity).unwrap();
-    let action = actions.action::<EventsBlocker>();
+    let action = actions.get::<EventsBlocker>()?;
     assert_eq!(action.value(), true.into());
     assert_eq!(action.state(), ActionState::Fired);
+
+    Ok(())
 }
 
 fn binding(trigger: Trigger<Binding<Player>>, mut actions: Query<&mut Actions<Player>>) {

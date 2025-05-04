@@ -46,11 +46,11 @@ fn rebuild() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert!(actions.get_action::<TestAction>().is_some());
+    assert!(actions.get::<TestAction>().is_ok());
 }
 
 #[test]
-fn rebuild_all() {
+fn rebuild_all() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -68,17 +68,19 @@ fn rebuild_all() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(actions.state::<TestAction>()?, ActionState::Fired);
 
     app.world_mut().trigger(RebuildBindings);
     app.world_mut().flush();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(
-        actions.action::<TestAction>().state(),
+        actions.state::<TestAction>()?,
         ActionState::None,
         "state should reset on rebuild"
     );
+
+    Ok(())
 }
 
 fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {

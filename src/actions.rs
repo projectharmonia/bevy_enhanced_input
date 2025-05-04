@@ -1,6 +1,8 @@
 use alloc::vec::Vec;
 use core::{
     any::{self, TypeId},
+    error::Error,
+    fmt::{self, Debug, Display, Formatter},
     marker::PhantomData,
 };
 
@@ -10,6 +12,7 @@ use crate::{
     action_binding::ActionBinding,
     action_map::{Action, ActionMap, ActionState},
     action_value::ActionValue,
+    events::ActionEvents,
     input::GamepadDevice,
     input_action::InputAction,
     input_reader::{InputReader, ResetInput},
@@ -58,50 +61,44 @@ impl<C: InputContext> Actions<C> {
         }
     }
 
-    /// Returns associated bindings for action `A` if exists.
+    /// Returns the associated bindings for action `A` if exists.
     ///
-    /// For panicking version see [`Self::binding`].
-    /// For assigning bindings use [`Self::bind`].
-    pub fn get_binding<A: InputAction>(&self) -> Option<&ActionBinding> {
+    /// Use [`Self::bind`] to assign bindings.
+    pub fn binding<A: InputAction>(&self) -> Result<&ActionBinding, NoActionError<C, A>> {
         self.bindings
             .iter()
             .find(|binding| binding.type_id() == TypeId::of::<A>())
+            .ok_or(NoActionError::default())
     }
 
-    /// Returns associated bindings for action `A`.
+    /// Returns the associated data for action `A` if it exists.
     ///
-    /// For non-panicking version see [`Self::get_binding`].
-    /// For assigning bindings use [`Self::bind`].
-    pub fn binding<A: InputAction>(&self) -> &ActionBinding {
-        self.get_binding::<A>().unwrap_or_else(|| {
-            panic!(
-                "action `{}` should be binded before access",
-                any::type_name::<A>()
-            )
-        })
+    /// Use [`Self::bind`] to associate an action with the context.
+    pub fn get<A: InputAction>(&self) -> Result<&Action, NoActionError<C, A>> {
+        self.action_map
+            .action::<A>()
+            .ok_or(NoActionError::default())
     }
 
-    /// Returns associated state for action `A` if exists.
+    /// Returns the associated value for action `A` if it exists.
     ///
-    /// For panicking version see [`Self::action`].
-    pub fn get_action<A: InputAction>(&self) -> Option<&Action> {
-        self.action_map.action::<A>()
+    /// Helper for [`Self::get`] to the value directly.
+    pub fn value<A: InputAction>(&self) -> Result<ActionValue, NoActionError<C, A>> {
+        self.get::<A>().map(|action| action.value())
     }
 
-    /// Returns associated state for action `A`.
+    /// Returns the associated state for action `A` if it exists.
     ///
-    /// For non-panicking version see [`Self::get_action`].
+    /// Helper for [`Self::get`] to the state directly.
+    pub fn state<A: InputAction>(&self) -> Result<ActionState, NoActionError<C, A>> {
+        self.get::<A>().map(|action| action.state())
+    }
+
+    /// Returns the associated events for action `A` if it exists.
     ///
-    /// # Panics
-    ///
-    /// Panics if the action `A` was not bound beforehand.
-    pub fn action<A: InputAction>(&self) -> &Action {
-        self.get_action::<A>().unwrap_or_else(|| {
-            panic!(
-                "action `{}` should be binded before access",
-                any::type_name::<A>()
-            )
-        })
+    /// Helper for [`Self::get`] to the events directly.
+    pub fn events<A: InputAction>(&self) -> Result<ActionEvents, NoActionError<C, A>> {
+        self.get::<A>().map(|action| action.events())
     }
 
     pub(crate) fn update(
@@ -154,6 +151,42 @@ impl<C: InputContext> Default for Actions<C> {
         }
     }
 }
+
+pub struct NoActionError<C: InputContext, A: InputAction> {
+    context: PhantomData<C>,
+    action: PhantomData<A>,
+}
+
+impl<C: InputContext, A: InputAction> Default for NoActionError<C, A> {
+    fn default() -> Self {
+        Self {
+            context: PhantomData,
+            action: PhantomData,
+        }
+    }
+}
+
+impl<C: InputContext, A: InputAction> Debug for NoActionError<C, A> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        f.debug_struct("NoActionError")
+            .field("context", &self.context)
+            .field("action", &self.action)
+            .finish()
+    }
+}
+
+impl<C: InputContext, A: InputAction> Display for NoActionError<C, A> {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(
+            f,
+            "action `{}` is not present in context `{}`",
+            any::type_name::<A>(),
+            any::type_name::<C>()
+        )
+    }
+}
+
+impl<C: InputContext, A: InputAction> Error for NoActionError<C, A> {}
 
 /// Marker for a gameplay-related input context that a player can be in.
 ///
@@ -219,8 +252,9 @@ mod tests {
         actions.bind::<TestAction>().to(KeyCode::KeyB);
         assert_eq!(actions.bindings.len(), 1);
 
-        let binding = actions.binding::<TestAction>();
+        let binding = actions.binding::<TestAction>().unwrap();
         assert_eq!(binding.inputs().len(), 2);
+        assert!(actions.get::<TestAction>().is_ok());
     }
 
     #[derive(Debug, InputAction)]

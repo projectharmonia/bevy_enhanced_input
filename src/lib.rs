@@ -280,18 +280,19 @@ The event system is highly flexible. For example, you can use the [`Hold`] condi
 
 ### Pull-style
 
-You can also query for [`Actions`] within a system. Use [`Actions::action<A>`] to retrieve an [`Action`], from which you can obtain the
+You can also query for [`Actions`] within a system. Use [`Actions::get<A>`] to retrieve an [`Action`], from which you can obtain the
 current value, state, or triggered events for this tick as [`ActionEvents`] bitset.
 
 ```
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
 /// Apply movemenet when `Move` action considered fired.
-fn system(players: Single<(&Actions<OnFoot>, &mut Transform)>) {
+fn system(players: Single<(&Actions<OnFoot>, &mut Transform)>) -> Result<()> {
     let (actions, mut transform) = players.into_inner();
-    if actions.action::<Jump>().state() == ActionState::Fired {
+    if actions.state::<Jump>()? == ActionState::Fired {
         // Apply logic...
     }
+#   Ok(())
 }
 # #[derive(InputContext)]
 # struct OnFoot;

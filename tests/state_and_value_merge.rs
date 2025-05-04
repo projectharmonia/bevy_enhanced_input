@@ -4,7 +4,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn input_level() {
+fn input_level() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -22,7 +22,7 @@ fn input_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<InputLevel>();
+    let action = actions.get::<InputLevel>()?;
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -33,7 +33,7 @@ fn input_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<InputLevel>();
+    let action = actions.get::<InputLevel>()?;
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -44,7 +44,7 @@ fn input_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<InputLevel>();
+    let action = actions.get::<InputLevel>()?;
     assert_eq!(action.value(), Vec2::NEG_Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -55,7 +55,7 @@ fn input_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<InputLevel>();
+    let action = actions.get::<InputLevel>()?;
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -66,7 +66,7 @@ fn input_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<InputLevel>();
+    let action = actions.get::<InputLevel>()?;
     assert_eq!(action.value(), Vec2::ZERO.into());
     assert_eq!(
         action.state(),
@@ -82,13 +82,15 @@ fn input_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<InputLevel>();
+    let action = actions.get::<InputLevel>()?;
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
+
+    Ok(())
 }
 
 #[test]
-fn action_level() {
+fn action_level() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -106,7 +108,7 @@ fn action_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<ActionLevel>();
+    let action = actions.get::<ActionLevel>()?;
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -117,7 +119,7 @@ fn action_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<ActionLevel>();
+    let action = actions.get::<ActionLevel>()?;
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -128,7 +130,7 @@ fn action_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<ActionLevel>();
+    let action = actions.get::<ActionLevel>()?;
     assert_eq!(action.value(), (Vec2::NEG_Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -139,7 +141,7 @@ fn action_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<ActionLevel>();
+    let action = actions.get::<ActionLevel>()?;
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -150,7 +152,7 @@ fn action_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<ActionLevel>();
+    let action = actions.get::<ActionLevel>()?;
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(
         action.state(),
@@ -166,13 +168,15 @@ fn action_level() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<ActionLevel>();
+    let action = actions.get::<ActionLevel>()?;
     assert_eq!(action.value(), (Vec2::NEG_Y * 4.0).into());
     assert_eq!(action.state(), ActionState::Fired);
+
+    Ok(())
 }
 
 #[test]
-fn both_levels() {
+fn both_levels() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
@@ -190,7 +194,7 @@ fn both_levels() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<BothLevels>();
+    let action = actions.get::<BothLevels>()?;
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Ongoing);
 
@@ -201,7 +205,7 @@ fn both_levels() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<BothLevels>();
+    let action = actions.get::<BothLevels>()?;
     assert_eq!(action.value(), (Vec2::Y * 2.0).into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -212,7 +216,7 @@ fn both_levels() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<BothLevels>();
+    let action = actions.get::<BothLevels>()?;
     assert_eq!(action.value(), Vec2::NEG_Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -223,7 +227,7 @@ fn both_levels() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<BothLevels>();
+    let action = actions.get::<BothLevels>()?;
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
 
@@ -234,7 +238,7 @@ fn both_levels() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<BothLevels>();
+    let action = actions.get::<BothLevels>()?;
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(
         action.state(),
@@ -250,9 +254,11 @@ fn both_levels() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    let action = actions.action::<BothLevels>();
+    let action = actions.get::<BothLevels>()?;
     assert_eq!(action.value(), Vec2::Y.into());
     assert_eq!(action.state(), ActionState::Fired);
+
+    Ok(())
 }
 
 fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {

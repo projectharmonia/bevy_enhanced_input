@@ -2,7 +2,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn layering() {
+fn layering() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
@@ -25,10 +25,10 @@ fn layering() {
     app.update();
 
     let first = app.world().get::<Actions<First>>(entity).unwrap();
-    assert_eq!(first.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(first.state::<TestAction>()?, ActionState::Fired);
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
-    assert_eq!(second.action::<TestAction>().state(), ActionState::None);
+    assert_eq!(second.state::<TestAction>()?, ActionState::None);
 
     app.world_mut()
         .entity_mut(entity)
@@ -38,7 +38,7 @@ fn layering() {
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
-        second.action::<TestAction>().state(),
+        second.state::<TestAction>()?,
         ActionState::None,
         "action should still be consumed even after removal"
     );
@@ -56,11 +56,13 @@ fn layering() {
     app.update();
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
-    assert_eq!(second.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(second.state::<TestAction>()?, ActionState::Fired);
+
+    Ok(())
 }
 
 #[test]
-fn switching() {
+fn switching() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
@@ -80,7 +82,7 @@ fn switching() {
     app.update();
 
     let actions = app.world().get::<Actions<First>>(entity).unwrap();
-    assert_eq!(actions.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(actions.state::<TestAction>()?, ActionState::Fired);
 
     app.world_mut()
         .entity_mut(entity)
@@ -91,7 +93,7 @@ fn switching() {
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
-        second.action::<TestAction>().state(),
+        second.state::<TestAction>()?,
         ActionState::None,
         "action should still be consumed even after removal"
     );
@@ -109,7 +111,9 @@ fn switching() {
     app.update();
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
-    assert_eq!(second.action::<TestAction>().state(), ActionState::Fired);
+    assert_eq!(second.state::<TestAction>()?, ActionState::Fired);
+
+    Ok(())
 }
 
 fn first_binding(trigger: Trigger<Binding<First>>, mut actions: Query<&mut Actions<First>>) {

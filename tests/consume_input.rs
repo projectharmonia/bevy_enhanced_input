@@ -2,7 +2,7 @@ use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 #[test]
-fn consume() {
+fn consume() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<ConsumeOnly>()
@@ -27,18 +27,20 @@ fn consume() {
     app.update();
 
     let entity1_ctx = app.world().get::<Actions<ConsumeOnly>>(entity1).unwrap();
-    assert_eq!(entity1_ctx.action::<Consume>().state(), ActionState::Fired);
+    assert_eq!(entity1_ctx.state::<Consume>()?, ActionState::Fired);
 
     let entity2_ctx = app.world().get::<Actions<ConsumeOnly>>(entity2).unwrap();
     assert_eq!(
-        entity2_ctx.action::<Consume>().state(),
+        entity2_ctx.state::<Consume>()?,
         ActionState::None,
         "only first entity with the same mappings that consume inputs should receive them"
     );
+
+    Ok(())
 }
 
 #[test]
-fn passthrough() {
+fn passthrough() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<PassthroughOnly>()
@@ -66,24 +68,23 @@ fn passthrough() {
         .world()
         .get::<Actions<PassthroughOnly>>(entity1)
         .unwrap();
-    assert_eq!(
-        entity1_ctx.action::<Passthrough>().state(),
-        ActionState::Fired
-    );
+    assert_eq!(entity1_ctx.state::<Passthrough>()?, ActionState::Fired);
 
     let entity2_ctx = app
         .world()
         .get::<Actions<PassthroughOnly>>(entity2)
         .unwrap();
     assert_eq!(
-        entity2_ctx.action::<Passthrough>().state(),
+        entity2_ctx.state::<Passthrough>()?,
         ActionState::Fired,
         "actions that doesn't consume inputs should still fire"
     );
+
+    Ok(())
 }
 
 #[test]
-fn consume_then_passthrough() {
+fn consume_then_passthrough() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<ConsumeThenPassthrough>()
@@ -107,16 +108,18 @@ fn consume_then_passthrough() {
         .world()
         .get::<Actions<ConsumeThenPassthrough>>(entity)
         .unwrap();
-    assert_eq!(actions.action::<Consume>().state(), ActionState::Fired);
+    assert_eq!(actions.state::<Consume>()?, ActionState::Fired);
     assert_eq!(
-        actions.action::<Passthrough>().state(),
+        actions.state::<Passthrough>()?,
         ActionState::None,
         "action should be consumed"
     );
+
+    Ok(())
 }
 
 #[test]
-fn passthrough_then_consume() {
+fn passthrough_then_consume() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<PassthroughThenConsume>()
@@ -140,8 +143,10 @@ fn passthrough_then_consume() {
         .world()
         .get::<Actions<PassthroughThenConsume>>(entity)
         .unwrap();
-    assert_eq!(actions.action::<Consume>().state(), ActionState::Fired);
-    assert_eq!(actions.action::<Passthrough>().state(), ActionState::Fired);
+    assert_eq!(actions.state::<Consume>()?, ActionState::Fired);
+    assert_eq!(actions.state::<Passthrough>()?, ActionState::Fired);
+
+    Ok(())
 }
 
 fn consume_only_binding(

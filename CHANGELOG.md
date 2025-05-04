@@ -7,10 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+`Actions::state`, `Actions::value` and `Actions::events` helpers to obtain specific information for an action directly.
+
 ### Changed
 
 - Rename `Press` into `Down`.
 - Rename `JustPress` into `Press`.
+- Return `Result` from `Actions::bindings` to integrate with Bevy's unified error handling system.
+- Rename `Actions::action` into `Actions::get` and return `Result`.
+
+### Removed
+
+- `Actions::get_action`. Use `Actions::get`.
+- `Actions::get_binding`. Use `Actions::binding`.
 
 ## [0.11.0] - 2025-04-24
 
@@ -78,8 +89,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Rename `ContextInstance` into `InputContext`. `InputContext` is no longer a trait. Bindings now configured via observer on `Bindings<C>` (see docs on `InputContextAppExt::add_input_context` for details). Priority now set at runtime via `InputContext::set_priority`. 
-- Move all child modules from `input_context` under crate root (one level upper). 
+- Rename `ContextInstance` into `InputContext`. `InputContext` is no longer a trait. Bindings now configured via observer on `Bindings<C>` (see docs on `InputContextAppExt::add_input_context` for details). Priority now set at runtime via `InputContext::set_priority`.
+- Move all child modules from `input_context` under crate root (one level upper).
 - Capture gamepad buttons as `Axis1D` because triggers are also buttons and sometimes have analog value.
 - Rename `input_context` module into `registry` and `context_instance` into `input_context`.
 - Rename `ContextAppExt` into `InputContextAppExt`.
