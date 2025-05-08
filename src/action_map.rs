@@ -49,7 +49,9 @@ pub struct Action {
     events: ActionEvents,
     value: ActionValue,
     elapsed_secs: f32,
+    elapsed_delta: f32,
     fired_secs: f32,
+    fired_delta: f32,
     trigger_events: fn(&Self, &mut Commands, Entity),
 }
 
@@ -64,7 +66,9 @@ impl Action {
             events: ActionEvents::empty(),
             value: ActionValue::zero(A::Output::DIM),
             elapsed_secs: 0.0,
+            elapsed_delta: 0.0,
             fired_secs: 0.0,
+            fired_delta: 0.0,
             trigger_events: Self::trigger_events_typed::<A>,
         }
     }
@@ -79,17 +83,23 @@ impl Action {
         match self.state {
             ActionState::None => {
                 self.elapsed_secs = 0.0;
+                self.elapsed_delta = 0.0;
                 self.fired_secs = 0.0;
+                self.fired_delta = 0.0;
             }
             ActionState::Ongoing => {
                 self.elapsed_secs += time.delta_secs();
-                self.fired_secs = 0.0;
+                self.elapsed_delta = 0.0;
+                self.fired_secs = time.delta_secs();
+                self.fired_delta = 0.0;
             }
             ActionState::Fired => {
                 self.elapsed_secs += time.delta_secs();
+                self.elapsed_delta = time.delta_secs();
                 self.fired_secs += time.delta_secs();
+                self.fired_delta = time.delta_secs();
             }
-        }
+        };
 
         self.events = ActionEvents::new(self.state, state);
         self.state = state;
@@ -125,6 +135,7 @@ impl Action {
                             value: A::Output::as_output(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
+                            delta: self.elapsed_delta,
                         },
                     );
                 }
@@ -137,6 +148,7 @@ impl Action {
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
+                            delta: self.fired_delta,
                         },
                     );
                 }
