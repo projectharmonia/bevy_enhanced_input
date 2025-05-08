@@ -99,6 +99,9 @@ pub struct Ongoing<A: InputAction> {
 
     /// Time that this action has been in [`ActionState::Ongoing`] state.
     pub elapsed_secs: f32,
+
+    /// Time since that last event was triggered.
+    pub delta: f32,
 }
 
 impl<A: InputAction> Clone for Ongoing<A> {
@@ -126,6 +129,9 @@ pub struct Fired<A: InputAction> {
 
     /// Total time this action has been in both [`ActionState::Ongoing`] and [`ActionState::Fired`].
     pub elapsed_secs: f32,
+
+    /// Time since that last event was triggered.
+    pub delta: f32,
 }
 
 impl<A: InputAction> Clone for Fired<A> {

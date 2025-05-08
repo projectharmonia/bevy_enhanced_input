@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-`Actions::state`, `Actions::value` and `Actions::events` helpers to obtain specific information for an action directly.
+- `Actions::state`, `Actions::value` and `Actions::events` helpers to obtain specific information for an action directly.
+- `delta` time to `Fire` and `Ongoing` events since the last time they were triggered in a sequence.
 
 ### Changed
 
