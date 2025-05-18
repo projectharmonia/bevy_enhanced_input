@@ -231,9 +231,9 @@ impl InputReader<'_, '_> {
 ///     mut action_sources: ResMut<ActionSources>,
 ///     interactions: Query<&Interaction>,
 /// ) {
-///     let mouse_used = interactions.iter().all(|&interaction| interaction == Interaction::None);
-///     action_sources.mouse_buttons = !mouse_used;
-///     action_sources.mouse_wheel = !mouse_used;
+///     let mouse_unused = interactions.iter().all(|&interaction| interaction == Interaction::None);
+///     action_sources.mouse_buttons = mouse_unused;
+///     action_sources.mouse_wheel = mouse_unused;
 /// }
 /// ```
 #[derive(Resource, Reflect)]
