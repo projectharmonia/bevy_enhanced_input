@@ -12,10 +12,11 @@ pub struct ConditionTimer {
 }
 
 impl ConditionTimer {
-    pub fn new(duration: f32) -> Self {
+    /// Creates a new instance with the given time passed.
+    pub fn with_duration(duration: f32) -> Self {
         Self {
             duration,
-            ..default()
+            ..Default::default()
         }
     }
 
