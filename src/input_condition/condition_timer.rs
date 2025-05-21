@@ -12,6 +12,13 @@ pub struct ConditionTimer {
 }
 
 impl ConditionTimer {
+    pub fn new(duration: f32) -> Self {
+        Self {
+            duration,
+            ..default()
+        }
+    }
+
     pub fn update(&mut self, timer: &Time<Virtual>) {
         // Time<Virtual> returns already scaled results.
         // Unscale if configured.
