@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `JustPress` into `Press`.
 - Return `Result` from `Actions::bindings` to integrate with Bevy's unified error handling system.
 - Rename `Actions::action` into `Actions::get` and return `Result`.
+- Fix dimension cutoff when using `SwizzleAxis` with `Axis2D`.
 
 ### Removed
 
