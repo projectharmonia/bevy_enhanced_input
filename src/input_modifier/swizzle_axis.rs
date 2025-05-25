@@ -46,10 +46,10 @@ impl InputModifier for SwizzleAxis {
             },
             ActionValue::Axis2D(value) => match self {
                 SwizzleAxis::YXZ => value.yx().into(),
-                SwizzleAxis::ZYX => (0.0, value.y).into(),
-                SwizzleAxis::XZY => (value.x, 0.0).into(),
-                SwizzleAxis::YZX => (value.y, 0.0).into(),
-                SwizzleAxis::ZXY => (0.0, value.x).into(),
+                SwizzleAxis::ZYX => (0.0, value.y, value.x).into(),
+                SwizzleAxis::XZY => (value.x, 0.0, value.y).into(),
+                SwizzleAxis::YZX => (value.y, 0.0, value.x).into(),
+                SwizzleAxis::ZXY => (0.0, value.x, value.y).into(),
             },
             ActionValue::Axis3D(value) => match self {
                 SwizzleAxis::YXZ => value.yxz().into(),
@@ -114,7 +114,7 @@ mod tests {
         );
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0).into()),
-            (0.0, 1.0).into()
+            (0.0, 1.0, 0.0).into()
         );
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
@@ -133,7 +133,7 @@ mod tests {
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0).into()),
-            (0.0, 0.0).into()
+            (0.0, 0.0, 1.0).into()
         );
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
@@ -161,7 +161,7 @@ mod tests {
         );
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0).into()),
-            (1.0, 0.0).into()
+            (1.0, 0.0, 0.0).into()
         );
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
@@ -189,7 +189,7 @@ mod tests {
         );
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0).into()),
-            (0.0, 0.0).into()
+            (0.0, 0.0, 1.0).into()
         );
         assert_eq!(
             modifier.apply(&action_map, &time, (0.0, 1.0, 2.0).into()),
