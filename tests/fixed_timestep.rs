@@ -1,5 +1,6 @@
 use bevy::{input::InputPlugin, prelude::*, time::TimeUpdateStrategy};
 use bevy_enhanced_input::prelude::*;
+use test_log::test;
 
 #[test]
 fn once_in_two_frames() -> Result<()> {

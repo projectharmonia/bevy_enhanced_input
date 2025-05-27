@@ -2,6 +2,7 @@ use core::any;
 
 use bevy::{input::InputPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
+use test_log::test;
 
 #[test]
 fn explicit() -> Result<()> {

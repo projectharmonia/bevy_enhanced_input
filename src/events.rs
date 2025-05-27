@@ -190,6 +190,7 @@ impl<A: InputAction> Copy for Completed<A> {}
 #[cfg(test)]
 mod tests {
     use bevy_enhanced_input_macros::InputAction;
+    use test_log::test;
 
     use super::*;
     use crate::action_map::Action;

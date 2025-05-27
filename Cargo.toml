@@ -36,6 +36,7 @@ bevy = { version = "0.16.0", default-features = false, features = [
   "tonemapping_luts",
   "x11",
 ] }
+test-log = "0.2"
 ron = "0.8"
 
 [lints.clippy]
