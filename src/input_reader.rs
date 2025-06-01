@@ -8,10 +8,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{
-    action_value::ActionValue,
-    input::{GamepadDevice, Input, ModKeys},
-};
+use crate::prelude::*;
 
 /// Input state for actions.
 ///
@@ -304,7 +301,6 @@ mod tests {
     };
 
     use super::*;
-    use crate::{Input, input::InputModKeys};
 
     #[test]
     fn keyboard() {

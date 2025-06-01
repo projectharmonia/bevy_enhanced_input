@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
-use crate::{action_map::ActionMap, action_value::ActionValue};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Remaps input values within the range [Self::lower_threshold] to [Self::upper_threshold] onto the range 0 to 1.
 /// Values outside this range are clamped.

@@ -1,13 +1,9 @@
 use alloc::{boxed::Box, vec::Vec};
 use core::iter;
 
-use crate::{
-    input::Input,
-    input_condition::{InputCondition, IntoConditions},
-    input_modifier::{InputModifier, IntoModifiers},
-};
+use crate::{input_condition::IntoConditions, input_modifier::IntoModifiers, prelude::*};
 
-/// Associated input for [`ActionBinding`](crate::action_binding::ActionBinding).
+/// Associated input for [`ActionBinding`].
 #[derive(Debug)]
 pub struct InputBinding {
     pub input: Input,
@@ -151,8 +147,8 @@ pub trait IntoBindings {
     ///
     /// <div class="warning">
     ///
-    /// Avoid using this with modifiers like [`DeadZone`](crate::input_modifier::dead_zone::DeadZone),
-    /// as this method applies the modifier to each input **individually** rather than to all bindings.
+    /// Avoid using this with modifiers like [`DeadZone`], as this method applies
+    /// the modifier to each input **individually** rather than to all bindings.
     ///
     /// </div>
     ///

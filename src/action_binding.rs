@@ -8,20 +8,14 @@ use bevy::prelude::*;
 use log::{debug, trace};
 
 use crate::{
-    action_map::{ActionMap, ActionState},
-    action_value::{ActionValue, ActionValueDim},
-    input::Input,
-    input_action::{Accumulation, ActionOutput, InputAction},
-    input_binding::{InputBinding, IntoBindings},
-    input_condition::{InputCondition, IntoConditions},
-    input_modifier::{InputModifier, IntoModifiers},
-    input_reader::InputReader,
+    action_map::ActionMap, input_action::ActionOutput, input_condition::IntoConditions,
+    input_modifier::IntoModifiers, input_reader::InputReader, prelude::*,
     trigger_tracker::TriggerTracker,
 };
 
 /// Bindings associated with an [`InputAction`] marker.
 ///
-/// Stored inside [`Actions`](crate::actions::Actions).
+/// Stored inside [`Actions`].
 ///
 /// Bindings are stored separately from [`ActionMap`] to allow reading other actions' data during evaluation.
 ///
@@ -78,8 +72,7 @@ impl ActionBinding {
 
     /// Adds action-level modifiers.
     ///
-    /// For input-level modifiers see
-    /// [`BindingBuilder::with_modifiers`](crate::input_binding::BindingBuilder::with_modifiers).
+    /// For input-level modifiers see [`BindingBuilder::with_modifiers`].
     ///
     /// # Examples
     ///
@@ -125,8 +118,7 @@ impl ActionBinding {
 
     /// Adds action-level conditions.
     ///
-    /// For input-level conditions see
-    /// [`BindingBuilder::with_conditions`](crate::input_binding::BindingBuilder::with_conditions).
+    /// For input-level conditions see [`BindingBuilder::with_conditions`].
     ///
     /// # Examples
     ///
@@ -181,7 +173,7 @@ impl ActionBinding {
     ///    Also implemented on tuples, so you can pass multiple inputs to a single call.
     ///
     /// All assigned inputs will be evaluated separately (equivalent to "any of").
-    /// If you're looking for a chord, see the [`Chord`](crate::input_condition::chord::Chord) condition.
+    /// If you're looking for a chord, see the [`Chord`] condition.
     ///
     /// # Examples
     ///

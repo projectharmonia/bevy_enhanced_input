@@ -373,6 +373,8 @@ use bevy::{input::InputSystem, prelude::*};
 
 use action_instances::ContextRegistry;
 use input_reader::{ActionSources, ResetInput};
+
+#[cfg(doc)]
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.

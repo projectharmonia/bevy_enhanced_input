@@ -14,10 +14,7 @@ use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;
 
-use crate::{
-    action_map::{ActionMap, ActionState},
-    action_value::ActionValue,
-};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Default actuation threshold for all conditions.
 pub const DEFAULT_ACTUATION: f32 = 0.5;
@@ -29,8 +26,7 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 /// or "release" events.
 ///
 /// Can be applied both to inputs and actions.
-/// See [`ActionBinding::with_conditions`](crate::action_binding::ActionBinding::with_conditions)
-/// and [`BindingBuilder::with_conditions`](crate::input_binding::BindingBuilder::with_conditions).
+/// See [`ActionBinding::with_conditions`] and [`BindingBuilder::with_conditions`].
 pub trait InputCondition: Sync + Send + Debug + 'static {
     /// Returns calculates state.
     ///
@@ -51,10 +47,10 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
 /// Determines how a condition contributes to the final [`ActionState`].
 ///
 /// If no conditions are provided, the state will be set to [`ActionState::Fired`]
-/// on any non-zero value, functioning similarly to a [`Down`](press::Down) condition
+/// on any non-zero value, functioning similarly to a [`Down`] condition
 /// with a zero actuation threshold.
 ///
-/// For details about how actions are combined, see [`Actions`](crate::actions::Actions).
+/// For details about how actions are combined, see [`Actions`].
 pub enum ConditionKind {
     /// The most significant [`ActionState`] from all explicit conditions will be the
     /// resulting state.
@@ -77,8 +73,7 @@ pub enum ConditionKind {
 }
 
 /// Conversion into iterator of bindings that could be passed into
-/// [`ActionBinding::with_conditions`](crate::action_binding::ActionBinding::with_conditions)
-/// and [`BindingBuilder::with_conditions`](crate::input_binding::BindingBuilder::with_conditions).
+/// [`ActionBinding::with_conditions`] and [`BindingBuilder::with_conditions`].
 pub trait IntoConditions {
     /// Returns an iterator over conditions.
     fn into_conditions(self) -> impl Iterator<Item = Box<dyn InputCondition>>;

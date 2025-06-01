@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
-use crate::{action_map::ActionMap, action_value::ActionValue};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Restricts input to a certain interval independently along each axis.
 ///

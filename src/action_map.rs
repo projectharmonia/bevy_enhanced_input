@@ -7,18 +7,13 @@ use bevy::{platform::collections::HashMap, prelude::*};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    action_value::ActionValue,
-    events::{ActionEvents, Canceled, Completed, Fired, Ongoing, Started},
-    input_action::{ActionOutput, InputAction},
-};
+use crate::{input_action::ActionOutput, prelude::*};
 
 /// Maps markers that implement [`InputAction`] to their data (state, value, etc.).
 ///
-/// Stored inside [`Actions`](crate::actions::Actions).
+/// Stored inside [`Actions`].
 ///
-/// Accessible from [`InputCondition::evaluate`](crate::input_condition::InputCondition::evaluate)
-/// and [`InputModifier::apply`](crate::input_modifier::InputModifier::apply)
+/// Accessible from [`InputCondition::evaluate`] and [`InputModifier::apply`].
 #[derive(Default, Deref, DerefMut)]
 pub struct ActionMap(pub HashMap<TypeId, Action>);
 
@@ -217,8 +212,8 @@ pub enum ActionState {
     None,
     /// Condition has started triggering, but has not yet finished.
     ///
-    /// For example, [`Hold`](crate::input_condition::hold::Hold) condition
-    /// requires its state to be maintained over several frames.
+    /// For example, [`Hold`] condition requires its state to be
+    /// maintained over several frames.
     Ongoing,
     /// The condition has been met.
     Fired,

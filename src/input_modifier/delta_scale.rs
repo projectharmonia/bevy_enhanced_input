@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
-use crate::{action_map::ActionMap, action_value::ActionValue};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Multiplies the input value by delta time for this frame.
 ///

@@ -2,7 +2,7 @@ use core::fmt::Debug;
 
 use bevy::prelude::*;
 
-use crate::action_value::{ActionValue, ActionValueDim};
+use crate::prelude::*;
 
 /// Marker for a gameplay-related action.
 ///
@@ -38,16 +38,14 @@ pub trait InputAction: Debug + Send + Sync + 'static {
     /// - For multi-axis actions, like `Move`, use [`Vec2`] or [`Vec3`].
     ///
     /// This type will also be used for `value` field on events
-    /// e.g. [`Fired::value`](crate::events::Fired::value),
-    /// [`Canceled::value`](crate::events::Canceled::value).
+    /// e.g. [`Fired::value`], [`Canceled::value`].
     type Output: ActionOutput;
 
-    /// Specifies whether this action should swallow any [`Input`](crate::input::Input)s
+    /// Specifies whether this action should swallow any [`Input`]s
     /// bound to it or allow them to pass through to affect other actions.
     ///
     /// Inputs are consumed when the action state is not equal to
-    /// [`ActionState::None`](crate::action_map::ActionState::None).
-    /// For details, see [`Actions`](crate::actions::Actions).
+    /// [`ActionState::None`]. For details, see [`Actions`].
     ///
     /// Consuming is global and affect actions in all contexts.
     const CONSUME_INPUT: bool = true;
@@ -122,8 +120,7 @@ impl ActionOutput for Vec3 {
 }
 
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
-/// same most significant [`ActionState`](crate::action_map::ActionState)
-/// (excluding [`ActionState::None`](crate::action_map::ActionState::None)).
+/// same most significant [`ActionState`] (excluding [`ActionState::None`]).
 #[derive(Default, Clone, Copy, Debug)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.

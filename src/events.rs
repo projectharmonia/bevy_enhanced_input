@@ -3,12 +3,12 @@ use core::fmt::Debug;
 use bevy::prelude::*;
 use bitflags::bitflags;
 
-use crate::{action_map::ActionState, input_action::InputAction};
+use crate::prelude::*;
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
     ///
-    /// Stored inside [`Action`](crate::action_map::Action).
+    /// Stored inside [`Action`].
     ///
     /// On transition, events will be triggered with dedicated types that correspond to bitflags.
     ///
@@ -26,7 +26,7 @@ bitflags! {
     /// | [`ActionState::Fired`]      | [`ActionState::Ongoing`] | [`Ongoing`]               |
     /// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Completed`]             |
     ///
-    /// The meaning of each kind depends on the assigned [`InputCondition`](crate::input_condition::InputCondition)s.
+    /// The meaning of each kind depends on the assigned [`InputCondition`]s.
     #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
     pub struct ActionEvents: u8 {
         /// Corresponds to [`Started`].
@@ -66,7 +66,7 @@ impl ActionEvents {
 ///
 /// Fired before [`Fired`] and [`Ongoing`].
 ///
-/// For example, with the [`Tap`](crate::input_condition::tap::Tap) condition, this event is triggered
+/// For example, with the [`Tap`] condition, this event is triggered
 /// only on the first press.
 #[derive(Debug, Event)]
 pub struct Started<A: InputAction> {
@@ -87,8 +87,8 @@ impl<A: InputAction> Copy for Started<A> {}
 
 /// Triggers every frame when an action state is [`ActionState::Ongoing`].
 ///
-/// For example, with the [`HoldAndRelease`](crate::input_condition::hold_and_release::HoldAndRelease) condition,
-/// this event is triggered while the user is holding down the button before the specified duration is reached.
+/// For example, with the [`HoldAndRelease`] condition, this event is triggered
+/// while the user is holding down the button before the specified duration is reached.
 #[derive(Debug, Event)]
 pub struct Ongoing<A: InputAction> {
     /// Current action value.
@@ -111,8 +111,8 @@ impl<A: InputAction> Copy for Ongoing<A> {}
 
 /// Triggers every frame when an action state is [`ActionState::Fired`].
 ///
-/// For example, with the [`Release`](crate::input_condition::release::Release) condition,
-/// this event is triggered when the user releases the key.
+/// For example, with the [`Release`] condition, this event is triggered
+/// when the user releases the key.
 #[derive(Debug, Event)]
 pub struct Fired<A: InputAction> {
     /// Current action value.
@@ -136,10 +136,10 @@ impl<A: InputAction> Clone for Fired<A> {
 
 impl<A: InputAction> Copy for Fired<A> {}
 
-/// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`],
+/// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`].
 ///
-/// For example, with the [`HoldAndRelease`](crate::input_condition::hold_and_release::HoldAndRelease) condition,
-/// this event is triggered if the user releases the button before the condition is triggered.
+/// For example, with the [`HoldAndRelease`] condition, this event is triggered
+/// if the user releases the button before the condition is triggered.
 #[derive(Debug, Event)]
 pub struct Canceled<A: InputAction> {
     /// Current action value.
@@ -160,10 +160,10 @@ impl<A: InputAction> Clone for Canceled<A> {
 
 impl<A: InputAction> Copy for Canceled<A> {}
 
-/// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`],
+/// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`].
 ///
-/// For example, with the [`Hold`](crate::input_condition::hold::Hold) condition,
-/// this event is triggered when the user releases the key.
+/// For example, with the [`Hold`] condition, this event is triggered
+/// when the user releases the key.
 #[derive(Debug, Event)]
 pub struct Completed<A: InputAction> {
     /// Current action value.
@@ -193,7 +193,6 @@ mod tests {
     use test_log::test;
 
     use super::*;
-    use crate::action_map::Action;
 
     #[test]
     fn none_none() {
