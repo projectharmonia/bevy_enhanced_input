@@ -3,7 +3,7 @@ use core::{
     fmt::Debug,
 };
 
-use bevy::{platform::collections::HashMap, prelude::*};
+use bevy::{prelude::*, utils::TypeIdMap};
 use log::debug;
 use serde::{Deserialize, Serialize};
 
@@ -20,7 +20,7 @@ use crate::{
 /// Accessible from [`InputCondition::evaluate`](crate::input_condition::InputCondition::evaluate)
 /// and [`InputModifier::apply`](crate::input_modifier::InputModifier::apply)
 #[derive(Default, Deref, DerefMut)]
-pub struct ActionMap(pub HashMap<TypeId, Action>);
+pub struct ActionMap(pub TypeIdMap<Action>);
 
 impl ActionMap {
     /// Returns associated state for action `A`.
