@@ -17,9 +17,8 @@ use bevy::{
 use log::{debug, trace};
 
 use crate::{
-    EnhancedInputSystem,
-    actions::{Actions, InputContext},
     input_reader::{InputReader, ResetInput},
+    prelude::*,
 };
 
 /// An extension trait for [`App`] to assign input to components.
@@ -404,7 +403,7 @@ impl<C: InputContext> Binding<C> {
 ///
 /// Use it when you change your application settings and want to reload the mappings.
 ///
-/// This will also reset all actions to [`ActionState::None`](crate::ActionState::None)
+/// This will also reset all actions to [`ActionState::None`]
 /// and trigger the corresponding events.
 #[derive(Event)]
 pub struct RebuildBindings;

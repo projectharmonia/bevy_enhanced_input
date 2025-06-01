@@ -3,12 +3,7 @@ use core::{any, marker::PhantomData};
 use bevy::prelude::*;
 use log::warn;
 
-use super::InputModifier;
-use crate::{
-    InputAction,
-    action_map::{ActionMap, ActionState},
-    action_value::ActionValue,
-};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Produces accumulated value when another action is fired within the same context.
 ///
@@ -62,7 +57,6 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
-    use crate::action_map::Action;
 
     #[test]
     fn accumulation_active() {

@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
-use crate::{action_map::ActionMap, action_value::ActionValue};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Produces a smoothed value of the current and previous input value.
 ///

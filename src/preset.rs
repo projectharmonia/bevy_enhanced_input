@@ -1,9 +1,6 @@
 use bevy::prelude::*;
 
-use crate::{
-    input_binding::{BindingBuilder, InputBinding, IntoBindings},
-    input_modifier::{negate::Negate, swizzle_axis::SwizzleAxis},
-};
+use crate::prelude::*;
 
 /// A preset to map buttons as 2-dimensional input.
 ///

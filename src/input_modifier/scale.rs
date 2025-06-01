@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
-use super::InputModifier;
-use crate::{action_map::ActionMap, action_value::ActionValue};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Scales input independently along each axis by a specified factor.
 ///

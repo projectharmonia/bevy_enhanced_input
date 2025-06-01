@@ -9,13 +9,9 @@ use core::{
 use bevy::{ecs::schedule::ScheduleLabel, platform::collections::hash_map::Entry, prelude::*};
 
 use crate::{
-    action_binding::ActionBinding,
-    action_map::{Action, ActionMap, ActionState},
-    action_value::ActionValue,
-    events::ActionEvents,
-    input::GamepadDevice,
-    input_action::InputAction,
+    action_map::ActionMap,
     input_reader::{InputReader, ResetInput},
+    prelude::*,
 };
 
 /// Component that stores actions with their bindings for a specific [`InputContext`].
@@ -192,12 +188,12 @@ impl<C: InputContext, A: InputAction> Error for NoActionError<C, A> {}
 ///
 /// Used to differentiate [`Actions`] components and configure how associated actions will be evaluated.
 ///
-/// All structs that implement this trait need to be registered using
-/// [`InputContextAppExt::add_input_context`](crate::action_instances::InputContextAppExt::add_input_context)
+/// All structs that implement this trait need to be registered
+/// using [`InputContextAppExt::add_input_context`].
 ///
 /// # Examples
 ///
-/// To implement the trait you can use the [`InputContext`](bevy_enhanced_input_macros::InputContext)
+/// To implement the trait you can use the [`InputContext`]
 /// derive to reduce boilerplate:
 ///
 /// ```
@@ -226,9 +222,8 @@ pub trait InputContext: Send + Sync + 'static {
     ///
     /// Set this to [`FixedPreUpdate`] if game logic relies on actions from this context
     /// in [`FixedUpdate`]. For example, if [`FixedMain`](bevy::app::FixedMain) runs twice
-    /// in a single frame and an action triggers, you will get [`Started`](crate::events::Started)
-    /// and [`Fired`](crate::events::Fired) on the first run and only [`Fired`](crate::events::Fired)
-    /// on the second run.
+    /// in a single frame and an action triggers, you will get [`Started`]
+    /// and [`Fired`] on the first run and only [`Fired`] on the second run.
     type Schedule: ScheduleLabel + Default;
 
     /// Determines the evaluation order of [`Actions<Self>`].

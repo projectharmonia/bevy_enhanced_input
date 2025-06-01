@@ -13,7 +13,7 @@ use core::{fmt::Debug, iter};
 
 use bevy::prelude::*;
 
-use crate::{action_map::ActionMap, action_value::ActionValue};
+use crate::{action_map::ActionMap, prelude::*};
 
 /// Pre-processor that alter the raw input values.
 ///
@@ -21,8 +21,7 @@ use crate::{action_map::ActionMap, action_value::ActionValue};
 /// or changing how input maps to axes.
 ///
 /// Can be applied both to inputs and actions.
-/// See [`ActionBinding::with_modifiers`](crate::action_binding::ActionBinding::with_modifiers)
-/// and [`BindingBuilder::with_modifiers`](crate::input_binding::BindingBuilder::with_modifiers).
+/// See [`ActionBinding::with_modifiers`] and [`BindingBuilder::with_modifiers`].
 pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Returns pre-processed value.
     ///
@@ -36,8 +35,7 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
 }
 
 /// Conversion into iterator of bindings that could be passed into
-/// [`ActionBinding::with_modifiers`](crate::action_binding::ActionBinding::with_modifiers)
-/// and [`BindingBuilder::with_modifiers`](crate::input_binding::BindingBuilder::with_modifiers).
+/// [`ActionBinding::with_modifiers`] and [`BindingBuilder::with_modifiers`].
 pub trait IntoModifiers {
     /// Returns an iterator over modifiers.
     fn into_modifiers(self) -> impl Iterator<Item = Box<dyn InputModifier>>;
