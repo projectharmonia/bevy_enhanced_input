@@ -357,9 +357,7 @@ impl ActionBinding {
         }
 
         action.update(time, state, value);
-        if !tracker.events_blocked() {
-            action.trigger_events(commands, entity);
-        }
+        action.trigger_events(commands, entity);
     }
 
     pub(crate) fn type_id(&self) -> TypeId {

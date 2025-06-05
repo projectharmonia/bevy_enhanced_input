@@ -62,14 +62,8 @@ fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test
         .bind::<TapAction>()
         .to(TapAction::KEY)
         .with_conditions(Tap::new(0.5));
-    actions
-        .bind::<ChordMember1>()
-        .to(ChordMember1::KEY)
-        .with_conditions(BlockBy::<ChordAction>::events_only()); // Don't trigger the action when the chord is active.
-    actions
-        .bind::<ChordMember2>()
-        .to(ChordMember2::KEY)
-        .with_conditions(BlockBy::<ChordAction>::events_only());
+    actions.bind::<ChordMember1>().to(ChordMember1::KEY);
+    actions.bind::<ChordMember2>().to(ChordMember2::KEY);
     actions.bind::<ChordAction>().with_conditions((
         Chord::<ChordMember1>::default(),
         Chord::<ChordMember2>::default(),
