@@ -16,7 +16,6 @@ pub(crate) struct TriggerTracker {
     found_implicit: bool,
     all_implicits_fired: bool,
     blocked: bool,
-    events_blocked: bool,
 }
 
 impl TriggerTracker {
@@ -30,7 +29,6 @@ impl TriggerTracker {
             found_implicit: false,
             all_implicits_fired: true,
             blocked: false,
-            events_blocked: false,
         }
     }
 
@@ -73,13 +71,8 @@ impl TriggerTracker {
                     self.all_implicits_fired &= state == ActionState::Fired;
                     self.found_active |= state != ActionState::None;
                 }
-                ConditionKind::Blocker { events_only } => {
-                    let blocked = state == ActionState::None;
-                    if events_only {
-                        self.events_blocked |= blocked;
-                    } else {
-                        self.blocked |= blocked;
-                    }
+                ConditionKind::Blocker => {
+                    self.blocked |= state == ActionState::None;
                 }
             }
         }
@@ -109,10 +102,6 @@ impl TriggerTracker {
 
     pub(crate) fn value(&self) -> ActionValue {
         self.value
-    }
-
-    pub(crate) fn events_blocked(&self) -> bool {
-        self.events_blocked
     }
 
     /// Replaces the state with `other`.
@@ -149,6 +138,5 @@ impl TriggerTracker {
         self.found_implicit |= other.found_implicit;
         self.all_implicits_fired &= other.all_implicits_fired;
         self.blocked |= other.blocked;
-        self.events_blocked |= other.events_blocked;
     }
 }

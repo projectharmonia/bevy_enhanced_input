@@ -61,15 +61,10 @@ pub enum ConditionKind {
     /// Otherwise, the most significant state will be capped at [`ActionState::Ongoing`].
     Implicit,
     /// Any blocking condition that returns [`ActionState::None`] will override
-    /// the state with [`ActionState::None`] or block the events.
+    /// the state with [`ActionState::None`].
     ///
     /// Doesn't contribute to the state on its own.
-    Blocker {
-        /// Block only events instead of overriding the state.
-        ///
-        /// Other actions will be able to see the action state in [`ActionMap`].
-        events_only: bool,
-    },
+    Blocker,
 }
 
 /// Conversion into iterator of bindings that could be passed into

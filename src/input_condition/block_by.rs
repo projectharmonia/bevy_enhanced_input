@@ -10,33 +10,12 @@ use crate::{action_map::ActionMap, prelude::*};
 pub struct BlockBy<A: InputAction> {
     /// Action that blocks this condition when active.
     marker: PhantomData<A>,
-
-    /// Whether to block the state or only the events.
-    ///
-    /// By default set to false.
-    pub events_only: bool,
-}
-
-impl<A: InputAction> BlockBy<A> {
-    /// Block only events.
-    ///
-    /// For details, see [`ConditionKind::Blocker::events_only`].
-    ///
-    /// This can be used for chords to avoid triggering required actions.
-    /// Otherwise, the chord will register the release and cancel itself.
-    pub fn events_only() -> Self {
-        Self {
-            marker: PhantomData,
-            events_only: true,
-        }
-    }
 }
 
 impl<A: InputAction> Default for BlockBy<A> {
     fn default() -> Self {
         Self {
             marker: PhantomData,
-            events_only: false,
         }
     }
 }
@@ -72,9 +51,7 @@ impl<A: InputAction> InputCondition for BlockBy<A> {
     }
 
     fn kind(&self) -> ConditionKind {
-        ConditionKind::Blocker {
-            events_only: self.events_only,
-        }
+        ConditionKind::Blocker
     }
 }
 
