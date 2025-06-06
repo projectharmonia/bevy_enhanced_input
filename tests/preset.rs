@@ -31,6 +31,22 @@ fn keys() {
         (KeyCode::Digit3, RIGHT),
         (KeyCode::Digit4, UP),
         (KeyCode::Digit5, DOWN),
+        (KeyCode::KeyK, UP),
+        (KeyCode::KeyU, RIGHT_UP),
+        (KeyCode::KeyL, RIGHT),
+        (KeyCode::KeyN, RIGHT_DOWN),
+        (KeyCode::KeyJ, DOWN),
+        (KeyCode::KeyB, LEFT_DOWN),
+        (KeyCode::KeyH, LEFT),
+        (KeyCode::KeyY, LEFT_UP),
+        (KeyCode::Numpad8, UP),
+        (KeyCode::Numpad9, RIGHT_UP),
+        (KeyCode::Numpad6, RIGHT),
+        (KeyCode::Numpad3, RIGHT_DOWN),
+        (KeyCode::Numpad2, DOWN),
+        (KeyCode::Numpad1, LEFT_DOWN),
+        (KeyCode::Numpad4, LEFT),
+        (KeyCode::Numpad7, LEFT_UP),
     ] {
         app.world_mut()
             .resource_mut::<ButtonInput<KeyCode>>()
@@ -137,6 +153,10 @@ const BACKWARD: Vec3 = Vec3::Z;
 const FORWARD: Vec3 = Vec3::NEG_Z;
 const UP: Vec3 = Vec3::Y;
 const DOWN: Vec3 = Vec3::NEG_Y;
+const RIGHT_UP: Vec3 = Vec3::new(1.0, 1.0, 0.0);
+const RIGHT_DOWN: Vec3 = Vec3::new(1.0, -1.0, 0.0);
+const LEFT_DOWN: Vec3 = Vec3::new(-1.0, -1.0, 0.0);
+const LEFT_UP: Vec3 = Vec3::new(-1.0, 1.0, 0.0);
 
 fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
@@ -158,6 +178,8 @@ fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test
             up: KeyCode::Digit4,
             down: KeyCode::Digit5,
         },
+        Ordinal::hjklyubn(),
+        Ordinal::numpad_keys(),
     ));
 }
 

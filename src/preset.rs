@@ -263,3 +263,92 @@ impl<I: IntoBindings> IntoBindings for Spatial<I> {
         )
     }
 }
+
+/// A preset to 8 map buttons as 2-dimensional input.
+///
+/// See [`Cardinal`] for a usage example.
+#[derive(Debug, Clone, Copy)]
+pub struct Ordinal<I: IntoBindings> {
+    pub north: I,
+    pub north_east: I,
+    pub east: I,
+    pub south_east: I,
+    pub south: I,
+    pub south_west: I,
+    pub west: I,
+    pub north_west: I,
+}
+
+impl Ordinal<KeyCode> {
+    /// Maps numpad keys as 2-dimensional input.
+    pub fn numpad_keys() -> Self {
+        Self {
+            north: KeyCode::Numpad8,
+            north_east: KeyCode::Numpad9,
+            east: KeyCode::Numpad6,
+            south_east: KeyCode::Numpad3,
+            south: KeyCode::Numpad2,
+            south_west: KeyCode::Numpad1,
+            west: KeyCode::Numpad4,
+            north_west: KeyCode::Numpad7,
+        }
+    }
+
+    /// Maps HJKLYUBN keys as 2-dimensional input.
+    ///
+    /// ```text
+    /// y   k   u
+    ///   🡴 🡱 🡵
+    /// h 🡰 · 🡲 l
+    ///   🡷 🡳 🡶
+    /// b   j   n
+    /// ```
+    /// Common for roguelikes.
+    pub fn hjklyubn() -> Self {
+        Self {
+            north: KeyCode::KeyK,
+            north_east: KeyCode::KeyU,
+            east: KeyCode::KeyL,
+            south_east: KeyCode::KeyN,
+            south: KeyCode::KeyJ,
+            south_west: KeyCode::KeyB,
+            west: KeyCode::KeyH,
+            north_west: KeyCode::KeyY,
+        }
+    }
+}
+
+impl<I: IntoBindings> IntoBindings for Ordinal<I> {
+    fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
+        let cardinal = Cardinal {
+            north: self.north,
+            east: self.east,
+            south: self.south,
+            west: self.west,
+        };
+
+        let north_east = self
+            .north_east
+            .into_bindings()
+            .map(|b| b.with_modifiers(SwizzleAxis::XXZ));
+        let south_east = self
+            .south_east
+            .into_bindings()
+            .map(|b| b.with_modifiers((SwizzleAxis::XXZ, Negate::y())));
+        let south_west = self
+            .south_west
+            .into_bindings()
+            .map(|b| b.with_modifiers((SwizzleAxis::XXZ, Negate::all())));
+        let north_west = self
+            .north_west
+            .into_bindings()
+            .map(|b| b.with_modifiers((SwizzleAxis::XXZ, Negate::x())));
+
+        cardinal
+            .into_bindings()
+            .chain(north_east)
+            .chain(south_east)
+            .chain(south_west)
+            .chain(north_west)
+    }
+}
