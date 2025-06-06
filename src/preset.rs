@@ -95,28 +95,20 @@ impl Cardinal<GamepadButton> {
 
 impl<I: IntoBindings> IntoBindings for Cardinal<I> {
     fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
-        // Y
-        let north = self
-            .north
-            .into_bindings()
-            .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
+        let x = Bidirectional {
+            positive: self.east,
+            negative: self.west,
+        };
 
-        // -X
-        let west = self
-            .west
-            .into_bindings()
-            .map(|binding| binding.with_modifiers(Negate::all()));
+        let y = Bidirectional {
+            positive: self.north,
+            negative: self.south,
+        };
 
-        // -Y
-        let south = self
-            .south
-            .into_bindings()
-            .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::YXZ)));
-
-        // X
-        let east = self.east.into_bindings();
-
-        north.chain(east).chain(south).chain(west)
+        x.into_bindings().chain(
+            y.into_bindings()
+                .map(|b| b.with_modifiers(SwizzleAxis::YXZ)),
+        )
     }
 }
 
@@ -185,7 +177,7 @@ impl<I: IntoBindings> IntoBindings for Axial<I> {
         let y = self
             .y
             .into_bindings()
-            .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
+            .map(|b| b.with_modifiers(SwizzleAxis::YXZ));
 
         x.chain(y)
     }
@@ -206,7 +198,7 @@ impl<I: IntoBindings> IntoBindings for Bidirectional<I> {
         let negative = self
             .negative
             .into_bindings()
-            .map(|binding| binding.with_modifiers(Negate::all()));
+            .map(|b| b.with_modifiers(Negate::all()));
 
         positive.chain(negative)
     }
@@ -253,44 +245,21 @@ impl Spatial<KeyCode> {
 
 impl<I: IntoBindings> IntoBindings for Spatial<I> {
     fn into_bindings(self) -> impl Iterator<Item = InputBinding> {
-        // Z
-        let backward = self
-            .backward
-            .into_bindings()
-            .map(|binding| binding.with_modifiers(SwizzleAxis::ZYX));
+        let xy = Cardinal {
+            north: self.up,
+            east: self.right,
+            south: self.down,
+            west: self.left,
+        };
 
-        // -Z
-        let forward = self
-            .forward
-            .into_bindings()
-            .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::ZYX)));
+        let z = Bidirectional {
+            positive: self.backward,
+            negative: self.forward,
+        };
 
-        // X
-        let right = self.right.into_bindings();
-
-        // -X
-        let left = self
-            .left
-            .into_bindings()
-            .map(|binding| binding.with_modifiers(Negate::all()));
-
-        // Y
-        let up = self
-            .up
-            .into_bindings()
-            .map(|binding| binding.with_modifiers(SwizzleAxis::YXZ));
-
-        // -Y
-        let down = self
-            .down
-            .into_bindings()
-            .map(|binding| binding.with_modifiers((Negate::all(), SwizzleAxis::YXZ)));
-
-        backward
-            .chain(forward)
-            .chain(right)
-            .chain(left)
-            .chain(up)
-            .chain(down)
+        xy.into_bindings().chain(
+            z.into_bindings()
+                .map(|b| b.with_modifiers(SwizzleAxis::ZYX)),
+        )
     }
 }
