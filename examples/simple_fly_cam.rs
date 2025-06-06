@@ -98,7 +98,15 @@ fn apply_movement(trigger: Trigger<Fired<Move>>, mut transforms: Query<&mut Tran
     transform.translation += rotation * movement
 }
 
-fn rotate(trigger: Trigger<Fired<Rotate>>, mut players: Query<&mut Transform>) {
+fn rotate(
+    trigger: Trigger<Fired<Rotate>>,
+    mut players: Query<&mut Transform>,
+    window: Single<&Window>,
+) {
+    if window.cursor_options.visible {
+        return;
+    }
+
     let mut transform = players.get_mut(trigger.target()).unwrap();
     let (mut yaw, mut pitch, _) = transform.rotation.to_euler(EulerRot::YXZ);
 
