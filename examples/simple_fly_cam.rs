@@ -22,9 +22,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut window: Single<&mut Window>,
 ) {
-    // Capture mouse.
-    window.cursor_options.grab_mode = CursorGrabMode::Confined;
-    window.cursor_options.visible = false;
+    grab_cursor(&mut window, true);
 
     // Spawn a camera with `Actions` component.
     commands.spawn((
@@ -117,13 +115,20 @@ fn rotate(
 }
 
 fn capture_cursor(_trigger: Trigger<Completed<CaptureCursor>>, mut window: Single<&mut Window>) {
-    window.cursor_options.grab_mode = CursorGrabMode::Confined;
-    window.cursor_options.visible = false;
+    grab_cursor(&mut window, true);
 }
 
 fn release_cursor(_trigger: Trigger<Completed<ReleaseCursor>>, mut window: Single<&mut Window>) {
-    window.cursor_options.grab_mode = CursorGrabMode::None;
-    window.cursor_options.visible = true;
+    grab_cursor(&mut window, false);
+}
+
+fn grab_cursor(window: &mut Window, grab: bool) {
+    window.cursor_options.grab_mode = if grab {
+        CursorGrabMode::Confined
+    } else {
+        CursorGrabMode::None
+    };
+    window.cursor_options.visible = !grab;
 }
 
 // Since it's possible to have multiple `Actions` components, you need
