@@ -63,7 +63,7 @@ pub trait InputAction: Debug + Send + Sync + 'static {
 }
 
 /// Marks a type which can be used as [`InputAction::Output`].
-pub trait ActionOutput: Send + Sync + Debug + Clone + Copy {
+pub trait ActionOutput: Send + Sync + Debug + Clone + Copy + Into<ActionValue> {
     /// Dimension of this output.
     const DIM: ActionValueDim;
 

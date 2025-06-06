@@ -15,19 +15,12 @@ use crate::{input_action::ActionOutput, prelude::*};
 ///
 /// Accessible from [`InputCondition::evaluate`] and [`InputModifier::apply`].
 #[derive(Default, Deref, DerefMut)]
-pub struct ActionMap(pub TypeIdMap<Action>);
+pub struct ActionMap(TypeIdMap<Action>);
 
 impl ActionMap {
     /// Returns associated state for action `A`.
     pub fn action<A: InputAction>(&self) -> Option<&Action> {
         self.get(&TypeId::of::<A>())
-    }
-
-    /// Inserts a state for action `A`.
-    ///
-    /// Returns previously associated state if present.
-    pub fn insert_action<A: InputAction>(&mut self, action: Action) -> Option<Action> {
-        self.insert(TypeId::of::<A>(), action)
     }
 }
 
@@ -53,7 +46,7 @@ impl Action {
     ///
     /// [`Self::trigger_events`] will trigger events for `A`.
     #[must_use]
-    pub fn new<A: InputAction>() -> Self {
+    pub(crate) fn new<A: InputAction>() -> Self {
         Self {
             state: Default::default(),
             events: ActionEvents::empty(),
@@ -65,7 +58,7 @@ impl Action {
     }
 
     /// Updates internal state.
-    pub fn update(
+    pub(crate) fn update(
         &mut self,
         time: &Time<Virtual>,
         state: ActionState,
@@ -94,7 +87,7 @@ impl Action {
     /// Triggers events resulting from a state transition after [`Self::update`].
     ///
     /// See also [`Self::new`] and [`ActionEvents`].
-    pub fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
+    pub(crate) fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
         (self.trigger_events)(self, commands, entity);
     }
 
