@@ -57,6 +57,8 @@ impl<A: InputAction> InputCondition for Chord<A> {
 
 #[cfg(test)]
 mod tests {
+    use core::any::TypeId;
+
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
@@ -68,7 +70,7 @@ mod tests {
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
         let mut action_map = ActionMap::default();
-        action_map.insert_action::<TestAction>(action);
+        action_map.insert(TypeId::of::<TestAction>(), action);
 
         assert_eq!(
             condition.evaluate(&action_map, &time, true.into()),

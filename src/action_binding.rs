@@ -2,6 +2,7 @@ use alloc::{boxed::Box, vec::Vec};
 use core::{
     any::{self, TypeId},
     cmp::Ordering,
+    time::Duration,
 };
 
 use bevy::prelude::*;
@@ -38,6 +39,7 @@ pub struct ActionBinding {
     accumulation: Accumulation,
     require_reset: bool,
 
+    mock: Option<ActionMock>,
     modifiers: Vec<Box<dyn InputModifier>>,
     conditions: Vec<Box<dyn InputCondition>>,
     inputs: Vec<InputBinding>,
@@ -56,6 +58,7 @@ impl ActionBinding {
             consume_input: A::CONSUME_INPUT,
             accumulation: A::ACCUMULATION,
             require_reset: A::REQUIRE_RESET,
+            mock: None,
             modifiers: Default::default(),
             conditions: Default::default(),
             inputs: Default::default(),
@@ -284,6 +287,20 @@ impl ActionBinding {
         self
     }
 
+    /// Type-erased version for [`Actions::mock`].
+    pub(crate) fn mock(&mut self, state: ActionState, value: ActionValue, span: MockSpan) {
+        debug!(
+            "mocking `{}` with `{state:?}` and `{value:?}` for `{span:?}`",
+            self.action_name,
+        );
+        self.mock = Some(ActionMock { state, value, span });
+    }
+
+    pub(crate) fn clear_mock(&mut self) {
+        debug!("clearing mock from `{}`", self.action_name);
+        self.mock = None;
+    }
+
     pub(crate) fn update(
         &mut self,
         commands: &mut Commands,
@@ -292,7 +309,25 @@ impl ActionBinding {
         time: &Time<Virtual>,
         entity: Entity,
     ) {
-        trace!("updating action `{}`", self.action_name);
+        let (state, value) = self
+            .update_from_mock(time.delta())
+            .unwrap_or_else(|| self.update_from_reader(reader, action_map, time));
+
+        let action = action_map
+            .get_mut(&self.type_id)
+            .expect("actions and bindings should have matching type IDs");
+
+        action.update(time, state, value);
+        action.trigger_events(commands, entity);
+    }
+
+    pub(crate) fn update_from_reader(
+        &mut self,
+        reader: &mut InputReader,
+        action_map: &mut ActionMap,
+        time: &Time<Virtual>,
+    ) -> (ActionState, ActionValue) {
+        trace!("updating `{}` from input", self.action_name);
 
         let mut tracker = TriggerTracker::new(ActionValue::zero(self.dim));
         for binding in &mut self.inputs {
@@ -340,10 +375,6 @@ impl ActionBinding {
         tracker.apply_modifiers(action_map, time, &mut self.modifiers);
         tracker.apply_conditions(action_map, time, &mut self.conditions);
 
-        let action = action_map
-            .get_mut(&self.type_id)
-            .expect("actions and bindings should have matching type IDs");
-
         let state = tracker.state();
         let value = tracker.value().convert(self.dim);
 
@@ -356,8 +387,35 @@ impl ActionBinding {
             self.consume_buffer.clear();
         }
 
-        action.update(time, state, value);
-        action.trigger_events(commands, entity);
+        (state, value)
+    }
+
+    fn update_from_mock(&mut self, delta: Duration) -> Option<(ActionState, ActionValue)> {
+        let Some(mock) = &mut self.mock else {
+            return None;
+        };
+        trace!("updating `{}` from `{mock:?}`", self.action_name);
+
+        let expired = match &mut mock.span {
+            MockSpan::Updates(ticks) => {
+                *ticks = ticks.saturating_sub(1);
+                *ticks == 0
+            }
+            MockSpan::Duration(duration) => {
+                *duration = duration.saturating_sub(delta);
+                trace!("reducing mock duration by {delta:?}");
+                duration.is_zero()
+            }
+            MockSpan::Manual => false,
+        };
+
+        let state = mock.state;
+        let value = mock.value;
+        if expired {
+            self.clear_mock();
+        }
+
+        Some((state, value))
     }
 
     pub(crate) fn type_id(&self) -> TypeId {
@@ -370,5 +428,31 @@ impl ActionBinding {
 
     pub(crate) fn require_reset(&self) -> bool {
         self.require_reset
+    }
+}
+
+#[derive(Debug)]
+struct ActionMock {
+    state: ActionState,
+    value: ActionValue,
+    span: MockSpan,
+}
+
+/// Specifies how long a mock input should remain active.
+///
+/// See also [`Actions::mock`].
+#[derive(Clone, Copy, Debug)]
+pub enum MockSpan {
+    /// Mock for a fixed number of context evaluations.
+    Updates(u32),
+    /// Mock for a real-time duration.
+    Duration(Duration),
+    /// Mock until manually cleared.
+    Manual,
+}
+
+impl From<Duration> for MockSpan {
+    fn from(value: Duration) -> Self {
+        Self::Duration(value)
     }
 }

@@ -57,6 +57,58 @@ impl<C: InputContext> Actions<C> {
         }
     }
 
+    /// Like [`Self::mock`], but sets the value only for a single context evaluation.
+    pub fn mock_once<A: InputAction>(&mut self, state: ActionState, value: A::Output) {
+        self.mock::<A>(state, value, MockSpan::Updates(1));
+    }
+
+    /// Mocks the state and value of a specific action for a given span.
+    ///
+    /// While mocked, the action will skip input evaluation, conditions, and modifiers,
+    /// and instead report the provided state and value. All state transition events will be
+    /// triggered as usual.
+    ///
+    /// Once the span expires, the action will resume evaluating real input.
+    ///
+    /// The action will be created if it doesn't already exist in the context, so calling
+    /// [`Self::bind`] beforehand is not required.
+    ///
+    /// Mocking won't take effect immediately - it will be applied on the next context evaluation.
+    /// See [`InputContext::Schedule`] for details.
+    ///
+    /// # Examples
+    ///
+    /// Move up for 2 seconds:
+    ///
+    /// ```
+    /// # use core::time::Duration;
+    /// # use bevy::prelude::*;
+    /// # use bevy_enhanced_input::prelude::*;
+    /// # let mut actions = Actions::<Player>::default();
+    /// actions.mock::<Move>(ActionState::Fired, Vec2::Y, Duration::from_secs(2));
+    /// # #[derive(InputContext)]
+    /// # struct Player;
+    /// # #[derive(Debug, InputAction)]
+    /// # #[input_action(output = Vec2)]
+    /// # struct Move;
+    /// ```
+    pub fn mock<A: InputAction>(
+        &mut self,
+        state: ActionState,
+        value: A::Output,
+        span: impl Into<MockSpan>,
+    ) {
+        self.bind::<A>().mock(state, value.into(), span.into());
+    }
+
+    /// Clears any active mock for the specified action.
+    ///
+    /// The action will be resume evaluating real input.
+    /// See also [`Self::mock`].
+    pub fn clear_mock<A: InputAction>(&mut self) {
+        self.bind::<A>().clear_mock();
+    }
+
     /// Returns the associated bindings for action `A` if exists.
     ///
     /// Use [`Self::bind`] to assign bindings.

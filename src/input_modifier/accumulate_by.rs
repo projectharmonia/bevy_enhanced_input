@@ -54,6 +54,8 @@ impl<A: InputAction> InputModifier for AccumulateBy<A> {
 
 #[cfg(test)]
 mod tests {
+    use core::any::TypeId;
+
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
@@ -65,7 +67,7 @@ mod tests {
         let time = Time::default();
         action.update(&time, ActionState::Fired, true);
         let mut action_map = ActionMap::default();
-        action_map.insert_action::<TestAction>(action);
+        action_map.insert(TypeId::of::<TestAction>(), action);
 
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 2.0.into());
@@ -77,7 +79,7 @@ mod tests {
         let action = Action::new::<TestAction>();
         let time = Time::default();
         let mut action_map = ActionMap::default();
-        action_map.insert_action::<TestAction>(action);
+        action_map.insert(TypeId::of::<TestAction>(), action);
 
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());

@@ -346,7 +346,7 @@ mod trigger_tracker;
 pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
-        action_binding::ActionBinding,
+        action_binding::{ActionBinding, MockSpan},
         action_instances::{Binding, InputContextAppExt, RebuildBindings},
         action_map::{Action, ActionState},
         action_value::{ActionValue, ActionValueDim},

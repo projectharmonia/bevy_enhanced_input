@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `Actions::mock` and related methods to mock actions.
+
 ### Removed
 
 - `BlockBy::events_only` and `ConditionKind::Blocker::events_only`. This functionality was added before the introduction of the pull-based API and caused inconsistencies in returned values. It was intended to be used with `Chord`. If you need an action to be part of a chord but only want to react to it when the chord is not active, just check its state in the observer.
+- `ActionMap::insert`. Use the new action mocking API.
+- `Action::new`, `Action::trigger_events` and `Action::update` from the public API. Use the new action mocking API.
 
 ## [0.12.0] - 2025-05-25
 
