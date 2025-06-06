@@ -66,8 +66,11 @@ impl ActionEvents {
 ///
 /// Fired before [`Fired`] and [`Ongoing`].
 ///
-/// For example, with the [`Tap`] condition, this event is triggered
-/// only on the first press.
+/// For example, with the [`Down`] condition, this event is triggered
+/// only once per press. It will not trigger again until the key is
+/// released and pressed again.
+///
+/// See [`ActionEvents`] for all transitions.
 #[derive(Debug, Event)]
 pub struct Started<A: InputAction> {
     /// Current action value.
@@ -87,8 +90,11 @@ impl<A: InputAction> Copy for Started<A> {}
 
 /// Triggers every frame when an action state is [`ActionState::Ongoing`].
 ///
-/// For example, with the [`HoldAndRelease`] condition, this event is triggered
-/// while the user is holding down the button before the specified duration is reached.
+/// For example, with the [`Hold`] condition, this event is triggered
+/// continuously while the user is holding down the button, until the
+/// specified duration is reached.
+///
+/// See [`ActionEvents`] for all transitions.
 #[derive(Debug, Event)]
 pub struct Ongoing<A: InputAction> {
     /// Current action value.
@@ -111,8 +117,10 @@ impl<A: InputAction> Copy for Ongoing<A> {}
 
 /// Triggers every frame when an action state is [`ActionState::Fired`].
 ///
-/// For example, with the [`Release`] condition, this event is triggered
-/// when the user releases the key.
+/// For example, with the [`Down`] condition, this event is triggered
+/// every frame the key is held down.
+///
+/// See [`ActionEvents`] for all transitions.
 #[derive(Debug, Event)]
 pub struct Fired<A: InputAction> {
     /// Current action value.
@@ -138,8 +146,10 @@ impl<A: InputAction> Copy for Fired<A> {}
 
 /// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`].
 ///
-/// For example, with the [`HoldAndRelease`] condition, this event is triggered
-/// if the user releases the button before the condition is triggered.
+/// For example, with the [`Hold`] condition, this event is triggered
+/// if the user releases the button before the hold duration is met.
+///
+/// See [`ActionEvents`] for all transitions.
 #[derive(Debug, Event)]
 pub struct Canceled<A: InputAction> {
     /// Current action value.
@@ -162,8 +172,10 @@ impl<A: InputAction> Copy for Canceled<A> {}
 
 /// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`].
 ///
-/// For example, with the [`Hold`] condition, this event is triggered
+/// For example, with the [`Down`] condition, this event is triggered
 /// when the user releases the key.
+///
+/// See [`ActionEvents`] for all transitions.
 #[derive(Debug, Event)]
 pub struct Completed<A: InputAction> {
     /// Current action value.
