@@ -27,10 +27,6 @@ impl ActionMap {
 /// Data associated with an [`InputAction`] marker.
 ///
 /// Stored inside [`ActionMap`].
-///
-/// This struct could also be created manually to track state for an action
-/// with externally sourced data (e.g., network). Use [`Self::update`] to apply
-/// the data followed by [`Self::trigger_events`].
 #[derive(Clone, Copy)]
 pub struct Action {
     state: ActionState,

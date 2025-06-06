@@ -74,7 +74,7 @@ impl<C: InputContext> Actions<C> {
     /// [`Self::bind`] beforehand is not required.
     ///
     /// Mocking won't take effect immediately - it will be applied on the next context evaluation.
-    /// See [`InputContext::schedule`] for details.
+    /// See [`InputContext::Schedule`] for details.
     ///
     /// # Examples
     ///
