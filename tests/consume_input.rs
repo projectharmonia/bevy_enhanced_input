@@ -120,6 +120,41 @@ fn passthrough_then_consume() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn modifiers() -> Result<()> {
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<Test>()
+        .add_observer(modifiers_binding)
+        .finish();
+
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
+
+    app.update();
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(KEY);
+
+    app.update();
+
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
+    assert_eq!(actions.state::<NoModifiers>()?, ActionState::Fired);
+    assert_eq!(actions.state::<WithModifiers>()?, ActionState::None);
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(KeyCode::ControlLeft);
+
+    app.update();
+
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
+    assert_eq!(actions.state::<NoModifiers>()?, ActionState::None);
+    assert_eq!(actions.state::<WithModifiers>()?, ActionState::Fired);
+
+    Ok(())
+}
+
 fn consume_only_binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Consume>().to(KEY);
@@ -151,10 +186,18 @@ fn passthrough_then_consume_binding(
     actions.bind::<Consume>().to(KEY);
 }
 
+fn modifiers_binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
+    actions.bind::<NoModifiers>().to(KEY);
+    actions
+        .bind::<WithModifiers>()
+        .to(KEY.with_mod_keys(WithModifiers::MOD));
+}
+
 #[derive(InputContext)]
 struct Test;
 
-/// A key used by both [`Consume`] and [`Passthrough`] actions.
+/// A key used by all actions.
 const KEY: KeyCode = KeyCode::KeyA;
 
 #[derive(Debug, InputAction)]
@@ -164,3 +207,15 @@ struct Consume;
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, consume_input = false)]
 struct Passthrough;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct NoModifiers;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct WithModifiers;
+
+impl WithModifiers {
+    const MOD: ModKeys = ModKeys::CONTROL;
+}

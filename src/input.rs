@@ -55,6 +55,12 @@ impl Input {
         }
     }
 
+    /// Returns the amount of associated keyboard modifiers.
+    #[must_use]
+    pub fn mod_keys_count(self) -> usize {
+        self.mod_keys().iter_names().count()
+    }
+
     /// Returns associated keyboard modifiers.
     #[must_use]
     pub const fn mod_keys(self) -> ModKeys {
