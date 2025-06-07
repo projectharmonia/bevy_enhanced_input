@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Actions::mock` and related methods to mock actions.
+- Add duplicative swizzles to `SwizzleAxis.`
 
 ### Removed
 
