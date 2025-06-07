@@ -6,18 +6,12 @@ use test_log::test;
 fn consume() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<ConsumeOnly>()
+        .add_input_context::<Test>()
         .add_observer(consume_only_binding)
         .finish();
 
-    let entity1 = app
-        .world_mut()
-        .spawn(Actions::<ConsumeOnly>::default())
-        .id();
-    let entity2 = app
-        .world_mut()
-        .spawn(Actions::<ConsumeOnly>::default())
-        .id();
+    let entity1 = app.world_mut().spawn(Actions::<Test>::default()).id();
+    let entity2 = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -27,10 +21,10 @@ fn consume() -> Result<()> {
 
     app.update();
 
-    let entity1_ctx = app.world().get::<Actions<ConsumeOnly>>(entity1).unwrap();
+    let entity1_ctx = app.world().get::<Actions<Test>>(entity1).unwrap();
     assert_eq!(entity1_ctx.state::<Consume>()?, ActionState::Fired);
 
-    let entity2_ctx = app.world().get::<Actions<ConsumeOnly>>(entity2).unwrap();
+    let entity2_ctx = app.world().get::<Actions<Test>>(entity2).unwrap();
     assert_eq!(
         entity2_ctx.state::<Consume>()?,
         ActionState::None,
@@ -44,18 +38,12 @@ fn consume() -> Result<()> {
 fn passthrough() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<PassthroughOnly>()
+        .add_input_context::<Test>()
         .add_observer(passthrough_only_binding)
         .finish();
 
-    let entity1 = app
-        .world_mut()
-        .spawn(Actions::<PassthroughOnly>::default())
-        .id();
-    let entity2 = app
-        .world_mut()
-        .spawn(Actions::<PassthroughOnly>::default())
-        .id();
+    let entity1 = app.world_mut().spawn(Actions::<Test>::default()).id();
+    let entity2 = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -65,16 +53,10 @@ fn passthrough() -> Result<()> {
 
     app.update();
 
-    let entity1_ctx = app
-        .world()
-        .get::<Actions<PassthroughOnly>>(entity1)
-        .unwrap();
+    let entity1_ctx = app.world().get::<Actions<Test>>(entity1).unwrap();
     assert_eq!(entity1_ctx.state::<Passthrough>()?, ActionState::Fired);
 
-    let entity2_ctx = app
-        .world()
-        .get::<Actions<PassthroughOnly>>(entity2)
-        .unwrap();
+    let entity2_ctx = app.world().get::<Actions<Test>>(entity2).unwrap();
     assert_eq!(
         entity2_ctx.state::<Passthrough>()?,
         ActionState::Fired,
@@ -88,14 +70,11 @@ fn passthrough() -> Result<()> {
 fn consume_then_passthrough() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<ConsumeThenPassthrough>()
+        .add_input_context::<Test>()
         .add_observer(consume_then_passthrough_binding)
         .finish();
 
-    let entity = app
-        .world_mut()
-        .spawn(Actions::<ConsumeThenPassthrough>::default())
-        .id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -105,10 +84,7 @@ fn consume_then_passthrough() -> Result<()> {
 
     app.update();
 
-    let actions = app
-        .world()
-        .get::<Actions<ConsumeThenPassthrough>>(entity)
-        .unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.state::<Consume>()?, ActionState::Fired);
     assert_eq!(
         actions.state::<Passthrough>()?,
@@ -123,14 +99,11 @@ fn consume_then_passthrough() -> Result<()> {
 fn passthrough_then_consume() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<PassthroughThenConsume>()
+        .add_input_context::<Test>()
         .add_observer(passthrough_then_consume_binding)
         .finish();
 
-    let entity = app
-        .world_mut()
-        .spawn(Actions::<PassthroughThenConsume>::default())
-        .id();
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
 
     app.update();
 
@@ -140,35 +113,64 @@ fn passthrough_then_consume() -> Result<()> {
 
     app.update();
 
-    let actions = app
-        .world()
-        .get::<Actions<PassthroughThenConsume>>(entity)
-        .unwrap();
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.state::<Consume>()?, ActionState::Fired);
     assert_eq!(actions.state::<Passthrough>()?, ActionState::Fired);
 
     Ok(())
 }
 
-fn consume_only_binding(
-    trigger: Trigger<Binding<ConsumeOnly>>,
-    mut actions: Query<&mut Actions<ConsumeOnly>>,
-) {
+#[test]
+fn modifiers() -> Result<()> {
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<Test>()
+        .add_observer(modifiers_binding)
+        .finish();
+
+    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
+
+    app.update();
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(KEY);
+
+    app.update();
+
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
+    assert_eq!(actions.state::<NoModifiers>()?, ActionState::Fired);
+    assert_eq!(actions.state::<WithModifiers>()?, ActionState::None);
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(KeyCode::ControlLeft);
+
+    app.update();
+
+    let actions = app.world().get::<Actions<Test>>(entity).unwrap();
+    assert_eq!(actions.state::<NoModifiers>()?, ActionState::None);
+    assert_eq!(actions.state::<WithModifiers>()?, ActionState::Fired);
+
+    Ok(())
+}
+
+fn consume_only_binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Consume>().to(KEY);
 }
 
 fn passthrough_only_binding(
-    trigger: Trigger<Binding<PassthroughOnly>>,
-    mut actions: Query<&mut Actions<PassthroughOnly>>,
+    trigger: Trigger<Binding<Test>>,
+    mut actions: Query<&mut Actions<Test>>,
 ) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Passthrough>().to(KEY);
 }
 
 fn consume_then_passthrough_binding(
-    trigger: Trigger<Binding<ConsumeThenPassthrough>>,
-    mut actions: Query<&mut Actions<ConsumeThenPassthrough>>,
+    trigger: Trigger<Binding<Test>>,
+    mut actions: Query<&mut Actions<Test>>,
 ) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Consume>().to(KEY);
@@ -176,27 +178,26 @@ fn consume_then_passthrough_binding(
 }
 
 fn passthrough_then_consume_binding(
-    trigger: Trigger<Binding<PassthroughThenConsume>>,
-    mut actions: Query<&mut Actions<PassthroughThenConsume>>,
+    trigger: Trigger<Binding<Test>>,
+    mut actions: Query<&mut Actions<Test>>,
 ) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Passthrough>().to(KEY);
     actions.bind::<Consume>().to(KEY);
 }
 
-#[derive(InputContext)]
-struct PassthroughOnly;
+fn modifiers_binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+    let mut actions = actions.get_mut(trigger.target()).unwrap();
+    actions.bind::<NoModifiers>().to(KEY);
+    actions
+        .bind::<WithModifiers>()
+        .to(KEY.with_mod_keys(WithModifiers::MOD));
+}
 
 #[derive(InputContext)]
-struct ConsumeOnly;
+struct Test;
 
-#[derive(InputContext)]
-struct PassthroughThenConsume;
-
-#[derive(InputContext)]
-struct ConsumeThenPassthrough;
-
-/// A key used by both [`Consume`] and [`Passthrough`] actions.
+/// A key used by all actions.
 const KEY: KeyCode = KeyCode::KeyA;
 
 #[derive(Debug, InputAction)]
@@ -206,3 +207,15 @@ struct Consume;
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, consume_input = false)]
 struct Passthrough;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct NoModifiers;
+
+#[derive(Debug, InputAction)]
+#[input_action(output = bool)]
+struct WithModifiers;
+
+impl WithModifiers {
+    const MOD: ModKeys = ModKeys::CONTROL;
+}

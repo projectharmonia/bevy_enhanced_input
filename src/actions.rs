@@ -1,12 +1,14 @@
 use alloc::vec::Vec;
 use core::{
     any::{self, TypeId},
+    cmp::Reverse,
     error::Error,
     fmt::{self, Debug, Display, Formatter},
     marker::PhantomData,
 };
 
 use bevy::{ecs::schedule::ScheduleLabel, platform::collections::hash_map::Entry, prelude::*};
+use log::debug;
 
 use crate::{
     action_map::ActionMap,
@@ -20,11 +22,16 @@ use crate::{
 /// Data for each bound action is stored inside [`ActionMap`].
 ///
 /// Actions are evaluated and trigger [`events`](crate::events) only when this component exists on an entity.
+///
+/// The evaluation order depends on the number of modifiers: actions with more modifiers are evaluated first.
+/// For example, if you have actions bound to `Ctrl + C` and just `C`, the action with `Ctrl + C` will be
+/// evaluated first to play nicely with [`InputAction::CONSUME_INPUT`].
 #[derive(Component)]
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
     bindings: Vec<ActionBinding>,
     action_map: ActionMap,
+    sort_required: bool,
     marker: PhantomData<C>,
 }
 
@@ -42,19 +49,8 @@ impl<C: InputContext> Actions<C> {
     ///
     /// This method can be called multiple times for the same action to extend its mappings.
     pub fn bind<A: InputAction>(&mut self) -> &mut ActionBinding {
-        let type_id = TypeId::of::<A>();
-        match self.action_map.entry(type_id) {
-            Entry::Occupied(_entry) => self
-                .bindings
-                .iter_mut()
-                .find(|binding| binding.type_id() == type_id)
-                .expect("actions and bindings should have matching type IDs"),
-            Entry::Vacant(entry) => {
-                entry.insert(Action::new::<A>());
-                self.bindings.push(ActionBinding::new::<A>());
-                self.bindings.last_mut().unwrap()
-            }
-        }
+        self.sort_required = true;
+        self.get_or_create_binding::<A>()
     }
 
     /// Like [`Self::mock`], but sets the value only for a single context evaluation.
@@ -98,7 +94,8 @@ impl<C: InputContext> Actions<C> {
         value: A::Output,
         span: impl Into<MockSpan>,
     ) {
-        self.bind::<A>().mock(state, value.into(), span.into());
+        self.get_or_create_binding::<A>()
+            .mock(state, value.into(), span.into());
     }
 
     /// Clears any active mock for the specified action.
@@ -106,7 +103,23 @@ impl<C: InputContext> Actions<C> {
     /// The action will be resume evaluating real input.
     /// See also [`Self::mock`].
     pub fn clear_mock<A: InputAction>(&mut self) {
-        self.bind::<A>().clear_mock();
+        self.get_or_create_binding::<A>().clear_mock();
+    }
+
+    fn get_or_create_binding<A: InputAction>(&mut self) -> &mut ActionBinding {
+        let type_id = TypeId::of::<A>();
+        match self.action_map.entry(type_id) {
+            Entry::Occupied(_entry) => self
+                .bindings
+                .iter_mut()
+                .find(|binding| binding.type_id() == type_id)
+                .expect("actions and bindings should have matching type IDs"),
+            Entry::Vacant(entry) => {
+                entry.insert(Action::new::<A>());
+                self.bindings.push(ActionBinding::new::<A>());
+                self.bindings.last_mut().unwrap()
+            }
+        }
     }
 
     /// Returns the associated bindings for action `A` if exists.
@@ -156,6 +169,15 @@ impl<C: InputContext> Actions<C> {
         time: &Time<Virtual>,
         entity: Entity,
     ) {
+        if self.sort_required {
+            debug!(
+                "sorting actions of `{}` on `{entity}`",
+                any::type_name::<C>()
+            );
+            self.bindings.sort_by_key(|b| Reverse(b.max_mod_keys()));
+            self.sort_required = false;
+        }
+
         reader.set_gamepad(self.gamepad);
         for binding in &mut self.bindings {
             binding.update(commands, reader, &mut self.action_map, time, entity);
@@ -186,6 +208,7 @@ impl<C: InputContext> Actions<C> {
 
         self.gamepad = Default::default();
         self.action_map.clear();
+        self.sort_required = false;
     }
 }
 
@@ -195,6 +218,7 @@ impl<C: InputContext> Default for Actions<C> {
             gamepad: Default::default(),
             bindings: Default::default(),
             action_map: Default::default(),
+            sort_required: false,
             marker: PhantomData,
         }
     }
