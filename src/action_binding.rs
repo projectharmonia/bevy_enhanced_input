@@ -429,6 +429,14 @@ impl ActionBinding {
     pub(crate) fn require_reset(&self) -> bool {
         self.require_reset
     }
+
+    pub(crate) fn max_mod_keys(&self) -> usize {
+        self.inputs()
+            .iter()
+            .map(|b| b.input.mod_keys_count())
+            .max()
+            .unwrap_or(0)
+    }
 }
 
 #[derive(Debug)]
