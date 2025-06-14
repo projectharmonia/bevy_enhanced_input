@@ -8,8 +8,8 @@ fn main() {
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
         .add_input_context::<Player>()
         .add_input_context::<Driving>()
-        .add_observer(regular_binding)
-        .add_observer(swimming_binding)
+        .add_observer(bind_regular)
+        .add_observer(bind_swimming)
         .add_observer(apply_movement)
         .add_observer(jump)
         .add_observer(exit_car)
@@ -23,7 +23,7 @@ fn spawn(mut commands: Commands) {
     commands.spawn(Actions::<Player>::default());
 }
 
-fn regular_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
+fn bind_regular(trigger: Trigger<Bind<Player>>, mut players: Query<&mut Actions<Player>>) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Move>()
@@ -37,7 +37,7 @@ fn regular_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Ac
         .to((KeyCode::Enter, GamepadButton::North));
 }
 
-fn swimming_binding(trigger: Trigger<Binding<Driving>>, mut players: Query<&mut Actions<Driving>>) {
+fn bind_swimming(trigger: Trigger<Bind<Driving>>, mut players: Query<&mut Actions<Driving>>) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
     // `Player` has lower priority, so `Brake` and `ExitCar` consume inputs first,
     // preventing `Rotate` and `EnterWater` from being triggered.

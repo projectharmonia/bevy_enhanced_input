@@ -7,7 +7,7 @@ fn keys() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -74,7 +74,7 @@ fn dpad() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
@@ -112,7 +112,7 @@ fn sticks() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
@@ -158,7 +158,7 @@ const RIGHT_DOWN: Vec3 = Vec3::new(1.0, -1.0, 0.0);
 const LEFT_DOWN: Vec3 = Vec3::new(-1.0, -1.0, 0.0);
 const LEFT_UP: Vec3 = Vec3::new(-1.0, 1.0, 0.0);
 
-fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<TestAction>().to((
         Cardinal::wasd_keys(),

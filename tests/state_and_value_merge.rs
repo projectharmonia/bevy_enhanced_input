@@ -7,7 +7,7 @@ fn input_level() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -81,7 +81,7 @@ fn action_level() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -155,7 +155,7 @@ fn both_levels() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -224,7 +224,7 @@ fn both_levels() -> Result<()> {
     Ok(())
 }
 
-fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
 
     let down = Down::default();

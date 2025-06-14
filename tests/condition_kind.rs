@@ -7,7 +7,7 @@ fn explicit() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Player>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Player>::default()).id();
@@ -49,7 +49,7 @@ fn implicit() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Player>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Player>::default()).id();
@@ -118,7 +118,7 @@ fn blocker() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Player>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Player>::default()).id();
@@ -182,7 +182,7 @@ fn blocker() -> Result<()> {
     Ok(())
 }
 
-fn binding(trigger: Trigger<Binding<Player>>, mut actions: Query<&mut Actions<Player>>) {
+fn bind(trigger: Trigger<Bind<Player>>, mut actions: Query<&mut Actions<Player>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<ReleaseAction>()

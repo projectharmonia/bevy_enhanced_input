@@ -23,7 +23,7 @@ struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_input_context::<Test>()
-            .add_observer(binding)
+            .add_observer(bind)
             .add_systems(Startup, spawn);
     }
 }
@@ -32,7 +32,7 @@ fn spawn(mut commands: Commands) {
     commands.spawn(Actions::<Test>::default());
 }
 
-fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions
         .bind::<PressAction>()
