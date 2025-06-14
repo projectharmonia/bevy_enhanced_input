@@ -233,7 +233,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
             any::type_name::<C>(),
         );
 
-        commands.trigger_targets(Binding::<C>::new(), entity);
+        commands.trigger_targets(Bind::<C>::new(), entity);
 
         let instance = ActionsInstance::new::<C>(entity);
         match self.binary_search_by_key(&Reverse(C::PRIORITY), |inst| Reverse(inst.priority)) {
@@ -362,7 +362,7 @@ impl ActionsInstance {
             .expect("deinitialized instances should be previously removed");
 
         actions.reset(commands, reset_input, time, self.entity);
-        commands.trigger_targets(Binding::<C>::new(), self.entity);
+        commands.trigger_targets(Bind::<C>::new(), self.entity);
     }
 }
 
@@ -387,9 +387,9 @@ type RebuildFn = fn(
 /// Can't be triggered by user. If you want to reload bindings, just re-insert
 /// the component or trigger [`RebuildBindings`].
 #[derive(Event)]
-pub struct Binding<C: InputContext>(PhantomData<C>);
+pub struct Bind<C: InputContext>(PhantomData<C>);
 
-impl<C: InputContext> Binding<C> {
+impl<C: InputContext> Bind<C> {
     /// Creates a new instance.
     ///
     /// Not exposed to users to because we need to properly

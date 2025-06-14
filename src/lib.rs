@@ -196,7 +196,7 @@ Similar to modifiers, you can also attach conditions to input tuples using [`Int
 It's convenient to define bindings in a single function that used every time you activate the context
 or reload your application settings.
 
-To achieve this, we provide a special [`Binding<C>`] event that triggers when you insert or replace
+To achieve this, we provide a special [`Bind<C>`] event that triggers when you insert or replace
 [`Actions<C>`] component. Just create an observer for it and define all your bindings there:
 
 ```
@@ -207,7 +207,7 @@ app.add_observer(bind_actions);
 
 /// Setups bindings for [`OnFoot`] context from application settings.
 fn bind_actions(
-    trigger: Trigger<Binding<OnFoot>>,
+    trigger: Trigger<Bind<OnFoot>>,
     settings: Res<AppSettings>,
     mut actions: Query<&mut Actions<OnFoot>>
 ) {
@@ -233,7 +233,7 @@ struct KeyboardSettings {
 ```
 
 We also provide a user-triggerable [`RebuildBindings`] event that resets bindings for all inserted
-[`Actions`] and also triggers [`Binding`] event for them.
+[`Actions`] and also triggers [`Bind`] event for them.
 
 ## Reacting on actions
 
@@ -347,7 +347,7 @@ pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
         action_binding::{ActionBinding, MockSpan},
-        action_instances::{Binding, InputContextAppExt, RebuildBindings},
+        action_instances::{Bind, InputContextAppExt, RebuildBindings},
         action_map::{Action, ActionState},
         action_value::{ActionValue, ActionValueDim},
         actions::{Actions, InputContext},

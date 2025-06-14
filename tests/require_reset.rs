@@ -8,8 +8,8 @@ fn layering() -> Result<()> {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
         .add_input_context::<Second>()
-        .add_observer(first_binding)
-        .add_observer(second_binding)
+        .add_observer(bind_first)
+        .add_observer(bind_second)
         .finish();
 
     let entity = app
@@ -68,8 +68,8 @@ fn switching() -> Result<()> {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
         .add_input_context::<Second>()
-        .add_observer(first_binding)
-        .add_observer(second_binding)
+        .add_observer(bind_first)
+        .add_observer(bind_second)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<First>::default()).id();
@@ -117,12 +117,12 @@ fn switching() -> Result<()> {
     Ok(())
 }
 
-fn first_binding(trigger: Trigger<Binding<First>>, mut actions: Query<&mut Actions<First>>) {
+fn bind_first(trigger: Trigger<Bind<First>>, mut actions: Query<&mut Actions<First>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<TestAction>().to(TestAction::KEY);
 }
 
-fn second_binding(trigger: Trigger<Binding<Second>>, mut actions: Query<&mut Actions<Second>>) {
+fn bind_second(trigger: Trigger<Bind<Second>>, mut actions: Query<&mut Actions<Second>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<TestAction>().to(TestAction::KEY);
 }

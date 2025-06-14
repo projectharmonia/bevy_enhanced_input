@@ -16,8 +16,8 @@ use crate::prelude::*;
 /// use bevy::prelude::*;
 /// use bevy_enhanced_input::prelude::*;
 ///
-/// fn binding(
-///     trigger: Trigger<Binding<Player>>,
+/// fn bind(
+///     trigger: Trigger<Bind<Player>>,
 ///     settings: Res<KeyboardSettings>,
 ///     mut players: Query<&mut Actions<Player>>,
 /// ) {
@@ -122,8 +122,8 @@ impl<I: IntoBindings> IntoBindings for Cardinal<I> {
 /// use bevy::prelude::*;
 /// use bevy_enhanced_input::prelude::*;
 ///
-/// fn binding(
-///     trigger: Trigger<Binding<Player>>,
+/// fn bind(
+///     trigger: Trigger<Bind<Player>>,
 ///     settings: Res<GamepadSettings>,
 ///     mut players: Query<&mut Actions<Player>>,
 /// ) {

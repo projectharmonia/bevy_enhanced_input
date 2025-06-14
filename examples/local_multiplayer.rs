@@ -8,7 +8,7 @@ fn main() {
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
         .init_resource::<Gamepads>()
         .add_input_context::<Player>()
-        .add_observer(binding)
+        .add_observer(bind)
         .add_observer(apply_movement)
         .add_systems(Startup, spawn)
         .add_systems(
@@ -59,8 +59,8 @@ fn spawn(
     ));
 }
 
-fn binding(
-    trigger: Trigger<Binding<Player>>,
+fn bind(
+    trigger: Trigger<Bind<Player>>,
     gamepads: Query<Entity, With<Gamepad>>,
     mut players: Query<(&Player, &mut Actions<Player>)>,
 ) {

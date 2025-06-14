@@ -8,8 +8,8 @@ fn main() {
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
         .add_input_context::<Player>()
         .add_input_context::<Inventory>()
-        .add_observer(player_binding)
-        .add_observer(inventory_binding)
+        .add_observer(bind_player)
+        .add_observer(bind_inventory)
         .add_observer(apply_movement)
         .add_observer(attack)
         .add_observer(open_inventory)
@@ -23,7 +23,7 @@ fn spawn(mut commands: Commands) {
     commands.spawn(Actions::<Player>::default());
 }
 
-fn player_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Actions<Player>>) {
+fn bind_player(trigger: Trigger<Bind<Player>>, mut players: Query<&mut Actions<Player>>) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<Move>()
@@ -37,10 +37,7 @@ fn player_binding(trigger: Trigger<Binding<Player>>, mut players: Query<&mut Act
         .to((KeyCode::KeyI, GamepadButton::Select));
 }
 
-fn inventory_binding(
-    trigger: Trigger<Binding<Inventory>>,
-    mut players: Query<&mut Actions<Inventory>>,
-) {
+fn bind_inventory(trigger: Trigger<Bind<Inventory>>, mut players: Query<&mut Actions<Inventory>>) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
     actions
         .bind::<NavigateInventory>()

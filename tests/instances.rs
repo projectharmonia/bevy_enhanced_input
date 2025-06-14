@@ -7,7 +7,7 @@ fn removal() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -33,7 +33,7 @@ fn rebuild() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -55,7 +55,7 @@ fn rebuild_all() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -84,7 +84,7 @@ fn rebuild_all() -> Result<()> {
     Ok(())
 }
 
-fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<TestAction>().to(TestAction::KEY);
 }

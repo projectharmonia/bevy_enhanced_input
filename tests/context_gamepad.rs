@@ -7,7 +7,7 @@ fn any() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<AnyGamepad>()
-        .add_observer(any_gamepad_binding)
+        .add_observer(bind_any_gamepad)
         .finish();
 
     let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();
@@ -50,7 +50,7 @@ fn by_id() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<SingleGamepad>()
-        .add_observer(single_gamepad_binding)
+        .add_observer(bind_single_gamepad)
         .finish();
 
     let gamepad_entity1 = app.world_mut().spawn(Gamepad::default()).id();
@@ -94,16 +94,16 @@ fn by_id() -> Result<()> {
     Ok(())
 }
 
-fn any_gamepad_binding(
-    trigger: Trigger<Binding<AnyGamepad>>,
+fn bind_any_gamepad(
+    trigger: Trigger<Bind<AnyGamepad>>,
     mut actions: Query<&mut Actions<AnyGamepad>>,
 ) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<TestAction>().to(TestAction::BUTTON);
 }
 
-fn single_gamepad_binding(
-    trigger: Trigger<Binding<SingleGamepad>>,
+fn bind_single_gamepad(
+    trigger: Trigger<Bind<SingleGamepad>>,
     mut actions: Query<(&mut Actions<SingleGamepad>, &mut SingleGamepad)>,
 ) {
     let (mut actions, gamepad) = actions.get_mut(trigger.target()).unwrap();

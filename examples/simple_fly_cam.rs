@@ -7,7 +7,7 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
         .add_input_context::<FlyCam>() // All contexts should be registered.
-        .add_observer(binding) // Add observer to setup bindings.
+        .add_observer(bind) // Add observer to setup bindings.
         .add_observer(apply_movement)
         .add_observer(capture_cursor)
         .add_observer(release_cursor)
@@ -50,10 +50,10 @@ fn setup(
     ));
 }
 
-// To define bindings for actions, write an observer for `Binding`.
+// To define bindings for actions, write an observer for `Bind`.
 // It's also possible to create bindings before the insertion,
 // but this way you can conveniently reload bindings when settings change.
-fn binding(trigger: Trigger<Binding<FlyCam>>, mut players: Query<&mut Actions<FlyCam>>) {
+fn bind(trigger: Trigger<Bind<FlyCam>>, mut players: Query<&mut Actions<FlyCam>>) {
     let mut actions = players.get_mut(trigger.target()).unwrap();
 
     // Bindings like WASD or sticks are very common,

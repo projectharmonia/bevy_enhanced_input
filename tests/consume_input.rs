@@ -7,7 +7,7 @@ fn consume() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(consume_only_binding)
+        .add_observer(bind_consume_only)
         .finish();
 
     let entity1 = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -39,7 +39,7 @@ fn passthrough() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(passthrough_only_binding)
+        .add_observer(bind_passthrough_only)
         .finish();
 
     let entity1 = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -71,7 +71,7 @@ fn consume_then_passthrough() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(consume_then_passthrough_binding)
+        .add_observer(bind_consume_then_passthrough)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -100,7 +100,7 @@ fn passthrough_then_consume() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(passthrough_then_consume_binding)
+        .add_observer(bind_passthrough_then_consume)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -125,7 +125,7 @@ fn modifiers() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(modifiers_binding)
+        .add_observer(bind_modifiers)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -155,21 +155,18 @@ fn modifiers() -> Result<()> {
     Ok(())
 }
 
-fn consume_only_binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind_consume_only(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Consume>().to(KEY);
 }
 
-fn passthrough_only_binding(
-    trigger: Trigger<Binding<Test>>,
-    mut actions: Query<&mut Actions<Test>>,
-) {
+fn bind_passthrough_only(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Passthrough>().to(KEY);
 }
 
-fn consume_then_passthrough_binding(
-    trigger: Trigger<Binding<Test>>,
+fn bind_consume_then_passthrough(
+    trigger: Trigger<Bind<Test>>,
     mut actions: Query<&mut Actions<Test>>,
 ) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
@@ -177,8 +174,8 @@ fn consume_then_passthrough_binding(
     actions.bind::<Passthrough>().to(KEY);
 }
 
-fn passthrough_then_consume_binding(
-    trigger: Trigger<Binding<Test>>,
+fn bind_passthrough_then_consume(
+    trigger: Trigger<Bind<Test>>,
     mut actions: Query<&mut Actions<Test>>,
 ) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
@@ -186,7 +183,7 @@ fn passthrough_then_consume_binding(
     actions.bind::<Consume>().to(KEY);
 }
 
-fn modifiers_binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind_modifiers(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<NoModifiers>().to(KEY);
     actions

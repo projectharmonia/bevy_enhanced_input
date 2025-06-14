@@ -7,7 +7,7 @@ fn bool() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -40,7 +40,7 @@ fn axis1d() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -73,7 +73,7 @@ fn axis2d() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -106,7 +106,7 @@ fn axis3d() -> Result<()> {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -134,7 +134,7 @@ fn axis3d() -> Result<()> {
     Ok(())
 }
 
-fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<Bool>().to(Bool::KEY);
     actions.bind::<Axis1D>().to(Axis1D::KEY);

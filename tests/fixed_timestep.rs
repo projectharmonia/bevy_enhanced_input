@@ -10,7 +10,7 @@ fn once_in_two_frames() -> Result<()> {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -51,7 +51,7 @@ fn twice_in_one_frame() -> Result<()> {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
         .add_input_context::<Test>()
-        .add_observer(binding)
+        .add_observer(bind)
         .finish();
 
     let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
@@ -80,7 +80,7 @@ fn twice_in_one_frame() -> Result<()> {
     Ok(())
 }
 
-fn binding(trigger: Trigger<Binding<Test>>, mut actions: Query<&mut Actions<Test>>) {
+fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
     actions.bind::<TestAction>().to(TestAction::KEY);
 }

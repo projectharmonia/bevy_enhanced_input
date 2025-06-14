@@ -14,8 +14,8 @@ use crate::{action_map::ActionMap, prelude::*};
 /// use bevy::prelude::*;
 /// use bevy_enhanced_input::prelude::*;
 ///
-/// fn binding(
-///     trigger: Trigger<Binding<Ui>>,
+/// fn bind(
+///     trigger: Trigger<Bind<Ui>>,
 ///     mut ui: Query<&mut Actions<Ui>>,
 /// ) {
 ///     let mut actions = ui.get_mut(trigger.target()).unwrap();
