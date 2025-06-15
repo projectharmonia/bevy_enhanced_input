@@ -182,7 +182,7 @@ fn update<S: ScheduleLabel>(
 }
 
 fn rebuild<S: ScheduleLabel>(
-    _trigger: Trigger<RebuildBindings>,
+    _trigger: Trigger<RebindAll>,
     mut commands: Commands,
     mut reset_input: ResMut<ResetInput>,
     mut instances: ResMut<ActionInstances<S>>,
@@ -385,7 +385,7 @@ type RebuildFn = fn(
 /// Trigger that requests bindings creation of [`Actions`] for an entity.
 ///
 /// Can't be triggered by user. If you want to reload bindings, just re-insert
-/// the component or trigger [`RebuildBindings`].
+/// the component or trigger [`RebindAll`].
 #[derive(Event)]
 pub struct Bind<C: InputContext>(PhantomData<C>);
 
@@ -406,4 +406,4 @@ impl<C: InputContext> Bind<C> {
 /// This will also reset all actions to [`ActionState::None`]
 /// and trigger the corresponding events.
 #[derive(Event)]
-pub struct RebuildBindings;
+pub struct RebindAll;

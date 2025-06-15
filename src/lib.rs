@@ -232,7 +232,7 @@ struct KeyboardSettings {
 # struct Jump;
 ```
 
-We also provide a user-triggerable [`RebuildBindings`] event that resets bindings for all inserted
+We also provide a user-triggerable [`RebindAll`] event that resets bindings for all inserted
 [`Actions`] and also triggers [`Bind`] event for them.
 
 ## Reacting on actions
@@ -347,7 +347,7 @@ pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
         action_binding::{ActionBinding, MockSpan},
-        action_instances::{Bind, InputContextAppExt, RebuildBindings},
+        action_instances::{Bind, InputContextAppExt, RebindAll},
         action_map::{Action, ActionState},
         action_value::{ActionValue, ActionValueDim},
         actions::{Actions, InputContext},

@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Rename `Binding` event into `Bind`.
+- Rename `RebuildBindings` event into `RebindAll`.
 
 ### Removed
 
