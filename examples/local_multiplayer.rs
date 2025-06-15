@@ -107,7 +107,7 @@ fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transfo
 }
 
 fn update_gamepads(mut commands: Commands) {
-    commands.trigger(RebuildBindings);
+    commands.trigger(RebindAll);
 }
 
 /// Used as both input context and component.

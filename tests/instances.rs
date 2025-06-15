@@ -71,7 +71,7 @@ fn rebuild_all() -> Result<()> {
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(actions.state::<TestAction>()?, ActionState::Fired);
 
-    app.world_mut().trigger(RebuildBindings);
+    app.world_mut().trigger(RebindAll);
     app.world_mut().flush();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();

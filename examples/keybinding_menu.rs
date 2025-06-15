@@ -369,7 +369,7 @@ fn apply(
         }
     }
 
-    commands.trigger(RebuildBindings);
+    commands.trigger(RebindAll);
 
     match settings.write(SETTINGS_PATH) {
         Ok(()) => info!("writing settings to '{SETTINGS_PATH}'"),
