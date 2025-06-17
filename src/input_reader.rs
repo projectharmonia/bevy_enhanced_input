@@ -129,9 +129,11 @@ impl InputReader<'_, '_> {
                 }
 
                 let value = match *self.gamepad_device {
-                    GamepadDevice::Any => self.gamepads.iter().find_map(|gamepad| {
-                        gamepad.get_unclamped(axis).filter(|&value| value != 0.0)
-                    }),
+                    GamepadDevice::Any => self
+                        .gamepads
+                        .iter()
+                        .filter_map(|gamepad| gamepad.get_unclamped(axis))
+                        .reduce(|acc, v| acc + v),
                     GamepadDevice::Single(entity) => self
                         .gamepads
                         .get(entity)
@@ -501,6 +503,30 @@ mod tests {
 
         reader.consume(axis2);
         assert_eq!(reader.value(axis2), ActionValue::Axis1D(0.0));
+    }
+
+    #[test]
+    fn any_gamepad_axis_sum() {
+        let (mut world, mut state) = init_world();
+
+        let axis = GamepadAxis::LeftStickX;
+        let mut gamepad1 = Gamepad::default();
+        gamepad1.analog_mut().set(axis, 0.001);
+        world.spawn(gamepad1);
+
+        let mut gamepad2 = Gamepad::default();
+        gamepad2.analog_mut().set(axis, 0.002);
+        world.spawn(gamepad2);
+
+        let mut reader = state.get_mut(&mut world);
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.003));
+        assert_eq!(
+            reader.value(GamepadAxis::RightStickX),
+            ActionValue::Axis1D(0.0)
+        );
+
+        reader.consume(axis);
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
     }
 
     #[test]
