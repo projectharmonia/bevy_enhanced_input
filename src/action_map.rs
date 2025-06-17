@@ -56,7 +56,7 @@ impl Action {
     /// Updates internal state.
     pub(crate) fn update(
         &mut self,
-        time: &Time<Virtual>,
+        time: &InputTime,
         state: ActionState,
         value: impl Into<ActionValue>,
     ) {

@@ -1,5 +1,3 @@
-use bevy::prelude::*;
-
 use super::DEFAULT_ACTUATION;
 use crate::{action_map::ActionMap, prelude::*};
 
@@ -33,7 +31,7 @@ impl InputCondition for Press {
     fn evaluate(
         &mut self,
         _action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        _time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
         let previously_actuated = self.actuated;
@@ -50,12 +48,14 @@ impl InputCondition for Press {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn press() {
         let mut condition = Press::default();
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             condition.evaluate(&action_map, &time, 0.0.into()),

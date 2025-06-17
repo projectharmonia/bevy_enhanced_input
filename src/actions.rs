@@ -166,7 +166,7 @@ impl<C: InputContext> Actions<C> {
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        time: &Time<Virtual>,
+        time: &InputTime,
         entity: Entity,
     ) {
         if self.sort_required {
@@ -191,7 +191,7 @@ impl<C: InputContext> Actions<C> {
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
-        time: &Time<Virtual>,
+        time: &InputTime,
         entity: Entity,
     ) {
         for binding in self.bindings.drain(..) {

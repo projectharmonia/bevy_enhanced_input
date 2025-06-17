@@ -205,6 +205,7 @@ mod tests {
     use test_log::test;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn none_none() {
@@ -261,7 +262,9 @@ mod tests {
     }
 
     fn transition(initial_state: ActionState, target_state: ActionState) -> ActionEvents {
-        let time = Time::<Virtual>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
+
         let mut action = Action::new::<TestAction>();
         action.update(&time, initial_state, true);
         action.update(&time, target_state, true);

@@ -31,7 +31,7 @@ impl<A: InputAction> InputModifier for AccumulateBy<A> {
     fn apply(
         &mut self,
         action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         if let Some(action) = action_map.action::<A>() {
@@ -59,12 +59,15 @@ mod tests {
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn accumulation_active() {
         let mut modifier = AccumulateBy::<TestAction>::default();
         let mut action = Action::new::<TestAction>();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
+
         action.update(&time, ActionState::Fired, true);
         let mut action_map = ActionMap::default();
         action_map.insert(TypeId::of::<TestAction>(), action);
@@ -77,7 +80,8 @@ mod tests {
     fn accumulation_inactive() {
         let mut modifier = AccumulateBy::<TestAction>::default();
         let action = Action::new::<TestAction>();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
         let mut action_map = ActionMap::default();
         action_map.insert(TypeId::of::<TestAction>(), action);
 
@@ -89,7 +93,8 @@ mod tests {
     fn missing_action() {
         let mut modifier = AccumulateBy::<TestAction>::default();
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());

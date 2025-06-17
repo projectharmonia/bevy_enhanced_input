@@ -30,7 +30,7 @@ impl InputModifier for Scale {
     fn apply(
         &mut self,
         _action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         match value {
@@ -48,12 +48,14 @@ impl InputModifier for Scale {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn scaling() {
         let mut modifier = Scale::splat(2.0);
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 2.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());

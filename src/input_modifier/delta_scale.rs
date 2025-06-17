@@ -1,5 +1,3 @@
-use bevy::prelude::*;
-
 use crate::{action_map::ActionMap, prelude::*};
 
 /// Multiplies the input value by delta time for this frame.
@@ -12,7 +10,7 @@ impl InputModifier for DeltaScale {
     fn apply(
         &mut self,
         _action_map: &ActionMap,
-        time: &Time<Virtual>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         match value {
@@ -31,13 +29,19 @@ impl InputModifier for DeltaScale {
 mod tests {
     use core::time::Duration;
 
+    use bevy::prelude::*;
+
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn scaling() {
         let action_map = ActionMap::default();
-        let mut time = Time::default();
-        time.advance_by(Duration::from_millis(500));
+        let (mut world, mut state) = input_time::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(500));
+        let time = state.get(&world);
 
         assert_eq!(
             DeltaScale.apply(&action_map, &time, true.into()),

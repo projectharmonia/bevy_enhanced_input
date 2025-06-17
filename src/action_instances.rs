@@ -156,9 +156,9 @@ fn add_context<C: InputContext>(
 fn remove_context<C: InputContext>(
     trigger: Trigger<OnReplace, Actions<C>>,
     mut commands: Commands,
+    time: InputTime,
     mut reset_input: ResMut<ResetInput>,
     mut instances: ResMut<ActionInstances<C::Schedule>>,
-    time: Res<Time<Virtual>>,
     mut actions: Query<&mut Actions<C>>,
 ) {
     instances.remove::<C>(
@@ -172,8 +172,8 @@ fn remove_context<C: InputContext>(
 
 fn update<S: ScheduleLabel>(
     mut commands: Commands,
+    time: InputTime,
     mut reader: InputReader,
-    time: Res<Time<Virtual>>, // We explicitly use `Virtual` to have access to `relative_speed`.
     mut instances: ResMut<ActionInstances<S>>,
     mut actions: Query<FilteredEntityMut>,
 ) {
@@ -184,9 +184,9 @@ fn update<S: ScheduleLabel>(
 fn rebuild<S: ScheduleLabel>(
     _trigger: Trigger<RebindAll>,
     mut commands: Commands,
+    time: InputTime,
     mut reset_input: ResMut<ResetInput>,
     mut instances: ResMut<ActionInstances<S>>,
-    time: Res<Time<Virtual>>,
     mut actions: Query<FilteredEntityMut>,
 ) {
     instances.rebuild(&mut commands, &mut reset_input, &time, &mut actions);
@@ -207,7 +207,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        time: &Time<Virtual>,
+        time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         for instance in &mut self.instances {
@@ -219,7 +219,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
-        time: &Time<Virtual>,
+        time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         for instance in &mut self.instances {
@@ -255,7 +255,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
-        time: &Time<Virtual>,
+        time: &InputTime,
         instances: &mut Query<&mut Actions<C>>,
         entity: Entity,
     ) {
@@ -303,7 +303,7 @@ impl ActionsInstance {
         &self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        time: &Time<Virtual>,
+        time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         (self.update)(self, commands, reader, time, actions);
@@ -314,7 +314,7 @@ impl ActionsInstance {
         &self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
-        time: &Time<Virtual>,
+        time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         (self.rebuild)(self, commands, reset_input, time, actions);
@@ -324,7 +324,7 @@ impl ActionsInstance {
         &self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        time: &Time<Virtual>,
+        time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         trace!(
@@ -346,7 +346,7 @@ impl ActionsInstance {
         &self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,
-        time: &Time<Virtual>,
+        time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         debug!(
@@ -370,17 +370,12 @@ type UpdateFn = fn(
     &ActionsInstance,
     &mut Commands,
     &mut InputReader,
-    &Time<Virtual>,
+    &InputTime,
     &mut Query<FilteredEntityMut>,
 );
 
-type RebuildFn = fn(
-    &ActionsInstance,
-    &mut Commands,
-    &mut ResetInput,
-    &Time<Virtual>,
-    &mut Query<FilteredEntityMut>,
-);
+type RebuildFn =
+    fn(&ActionsInstance, &mut Commands, &mut ResetInput, &InputTime, &mut Query<FilteredEntityMut>);
 
 /// Trigger that requests bindings creation of [`Actions`] for an entity.
 ///

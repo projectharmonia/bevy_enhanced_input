@@ -306,7 +306,7 @@ impl ActionBinding {
         commands: &mut Commands,
         reader: &mut InputReader,
         action_map: &mut ActionMap,
-        time: &Time<Virtual>,
+        time: &InputTime,
         entity: Entity,
     ) {
         let (state, value) = self
@@ -325,7 +325,7 @@ impl ActionBinding {
         &mut self,
         reader: &mut InputReader,
         action_map: &mut ActionMap,
-        time: &Time<Virtual>,
+        time: &InputTime,
     ) -> (ActionState, ActionValue) {
         trace!("updating `{}` from input", self.action_name);
 

@@ -11,8 +11,6 @@ pub mod swizzle_axis;
 use alloc::boxed::Box;
 use core::{fmt::Debug, iter};
 
-use bevy::prelude::*;
-
 use crate::{action_map::ActionMap, prelude::*};
 
 /// Pre-processor that alter the raw input values.
@@ -29,7 +27,7 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
     fn apply(
         &mut self,
         action_map: &ActionMap,
-        time: &Time<Virtual>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionValue;
 }
