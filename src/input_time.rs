@@ -30,8 +30,8 @@ impl InputTime<'_> {
 /// Type of time resource to use.
 #[derive(Debug, Clone, Copy, Default)]
 pub enum TimeKind {
-    /// Corresponds to [`Time`], which contains [`Time<Virtual>`], except in [`FixedMain`],
-    /// where it is [`Time<Fixed>`].
+    /// Corresponds to [`Time`], which contains [`Time<Virtual>`], except in the fixed schedule,
+    /// where it's [`Time<Fixed>`].
     ///
     /// Virtual game time, affected by [`Time::pause`] and [`Time::relative_speed`].
     #[default]
