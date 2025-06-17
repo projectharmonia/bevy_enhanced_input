@@ -4,7 +4,7 @@ use super::DEFAULT_ACTUATION;
 use crate::{action_map::ActionMap, prelude::*};
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
-/// each [`Self::interval`] seconds.
+/// on the defined time interval.
 ///
 /// Note: [`Completed`] only fires when the repeat limit is reached or when input is released
 /// immediately after being triggered. Otherwise, [`Canceled`] is fired when input is released.
@@ -28,6 +28,7 @@ pub struct Pulse {
 }
 
 impl Pulse {
+    /// Creates a new instance with the given interval in seconds.
     #[must_use]
     pub fn new(interval: f32) -> Self {
         Self {

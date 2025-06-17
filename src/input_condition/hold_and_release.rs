@@ -4,9 +4,9 @@ use super::DEFAULT_ACTUATION;
 use crate::{action_map::ActionMap, prelude::*};
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
-/// when the input is released after having been actuated for [`Self::hold_time`] seconds.
+/// when the input is released after having been actuated for the defined hold time.
 ///
-/// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
+/// Returns [`ActionState::None`] when the input stops being actuated earlier than the defined hold time.
 #[derive(Clone, Debug)]
 pub struct HoldAndRelease {
     /// Trigger threshold.
@@ -19,6 +19,7 @@ pub struct HoldAndRelease {
 }
 
 impl HoldAndRelease {
+    /// Creates a new instance with the given hold time in seconds.
     #[must_use]
     pub fn new(hold_time: f32) -> Self {
         Self {

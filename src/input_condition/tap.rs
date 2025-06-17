@@ -4,9 +4,9 @@ use super::DEFAULT_ACTUATION;
 use crate::{action_map::ActionMap, prelude::*};
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
-/// when the input is released within the [`Self::release_time`] seconds.
+/// when the input is released within the defined release time.
 ///
-/// Returns [`ActionState::None`] when the input is actuated more than [`Self::release_time`] seconds.
+/// Returns [`ActionState::None`] when the input is actuated more than the defined release time.
 #[derive(Clone, Debug)]
 pub struct Tap {
     /// Trigger threshold.
@@ -21,6 +21,7 @@ pub struct Tap {
 }
 
 impl Tap {
+    /// Creates a new instance with the given release time in seconds.
     #[must_use]
     pub fn new(release_time: f32) -> Self {
         Self {

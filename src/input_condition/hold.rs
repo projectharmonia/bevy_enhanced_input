@@ -4,9 +4,9 @@ use super::DEFAULT_ACTUATION;
 use crate::{action_map::ActionMap, prelude::*};
 
 /// Returns [`ActionState::Ongoing`] when the input becomes actuated and
-/// [`ActionState::Fired`] when input remained actuated for [`Self::hold_time`] seconds.
+/// [`ActionState::Fired`] when input remained actuated for the defined hold time.
 ///
-/// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
+/// Returns [`ActionState::None`] when the input stops being actuated earlier than the defined hold time.
 /// May optionally fire once, or repeatedly fire.
 #[derive(Clone, Debug)]
 pub struct Hold {
@@ -23,6 +23,7 @@ pub struct Hold {
 }
 
 impl Hold {
+    /// Creates a new instance with the given hold time in seconds.
     #[must_use]
     pub fn new(hold_time: f32) -> Self {
         Self {
