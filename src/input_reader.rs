@@ -129,7 +129,7 @@ impl InputReader<'_, '_> {
                 }
 
                 let value = match *self.gamepad_device {
-                   GamepadDevice::Any => self
+                    GamepadDevice::Any => self
                         .gamepads
                         .iter()
                         .filter_map(|gamepad| gamepad.get_unclamped(axis))
