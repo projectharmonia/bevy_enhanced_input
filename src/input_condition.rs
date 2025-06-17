@@ -3,7 +3,7 @@ pub mod chord;
 pub mod down;
 pub mod hold;
 pub mod hold_and_release;
-pub mod just_press;
+pub mod press;
 pub mod pulse;
 pub mod release;
 pub mod tap;
