@@ -25,6 +25,9 @@ pub struct Pulse {
     timer: Timer,
 
     trigger_count: u32,
+
+    /// Tracks if we're in an actuated state to detect the start.
+    started_actuation: bool,
 }
 
 impl Pulse {
@@ -38,6 +41,7 @@ impl Pulse {
             time_kind: Default::default(),
             timer: Timer::from_seconds(interval, TimerMode::Repeating),
             trigger_count: 0,
+            started_actuation: false,
         }
     }
 
@@ -74,11 +78,19 @@ impl InputCondition for Pulse {
         value: ActionValue,
     ) -> ActionState {
         if value.is_actuated(self.actuation) {
+            let mut should_fire = false;
+
+            if !self.started_actuation {
+                self.started_actuation = true;
+                should_fire |= self.trigger_on_start;
+            }
+
             self.timer.tick(time.delta_kind(self.time_kind));
+            should_fire |= self.timer.just_finished();
 
             if self.trigger_limit == 0 || self.trigger_count < self.trigger_limit {
-                if self.timer.just_finished() {
-                    self.trigger_count += self.timer.times_finished_this_tick();
+                if should_fire {
+                    self.trigger_count += 1;
                     ActionState::Fired
                 } else {
                     ActionState::Ongoing
@@ -88,11 +100,6 @@ impl InputCondition for Pulse {
             }
         } else {
             self.timer.reset();
-            if self.trigger_on_start {
-                // Mock the timer to be triggered.
-                self.timer.tick(self.timer.duration());
-            }
-
             self.trigger_count = 0;
             ActionState::None
         }
@@ -107,7 +114,7 @@ mod tests {
     use crate::input_time;
 
     #[test]
-    fn tap() {
+    fn pulse() {
         let mut condition = Pulse::new(1.0);
         let action_map = ActionMap::default();
         let (mut world, mut state) = input_time::init_world();
