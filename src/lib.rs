@@ -357,8 +357,8 @@ pub mod prelude {
         input_action::{Accumulation, InputAction},
         input_binding::{BindingBuilder, InputBinding, IntoBindings},
         input_condition::{
-            ConditionKind, InputCondition, block_by::*, chord::*, hold::*, hold_and_release::*,
-            just_press::*, press::*, pulse::*, release::*, tap::*,
+            ConditionKind, InputCondition, block_by::*, chord::*, down::*, hold::*,
+            hold_and_release::*, just_press::*, pulse::*, release::*, tap::*,
         },
         input_modifier::{
             InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
