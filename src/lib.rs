@@ -340,6 +340,7 @@ pub mod input_binding;
 pub mod input_condition;
 pub mod input_modifier;
 pub mod input_reader;
+pub mod input_time;
 pub mod preset;
 mod trigger_tracker;
 
@@ -356,14 +357,15 @@ pub mod prelude {
         input_action::{Accumulation, InputAction},
         input_binding::{BindingBuilder, InputBinding, IntoBindings},
         input_condition::{
-            ConditionKind, InputCondition, block_by::*, chord::*, condition_timer::*, hold::*,
-            hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,
+            ConditionKind, InputCondition, block_by::*, chord::*, hold::*, hold_and_release::*,
+            just_press::*, press::*, pulse::*, release::*, tap::*,
         },
         input_modifier::{
             InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
             exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
         },
         input_reader::ActionSources,
+        input_time::{InputTime, TimeKind},
         preset::*,
     };
     pub use bevy_enhanced_input_macros::{InputAction, InputContext};

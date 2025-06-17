@@ -50,7 +50,7 @@ impl InputModifier for SwizzleAxis {
     fn apply(
         &mut self,
         _action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         match value {
@@ -109,12 +109,14 @@ impl InputModifier for SwizzleAxis {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn yxz() {
         let mut modifier = SwizzleAxis::YXZ;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -142,7 +144,8 @@ mod tests {
     fn zyx() {
         let mut modifier = SwizzleAxis::ZYX;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -170,7 +173,8 @@ mod tests {
     fn xzy() {
         let mut modifier = SwizzleAxis::XZY;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
@@ -189,7 +193,8 @@ mod tests {
     fn yzx() {
         let mut modifier = SwizzleAxis::YZX;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -217,7 +222,8 @@ mod tests {
     fn zxy() {
         let mut modifier = SwizzleAxis::ZXY;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -245,7 +251,8 @@ mod tests {
     fn xxy() {
         let mut modifier = SwizzleAxis::XXY;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -273,7 +280,8 @@ mod tests {
     fn yyx() {
         let mut modifier = SwizzleAxis::YYX;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -301,7 +309,8 @@ mod tests {
     fn xxz() {
         let mut modifier = SwizzleAxis::XXZ;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -329,7 +338,8 @@ mod tests {
     fn yyz() {
         let mut modifier = SwizzleAxis::YYZ;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 0.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
@@ -348,7 +358,8 @@ mod tests {
     fn zzx() {
         let mut modifier = SwizzleAxis::ZZX;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -376,7 +387,8 @@ mod tests {
     fn zzy() {
         let mut modifier = SwizzleAxis::ZZY;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 0.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
@@ -395,7 +407,8 @@ mod tests {
     fn xxx() {
         let mut modifier = SwizzleAxis::XXX;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -423,7 +436,8 @@ mod tests {
     fn yyy() {
         let mut modifier = SwizzleAxis::YYY;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 0.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
@@ -442,7 +456,8 @@ mod tests {
     fn zzz() {
         let mut modifier = SwizzleAxis::ZZZ;
         let action_map = ActionMap::default();
-        let time = Time::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 0.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());

@@ -1,6 +1,5 @@
 use alloc::boxed::Box;
 
-use bevy::prelude::*;
 use log::trace;
 
 use crate::{action_map::ActionMap, prelude::*};
@@ -35,7 +34,7 @@ impl TriggerTracker {
     pub(crate) fn apply_modifiers(
         &mut self,
         action_map: &ActionMap,
-        time: &Time<Virtual>,
+        time: &InputTime,
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
         for modifier in modifiers {
@@ -52,7 +51,7 @@ impl TriggerTracker {
     pub(crate) fn apply_conditions(
         &mut self,
         action_map: &ActionMap,
-        time: &Time<Virtual>,
+        time: &InputTime,
         conditions: &mut [Box<dyn InputCondition>],
     ) {
         // Note: No early outs permitted!

@@ -8,31 +8,28 @@ use crate::{action_map::ActionMap, prelude::*};
 ///
 /// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
 /// May optionally fire once, or repeatedly fire.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Hold {
-    /// How long does the input have to be held to cause trigger.
-    pub hold_time: f32,
-
     /// Should this trigger fire only once, or fire every frame once the hold time threshold is met?
     pub one_shot: bool,
 
     /// Trigger threshold.
     pub actuation: f32,
 
-    timer: ConditionTimer,
+    /// The type of time used to advance the timer.
+    pub time_kind: TimeKind,
 
-    fired: bool,
+    timer: Timer,
 }
 
 impl Hold {
     #[must_use]
     pub fn new(hold_time: f32) -> Self {
         Self {
-            hold_time,
             one_shot: false,
             actuation: DEFAULT_ACTUATION,
-            timer: Default::default(),
-            fired: false,
+            time_kind: Default::default(),
+            timer: Timer::from_seconds(hold_time, TimerMode::Once),
         }
     }
 
@@ -48,10 +45,9 @@ impl Hold {
         self
     }
 
-    /// Enables or disables time dilation.
     #[must_use]
-    pub fn relative_speed(mut self, relative: bool) -> Self {
-        self.timer.relative_speed = relative;
+    pub fn with_time_kind(mut self, kind: TimeKind) -> Self {
+        self.time_kind = kind;
         self
     }
 }
@@ -60,21 +56,18 @@ impl InputCondition for Hold {
     fn evaluate(
         &mut self,
         _action_map: &ActionMap,
-        time: &Time<Virtual>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
         let actuated = value.is_actuated(self.actuation);
         if actuated {
-            self.timer.update(time);
+            self.timer.tick(time.delta_kind(self.time_kind));
         } else {
             self.timer.reset();
         }
 
-        let is_first_trigger = !self.fired;
-        self.fired = self.timer.duration() >= self.hold_time;
-
-        if self.fired {
-            if is_first_trigger || !self.one_shot {
+        if self.timer.finished() {
+            if self.timer.just_finished() || !self.one_shot {
                 ActionState::Fired
             } else {
                 ActionState::None
@@ -92,19 +85,25 @@ mod tests {
     use core::time::Duration;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn hold() {
         let mut condition = Hold::new(1.0);
         let action_map = ActionMap::default();
-        let mut time = Time::default();
+        let (mut world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
 
-        time.advance_by(Duration::from_secs(1));
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs(1));
+        let time = state.get(&world);
+
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Fired,
@@ -118,7 +117,9 @@ mod tests {
             ActionState::None
         );
 
-        time.advance_by(Duration::ZERO);
+        world.resource_mut::<Time>().advance_by(Duration::ZERO);
+        let time = state.get(&world);
+
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
@@ -129,8 +130,11 @@ mod tests {
     fn one_shot() {
         let mut hold = Hold::new(1.0).one_shot(true);
         let action_map = ActionMap::default();
-        let mut time = Time::default();
-        time.advance_by(Duration::from_secs(1));
+        let (mut world, mut state) = input_time::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs(1));
+        let time = state.get(&world);
 
         assert_eq!(
             hold.evaluate(&action_map, &time, 1.0.into()),
