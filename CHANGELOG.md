@@ -16,9 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Rename `Binding` event into `Bind`.
 - Rename `RebuildBindings` event into `RebindAll`.
-- All conditions with timer no longer implement `Copy`.
 - Conditions and modifiers now accept the newly added `InputTime` system parameter, which dereferences to `Time`. From it, you can also access `Time<Real>` if you need time that is not affected by time dilation.
 - Rename `relative_speed` into `with_time_kind` and accept the newly added `TimeKind` enum instead of boolean.
+- All conditions with timer no longer implement `Copy`.
 
 ### Removed
 
