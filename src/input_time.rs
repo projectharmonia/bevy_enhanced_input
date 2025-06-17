@@ -6,13 +6,13 @@ use bevy::{ecs::system::SystemParam, prelude::*};
 
 /// Time resources used for input conditions and modifier evaluation.
 ///
-/// Dereferences to [`Self::current`], which is the default time resource
+/// Dereferences to [`Self::virt`], which is the default time resource
 /// based on the current schedule. But you can optionally use [`Self::real`]
 /// if you want the time to be unaffected by time dilation.
 #[derive(SystemParam, Deref)]
 pub struct InputTime<'w> {
     #[deref]
-    pub current: Res<'w, Time>,
+    pub virt: Res<'w, Time>,
     pub real: Res<'w, Time<Real>>,
 }
 
@@ -21,7 +21,7 @@ impl InputTime<'_> {
     #[must_use]
     pub fn delta_kind(&self, kind: TimeKind) -> Duration {
         match kind {
-            TimeKind::Virtual => self.current.delta(),
+            TimeKind::Virtual => self.virt.delta(),
             TimeKind::Real => self.real.delta(),
         }
     }
