@@ -1,7 +1,7 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 
 use super::DEFAULT_ACTUATION;
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
 /// when the input is released within the defined release time.
@@ -48,7 +48,7 @@ impl Tap {
 impl InputCondition for Tap {
     fn evaluate(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn tap() {
         let mut condition = Tap::new(1.0);
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (mut world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

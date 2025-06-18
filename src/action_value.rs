@@ -3,7 +3,7 @@ use core::fmt::Debug;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Value from [`Input`](crate::input::Input) for [`Action`](crate::action_map::Action).
+/// Value from [`Input`](crate::input::Input) for [`Action`](crate::input_context::input_action::Action).
 ///
 /// Can be optionally modified by [`InputModifier`](crate::input_modifier::InputModifier)
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]

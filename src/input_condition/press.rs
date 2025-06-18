@@ -1,5 +1,7 @@
+use bevy::utils::TypeIdMap;
+
 use super::DEFAULT_ACTUATION;
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Like [`super::press::Down`] but returns [`ActionState::Fired`] only once until the next actuation.
 ///
@@ -30,7 +32,7 @@ impl Default for Press {
 impl InputCondition for Press {
     fn evaluate(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -53,7 +55,7 @@ mod tests {
     #[test]
     fn press() {
         let mut condition = Press::default();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

@@ -1,8 +1,9 @@
 use alloc::boxed::Box;
 
+use bevy::utils::TypeIdMap;
 use log::trace;
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Helper to calculate [`ActionState`] based on its modifiers and conditions.
 ///
@@ -33,7 +34,7 @@ impl TriggerTracker {
 
     pub(crate) fn apply_modifiers(
         &mut self,
-        action_map: &ActionMap,
+        action_map: &TypeIdMap<Action>,
         time: &InputTime,
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
@@ -50,7 +51,7 @@ impl TriggerTracker {
 
     pub(crate) fn apply_conditions(
         &mut self,
-        action_map: &ActionMap,
+        action_map: &TypeIdMap<Action>,
         time: &InputTime,
         conditions: &mut [Box<dyn InputCondition>],
     ) {

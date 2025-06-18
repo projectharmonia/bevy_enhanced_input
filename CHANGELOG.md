@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `relative_speed` into `with_time_kind` and accept the newly added `TimeKind` enum instead of boolean.
 - All conditions with timer no longer implement `Copy`.
 - Rename `input_condition::press` into `input_condition::down` and `input_condition::just_press` into `input_condition::press`. Their structs were renamed in the previous release, but the modules weren't.
+- Merge `acton_map` module into `input_action`.
 
 ### Removed
 
@@ -28,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `ActionMap::insert`. Use the new action mocking API.
 - `Action::new`, `Action::trigger_events` and `Action::update` from the public API. Use the new action mocking API.
 - `ConditionTimer`. Use Bevy's `Timer`. Use `InputTime::delta_kind` if you need a configurable time dilation.
+- `ActionMap`. Use Bevy's `TypeIdMap` instead.
 
 ## [0.12.0] - 2025-05-25
 
