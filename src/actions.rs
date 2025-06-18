@@ -125,40 +125,40 @@ impl<C: InputContext> Actions<C> {
     /// Returns the associated bindings for action `A` if exists.
     ///
     /// Use [`Self::bind`] to assign bindings.
-    pub fn binding<A: InputAction>(&self) -> Result<&ActionBinding, NoActionError<C, A>> {
+    pub fn binding<A: InputAction>(&self) -> Result<&ActionBinding, NoActionError> {
         self.bindings
             .iter()
             .find(|binding| binding.type_id() == TypeId::of::<A>())
-            .ok_or(NoActionError::default())
+            .ok_or(NoActionError::new::<C, A>())
     }
 
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
-    pub fn get<A: InputAction>(&self) -> Result<&Action, NoActionError<C, A>> {
+    pub fn get<A: InputAction>(&self) -> Result<&Action, NoActionError> {
         self.action_map
             .action::<A>()
-            .ok_or(NoActionError::default())
+            .ok_or(NoActionError::new::<C, A>())
     }
 
     /// Returns the associated value for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the value directly.
-    pub fn value<A: InputAction>(&self) -> Result<ActionValue, NoActionError<C, A>> {
+    pub fn value<A: InputAction>(&self) -> Result<ActionValue, NoActionError> {
         self.get::<A>().map(|action| action.value())
     }
 
     /// Returns the associated state for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the state directly.
-    pub fn state<A: InputAction>(&self) -> Result<ActionState, NoActionError<C, A>> {
+    pub fn state<A: InputAction>(&self) -> Result<ActionState, NoActionError> {
         self.get::<A>().map(|action| action.state())
     }
 
     /// Returns the associated events for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the events directly.
-    pub fn events<A: InputAction>(&self) -> Result<ActionEvents, NoActionError<C, A>> {
+    pub fn events<A: InputAction>(&self) -> Result<ActionEvents, NoActionError> {
         self.get::<A>().map(|action| action.events())
     }
 
@@ -224,41 +224,32 @@ impl<C: InputContext> Default for Actions<C> {
     }
 }
 
-pub struct NoActionError<C: InputContext, A: InputAction> {
-    context: PhantomData<C>,
-    action: PhantomData<A>,
+#[derive(Debug)]
+pub struct NoActionError {
+    context: &'static str,
+    action: &'static str,
 }
 
-impl<C: InputContext, A: InputAction> Default for NoActionError<C, A> {
-    fn default() -> Self {
+impl NoActionError {
+    fn new<C: InputContext, A: InputAction>() -> Self {
         Self {
-            context: PhantomData,
-            action: PhantomData,
+            context: any::type_name::<C>(),
+            action: any::type_name::<A>(),
         }
     }
 }
 
-impl<C: InputContext, A: InputAction> Debug for NoActionError<C, A> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.debug_struct("NoActionError")
-            .field("context", &self.context)
-            .field("action", &self.action)
-            .finish()
-    }
-}
-
-impl<C: InputContext, A: InputAction> Display for NoActionError<C, A> {
+impl Display for NoActionError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "action `{}` is not present in context `{}`",
-            any::type_name::<A>(),
-            any::type_name::<C>()
+            "action `{}` is not defined for input context `{}`",
+            self.context, self.action,
         )
     }
 }
 
-impl<C: InputContext, A: InputAction> Error for NoActionError<C, A> {}
+impl Error for NoActionError {}
 
 #[cfg(test)]
 mod tests {
