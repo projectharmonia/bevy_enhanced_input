@@ -11,11 +11,24 @@ use crate::prelude::*;
 /// Stored inside [`Actions`].
 #[derive(Clone, Copy)]
 pub struct Action {
-    state: ActionState,
-    events: ActionEvents,
-    value: ActionValue,
-    elapsed_secs: f32,
-    fired_secs: f32,
+    /// Current state.
+    pub state: ActionState,
+
+    /// Events triggered by a transition of [`Self::state`] since the last update.
+    pub events: ActionEvents,
+
+    /// Value since the last update.
+    ///
+    /// Unlike when reading values from triggers, its encoded by enum since actions
+    /// are stored in a type-erased format.
+    pub value: ActionValue,
+
+    /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
+    pub elapsed_secs: f32,
+
+    /// Time the action was in [`ActionState::Fired`] state.
+    pub fired_secs: f32,
+
     trigger_events: fn(&Self, &mut Commands, Entity),
 }
 
@@ -132,34 +145,6 @@ impl Action {
                 _ => unreachable!("iteration should yield only named flags"),
             }
         }
-    }
-
-    /// Returns the current state.
-    pub fn state(&self) -> ActionState {
-        self.state
-    }
-
-    /// Returns events triggered by a transition of [`Self::state`] since the last update.
-    pub fn events(&self) -> ActionEvents {
-        self.events
-    }
-
-    /// Returns the value since the last update.
-    ///
-    /// Unlike when reading values from triggers, this returns [`ActionValue`] since actions
-    /// are stored in a type-erased format.
-    pub fn value(&self) -> ActionValue {
-        self.value
-    }
-
-    /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
-    pub fn elapsed_secs(&self) -> f32 {
-        self.elapsed_secs
-    }
-
-    /// Time the action was in [`ActionState::Fired`] state.
-    pub fn fired_secs(&self) -> f32 {
-        self.fired_secs
     }
 }
 
