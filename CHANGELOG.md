@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All conditions with timer no longer implement `Copy`.
 - Rename `input_condition::press` into `input_condition::down` and `input_condition::just_press` into `input_condition::press`. Their structs were renamed in the previous release, but the modules weren't.
 - Merge `acton_map` module into `input_action`.
+- Move `action_binding`, `actions`, `events`, `input_action`, `input_binding`, `input_condition`, `input_modifier` and `preset` modules under `input_context` module.
 
 ### Removed
 

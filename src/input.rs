@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 /// Wraps input from any source.
 ///
-/// [Input modifiers](crate::input_modifier) can change the captured dimension.
+/// [Input modifiers](crate::input_context::input_modifier) can change the captured dimension.
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
 /// [`ActionValue::convert`](crate::action_value::ActionValue::convert).

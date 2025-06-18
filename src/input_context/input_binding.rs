@@ -1,7 +1,8 @@
 use alloc::{boxed::Box, vec::Vec};
 use core::iter;
 
-use crate::{input_condition::IntoConditions, input_modifier::IntoModifiers, prelude::*};
+use super::{input_condition::IntoConditions, input_modifier::IntoModifiers};
+use crate::prelude::*;
 
 /// Associated input for [`ActionBinding`].
 #[derive(Debug)]
@@ -16,7 +17,7 @@ pub struct InputBinding {
     /// until they’re released.
     ///
     /// Used only if [`ActionBinding`](crate::action_binding::ActionBinding::require_reset) is set.
-    pub(crate) first_activation: bool,
+    pub(super) first_activation: bool,
 }
 
 impl InputBinding {
@@ -41,8 +42,7 @@ impl<I: Into<Input>> From<I> for InputBinding {
 pub trait BindingBuilder {
     /// Adds input-level modifiers.
     ///
-    /// For action-level conditions see
-    /// [`ActionBinding::with_modifiers`](crate::action_binding::ActionBinding::with_modifiers).
+    /// For action-level conditions see [`ActionBinding::with_modifiers`].
     ///
     /// # Examples
     ///
@@ -82,8 +82,7 @@ pub trait BindingBuilder {
     ///
     /// You can also apply modifiers to multiple inputs using [`IntoBindings::with_modifiers_each`]
     ///
-    /// For action-level conditions see
-    /// [`ActionBinding::with_conditions`](crate::action_binding::ActionBinding::with_conditions).
+    /// For action-level conditions see [`ActionBinding::with_conditions`].
     ///
     /// # Examples
     ///
@@ -135,10 +134,10 @@ impl<T: Into<InputBinding>> BindingBuilder for T {
 }
 
 /// Conversion into iterator of bindings that could be passed into
-/// [`ActionBinding::to`](crate::action_binding::ActionBinding::to).
+/// [`ActionBinding::to`].
 ///
 /// Can be manually implemented to provide custom modifiers or conditions.
-/// See [`preset`](crate::preset) for examples.
+/// See [`preset`](super::preset) for examples.
 pub trait IntoBindings {
     /// Returns an iterator over bindings.
     fn into_bindings(self) -> impl Iterator<Item = InputBinding>;
