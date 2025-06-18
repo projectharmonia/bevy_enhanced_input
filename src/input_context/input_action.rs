@@ -91,7 +91,7 @@ impl Action {
                         commands,
                         entity,
                         Started::<A> {
-                            value: A::Output::as_output(self.value),
+                            value: A::Output::unwrap_value(self.value),
                             state: self.state,
                         },
                     );
@@ -101,7 +101,7 @@ impl Action {
                         commands,
                         entity,
                         Ongoing::<A> {
-                            value: A::Output::as_output(self.value),
+                            value: A::Output::unwrap_value(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -112,7 +112,7 @@ impl Action {
                         commands,
                         entity,
                         Fired::<A> {
-                            value: A::Output::as_output(self.value),
+                            value: A::Output::unwrap_value(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -124,7 +124,7 @@ impl Action {
                         commands,
                         entity,
                         Canceled::<A> {
-                            value: A::Output::as_output(self.value),
+                            value: A::Output::unwrap_value(self.value),
                             state: self.state,
                             elapsed_secs: self.elapsed_secs,
                         },
@@ -135,7 +135,7 @@ impl Action {
                         commands,
                         entity,
                         Completed::<A> {
-                            value: A::Output::as_output(self.value),
+                            value: A::Output::unwrap_value(self.value),
                             state: self.state,
                             fired_secs: self.fired_secs,
                             elapsed_secs: self.elapsed_secs,
@@ -243,15 +243,15 @@ pub trait ActionOutput: Send + Sync + Debug + Clone + Copy + Into<ActionValue> {
     /// # Panics
     ///
     /// Panics if the value represents a different type.
-    fn as_output(value: ActionValue) -> Self;
+    fn unwrap_value(value: ActionValue) -> Self;
 }
 
 impl ActionOutput for bool {
     const DIM: ActionValueDim = ActionValueDim::Bool;
 
-    fn as_output(value: ActionValue) -> Self {
+    fn unwrap_value(value: ActionValue) -> Self {
         let ActionValue::Bool(value) = value else {
-            unreachable!("output value should be bool");
+            panic!("output value should be bool");
         };
         value
     }
@@ -260,9 +260,9 @@ impl ActionOutput for bool {
 impl ActionOutput for f32 {
     const DIM: ActionValueDim = ActionValueDim::Axis1D;
 
-    fn as_output(value: ActionValue) -> Self {
+    fn unwrap_value(value: ActionValue) -> Self {
         let ActionValue::Axis1D(value) = value else {
-            unreachable!("output value should be axis 1D");
+            panic!("output value should be axis 1D");
         };
         value
     }
@@ -271,9 +271,9 @@ impl ActionOutput for f32 {
 impl ActionOutput for Vec2 {
     const DIM: ActionValueDim = ActionValueDim::Axis2D;
 
-    fn as_output(value: ActionValue) -> Self {
+    fn unwrap_value(value: ActionValue) -> Self {
         let ActionValue::Axis2D(value) = value else {
-            unreachable!("output value should be axis 2D");
+            panic!("output value should be axis 2D");
         };
         value
     }
@@ -282,9 +282,9 @@ impl ActionOutput for Vec2 {
 impl ActionOutput for Vec3 {
     const DIM: ActionValueDim = ActionValueDim::Axis3D;
 
-    fn as_output(value: ActionValue) -> Self {
+    fn unwrap_value(value: ActionValue) -> Self {
         let ActionValue::Axis3D(value) = value else {
-            unreachable!("output value should be axis 3D");
+            panic!("output value should be axis 3D");
         };
         value
     }
