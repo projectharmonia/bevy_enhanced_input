@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Actions::mock` and related methods to mock actions.
 - Add duplicative swizzles to `SwizzleAxis.`
+- `Actions::bindings` to get bindings access.
 - `Actions::iter` and `Actions::iter_mut` to read and write actions data.
 
 ### Changed
