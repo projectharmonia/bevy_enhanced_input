@@ -1,8 +1,12 @@
-use core::{any, marker::PhantomData};
+use core::{
+    any::{self, TypeId},
+    marker::PhantomData,
+};
 
+use bevy::utils::TypeIdMap;
 use log::warn;
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Requires action `A` to be fired within the same context.
 ///
@@ -32,11 +36,11 @@ impl<A: InputAction> Copy for Chord<A> {}
 impl<A: InputAction> InputCondition for Chord<A> {
     fn evaluate(
         &mut self,
-        action_map: &ActionMap,
+        action_map: &TypeIdMap<Action>,
         _time: &InputTime,
         _value: ActionValue,
     ) -> ActionState {
-        if let Some(action) = action_map.action::<A>() {
+        if let Some(action) = action_map.get(&TypeId::of::<A>()) {
             // Inherit state from the chorded action.
             action.state()
         } else {
@@ -71,7 +75,7 @@ mod tests {
         let time = state.get(&world);
 
         action.update(&time, ActionState::Fired, true);
-        let mut action_map = ActionMap::default();
+        let mut action_map = TypeIdMap::<Action>::default();
         action_map.insert(TypeId::of::<TestAction>(), action);
 
         assert_eq!(
@@ -83,7 +87,7 @@ mod tests {
     #[test]
     fn missing_action() {
         let mut condition = Chord::<TestAction>::default();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

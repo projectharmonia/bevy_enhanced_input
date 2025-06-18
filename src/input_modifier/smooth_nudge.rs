@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Produces a smoothed value of the current and previous input value.
 ///
@@ -36,7 +36,7 @@ impl Default for SmoothNudge {
 impl InputModifier for SmoothNudge {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
@@ -69,7 +69,7 @@ mod tests {
     #[test]
     fn lerp() {
         let mut modifier = SmoothNudge::default();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (mut world, mut state) = input_time::init_world();
         world
             .resource_mut::<Time>()
@@ -89,7 +89,7 @@ mod tests {
     #[test]
     fn bool_as_axis1d() {
         let mut modifier = SmoothNudge::default();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (mut world, mut state) = input_time::init_world();
         world
             .resource_mut::<Time>()
@@ -106,7 +106,7 @@ mod tests {
     #[test]
     fn snapping() {
         let mut modifier = SmoothNudge::default();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (mut world, mut state) = input_time::init_world();
         world
             .resource_mut::<Time>()

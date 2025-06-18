@@ -1,4 +1,6 @@
-use crate::{action_map::ActionMap, prelude::*};
+use bevy::utils::TypeIdMap;
+
+use crate::prelude::*;
 
 /// Remaps input values within the range [Self::lower_threshold] to [Self::upper_threshold] onto the range 0 to 1.
 /// Values outside this range are clamped.
@@ -64,7 +66,7 @@ impl Default for DeadZone {
 impl InputModifier for DeadZone {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
@@ -126,7 +128,7 @@ mod tests {
     #[test]
     fn radial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -168,7 +170,7 @@ mod tests {
     #[test]
     fn axial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Axial);
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

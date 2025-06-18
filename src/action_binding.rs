@@ -5,20 +5,19 @@ use core::{
     time::Duration,
 };
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 use log::{debug, trace};
 
 use crate::{
-    action_map::ActionMap, input_action::ActionOutput, input_condition::IntoConditions,
-    input_modifier::IntoModifiers, input_reader::InputReader, prelude::*,
-    trigger_tracker::TriggerTracker,
+    input_action::ActionOutput, input_condition::IntoConditions, input_modifier::IntoModifiers,
+    input_reader::InputReader, prelude::*, trigger_tracker::TriggerTracker,
 };
 
 /// Bindings associated with an [`InputAction`] marker.
 ///
 /// Stored inside [`Actions`].
 ///
-/// Bindings are stored separately from [`ActionMap`] to allow reading other actions' data during evaluation.
+/// Stored separately from [`Action`] to allow reading other actions' data during evaluation.
 ///
 /// Action bindings evaluation follows these steps:
 ///
@@ -305,7 +304,7 @@ impl ActionBinding {
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        action_map: &mut ActionMap,
+        action_map: &mut TypeIdMap<Action>,
         time: &InputTime,
         entity: Entity,
     ) {
@@ -324,7 +323,7 @@ impl ActionBinding {
     pub(crate) fn update_from_reader(
         &mut self,
         reader: &mut InputReader,
-        action_map: &mut ActionMap,
+        action_map: &mut TypeIdMap<Action>,
         time: &InputTime,
     ) -> (ActionState, ActionValue) {
         trace!("updating `{}` from input", self.action_name);

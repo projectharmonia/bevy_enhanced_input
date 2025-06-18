@@ -329,7 +329,6 @@ extern crate alloc;
 extern crate self as bevy_enhanced_input;
 
 pub mod action_binding;
-pub mod action_map;
 pub mod action_value;
 pub mod actions;
 pub mod events;
@@ -348,12 +347,11 @@ pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
         action_binding::{ActionBinding, MockSpan},
-        action_map::{Action, ActionState},
         action_value::{ActionValue, ActionValueDim},
         actions::Actions,
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
-        input_action::{Accumulation, InputAction},
+        input_action::{Accumulation, Action, ActionState, InputAction},
         input_binding::{BindingBuilder, InputBinding, IntoBindings},
         input_condition::{
             ConditionKind, InputCondition, block_by::*, chord::*, down::*, hold::*,

@@ -1,5 +1,7 @@
+use bevy::utils::TypeIdMap;
+
 use super::DEFAULT_ACTUATION;
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Returns [`ActionState::Fired`] when the input exceeds the actuation threshold.
 #[derive(Clone, Copy, Debug)]
@@ -24,7 +26,7 @@ impl Default for Down {
 impl InputCondition for Down {
     fn evaluate(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -44,7 +46,7 @@ mod tests {
     #[test]
     fn down() {
         let mut condition = Down::new(1.0);
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

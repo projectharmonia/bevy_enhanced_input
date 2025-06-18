@@ -7,11 +7,10 @@ use core::{
     marker::PhantomData,
 };
 
-use bevy::{platform::collections::hash_map::Entry, prelude::*};
+use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
 use log::debug;
 
 use crate::{
-    action_map::ActionMap,
     input_reader::{InputReader, ResetInput},
     prelude::*,
 };
@@ -19,7 +18,7 @@ use crate::{
 /// Component that stores actions with their bindings for a specific [`InputContext`].
 ///
 /// Bindings represented by [`ActionBinding`] and can be added to specific action using [`Self::bind`].
-/// Data for each bound action is stored inside [`ActionMap`].
+/// Data for each bound action represented by [`Action`].
 ///
 /// Actions are evaluated and trigger [`events`](crate::events) only when this component exists on an entity.
 ///
@@ -30,7 +29,7 @@ use crate::{
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
     bindings: Vec<ActionBinding>,
-    action_map: ActionMap,
+    action_map: TypeIdMap<Action>,
     sort_required: bool,
     marker: PhantomData<C>,
 }
@@ -137,7 +136,7 @@ impl<C: InputContext> Actions<C> {
     /// Use [`Self::bind`] to associate an action with the context.
     pub fn get<A: InputAction>(&self) -> Result<&Action, NoActionError> {
         self.action_map
-            .action::<A>()
+            .get(&TypeId::of::<A>())
             .ok_or(NoActionError::new::<C, A>())
     }
 

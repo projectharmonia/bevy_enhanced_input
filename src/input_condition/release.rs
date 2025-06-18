@@ -1,5 +1,7 @@
+use bevy::utils::TypeIdMap;
+
 use super::DEFAULT_ACTUATION;
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Returns [`ActionState::Ongoing`] when the input exceeds the actuation threshold and
 /// [`ActionState::Fired`] once when the input drops back below the actuation threshold.
@@ -29,7 +31,7 @@ impl Default for Release {
 impl InputCondition for Release {
     fn evaluate(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -56,7 +58,7 @@ mod tests {
     #[test]
     fn release() {
         let mut condition = Release::default();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

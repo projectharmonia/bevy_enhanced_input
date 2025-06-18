@@ -1,4 +1,6 @@
-use crate::{action_map::ActionMap, prelude::*};
+use bevy::utils::TypeIdMap;
+
+use crate::prelude::*;
 
 /// Inverts value per axis.
 ///
@@ -69,7 +71,7 @@ impl Negate {
 impl InputModifier for Negate {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
@@ -120,7 +122,7 @@ mod tests {
     #[test]
     fn x() {
         let mut modifier = Negate::x();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -146,7 +148,7 @@ mod tests {
     #[test]
     fn y() {
         let mut modifier = Negate::y();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -166,7 +168,7 @@ mod tests {
     #[test]
     fn z() {
         let mut modifier = Negate::z();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -186,7 +188,7 @@ mod tests {
     #[test]
     fn all() {
         let mut modifier = Negate::all();
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

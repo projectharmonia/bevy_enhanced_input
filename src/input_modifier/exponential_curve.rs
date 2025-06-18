@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Response curve exponential.
 ///
@@ -29,7 +29,7 @@ impl ExponentialCurve {
 impl InputModifier for ExponentialCurve {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
+        _action_map: &TypeIdMap<Action>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn exp() {
         let mut modifier = ExponentialCurve::splat(2.0);
-        let action_map = ActionMap::default();
+        let action_map = TypeIdMap::<Action>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
