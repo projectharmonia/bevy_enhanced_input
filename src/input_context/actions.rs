@@ -121,6 +121,11 @@ impl<C: InputContext> Actions<C> {
         }
     }
 
+    /// Returns bindings for each action in their evaluation order.
+    pub fn bindings(&self) -> &[ActionBinding] {
+        &self.bindings
+    }
+
     /// Returns the associated bindings for action `A` if exists.
     ///
     /// Use [`Self::bind`] to assign bindings.
@@ -272,7 +277,7 @@ mod tests {
         actions.bind::<TestAction>().to(KeyCode::KeyA);
         actions.bind::<TestAction>().to(KeyCode::KeyB);
         assert_eq!(actions.iter().count(), 1);
-        assert_eq!(actions.bindings.len(), 1);
+        assert_eq!(actions.bindings().len(), 1);
 
         let binding = actions.binding::<TestAction>().unwrap();
         assert_eq!(binding.inputs().len(), 2);
