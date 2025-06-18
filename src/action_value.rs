@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 /// Value from [`Input`](crate::input::Input) for [`Action`](crate::input_context::input_action::Action).
 ///
-/// Can be optionally modified by [`InputModifier`](crate::input_modifier::InputModifier)
+/// Can be optionally modified by [`InputModifier`](crate::input_context::input_modifier::InputModifier)
 #[derive(Serialize, Deserialize, Clone, Copy, PartialEq, Debug)]
 pub enum ActionValue {
     Bool(bool),

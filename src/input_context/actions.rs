@@ -20,7 +20,7 @@ use crate::{
 /// Bindings represented by [`ActionBinding`] and can be added to specific action using [`Self::bind`].
 /// Data for each bound action represented by [`Action`].
 ///
-/// Actions are evaluated and trigger [`events`](crate::events) only when this component exists on an entity.
+/// Actions are evaluated and trigger [`events`](super::events) only when this component exists on an entity.
 ///
 /// The evaluation order depends on the number of modifiers: actions with more modifiers are evaluated first.
 /// For example, if you have actions bound to `Ctrl + C` and just `C`, the action with `Ctrl + C` will be
@@ -186,7 +186,7 @@ impl<C: InputContext> Actions<C> {
     /// Sets the state for each action to [`ActionState::None`]  and triggers transitions with zero value.
     ///
     /// Resets the input.
-    pub(crate) fn reset(
+    pub(super) fn reset(
         &mut self,
         commands: &mut Commands,
         reset_input: &mut ResetInput,

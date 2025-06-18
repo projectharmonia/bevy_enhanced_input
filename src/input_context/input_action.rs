@@ -24,7 +24,7 @@ impl Action {
     ///
     /// [`Self::trigger_events`] will trigger events for `A`.
     #[must_use]
-    pub(crate) fn new<A: InputAction>() -> Self {
+    pub(super) fn new<A: InputAction>() -> Self {
         Self {
             state: Default::default(),
             events: ActionEvents::empty(),
@@ -36,7 +36,7 @@ impl Action {
     }
 
     /// Updates internal state.
-    pub(crate) fn update(
+    pub(super) fn update(
         &mut self,
         time: &InputTime,
         state: ActionState,
@@ -65,7 +65,7 @@ impl Action {
     /// Triggers events resulting from a state transition after [`Self::update`].
     ///
     /// See also [`Self::new`] and [`ActionEvents`].
-    pub(crate) fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
+    pub(super) fn trigger_events(&self, commands: &mut Commands, entity: Entity) {
         (self.trigger_events)(self, commands, entity);
     }
 
@@ -192,7 +192,7 @@ pub enum ActionState {
 
 /// Marker for a gameplay-related action.
 ///
-/// Needs to be bound to actions using [`Actions::bind`](crate::actions::Actions::bind).
+/// Needs to be bound to actions using [`Actions::bind`].
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:
