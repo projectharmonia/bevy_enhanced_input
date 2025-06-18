@@ -11,6 +11,7 @@ use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap}
 use log::debug;
 
 use crate::{
+    input_context::input_action::ActionOutput,
     input_reader::{InputReader, ResetInput},
     prelude::*,
 };
@@ -158,8 +159,9 @@ impl<C: InputContext> Actions<C> {
     /// Returns the associated value for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the value directly.
-    pub fn value<A: InputAction>(&self) -> Result<ActionValue, NoActionError> {
-        self.get::<A>().map(|action| action.value)
+    pub fn value<A: InputAction>(&self) -> Result<A::Output, NoActionError> {
+        self.get::<A>()
+            .map(|action| ActionOutput::unwrap_value(action.value))
     }
 
     /// Returns the associated state for action `A` if it exists.

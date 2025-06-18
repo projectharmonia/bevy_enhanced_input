@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Merge `acton_map` module into `input_action`.
 - Move `action_binding`, `actions`, `events`, `input_action`, `input_binding`, `input_condition`, `input_modifier` and `preset` modules under `input_context` module.
 - Make all data fields of `Action` public.
+- Return the strongly typed output of an action from `Actions::value`, similar to triggers.
 - Rename `ActionOutput::as_output` into `ActionOutput::unwrap_value`.
 
 ### Removed
