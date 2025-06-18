@@ -262,14 +262,13 @@ mod tests {
     }
 
     fn transition(initial_state: ActionState, target_state: ActionState) -> ActionEvents {
-        let (world, mut state) = input_time::init_world();
+        let (mut world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
         let mut action = Action::new::<TestAction>();
         action.update(&time, initial_state, true);
         action.update(&time, target_state, true);
 
-        let mut world = World::new();
         world.init_resource::<TriggeredEvents>();
         world.add_observer(
             |_trigger: Trigger<Fired<TestAction>>, mut events: ResMut<TriggeredEvents>| {
