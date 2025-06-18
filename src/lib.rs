@@ -329,7 +329,6 @@ extern crate alloc;
 extern crate self as bevy_enhanced_input;
 
 pub mod action_binding;
-pub mod action_instances;
 pub mod action_map;
 pub mod action_value;
 pub mod actions;
@@ -338,6 +337,7 @@ pub mod input;
 pub mod input_action;
 pub mod input_binding;
 pub mod input_condition;
+pub mod input_context;
 pub mod input_modifier;
 pub mod input_reader;
 pub mod input_time;
@@ -348,10 +348,9 @@ pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
         action_binding::{ActionBinding, MockSpan},
-        action_instances::{Bind, InputContextAppExt, RebindAll},
         action_map::{Action, ActionState},
         action_value::{ActionValue, ActionValueDim},
-        actions::{Actions, InputContext},
+        actions::Actions,
         events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_action::{Accumulation, InputAction},
@@ -360,6 +359,7 @@ pub mod prelude {
             ConditionKind, InputCondition, block_by::*, chord::*, down::*, hold::*,
             hold_and_release::*, press::*, pulse::*, release::*, tap::*,
         },
+        input_context::{Bind, InputContext, InputContextAppExt, RebindAll},
         input_modifier::{
             InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
             exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
@@ -373,7 +373,7 @@ pub mod prelude {
 
 use bevy::{input::InputSystem, prelude::*};
 
-use action_instances::ContextRegistry;
+use input_context::ContextRegistry;
 use input_reader::{ActionSources, ResetInput};
 
 #[cfg(doc)]
