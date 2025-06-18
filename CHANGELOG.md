@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Actions::mock` and related methods to mock actions.
 - Add duplicative swizzles to `SwizzleAxis.`
+- `Actions::iter` and `Actions::iter_mut` to read and write actions data.
 
 ### Changed
 
@@ -23,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `input_condition::press` into `input_condition::down` and `input_condition::just_press` into `input_condition::press`. Their structs were renamed in the previous release, but the modules weren't.
 - Merge `acton_map` module into `input_action`.
 - Move `action_binding`, `actions`, `events`, `input_action`, `input_binding`, `input_condition`, `input_modifier` and `preset` modules under `input_context` module.
+- Make all data fields of `Action` public.
 
 ### Removed
 
@@ -31,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Action::new`, `Action::trigger_events` and `Action::update` from the public API. Use the new action mocking API.
 - `ConditionTimer`. Use Bevy's `Timer`. Use `InputTime::delta_kind` if you need a configurable time dilation.
 - `ActionMap`. Use Bevy's `TypeIdMap` instead.
+- Getters for `Action`. Use the fields, which are now public.
 
 ## [0.12.0] - 2025-05-25
 

@@ -131,6 +131,16 @@ impl<C: InputContext> Actions<C> {
             .ok_or(NoActionError::new::<C, A>())
     }
 
+    /// Returns an iterator over type-erased actions data and their IDs.
+    pub fn iter(&self) -> impl Iterator<Item = (TypeId, &Action)> {
+        self.action_map.iter().map(|(&id, action)| (id, action))
+    }
+
+    /// Returns an mutable iterator over type-erased actions data and their IDs.
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (TypeId, &mut Action)> {
+        self.action_map.iter_mut().map(|(&id, action)| (id, action))
+    }
+
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
@@ -144,21 +154,21 @@ impl<C: InputContext> Actions<C> {
     ///
     /// Helper for [`Self::get`] to the value directly.
     pub fn value<A: InputAction>(&self) -> Result<ActionValue, NoActionError> {
-        self.get::<A>().map(|action| action.value())
+        self.get::<A>().map(|action| action.value)
     }
 
     /// Returns the associated state for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the state directly.
     pub fn state<A: InputAction>(&self) -> Result<ActionState, NoActionError> {
-        self.get::<A>().map(|action| action.state())
+        self.get::<A>().map(|action| action.state)
     }
 
     /// Returns the associated events for action `A` if it exists.
     ///
     /// Helper for [`Self::get`] to the events directly.
     pub fn events<A: InputAction>(&self) -> Result<ActionEvents, NoActionError> {
-        self.get::<A>().map(|action| action.events())
+        self.get::<A>().map(|action| action.events)
     }
 
     pub(crate) fn update(
@@ -261,6 +271,7 @@ mod tests {
         let mut actions = Actions::<Test>::default();
         actions.bind::<TestAction>().to(KeyCode::KeyA);
         actions.bind::<TestAction>().to(KeyCode::KeyB);
+        assert_eq!(actions.iter().count(), 1);
         assert_eq!(actions.bindings.len(), 1);
 
         let binding = actions.binding::<TestAction>().unwrap();

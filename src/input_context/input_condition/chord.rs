@@ -42,7 +42,7 @@ impl<A: InputAction> InputCondition for Chord<A> {
     ) -> ActionState {
         if let Some(action) = action_map.get(&TypeId::of::<A>()) {
             // Inherit state from the chorded action.
-            action.state()
+            action.state
         } else {
             // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
             warn!(

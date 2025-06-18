@@ -263,11 +263,6 @@ mod tests {
 
     fn transition(initial_state: ActionState, target_state: ActionState) -> ActionEvents {
         let (mut world, mut state) = input_time::init_world();
-        let time = state.get(&world);
-
-        let mut action = Action::new::<TestAction>();
-        action.update(&time, initial_state, true);
-        action.update(&time, target_state, true);
 
         world.init_resource::<TriggeredEvents>();
         world.add_observer(
@@ -296,7 +291,12 @@ mod tests {
             },
         );
 
+        let time = state.get(&world);
+        let mut action = Action::new::<TestAction>();
+        action.state = initial_state;
+        action.update(&time, target_state, true);
         action.trigger_events(&mut world.commands(), Entity::PLACEHOLDER);
+
         world.flush();
 
         *world.remove_resource::<TriggeredEvents>().unwrap()

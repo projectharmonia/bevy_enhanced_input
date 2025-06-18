@@ -38,7 +38,7 @@ impl<A: InputAction> InputModifier for AccumulateBy<A> {
         value: ActionValue,
     ) -> ActionValue {
         if let Some(action) = action_map.get(&TypeId::of::<A>()) {
-            if action.state() == ActionState::Fired {
+            if action.state == ActionState::Fired {
                 self.value += value.as_axis3d();
             } else {
                 self.value = value.as_axis3d();
