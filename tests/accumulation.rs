@@ -21,7 +21,7 @@ fn max_abs() {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.value::<MaxAbs>().unwrap(), Vec2::Y.into());
+    assert_eq!(actions.value::<MaxAbs>().unwrap(), Vec2::Y);
 }
 
 #[test]
@@ -45,7 +45,7 @@ fn cumulative() {
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     assert_eq!(
         actions.value::<Cumulative>().unwrap(),
-        Vec2::ZERO.into(),
+        Vec2::ZERO,
         "up and down should cancel each other"
     );
 }
