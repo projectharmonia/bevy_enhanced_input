@@ -344,7 +344,7 @@ pub mod prelude {
             action_binding::{ActionBinding, MockSpan},
             actions::Actions,
             events::*,
-            input_action::{Accumulation, Action, ActionState, InputAction},
+            input_action::{Accumulation, Action, ActionState, InputAction, UntypedAction},
             input_binding::{BindingBuilder, InputBinding, IntoBindings},
             input_condition::{
                 ConditionKind, InputCondition, block_by::*, chord::*, down::*, hold::*,

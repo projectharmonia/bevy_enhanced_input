@@ -66,7 +66,7 @@ impl Default for DeadZone {
 impl InputModifier for DeadZone {
     fn apply(
         &mut self,
-        _action_map: &TypeIdMap<Action>,
+        _action_map: &TypeIdMap<UntypedAction>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
@@ -128,7 +128,7 @@ mod tests {
     #[test]
     fn radial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -170,7 +170,7 @@ mod tests {
     #[test]
     fn axial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Axial);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

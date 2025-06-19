@@ -292,7 +292,7 @@ mod tests {
         );
 
         let time = state.get(&world);
-        let mut action = Action::new::<TestAction>();
+        let mut action = UntypedAction::new::<TestAction>();
         action.state = initial_state;
         action.update(&time, target_state, true);
         action.trigger_events(&mut world.commands(), Entity::PLACEHOLDER);

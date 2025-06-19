@@ -32,7 +32,7 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
     /// `actions` is a state of other actions within the currently evaluating context.
     fn evaluate(
         &mut self,
-        action_map: &TypeIdMap<Action>,
+        action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionState;

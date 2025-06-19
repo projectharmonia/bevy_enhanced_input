@@ -8,9 +8,9 @@ use crate::prelude::*;
 
 /// Data associated with an [`InputAction`] marker.
 ///
-/// Stored inside [`Actions`].
+/// Type-erased version of [`Action`]. Stored inside [`Actions`].
 #[derive(Clone, Copy)]
-pub struct Action {
+pub struct UntypedAction {
     /// Current state.
     pub state: ActionState,
 
@@ -32,7 +32,7 @@ pub struct Action {
     trigger_events: fn(&Self, &mut Commands, Entity),
 }
 
-impl Action {
+impl UntypedAction {
     /// Creates a new instance associated with action `A`.
     ///
     /// [`Self::trigger_events`] will trigger events for `A`.
@@ -45,6 +45,16 @@ impl Action {
             elapsed_secs: 0.0,
             fired_secs: 0.0,
             trigger_events: Self::trigger_events_typed::<A>,
+        }
+    }
+
+    pub(super) fn typed<A: InputAction>(&self) -> Action<A> {
+        Action {
+            state: self.state,
+            events: self.events,
+            value: A::Output::unwrap_value(self.value),
+            elapsed_secs: self.elapsed_secs,
+            fired_secs: self.fired_secs,
         }
     }
 
@@ -154,6 +164,27 @@ fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity,
         any::type_name::<A>()
     );
     commands.trigger_targets(event, entity);
+}
+
+/// A strongly-typed version of [`Action`].
+///
+/// Can be obtained from [`Actions::get`].
+#[derive(Clone, Copy, Debug)]
+pub struct Action<A: InputAction> {
+    /// Current state.
+    pub state: ActionState,
+
+    /// Events triggered by a transition of [`Self::state`] since the last update.
+    pub events: ActionEvents,
+
+    /// Value since the last update.
+    pub value: A::Output,
+
+    /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
+    pub elapsed_secs: f32,
+
+    /// Time the action was in [`ActionState::Fired`] state.
+    pub fired_secs: f32,
 }
 
 /// State for [`Action`].

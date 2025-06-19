@@ -48,7 +48,7 @@ impl Tap {
 impl InputCondition for Tap {
     fn evaluate(
         &mut self,
-        _action_map: &TypeIdMap<Action>,
+        _action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -85,7 +85,7 @@ mod tests {
     #[test]
     fn tap() {
         let mut condition = Tap::new(1.0);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

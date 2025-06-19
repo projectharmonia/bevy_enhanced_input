@@ -31,7 +31,7 @@ impl Default for Release {
 impl InputCondition for Release {
     fn evaluate(
         &mut self,
-        _action_map: &TypeIdMap<Action>,
+        _action_map: &TypeIdMap<UntypedAction>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -58,7 +58,7 @@ mod tests {
     #[test]
     fn release() {
         let mut condition = Release::default();
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

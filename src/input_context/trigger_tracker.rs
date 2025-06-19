@@ -34,7 +34,7 @@ impl TriggerTracker {
 
     pub(super) fn apply_modifiers(
         &mut self,
-        action_map: &TypeIdMap<Action>,
+        action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
@@ -51,7 +51,7 @@ impl TriggerTracker {
 
     pub(super) fn apply_conditions(
         &mut self,
-        action_map: &TypeIdMap<Action>,
+        action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         conditions: &mut [Box<dyn InputCondition>],
     ) {
