@@ -305,7 +305,7 @@ impl ActionBinding {
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        action_map: &mut TypeIdMap<Action>,
+        action_map: &mut TypeIdMap<UntypedAction>,
         time: &InputTime,
         entity: Entity,
     ) {
@@ -324,7 +324,7 @@ impl ActionBinding {
     pub(super) fn update_from_reader(
         &mut self,
         reader: &mut InputReader,
-        action_map: &mut TypeIdMap<Action>,
+        action_map: &mut TypeIdMap<UntypedAction>,
         time: &InputTime,
     ) -> (ActionState, ActionValue) {
         trace!("updating `{}` from input", self.action_name);

@@ -56,7 +56,7 @@ impl Hold {
 impl InputCondition for Hold {
     fn evaluate(
         &mut self,
-        _action_map: &TypeIdMap<Action>,
+        _action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn hold() {
         let mut condition = Hold::new(1.0);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn one_shot() {
         let mut hold = Hold::new(1.0).one_shot(true);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
         world
             .resource_mut::<Time>()

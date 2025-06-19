@@ -36,7 +36,7 @@ impl<A: InputAction> Copy for Chord<A> {}
 impl<A: InputAction> InputCondition for Chord<A> {
     fn evaluate(
         &mut self,
-        action_map: &TypeIdMap<Action>,
+        action_map: &TypeIdMap<UntypedAction>,
         _time: &InputTime,
         _value: ActionValue,
     ) -> ActionState {
@@ -70,12 +70,12 @@ mod tests {
     #[test]
     fn chord() {
         let mut condition = Chord::<TestAction>::default();
-        let mut action = Action::new::<TestAction>();
+        let mut action = UntypedAction::new::<TestAction>();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
         action.update(&time, ActionState::Fired, true);
-        let mut action_map = TypeIdMap::<Action>::default();
+        let mut action_map = TypeIdMap::<UntypedAction>::default();
         action_map.insert(TypeId::of::<TestAction>(), action);
 
         assert_eq!(
@@ -87,7 +87,7 @@ mod tests {
     #[test]
     fn missing_action() {
         let mut condition = Chord::<TestAction>::default();
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

@@ -45,7 +45,7 @@ impl HoldAndRelease {
 impl InputCondition for HoldAndRelease {
     fn evaluate(
         &mut self,
-        _action_map: &TypeIdMap<Action>,
+        _action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -77,7 +77,7 @@ mod tests {
     #[test]
     fn hold_and_release() {
         let mut condition = HoldAndRelease::new(1.0);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

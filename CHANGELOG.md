@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make all data fields of `Action` public.
 - Return the strongly typed output of an action from `Actions::value`, similar to triggers.
 - Rename `ActionOutput::as_output` into `ActionOutput::unwrap_value`.
+- Rename `Action` into `UntypedAction`.
+- `Actions::get` now returns a typed `Action<A>`.
 
 ### Removed
 

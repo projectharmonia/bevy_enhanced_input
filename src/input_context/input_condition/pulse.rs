@@ -73,7 +73,7 @@ impl Pulse {
 impl InputCondition for Pulse {
     fn evaluate(
         &mut self,
-        _action_map: &TypeIdMap<Action>,
+        _action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn pulse() {
         let mut condition = Pulse::new(1.0);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -155,7 +155,7 @@ mod tests {
     #[test]
     fn not_trigger_on_start() {
         let mut condition = Pulse::new(1.0).trigger_on_start(false);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -168,7 +168,7 @@ mod tests {
     #[test]
     fn trigger_limit() {
         let mut condition = Pulse::new(1.0).with_trigger_limit(1);
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 

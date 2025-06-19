@@ -19,7 +19,7 @@ fn updates() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, true.into());
+    assert!(action.value);
     assert_eq!(action.state, ActionState::Fired);
     assert_eq!(action.events, ActionEvents::FIRED | ActionEvents::STARTED);
 
@@ -27,7 +27,7 @@ fn updates() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, false.into());
+    assert!(!action.value);
     assert_eq!(action.state, ActionState::None);
     assert_eq!(action.events, ActionEvents::COMPLETED);
 }
@@ -51,7 +51,7 @@ fn duration() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, true.into());
+    assert!(action.value);
     assert_eq!(action.state, ActionState::Fired);
     assert_eq!(action.events, ActionEvents::FIRED | ActionEvents::STARTED);
 
@@ -59,7 +59,7 @@ fn duration() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, true.into());
+    assert!(action.value);
     assert_eq!(action.state, ActionState::Fired);
     assert_eq!(action.events, ActionEvents::FIRED);
 
@@ -67,7 +67,7 @@ fn duration() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, false.into());
+    assert!(!action.value);
     assert_eq!(action.state, ActionState::None);
     assert_eq!(action.events, ActionEvents::COMPLETED);
 }
@@ -87,7 +87,7 @@ fn manual() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, true.into());
+    assert!(action.value);
     assert_eq!(action.state, ActionState::Fired);
     assert_eq!(action.events, ActionEvents::FIRED | ActionEvents::STARTED);
 
@@ -95,7 +95,7 @@ fn manual() {
 
     let mut actions = app.world_mut().get_mut::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, true.into());
+    assert!(action.value);
     assert_eq!(action.state, ActionState::Fired);
     assert_eq!(action.events, ActionEvents::FIRED);
 
@@ -105,7 +105,7 @@ fn manual() {
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
     let action = actions.get::<TestAction>().unwrap();
-    assert_eq!(action.value, false.into());
+    assert!(!action.value);
     assert_eq!(action.state, ActionState::None);
     assert_eq!(action.events, ActionEvents::COMPLETED);
 }

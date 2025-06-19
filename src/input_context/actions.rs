@@ -11,7 +11,6 @@ use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap}
 use log::debug;
 
 use crate::{
-    input_context::input_action::ActionOutput,
     input_reader::{InputReader, ResetInput},
     prelude::*,
 };
@@ -30,7 +29,7 @@ use crate::{
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
     bindings: Vec<ActionBinding>,
-    action_map: TypeIdMap<Action>,
+    action_map: TypeIdMap<UntypedAction>,
     sort_required: bool,
     marker: PhantomData<C>,
 }
@@ -115,7 +114,7 @@ impl<C: InputContext> Actions<C> {
                 .find(|binding| binding.type_id() == type_id)
                 .expect("actions and bindings should have matching type IDs"),
             Entry::Vacant(entry) => {
-                entry.insert(Action::new::<A>());
+                entry.insert(UntypedAction::new::<A>());
                 self.bindings.push(ActionBinding::new::<A>());
                 self.bindings.last_mut().unwrap()
             }
@@ -138,21 +137,22 @@ impl<C: InputContext> Actions<C> {
     }
 
     /// Returns an iterator over type-erased actions data and their IDs.
-    pub fn iter(&self) -> impl Iterator<Item = (TypeId, &Action)> {
+    pub fn iter(&self) -> impl Iterator<Item = (TypeId, &UntypedAction)> {
         self.action_map.iter().map(|(&id, action)| (id, action))
     }
 
     /// Returns an mutable iterator over type-erased actions data and their IDs.
-    pub fn iter_mut(&mut self) -> impl Iterator<Item = (TypeId, &mut Action)> {
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = (TypeId, &mut UntypedAction)> {
         self.action_map.iter_mut().map(|(&id, action)| (id, action))
     }
 
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
-    pub fn get<A: InputAction>(&self) -> Result<&Action, NoActionError> {
+    pub fn get<A: InputAction>(&self) -> Result<Action<A>, NoActionError> {
         self.action_map
             .get(&TypeId::of::<A>())
+            .map(|action| action.typed())
             .ok_or(NoActionError::new::<C, A>())
     }
 
@@ -160,8 +160,7 @@ impl<C: InputContext> Actions<C> {
     ///
     /// Helper for [`Self::get`] to the value directly.
     pub fn value<A: InputAction>(&self) -> Result<A::Output, NoActionError> {
-        self.get::<A>()
-            .map(|action| ActionOutput::unwrap_value(action.value))
+        self.get::<A>().map(|action| action.value)
     }
 
     /// Returns the associated state for action `A` if it exists.

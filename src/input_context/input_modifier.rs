@@ -27,7 +27,7 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Called each frame.
     fn apply(
         &mut self,
-        action_map: &TypeIdMap<Action>,
+        action_map: &TypeIdMap<UntypedAction>,
         time: &InputTime,
         value: ActionValue,
     ) -> ActionValue;

@@ -49,7 +49,7 @@ pub enum SwizzleAxis {
 impl InputModifier for SwizzleAxis {
     fn apply(
         &mut self,
-        _action_map: &TypeIdMap<Action>,
+        _action_map: &TypeIdMap<UntypedAction>,
         _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
@@ -114,7 +114,7 @@ mod tests {
     #[test]
     fn yxz() {
         let mut modifier = SwizzleAxis::YXZ;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -143,7 +143,7 @@ mod tests {
     #[test]
     fn zyx() {
         let mut modifier = SwizzleAxis::ZYX;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn xzy() {
         let mut modifier = SwizzleAxis::XZY;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -192,7 +192,7 @@ mod tests {
     #[test]
     fn yzx() {
         let mut modifier = SwizzleAxis::YZX;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -221,7 +221,7 @@ mod tests {
     #[test]
     fn zxy() {
         let mut modifier = SwizzleAxis::ZXY;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn xxy() {
         let mut modifier = SwizzleAxis::XXY;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -279,7 +279,7 @@ mod tests {
     #[test]
     fn yyx() {
         let mut modifier = SwizzleAxis::YYX;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -308,7 +308,7 @@ mod tests {
     #[test]
     fn xxz() {
         let mut modifier = SwizzleAxis::XXZ;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn yyz() {
         let mut modifier = SwizzleAxis::YYZ;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -357,7 +357,7 @@ mod tests {
     #[test]
     fn zzx() {
         let mut modifier = SwizzleAxis::ZZX;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -386,7 +386,7 @@ mod tests {
     #[test]
     fn zzy() {
         let mut modifier = SwizzleAxis::ZZY;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -406,7 +406,7 @@ mod tests {
     #[test]
     fn xxx() {
         let mut modifier = SwizzleAxis::XXX;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -435,7 +435,7 @@ mod tests {
     #[test]
     fn yyy() {
         let mut modifier = SwizzleAxis::YYY;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
@@ -455,7 +455,7 @@ mod tests {
     #[test]
     fn zzz() {
         let mut modifier = SwizzleAxis::ZZZ;
-        let action_map = TypeIdMap::<Action>::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
         let (world, mut state) = input_time::init_world();
         let time = state.get(&world);
 
