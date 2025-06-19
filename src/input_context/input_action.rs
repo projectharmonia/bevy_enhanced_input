@@ -169,6 +169,7 @@ fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity,
 /// A strongly-typed version of [`Action`].
 ///
 /// Can be obtained from [`Actions::get`].
+#[derive(Clone, Copy, Debug)]
 pub struct Action<A: InputAction> {
     /// Current state.
     pub state: ActionState,
