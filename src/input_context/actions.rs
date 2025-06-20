@@ -141,11 +141,15 @@ impl<C: InputContext> Actions<C> {
         self.action_map.iter().map(|(&id, action)| (id, action))
     }
 
-    /// Returns an mutable iterator over type-erased actions data and their IDs.
+    /// Returns a mutable iterator over type-erased actions data and their IDs.
     pub fn iter_mut(&mut self) -> impl Iterator<Item = (TypeId, &mut UntypedAction)> {
         self.action_map.iter_mut().map(|(&id, action)| (id, action))
     }
 
+    /// Returns a type-erased action for the given type ID if it exists.
+    pub fn get_mut_by_id(&mut self, type_id: TypeId) -> Option<&mut UntypedAction> {
+        self.action_map.get_mut(&type_id)
+    }
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
