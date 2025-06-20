@@ -169,7 +169,7 @@ fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity,
 /// A strongly-typed version of [`Action`].
 ///
 /// Can be obtained from [`Actions::get`].
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Action<A: InputAction> {
     /// Current state.
     pub state: ActionState,
@@ -186,6 +186,14 @@ pub struct Action<A: InputAction> {
     /// Time the action was in [`ActionState::Fired`] state.
     pub fired_secs: f32,
 }
+
+impl<A: InputAction> Clone for Action<A> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<A: InputAction> Copy for Action<A> {}
 
 /// State for [`Action`].
 ///
