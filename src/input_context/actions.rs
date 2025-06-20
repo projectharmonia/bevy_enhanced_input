@@ -146,11 +146,10 @@ impl<C: InputContext> Actions<C> {
         self.action_map.iter_mut().map(|(&id, action)| (id, action))
     }
 
-    /// Returns the UntypedAction for the given action type if it exists.
-    pub fn get_mut(&mut self, action_type: TypeId) -> Option<&mut UntypedAction> {
-        self.action_map.get_mut(&action_type)
+    /// Returns a type-erased action for the given type ID if it exists.
+    pub fn get_mut_by_id(&mut self, type_id: TypeId) -> Option<&mut UntypedAction> {
+        self.action_map.get_mut(&type_id)
     }
-
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
