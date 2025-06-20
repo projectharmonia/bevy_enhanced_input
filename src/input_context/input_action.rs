@@ -192,7 +192,9 @@ pub struct Action<A: InputAction> {
 /// States are ordered by their significance.
 ///
 /// See also [`ActionEvents`] and [`ActionBinding`].
-#[derive(Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Reflect, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Default, Debug, PartialEq, Eq, PartialOrd, Ord, Reflect, Serialize, Deserialize,
+)]
 pub enum ActionState {
     /// Condition is not triggered.
     #[default]
