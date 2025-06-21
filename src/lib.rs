@@ -78,6 +78,10 @@ To bind actions, use [`Actions::bind`] followed by one or more [`ActionBinding::
 input type that implements [`IntoBindings`], including tuples for multiple inputs (similar to [`App::add_systems`] in Bevy).
 All assigned inputs will be treated as "any of". See [`ActionBinding::to`] for details.
 
+Actions evaluated in their binding order, but actions with modifiers are automatically reordered to be evaluated first.
+For example, if you have actions bound to `Ctrl + C` and just `C`, the `Ctrl + C` action will be evaluated first to work
+nicely with [`InputAction::CONSUME_INPUT`].
+
 ```
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;

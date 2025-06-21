@@ -21,10 +21,6 @@ use crate::{
 /// Data for each bound action represented by [`Action`].
 ///
 /// Actions are evaluated and trigger [`events`](super::events) only when this component exists on an entity.
-///
-/// The evaluation order depends on the number of modifiers: actions with more modifiers are evaluated first.
-/// For example, if you have actions bound to `Ctrl + C` and just `C`, the action with `Ctrl + C` will be
-/// evaluated first to play nicely with [`InputAction::CONSUME_INPUT`].
 #[derive(Component)]
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
