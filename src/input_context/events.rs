@@ -26,7 +26,8 @@ bitflags! {
     /// | [`ActionState::Fired`]      | [`ActionState::Ongoing`] | [`Ongoing`]               |
     /// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Completed`]             |
     ///
-    /// The meaning of each kind depends on the assigned [`InputCondition`]s.
+    /// The meaning of each kind depends on the assigned [`InputCondition`]s. The events are
+    /// fired in the action evaluation order.
     #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
     pub struct ActionEvents: u8 {
         /// Corresponds to [`Started`].
