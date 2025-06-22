@@ -26,7 +26,11 @@ use bevy::{
 };
 use log::{debug, trace};
 
-use crate::{input_reader::{InputReader, ResetInput}, prelude::*, EnhancedInputSet};
+use crate::{
+    EnhancedInputSet,
+    input_reader::{InputReader, ResetInput},
+    prelude::*,
+};
 
 /// An extension trait for [`App`] to assign input to components.
 pub trait InputContextAppExt {
@@ -128,7 +132,7 @@ impl ScheduleContexts {
         )
             .build_state(app.world_mut())
             .build_system(update::<S>);
-        
+
         let trigger = (
             ParamBuilder,
             ParamBuilder,
@@ -160,12 +164,18 @@ impl ScheduleContexts {
             .build_any_system(rebuild::<S>);
 
         app.init_resource::<ActionInstances<S>>()
-            .configure_sets(S::default(), (EnhancedInputSet::Update, EnhancedInputSet::Trigger).chain())
+            .configure_sets(
+                S::default(),
+                (EnhancedInputSet::Update, EnhancedInputSet::Trigger).chain(),
+            )
             .add_observer(rebuild)
-            .add_systems(S::default(), (
-                update.in_set(EnhancedInputSet::Update),
-                trigger.in_set(EnhancedInputSet::Trigger)
-            ));
+            .add_systems(
+                S::default(),
+                (
+                    update.in_set(EnhancedInputSet::Update),
+                    trigger.in_set(EnhancedInputSet::Trigger),
+                ),
+            );
     }
 }
 
@@ -244,7 +254,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
             instance.update(reader, time, actions);
         }
     }
-    
+
     pub(crate) fn trigger(
         &mut self,
         commands: &mut Commands,
@@ -349,13 +359,9 @@ impl ActionsInstance {
     ) {
         (self.update)(self, reader, time, actions);
     }
-    
+
     /// Calls [`Self::trigger_typed`] for `C` that was associated in [`Self::new`].
-    fn trigger(
-        &self,
-        commands: &mut Commands,
-        actions: &mut Query<FilteredEntityMut>,
-    ) {
+    fn trigger(&self, commands: &mut Commands, actions: &mut Query<FilteredEntityMut>) {
         (self.trigger)(self, commands, actions);
     }
 
@@ -390,7 +396,7 @@ impl ActionsInstance {
 
         actions.update(reader, time, self.entity);
     }
-    
+
     fn trigger_typed<C: InputContext>(
         &self,
         commands: &mut Commands,
@@ -435,18 +441,9 @@ impl ActionsInstance {
     }
 }
 
-type UpdateFn = fn(
-    &ActionsInstance,
-    &mut InputReader,
-    &InputTime,
-    &mut Query<FilteredEntityMut>,
-);
+type UpdateFn = fn(&ActionsInstance, &mut InputReader, &InputTime, &mut Query<FilteredEntityMut>);
 
-type TriggerFn = fn(
-    &ActionsInstance,
-    &mut Commands,
-    &mut Query<FilteredEntityMut>,
-);
+type TriggerFn = fn(&ActionsInstance, &mut Commands, &mut Query<FilteredEntityMut>);
 
 type RebuildFn =
     fn(&ActionsInstance, &mut Commands, &mut ResetInput, &InputTime, &mut Query<FilteredEntityMut>);

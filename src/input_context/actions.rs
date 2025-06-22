@@ -1,4 +1,7 @@
 use alloc::vec::Vec;
+use bevy::platform::hash::NoOpHash;
+use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
+use core::ops::{Deref, DerefMut};
 use core::{
     any::{self, TypeId},
     cmp::Reverse,
@@ -6,9 +9,6 @@ use core::{
     fmt::{self, Debug, Display, Formatter},
     marker::PhantomData,
 };
-
-use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
-use bevy::platform::hash::NoOpHash;
 use log::debug;
 
 use crate::{
@@ -24,14 +24,36 @@ use crate::{
 /// Actions are evaluated and trigger [`events`](super::events) only when this component exists on an entity.
 #[derive(Component)]
 pub struct Actions<C: InputContext> {
-    gamepad: GamepadDevice,
-    pub bindings: Vec<ActionBinding>,
-    pub action_map: TypeIdMap<UntypedAction>,
-    sort_required: bool,
+    actions: UntypedActions,
     marker: PhantomData<C>,
 }
 
-impl<C: InputContext> Actions<C> {
+impl<C: InputContext> Deref for Actions<C> {
+    type Target = UntypedActions;
+
+    fn deref(&self) -> &Self::Target {
+        &self.actions
+    }
+}
+
+impl<C: InputContext> DerefMut for Actions<C> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.actions
+    }
+}
+
+/// Data associated with an [`InputContext`] marker.
+///
+/// Type-erased version of [`Actions`]. Stored inside [`Actions`].
+#[derive(Default)]
+pub struct UntypedActions {
+    gamepad: GamepadDevice,
+    bindings: Vec<ActionBinding>,
+    action_map: TypeIdMap<UntypedAction>,
+    sort_required: bool,
+}
+
+impl UntypedActions {
     /// Associates context with gamepad.
     ///
     /// Context will process input only from this gamepad.
@@ -101,9 +123,21 @@ impl<C: InputContext> Actions<C> {
     pub fn clear_mock<A: InputAction>(&mut self) {
         self.get_or_create_binding::<A>().clear_mock();
     }
-    
+
     fn get_or_create_binding<A: InputAction>(&mut self) -> &mut ActionBinding {
-        get_or_create_binding_untyped::<A>(&mut self.bindings, &mut self.action_map)
+        let type_id = TypeId::of::<A>();
+        match self.action_map.entry(type_id) {
+            Entry::Occupied(_entry) => self
+                .bindings
+                .iter_mut()
+                .find(|binding| binding.type_id() == type_id)
+                .expect("actions and bindings should have matching type IDs"),
+            Entry::Vacant(entry) => {
+                entry.insert(UntypedAction::new::<A>());
+                self.bindings.push(ActionBinding::new::<A>());
+                self.bindings.last_mut().unwrap()
+            }
+        }
     }
 
     /// Returns bindings for each action in their evaluation order.
@@ -118,7 +152,7 @@ impl<C: InputContext> Actions<C> {
         self.bindings
             .iter()
             .find(|binding| binding.type_id() == TypeId::of::<A>())
-            .ok_or(NoActionError::new::<C, A>())
+            .ok_or(NoActionError::new::<A>())
     }
 
     /// Returns an iterator over type-erased actions data and their IDs.
@@ -143,7 +177,7 @@ impl<C: InputContext> Actions<C> {
         self.action_map
             .get(&TypeId::of::<A>())
             .map(|action| action.typed())
-            .ok_or(NoActionError::new::<C, A>())
+            .ok_or(NoActionError::new::<A>())
     }
 
     /// Returns the associated value for action `A` if it exists.
@@ -167,17 +201,9 @@ impl<C: InputContext> Actions<C> {
         self.get::<A>().map(|action| action.events)
     }
 
-    pub(crate) fn update(
-        &mut self,
-        reader: &mut InputReader,
-        time: &InputTime,
-        entity: Entity,
-    ) {
+    pub(crate) fn update(&mut self, reader: &mut InputReader, time: &InputTime, entity: Entity) {
         if self.sort_required {
-            debug!(
-                "sorting actions of `{}` on `{entity}`",
-                any::type_name::<C>()
-            );
+            debug!("sorting actions on `{entity}`",);
             self.bindings.sort_by_key(|b| Reverse(b.max_mod_keys()));
             self.sort_required = false;
         }
@@ -188,20 +214,7 @@ impl<C: InputContext> Actions<C> {
         }
     }
 
-    pub(crate) fn trigger(
-        &mut self,
-        commands: &mut Commands,
-        entity: Entity,
-    ) {
-        if self.sort_required {
-            debug!(
-                "sorting actions of `{}` on `{entity}`",
-                any::type_name::<C>()
-            );
-            self.bindings.sort_by_key(|b| Reverse(b.max_mod_keys()));
-            self.sort_required = false;
-        }
-
+    pub(crate) fn trigger(&mut self, commands: &mut Commands, entity: Entity) {
         for binding in &mut self.bindings {
             binding.trigger(commands, &mut self.action_map, entity);
         }
@@ -235,31 +248,10 @@ impl<C: InputContext> Actions<C> {
     }
 }
 
-pub fn get_or_create_binding_untyped<'a, A: InputAction>(
-    bindings: &'a mut Vec<ActionBinding>,
-    action_map: &'a mut TypeIdMap<UntypedAction>,
-) -> &'a mut ActionBinding {
-    let type_id = TypeId::of::<A>();
-    match action_map.entry(type_id) {
-        Entry::Occupied(_entry) => bindings
-            .iter_mut()
-            .find(|binding| binding.type_id() == type_id)
-            .expect("actions and bindings should have matching type IDs"),
-        Entry::Vacant(entry) => {
-            entry.insert(UntypedAction::new::<A>());
-            bindings.push(ActionBinding::new::<A>());
-            bindings.last_mut().unwrap()
-        }
-    }
-}
-
 impl<C: InputContext> Default for Actions<C> {
     fn default() -> Self {
         Self {
-            gamepad: Default::default(),
-            bindings: Default::default(),
-            action_map: Default::default(),
-            sort_required: false,
+            actions: UntypedActions::default(),
             marker: PhantomData,
         }
     }
@@ -267,14 +259,12 @@ impl<C: InputContext> Default for Actions<C> {
 
 #[derive(Debug)]
 pub struct NoActionError {
-    context: &'static str,
     action: &'static str,
 }
 
 impl NoActionError {
-    fn new<C: InputContext, A: InputAction>() -> Self {
+    fn new<A: InputAction>() -> Self {
         Self {
-            context: any::type_name::<C>(),
             action: any::type_name::<A>(),
         }
     }
@@ -284,8 +274,8 @@ impl Display for NoActionError {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         write!(
             f,
-            "action `{}` is not defined for input context `{}`",
-            self.context, self.action,
+            "action `{}` is not defined for this input context",
+            self.action,
         )
     }
 }
