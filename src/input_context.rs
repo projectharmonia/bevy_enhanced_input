@@ -26,10 +26,7 @@ use bevy::{
 };
 use log::{debug, trace};
 
-use crate::{
-    input_reader::{InputReader, ResetInput},
-    prelude::*,
-};
+use crate::{input_reader::{InputReader, ResetInput}, prelude::*, EnhancedInputSet};
 
 /// An extension trait for [`App`] to assign input to components.
 pub trait InputContextAppExt {
@@ -121,7 +118,6 @@ impl ScheduleContexts {
             ParamBuilder,
             ParamBuilder,
             ParamBuilder,
-            ParamBuilder,
             QueryParamBuilder::new(|builder| {
                 builder.optional(|builder| {
                     for &id in &self.action_ids {
@@ -132,6 +128,20 @@ impl ScheduleContexts {
         )
             .build_state(app.world_mut())
             .build_system(update::<S>);
+        
+        let trigger = (
+            ParamBuilder,
+            ParamBuilder,
+            QueryParamBuilder::new(|builder| {
+                builder.optional(|builder| {
+                    for &id in &self.action_ids {
+                        builder.mut_id(id);
+                    }
+                });
+            }),
+        )
+            .build_state(app.world_mut())
+            .build_system(trigger::<S>);
 
         let rebuild = (
             ParamBuilder,
@@ -150,8 +160,12 @@ impl ScheduleContexts {
             .build_any_system(rebuild::<S>);
 
         app.init_resource::<ActionInstances<S>>()
+            .configure_sets(S::default(), (EnhancedInputSet::Update, EnhancedInputSet::Trigger).chain())
             .add_observer(rebuild)
-            .add_systems(S::default(), update.in_set(EnhancedInputSystem));
+            .add_systems(S::default(), (
+                update.in_set(EnhancedInputSet::Update),
+                trigger.in_set(EnhancedInputSet::Trigger)
+            ));
     }
 }
 
@@ -181,14 +195,21 @@ fn remove_context<C: InputContext>(
 }
 
 fn update<S: ScheduleLabel>(
-    mut commands: Commands,
     time: InputTime,
     mut reader: InputReader,
     mut instances: ResMut<ActionInstances<S>>,
     mut actions: Query<FilteredEntityMut>,
 ) {
     reader.update_state();
-    instances.update(&mut commands, &mut reader, &time, &mut actions);
+    instances.update(&mut reader, &time, &mut actions);
+}
+
+fn trigger<S: ScheduleLabel>(
+    mut commands: Commands,
+    mut instances: ResMut<ActionInstances<S>>,
+    mut actions: Query<FilteredEntityMut>,
+) {
+    instances.trigger(&mut commands, &mut actions);
 }
 
 fn rebuild<S: ScheduleLabel>(
@@ -215,13 +236,22 @@ pub(crate) struct ActionInstances<S: ScheduleLabel> {
 impl<S: ScheduleLabel> ActionInstances<S> {
     pub(crate) fn update(
         &mut self,
-        commands: &mut Commands,
         reader: &mut InputReader,
         time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         for instance in &mut self.instances {
-            instance.update(commands, reader, time, actions);
+            instance.update(reader, time, actions);
+        }
+    }
+    
+    pub(crate) fn trigger(
+        &mut self,
+        commands: &mut Commands,
+        actions: &mut Query<FilteredEntityMut>,
+    ) {
+        for instance in &mut self.instances {
+            instance.trigger(commands, actions);
         }
     }
 
@@ -294,6 +324,7 @@ pub(crate) struct ActionsInstance {
 
     // Type-erased functions.
     update: UpdateFn,
+    trigger: TriggerFn,
     rebuild: RebuildFn,
 }
 
@@ -304,6 +335,7 @@ impl ActionsInstance {
             priority: C::PRIORITY,
             type_id: TypeId::of::<C>(),
             update: Self::update_typed::<C>,
+            trigger: Self::trigger_typed::<C>,
             rebuild: Self::rebuild_typed::<C>,
         }
     }
@@ -311,12 +343,20 @@ impl ActionsInstance {
     /// Calls [`Self::update_typed`] for `C` that was associated in [`Self::new`].
     fn update(
         &self,
-        commands: &mut Commands,
         reader: &mut InputReader,
         time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
-        (self.update)(self, commands, reader, time, actions);
+        (self.update)(self, reader, time, actions);
+    }
+    
+    /// Calls [`Self::trigger_typed`] for `C` that was associated in [`Self::new`].
+    fn trigger(
+        &self,
+        commands: &mut Commands,
+        actions: &mut Query<FilteredEntityMut>,
+    ) {
+        (self.trigger)(self, commands, actions);
     }
 
     /// Calls [`Self::rebuild_typed`] for `C` that was associated in [`Self::new`].
@@ -332,7 +372,6 @@ impl ActionsInstance {
 
     fn update_typed<C: InputContext>(
         &self,
-        commands: &mut Commands,
         reader: &mut InputReader,
         time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
@@ -349,7 +388,27 @@ impl ActionsInstance {
             .and_then(FilteredEntityMut::into_mut::<Actions<C>>)
             .expect("deinitialized instances should be previously removed");
 
-        actions.update(commands, reader, time, self.entity);
+        actions.update(reader, time, self.entity);
+    }
+    
+    fn trigger_typed<C: InputContext>(
+        &self,
+        commands: &mut Commands,
+        actions: &mut Query<FilteredEntityMut>,
+    ) {
+        trace!(
+            "updating input context `{}` on `{}`",
+            any::type_name::<C>(),
+            self.entity
+        );
+
+        let mut actions = actions
+            .get_mut(self.entity)
+            .ok()
+            .and_then(FilteredEntityMut::into_mut::<Actions<C>>)
+            .expect("deinitialized instances should be previously removed");
+
+        actions.trigger(commands, self.entity);
     }
 
     fn rebuild_typed<C: InputContext>(
@@ -378,9 +437,14 @@ impl ActionsInstance {
 
 type UpdateFn = fn(
     &ActionsInstance,
-    &mut Commands,
     &mut InputReader,
     &InputTime,
+    &mut Query<FilteredEntityMut>,
+);
+
+type TriggerFn = fn(
+    &ActionsInstance,
+    &mut Commands,
     &mut Query<FilteredEntityMut>,
 );
 

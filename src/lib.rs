@@ -340,7 +340,7 @@ pub mod input_time;
 
 pub mod prelude {
     pub use super::{
-        EnhancedInputPlugin, EnhancedInputSystem,
+        EnhancedInputPlugin, EnhancedInputSet,
         action_value::{ActionValue, ActionValueDim},
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_context::{
@@ -376,7 +376,7 @@ use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
 ///
-/// See also [`EnhancedInputSystem`].
+/// See also [`EnhancedInputSet`].
 pub struct EnhancedInputPlugin;
 
 impl Plugin for EnhancedInputPlugin {
@@ -384,7 +384,7 @@ impl Plugin for EnhancedInputPlugin {
         app.init_resource::<ContextRegistry>()
             .init_resource::<ResetInput>()
             .init_resource::<ActionSources>()
-            .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem));
+            .configure_sets(PreUpdate, EnhancedInputSet::Update.after(InputSystem));
     }
 
     fn finish(&self, app: &mut App) {
@@ -403,4 +403,9 @@ impl Plugin for EnhancedInputPlugin {
 ///
 /// Runs in each registered [`InputContext::Schedule`].
 #[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
-pub struct EnhancedInputSystem;
+pub enum EnhancedInputSet {
+    /// Update the state of the input contexts using the InputReaders
+    Update,
+    /// Trigger events
+    Trigger,
+}

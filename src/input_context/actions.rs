@@ -201,7 +201,6 @@ impl<C: InputContext> Actions<C> {
 
     pub(crate) fn update(
         &mut self,
-        commands: &mut Commands,
         reader: &mut InputReader,
         time: &InputTime,
         entity: Entity,
@@ -217,7 +216,26 @@ impl<C: InputContext> Actions<C> {
 
         reader.set_gamepad(self.gamepad);
         for binding in &mut self.bindings {
-            binding.update(commands, reader, &mut self.action_map, time, entity);
+            binding.update(reader, &mut self.action_map, time);
+        }
+    }
+    
+    pub(crate) fn trigger(
+        &mut self,
+        commands: &mut Commands,
+        entity: Entity,
+    ) {
+        if self.sort_required {
+            debug!(
+                "sorting actions of `{}` on `{entity}`",
+                any::type_name::<C>()
+            );
+            self.bindings.sort_by_key(|b| Reverse(b.max_mod_keys()));
+            self.sort_required = false;
+        }
+
+        for binding in &mut self.bindings {
+            binding.trigger(commands, &mut self.action_map, entity);
         }
     }
 

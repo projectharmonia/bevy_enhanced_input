@@ -303,11 +303,9 @@ impl ActionBinding {
 
     pub(super) fn update(
         &mut self,
-        commands: &mut Commands,
         reader: &mut InputReader,
         action_map: &mut TypeIdMap<UntypedAction>,
         time: &InputTime,
-        entity: Entity,
     ) {
         let (state, value) = self
             .update_from_mock(time.delta())
@@ -318,7 +316,6 @@ impl ActionBinding {
             .expect("actions and bindings should have matching type IDs");
 
         action.update(time, state, value);
-        action.trigger_events(commands, entity);
     }
 
     pub(super) fn update_from_reader(
@@ -416,6 +413,18 @@ impl ActionBinding {
         }
 
         Some((state, value))
+    }
+    
+    pub(super) fn trigger(
+        &mut self,
+        commands: &mut Commands,
+        action_map: &mut TypeIdMap<UntypedAction>,
+        entity: Entity,
+    ) {
+        let action = action_map
+            .get_mut(&self.type_id)
+            .expect("actions and bindings should have matching type IDs");
+        action.trigger_events(commands, entity);
     }
 
     pub(super) fn type_id(&self) -> TypeId {
