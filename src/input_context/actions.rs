@@ -31,33 +31,6 @@ pub struct Actions<C: InputContext> {
     marker: PhantomData<C>,
 }
 
-pub struct UntypedActions<'a> {
-    gamepad: &'a mut GamepadDevice,
-    bindings: &'a mut Vec<ActionBinding>,
-    action_map: &'a mut TypeIdMap<UntypedAction>,
-    sort_required: &'a mut bool,
-}
-
-impl<'a> UntypedActions<'a> {
-    fn get_or_create_binding<A: InputAction>(
-        &mut self,
-    ) -> &mut ActionBinding {
-        let type_id = TypeId::of::<A>();
-        match self.action_map.entry(type_id) {
-            Entry::Occupied(_entry) => self.bindings
-                .iter_mut()
-                .find(|binding| binding.type_id() == type_id)
-                .expect("actions and bindings should have matching type IDs"),
-            Entry::Vacant(entry) => {
-                entry.insert(UntypedAction::new::<A>());
-                self.bindings.push(ActionBinding::new::<A>());
-                self.bindings.last_mut().unwrap()
-            }
-        }
-    }
-
-}
-
 impl<C: InputContext> Actions<C> {
     /// Associates context with gamepad.
     ///
@@ -219,7 +192,7 @@ impl<C: InputContext> Actions<C> {
             binding.update(reader, &mut self.action_map, time);
         }
     }
-    
+
     pub(crate) fn trigger(
         &mut self,
         commands: &mut Commands,
