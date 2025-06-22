@@ -106,7 +106,6 @@ impl<C: InputContext> Actions<C> {
         get_or_create_binding_untyped::<A>(&mut self.bindings, &mut self.action_map)
     }
 
-
     /// Returns bindings for each action in their evaluation order.
     pub fn bindings(&self) -> &[ActionBinding] {
         &self.bindings
@@ -135,10 +134,6 @@ impl<C: InputContext> Actions<C> {
     /// Returns a type-erased action for the given type ID if it exists.
     pub fn get_mut_by_id(&mut self, type_id: TypeId) -> Option<&mut UntypedAction> {
         self.action_map.get_mut(&type_id)
-    }
-
-    pub fn entry_by_id(&mut self, type_id: TypeId) -> Entry<TypeId, UntypedAction, NoOpHash> {
-        self.action_map.entry(type_id)
     }
 
     /// Returns the associated data for action `A` if it exists.

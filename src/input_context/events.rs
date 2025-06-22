@@ -2,7 +2,7 @@ use core::fmt::Debug;
 
 use bevy::prelude::*;
 use bitflags::bitflags;
-
+use serde::{Deserialize, Serialize};
 use crate::prelude::*;
 
 bitflags! {
@@ -28,7 +28,7 @@ bitflags! {
     ///
     /// The meaning of each kind depends on the assigned [`InputCondition`]s. The events are
     /// fired in the action evaluation order.
-    #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
+    #[derive(Serialize, Deserialize, Default, Clone, Copy, Debug, PartialEq, Eq)]
     pub struct ActionEvents: u8 {
         /// Corresponds to [`Started`].
         const STARTED = 0b00000001;
