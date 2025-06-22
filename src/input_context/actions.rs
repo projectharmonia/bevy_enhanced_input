@@ -25,8 +25,8 @@ use crate::{
 #[derive(Component)]
 pub struct Actions<C: InputContext> {
     gamepad: GamepadDevice,
-    bindings: Vec<ActionBinding>,
-    action_map: TypeIdMap<UntypedAction>,
+    pub bindings: Vec<ActionBinding>,
+    pub action_map: TypeIdMap<UntypedAction>,
     sort_required: bool,
     marker: PhantomData<C>,
 }
@@ -163,11 +163,11 @@ impl<C: InputContext> Actions<C> {
     pub fn get_mut_by_id(&mut self, type_id: TypeId) -> Option<&mut UntypedAction> {
         self.action_map.get_mut(&type_id)
     }
-    
+
     pub fn entry_by_id(&mut self, type_id: TypeId) -> Entry<TypeId, UntypedAction, NoOpHash> {
         self.action_map.entry(type_id)
     }
-    
+
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
