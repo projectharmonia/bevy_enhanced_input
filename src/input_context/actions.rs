@@ -1,5 +1,4 @@
 use alloc::vec::Vec;
-use bevy::platform::hash::NoOpHash;
 use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
 use core::ops::{Deref, DerefMut};
 use core::{
