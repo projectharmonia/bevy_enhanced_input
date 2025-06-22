@@ -8,6 +8,7 @@ use core::{
 };
 
 use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
+use bevy::platform::hash::NoOpHash;
 use log::debug;
 
 use crate::{
@@ -28,6 +29,33 @@ pub struct Actions<C: InputContext> {
     action_map: TypeIdMap<UntypedAction>,
     sort_required: bool,
     marker: PhantomData<C>,
+}
+
+pub struct UntypedActions<'a> {
+    gamepad: &'a mut GamepadDevice,
+    bindings: &'a mut Vec<ActionBinding>,
+    action_map: &'a mut TypeIdMap<UntypedAction>,
+    sort_required: &'a mut bool,
+}
+
+impl<'a> UntypedActions<'a> {
+    fn get_or_create_binding<A: InputAction>(
+        &mut self,
+    ) -> &mut ActionBinding {
+        let type_id = TypeId::of::<A>();
+        match self.action_map.entry(type_id) {
+            Entry::Occupied(_entry) => self.bindings
+                .iter_mut()
+                .find(|binding| binding.type_id() == type_id)
+                .expect("actions and bindings should have matching type IDs"),
+            Entry::Vacant(entry) => {
+                entry.insert(UntypedAction::new::<A>());
+                self.bindings.push(ActionBinding::new::<A>());
+                self.bindings.last_mut().unwrap()
+            }
+        }
+    }
+
 }
 
 impl<C: InputContext> Actions<C> {
@@ -100,22 +128,11 @@ impl<C: InputContext> Actions<C> {
     pub fn clear_mock<A: InputAction>(&mut self) {
         self.get_or_create_binding::<A>().clear_mock();
     }
-
+    
     fn get_or_create_binding<A: InputAction>(&mut self) -> &mut ActionBinding {
-        let type_id = TypeId::of::<A>();
-        match self.action_map.entry(type_id) {
-            Entry::Occupied(_entry) => self
-                .bindings
-                .iter_mut()
-                .find(|binding| binding.type_id() == type_id)
-                .expect("actions and bindings should have matching type IDs"),
-            Entry::Vacant(entry) => {
-                entry.insert(UntypedAction::new::<A>());
-                self.bindings.push(ActionBinding::new::<A>());
-                self.bindings.last_mut().unwrap()
-            }
-        }
+        get_or_create_binding_untyped::<A>(&mut self.bindings, &mut self.action_map)
     }
+
 
     /// Returns bindings for each action in their evaluation order.
     pub fn bindings(&self) -> &[ActionBinding] {
@@ -146,6 +163,11 @@ impl<C: InputContext> Actions<C> {
     pub fn get_mut_by_id(&mut self, type_id: TypeId) -> Option<&mut UntypedAction> {
         self.action_map.get_mut(&type_id)
     }
+    
+    pub fn entry_by_id(&mut self, type_id: TypeId) -> Entry<TypeId, UntypedAction, NoOpHash> {
+        self.action_map.entry(type_id)
+    }
+    
     /// Returns the associated data for action `A` if it exists.
     ///
     /// Use [`Self::bind`] to associate an action with the context.
@@ -224,6 +246,24 @@ impl<C: InputContext> Actions<C> {
         self.gamepad = Default::default();
         self.action_map.clear();
         self.sort_required = false;
+    }
+}
+
+pub fn get_or_create_binding_untyped<'a, A: InputAction>(
+    bindings: &'a mut Vec<ActionBinding>,
+    action_map: &'a mut TypeIdMap<UntypedAction>,
+) -> &'a mut ActionBinding {
+    let type_id = TypeId::of::<A>();
+    match action_map.entry(type_id) {
+        Entry::Occupied(_entry) => bindings
+            .iter_mut()
+            .find(|binding| binding.type_id() == type_id)
+            .expect("actions and bindings should have matching type IDs"),
+        Entry::Vacant(entry) => {
+            entry.insert(UntypedAction::new::<A>());
+            bindings.push(ActionBinding::new::<A>());
+            bindings.last_mut().unwrap()
+        }
     }
 }
 
