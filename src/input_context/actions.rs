@@ -17,7 +17,7 @@ use crate::{
 
 /// Component that stores actions with their bindings for a specific [`InputContext`].
 ///
-/// Bindings represented by [`ActionBinding`] and can be added to specific action using [`Self::bind`].
+/// Bindings represented by [`ActionBinding`] and can be added to specific action using [`UntypedActions::bind`].
 /// Data for each bound action represented by [`Action`].
 ///
 /// Actions are evaluated and trigger [`events`](super::events) only when this component exists on an entity.

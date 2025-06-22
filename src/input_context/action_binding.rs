@@ -287,7 +287,7 @@ impl ActionBinding {
         self
     }
 
-    /// Type-erased version for [`Actions::mock`].
+    /// Type-erased version for [`UntypedActions::mock`].
     pub fn mock(&mut self, state: ActionState, value: ActionValue, span: MockSpan) {
         debug!(
             "mocking `{}` with `{state:?}` and `{value:?}` for `{span:?}`",
@@ -457,7 +457,7 @@ struct ActionMock {
 
 /// Specifies how long a mock input should remain active.
 ///
-/// See also [`Actions::mock`].
+/// See also [`UntypedActions::mock`].
 #[derive(Clone, Copy, Debug)]
 pub enum MockSpan {
     /// Mock for a fixed number of context evaluations.
