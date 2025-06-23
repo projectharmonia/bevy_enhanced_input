@@ -43,7 +43,7 @@ impl<C: InputContext> DerefMut for Actions<C> {
 
 /// Data associated with an [`InputContext`] marker.
 ///
-/// Type-erased version of [`Actions`]. Stored inside [`Actions`].
+/// Type-erased version of [`Actions`] stored inside it.
 #[derive(Default)]
 pub struct UntypedActions {
     gamepad: GamepadDevice,
