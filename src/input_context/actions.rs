@@ -1,14 +1,15 @@
 use alloc::vec::Vec;
-use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
-use core::ops::{Deref, DerefMut};
 use core::{
     any::{self, TypeId},
     cmp::Reverse,
     error::Error,
     fmt::{self, Debug, Display, Formatter},
     marker::PhantomData,
+    ops::{Deref, DerefMut},
 };
 use log::debug;
+
+use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
 
 use crate::{
     input_reader::{InputReader, ResetInput},

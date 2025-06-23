@@ -288,7 +288,7 @@ impl ActionBinding {
     }
 
     /// Type-erased version for [`UntypedActions::mock`].
-    pub fn mock(&mut self, state: ActionState, value: ActionValue, span: MockSpan) {
+    pub(super) fn mock(&mut self, state: ActionState, value: ActionValue, span: MockSpan) {
         debug!(
             "mocking `{}` with `{state:?}` and `{value:?}` for `{span:?}`",
             self.action_name,

@@ -5,7 +5,6 @@ use bitflags::bitflags;
 use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
-use serde::{Deserialize, Serialize};
 
 bitflags! {
     /// Bitset with events triggered by updating [`ActionState`] for an action.
