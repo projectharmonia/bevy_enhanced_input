@@ -403,7 +403,7 @@ impl ActionsInstance {
         actions: &mut Query<FilteredEntityMut>,
     ) {
         trace!(
-            "updating input context `{}` on `{}`",
+            "triggering input context `{}` on `{}`",
             any::type_name::<C>(),
             self.entity
         );
