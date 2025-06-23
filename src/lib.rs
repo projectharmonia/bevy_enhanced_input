@@ -404,8 +404,8 @@ impl Plugin for EnhancedInputPlugin {
 /// Runs in each registered [`InputContext::Schedule`].
 #[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
 pub enum EnhancedInputSet {
-    /// Update the state of the input contexts using the InputReaders
+    /// Updates the state of the input contexts from inputs and mocks.
     Update,
-    /// Trigger events
+    /// Triggers events.
     Trigger,
 }
