@@ -6,9 +6,9 @@ use core::{
     fmt::{self, Debug, Display, Formatter},
     marker::PhantomData,
 };
-use log::debug;
 
 use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
+use log::debug;
 
 use crate::{
     input_reader::{InputReader, ResetInput},
