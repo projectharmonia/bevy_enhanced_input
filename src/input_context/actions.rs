@@ -28,7 +28,6 @@ pub struct Actions<C: InputContext> {
     marker: PhantomData<C>,
 }
 
-
 /// Data associated with an [`InputContext`] marker.
 ///
 /// Type-erased version of [`Actions`] stored inside it.
