@@ -1,8 +1,10 @@
 use core::fmt::Debug;
 
-use crate::prelude::*;
 use bevy::prelude::*;
 use bitflags::bitflags;
+use serde::{Deserialize, Serialize};
+
+use crate::prelude::*;
 use serde::{Deserialize, Serialize};
 
 bitflags! {
