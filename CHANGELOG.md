@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `Action<A>` now implements `Clone` and `Copy` for any `A`.
+- `ActionEvents` now implements `Serialize` and `Deserialize`.
+- `BEIEnhancedSystem` has been split between `BEIEnhancedSet::Update` (read new inputs from the `InputReader` and update the `Actions` components)
+ and `BEIEnhancedSet::Trigger` (trigger the events corresponding to how the `Actions` components changed)
+- Most of the `Actions<C>` functionalities have been moved to an untyped struct `UntypedActions`. `Actions<C>` derefs to `UntypedActions` so you
+don't have to change any call site.
 
 ## [0.13.0] - 2025-06-19
 
