@@ -5,7 +5,6 @@ use core::{
     error::Error,
     fmt::{self, Debug, Display, Formatter},
     marker::PhantomData,
-    ops::{Deref, DerefMut},
 };
 use log::debug;
 
@@ -22,25 +21,13 @@ use crate::{
 /// Data for each bound action represented by [`Action`].
 ///
 /// Actions are evaluated and trigger [`events`](super::events) only when this component exists on an entity.
-#[derive(Component)]
+#[derive(Component, Deref, DerefMut)]
 pub struct Actions<C: InputContext> {
+    #[deref]
     actions: UntypedActions,
     marker: PhantomData<C>,
 }
 
-impl<C: InputContext> Deref for Actions<C> {
-    type Target = UntypedActions;
-
-    fn deref(&self) -> &Self::Target {
-        &self.actions
-    }
-}
-
-impl<C: InputContext> DerefMut for Actions<C> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.actions
-    }
-}
 
 /// Data associated with an [`InputContext`] marker.
 ///
