@@ -721,6 +721,7 @@ mod tests {
         world.init_resource::<Axis<GamepadAxis>>();
         world.init_resource::<AccumulatedMouseMotion>();
         world.init_resource::<AccumulatedMouseScroll>();
+        world.init_resource::<ConsumedInput>();
         world.init_resource::<ResetInput>();
         world.init_resource::<ActionSources>();
 
