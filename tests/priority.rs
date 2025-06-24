@@ -8,8 +8,8 @@ fn prioritization() -> Result<()> {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
         .add_input_context::<Second>()
-        .add_observer(bind_first)
-        .add_observer(bind_second)
+        .add_observer(bind::<First>)
+        .add_observer(bind::<Second>)
         .finish();
 
     let entity = app
@@ -20,23 +20,23 @@ fn prioritization() -> Result<()> {
     app.update();
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-    keys.press(CONSUME_KEY);
-    keys.press(PASSTHROUGH_KEY);
+    keys.press(Consume::KEY);
+    keys.press(Passthrough::KEY);
 
     app.update();
 
     let first = app.world().get::<Actions<First>>(entity).unwrap();
-    assert_eq!(first.state::<FirstConsume>()?, ActionState::Fired);
-    assert_eq!(first.state::<FirstPassthrough>()?, ActionState::Fired);
+    assert_eq!(first.state::<Consume>()?, ActionState::Fired);
+    assert_eq!(first.state::<Passthrough>()?, ActionState::Fired);
 
     let second = app.world().get::<Actions<Second>>(entity).unwrap();
     assert_eq!(
-        second.state::<SecondConsume>()?,
+        second.state::<Consume>()?,
         ActionState::None,
         "action should be consumed by component input with a higher priority"
     );
     assert_eq!(
-        second.state::<SecondPassthrough>()?,
+        second.state::<Passthrough>()?,
         ActionState::Fired,
         "actions that doesn't consume inputs should still be triggered"
     );
@@ -44,16 +44,10 @@ fn prioritization() -> Result<()> {
     Ok(())
 }
 
-fn bind_first(trigger: Trigger<Bind<First>>, mut actions: Query<&mut Actions<First>>) {
+fn bind<C: InputContext>(trigger: Trigger<Bind<C>>, mut actions: Query<&mut Actions<C>>) {
     let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<FirstConsume>().to(CONSUME_KEY);
-    actions.bind::<FirstPassthrough>().to(PASSTHROUGH_KEY);
-}
-
-fn bind_second(trigger: Trigger<Bind<Second>>, mut actions: Query<&mut Actions<Second>>) {
-    let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<SecondConsume>().to(CONSUME_KEY);
-    actions.bind::<SecondPassthrough>().to(PASSTHROUGH_KEY);
+    actions.bind::<Consume>().to(Consume::KEY);
+    actions.bind::<Passthrough>().to(Passthrough::KEY);
 }
 
 #[derive(InputContext)]
@@ -63,24 +57,18 @@ struct First;
 #[derive(InputContext)]
 struct Second;
 
-/// A key used by both [`FirstConsume`] and [`SecondConsume`] actions.
-const CONSUME_KEY: KeyCode = KeyCode::KeyA;
-
-/// A key used by both [`FirstPassthrough`] and [`SecondPassthrough`] actions.
-const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyB;
-
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, consume_input = true)]
-struct FirstConsume;
+struct Consume;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = bool, consume_input = true)]
-struct SecondConsume;
+impl Consume {
+    const KEY: KeyCode = KeyCode::KeyA;
+}
 
 #[derive(Debug, InputAction)]
 #[input_action(output = bool, consume_input = false)]
-struct FirstPassthrough;
+struct Passthrough;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = bool, consume_input = false)]
-struct SecondPassthrough;
+impl Passthrough {
+    const KEY: KeyCode = KeyCode::KeyB;
+}
