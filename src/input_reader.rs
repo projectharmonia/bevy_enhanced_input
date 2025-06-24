@@ -228,7 +228,7 @@ pub(crate) fn update(mut input_reader: InputReader) {
 /// use bevy_enhanced_input::prelude::*;
 ///
 /// # let mut app = App::new();
-/// app.add_systems(PreUpdate, disable_mouse.before(EnhancedInputSet::Update));
+/// app.add_systems(PreUpdate, disable_mouse.before(EnhancedInputSet::UpdateContexts));
 ///
 /// fn disable_mouse(
 ///     mut action_sources: ResMut<ActionSources>,
