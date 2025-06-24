@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Action<A>` now implements `Clone` and `Copy` for any `A`.
 - `ActionEvents` now implements `Serialize` and `Deserialize`.
-- Split `EnhancedInputSystem` into `EnhancedInputSet::Update` (reads new inputs from the `InputReader` and updates the `Actions` components) and `EnhancedInputSet::Trigger` (triggers the events corresponding to how the `Actions` components changed).
+- Split `EnhancedInputSystem` into `EnhancedInputSet::UpdateReader` (resets consumed inputs and updates reset inputs for `InputReader`), `EnhancedInputSet::UpdateContexts` (reads new inputs from the `InputReader` and updates the `Actions` components), `EnhancedInputSet::Trigger` (triggers the events corresponding to how the `Actions` components changed).
 - Move most of the `Actions<C>` functionality to an untyped struct `UntypedActions`. `Actions<C>` derefs to `UntypedActions`, so you don't have to change any call sites.
+- Consume inputs between contexts.
 
 ## [0.13.0] - 2025-06-19
 

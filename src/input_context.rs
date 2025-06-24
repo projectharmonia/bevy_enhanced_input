@@ -166,13 +166,13 @@ impl ScheduleContexts {
         app.init_resource::<ActionInstances<S>>()
             .configure_sets(
                 S::default(),
-                (EnhancedInputSet::Update, EnhancedInputSet::Trigger).chain(),
+                (EnhancedInputSet::UpdateContexts, EnhancedInputSet::Trigger).chain(),
             )
             .add_observer(rebuild)
             .add_systems(
                 S::default(),
                 (
-                    update.in_set(EnhancedInputSet::Update),
+                    update.in_set(EnhancedInputSet::UpdateContexts),
                     trigger.in_set(EnhancedInputSet::Trigger),
                 ),
             );
@@ -210,7 +210,6 @@ fn update<S: ScheduleLabel>(
     mut instances: ResMut<ActionInstances<S>>,
     mut actions: Query<FilteredEntityMut>,
 ) {
-    reader.update_state();
     instances.update(&mut reader, &time, &mut actions);
 }
 
@@ -518,8 +517,9 @@ pub trait InputContext: Send + Sync + 'static {
 
     /// Determines the evaluation order of [`Actions<Self>`].
     ///
-    /// Used to control how contexts are layered since some [`InputAction`]s may consume inputs.
+    /// Used to control how contexts are layered, as some [`InputAction`]s may consume inputs.
     ///
-    /// Ordering is global. Contexts with a higher priority are evaluated first.
+    /// The ordering applies per schedule: contexts in schedules that run earlier are evaluated first.
+    /// Within the same schedule, contexts with a higher priority are evaluated first.
     const PRIORITY: usize = 0;
 }

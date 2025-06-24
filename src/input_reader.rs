@@ -21,14 +21,14 @@ pub(crate) struct InputReader<'w, 's> {
     mouse_scroll: Res<'w, AccumulatedMouseScroll>,
     gamepads: Query<'w, 's, &'static Gamepad>,
     action_sources: Res<'w, ActionSources>,
-    consumed: Local<'s, ConsumedInput>,
+    consumed: ResMut<'w, ConsumedInput>,
     reset_input: ResMut<'w, ResetInput>,
     gamepad_device: Local<'s, GamepadDevice>,
 }
 
 impl InputReader<'_, '_> {
     /// Clears all consumed values and updates reset input.
-    pub(crate) fn update_state(&mut self) {
+    fn update(&mut self) {
         self.consumed.clear();
 
         // Temporary take the original value to avoid issues with the borrow checker.
@@ -206,6 +206,10 @@ impl InputReader<'_, '_> {
     }
 }
 
+pub(crate) fn update(mut input_reader: InputReader) {
+    input_reader.update();
+}
+
 /// Configures which input sources are visible to actions.
 ///
 /// Defaults to `true` for all values.
@@ -260,7 +264,7 @@ impl Default for ActionSources {
 
 /// Tracks all consumed input from Bevy resources.
 #[derive(Resource, Default)]
-struct ConsumedInput {
+pub(crate) struct ConsumedInput {
     keys: HashSet<KeyCode>,
     mod_keys: ModKeys,
     mouse_buttons: HashSet<MouseButton>,
@@ -353,7 +357,7 @@ mod tests {
 
         let input = Input::mouse_motion();
         let mut reader = state.get_mut(&mut world);
-        reader.update_state();
+        reader.update();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SHIFT)),
@@ -376,7 +380,7 @@ mod tests {
 
         let input = Input::mouse_wheel();
         let mut reader = state.get_mut(&mut world);
-        reader.update_state();
+        reader.update();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SUPER)),
@@ -605,7 +609,7 @@ mod tests {
 
         let input = Input::mouse_motion().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
-        reader.update_state();
+        reader.update();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
             reader.value(input.without_mod_keys()),
@@ -638,7 +642,7 @@ mod tests {
 
         let input = Input::mouse_wheel().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
-        reader.update_state();
+        reader.update();
         assert_eq!(reader.value(input), ActionValue::Axis2D(value));
         assert_eq!(
             reader.value(input.without_mod_keys()),
@@ -691,7 +695,7 @@ mod tests {
         action_sources.gamepad_axis = false;
 
         let mut reader = state.get_mut(&mut world);
-        reader.update_state();
+        reader.update();
 
         assert_eq!(reader.value(key), ActionValue::Bool(false));
         assert_eq!(reader.value(mouse_button), ActionValue::Bool(false));

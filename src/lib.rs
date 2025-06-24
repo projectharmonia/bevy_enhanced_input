@@ -369,7 +369,7 @@ pub mod prelude {
 use bevy::{input::InputSystem, prelude::*};
 
 use input_context::ContextRegistry;
-use input_reader::{ActionSources, ResetInput};
+use input_reader::{ActionSources, ConsumedInput, ResetInput};
 
 #[cfg(doc)]
 use prelude::*;
@@ -382,9 +382,22 @@ pub struct EnhancedInputPlugin;
 impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ContextRegistry>()
+            .init_resource::<ConsumedInput>()
             .init_resource::<ResetInput>()
             .init_resource::<ActionSources>()
-            .configure_sets(PreUpdate, EnhancedInputSet::Update.after(InputSystem));
+            .configure_sets(
+                PreUpdate,
+                (
+                    EnhancedInputSet::UpdateReader,
+                    EnhancedInputSet::UpdateContexts,
+                )
+                    .chain()
+                    .after(InputSystem),
+            )
+            .add_systems(
+                PreUpdate,
+                input_reader::update.in_set(EnhancedInputSet::UpdateReader),
+            );
     }
 
     fn finish(&self, app: &mut App) {
@@ -404,8 +417,16 @@ impl Plugin for EnhancedInputPlugin {
 /// Runs in each registered [`InputContext::Schedule`].
 #[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
 pub enum EnhancedInputSet {
+    /// Resets consumed inputs and updates reset inputs.
+    ///
+    /// Runs in [`PreUpdate`].
+    UpdateReader,
     /// Updates the state of the input contexts from inputs and mocks.
-    Update,
-    /// Triggers events.
+    ///
+    /// Runs in each registered [`InputContext::Schedule`].
+    UpdateContexts,
+    /// Triggers events for events calculated from [`Self::UpdateContexts`].
+    ///
+    /// Runs in each registered [`InputContext::Schedule`].
     Trigger,
 }
