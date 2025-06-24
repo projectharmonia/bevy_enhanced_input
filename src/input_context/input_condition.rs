@@ -1,9 +1,8 @@
 pub mod block_by;
 pub mod chord;
-pub mod condition_timer;
+pub mod down;
 pub mod hold;
 pub mod hold_and_release;
-pub mod just_press;
 pub mod press;
 pub mod pulse;
 pub mod release;
@@ -12,9 +11,9 @@ pub mod tap;
 use alloc::boxed::Box;
 use core::{fmt::Debug, iter};
 
-use bevy::prelude::*;
+use bevy::utils::TypeIdMap;
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Default actuation threshold for all conditions.
 pub const DEFAULT_ACTUATION: f32 = 0.5;
@@ -33,8 +32,8 @@ pub trait InputCondition: Sync + Send + Debug + 'static {
     /// `actions` is a state of other actions within the currently evaluating context.
     fn evaluate(
         &mut self,
-        action_map: &ActionMap,
-        time: &Time<Virtual>,
+        action_map: &TypeIdMap<UntypedAction>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionState;
 

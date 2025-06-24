@@ -78,6 +78,10 @@ To bind actions, use [`Actions::bind`] followed by one or more [`ActionBinding::
 input type that implements [`IntoBindings`], including tuples for multiple inputs (similar to [`App::add_systems`] in Bevy).
 All assigned inputs will be treated as "any of". See [`ActionBinding::to`] for details.
 
+Actions evaluated in their binding order, but actions with modifiers are automatically reordered to be evaluated first.
+For example, if you have actions bound to `Ctrl + C` and just `C`, the `Ctrl + C` action will be evaluated first to work
+nicely with [`InputAction::CONSUME_INPUT`].
+
 ```
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
@@ -99,7 +103,7 @@ if your action’s output type is [`Vec2`], the value will be assigned to the X 
 source is captured and [`ActionValue::convert`] for details about how values are converted.
 
 However, you might want to apply preprocessing first. For example, invert values, apply sensitivity, or remap axes. This is
-where [input modifiers](crate::input_modifier) come in. They represented as structs that implement the [`InputModifier`] trait.
+where [input modifiers](crate::input_context::input_modifier) come in. They represented as structs that implement the [`InputModifier`] trait.
 You can attach modifiers to inputs using [`BindingBuilder::with_modifiers`]. Thanks to traits, this works with any input type.
 You can also attach modifiers globally via [`ActionBinding::with_modifiers`], which applies to all inputs. For details about
 how multiple modifiers are merged together, see the [`ActionBinding`] documentation. Both methods also support tuple syntax
@@ -141,7 +145,7 @@ You can also attach modifiers to input tuples using [`IntoBindings::with_modifie
 ### Presets
 
 Some bindings are very common. It would be inconvenient to bind WASD and sticks like in the example above every time.
-To solve this, we provide [presets](crate::preset) - structs that store bindings and apply predefined modifiers.
+To solve this, we provide [presets](crate::input_context::preset) - structs that store bindings and apply predefined modifiers.
 They implement [`IntoBindings`], so you can pass them directly into [`ActionBinding::to`].
 
 For example, you can use [`Cardinal`] and [`Axial`] presets to simplify the example above.
@@ -166,7 +170,7 @@ actions
 ### Input conditions
 
 Instead of hardcoded states like "pressed" or "released", all actions internally have an abstract [`ActionState`].
-Its meaning depends on assigned [input conditions](crate::input_condition), which decide when the action triggers.
+Its meaning depends on assigned [input conditions](crate::input_context::input_condition), which decide when the action triggers.
 This allows to define flexible conditions, such as "hold for 1 second".
 
 Input conditions are structs that implement [`InputCondition`]. Similar to modifiers, you can use
@@ -328,50 +332,43 @@ extern crate alloc;
 // Required for the derive macro to work within the crate.
 extern crate self as bevy_enhanced_input;
 
-pub mod action_binding;
-pub mod action_instances;
-pub mod action_map;
 pub mod action_value;
-pub mod actions;
-pub mod events;
 pub mod input;
-pub mod input_action;
-pub mod input_binding;
-pub mod input_condition;
-pub mod input_modifier;
+pub mod input_context;
 pub mod input_reader;
-pub mod preset;
-mod trigger_tracker;
+pub mod input_time;
 
 pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSystem,
-        action_binding::{ActionBinding, MockSpan},
-        action_instances::{Bind, InputContextAppExt, RebindAll},
-        action_map::{Action, ActionState},
         action_value::{ActionValue, ActionValueDim},
-        actions::{Actions, InputContext},
-        events::*,
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
-        input_action::{Accumulation, InputAction},
-        input_binding::{BindingBuilder, InputBinding, IntoBindings},
-        input_condition::{
-            ConditionKind, InputCondition, block_by::*, chord::*, condition_timer::*, hold::*,
-            hold_and_release::*, just_press::*, press::*, pulse::*, release::*, tap::*,
-        },
-        input_modifier::{
-            InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
-            exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
+        input_context::{
+            Bind, InputContext, InputContextAppExt, RebindAll,
+            action_binding::{ActionBinding, MockSpan},
+            actions::Actions,
+            events::*,
+            input_action::{Accumulation, Action, ActionState, InputAction, UntypedAction},
+            input_binding::{BindingBuilder, InputBinding, IntoBindings},
+            input_condition::{
+                ConditionKind, InputCondition, block_by::*, chord::*, down::*, hold::*,
+                hold_and_release::*, press::*, pulse::*, release::*, tap::*,
+            },
+            input_modifier::{
+                InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
+                exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
+            },
+            preset::*,
         },
         input_reader::ActionSources,
-        preset::*,
+        input_time::{InputTime, TimeKind},
     };
     pub use bevy_enhanced_input_macros::{InputAction, InputContext};
 }
 
 use bevy::{input::InputSystem, prelude::*};
 
-use action_instances::ContextRegistry;
+use input_context::ContextRegistry;
 use input_reader::{ActionSources, ResetInput};
 
 #[cfg(doc)]

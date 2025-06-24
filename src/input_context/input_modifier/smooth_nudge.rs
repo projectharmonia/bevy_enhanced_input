@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Produces a smoothed value of the current and previous input value.
 ///
@@ -36,8 +36,8 @@ impl Default for SmoothNudge {
 impl InputModifier for SmoothNudge {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
-        time: &Time<Virtual>,
+        _action_map: &TypeIdMap<UntypedAction>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         if let ActionValue::Bool(value) = value {
@@ -64,13 +64,17 @@ mod tests {
     use core::time::Duration;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn lerp() {
         let mut modifier = SmoothNudge::default();
-        let action_map = ActionMap::default();
-        let mut time = Time::default();
-        time.advance_by(Duration::from_millis(100));
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(100));
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, 0.5.into()),
@@ -85,9 +89,12 @@ mod tests {
     #[test]
     fn bool_as_axis1d() {
         let mut modifier = SmoothNudge::default();
-        let action_map = ActionMap::default();
-        let mut time = Time::default();
-        time.advance_by(Duration::from_millis(100));
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(100));
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
         assert_eq!(
@@ -99,9 +106,13 @@ mod tests {
     #[test]
     fn snapping() {
         let mut modifier = SmoothNudge::default();
-        let action_map = ActionMap::default();
-        let mut time = Time::default();
-        time.advance_by(Duration::from_millis(100));
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(100));
+        let time = state.get(&world);
+
         modifier.current_value = Vec3::X * 0.99;
         assert_eq!(modifier.apply(&action_map, &time, 1.0.into()), 1.0.into());
         modifier.current_value = Vec3::X * 0.98;

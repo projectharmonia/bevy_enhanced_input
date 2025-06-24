@@ -1,30 +1,31 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 
 use super::DEFAULT_ACTUATION;
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
-/// when the input is released after having been actuated for [`Self::hold_time`] seconds.
+/// when the input is released after having been actuated for the defined hold time.
 ///
-/// Returns [`ActionState::None`] when the input stops being actuated earlier than [`Self::hold_time`] seconds.
-#[derive(Clone, Copy, Debug)]
+/// Returns [`ActionState::None`] when the input stops being actuated earlier than the defined hold time.
+#[derive(Clone, Debug)]
 pub struct HoldAndRelease {
-    /// How long does the input have to be held to cause trigger.
-    pub hold_time: f32,
-
     /// Trigger threshold.
     pub actuation: f32,
 
-    timer: ConditionTimer,
+    /// The type of time used to advance the timer.
+    pub time_kind: TimeKind,
+
+    timer: Timer,
 }
 
 impl HoldAndRelease {
+    /// Creates a new instance with the given hold time in seconds.
     #[must_use]
     pub fn new(hold_time: f32) -> Self {
         Self {
-            hold_time,
             actuation: DEFAULT_ACTUATION,
-            timer: Default::default(),
+            time_kind: Default::default(),
+            timer: Timer::from_seconds(hold_time, TimerMode::Once),
         }
     }
 
@@ -34,10 +35,9 @@ impl HoldAndRelease {
         self
     }
 
-    /// Enables or disables time dilation.
     #[must_use]
-    pub fn relative_speed(mut self, relative: bool) -> Self {
-        self.timer.relative_speed = relative;
+    pub fn with_time_kind(mut self, kind: TimeKind) -> Self {
+        self.time_kind = kind;
         self
     }
 }
@@ -45,22 +45,20 @@ impl HoldAndRelease {
 impl InputCondition for HoldAndRelease {
     fn evaluate(
         &mut self,
-        _action_map: &ActionMap,
-        time: &Time<Virtual>,
+        _action_map: &TypeIdMap<UntypedAction>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
-        // Evaluate the updated held duration prior to checking for actuation.
-        // This stops us failing to trigger if the input is released on the
-        // threshold frame due to held duration being 0.
-        self.timer.update(time);
-        let held_duration = self.timer.duration();
+        self.timer.tick(time.delta_kind(self.time_kind));
 
         if value.is_actuated(self.actuation) {
             ActionState::Ongoing
         } else {
+            let just_finished = self.timer.just_finished();
             self.timer.reset();
+
             // Trigger if we've passed the threshold and released.
-            if held_duration >= self.hold_time {
+            if just_finished {
                 ActionState::Fired
             } else {
                 ActionState::None
@@ -74,25 +72,33 @@ mod tests {
     use core::time::Duration;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn hold_and_release() {
         let mut condition = HoldAndRelease::new(1.0);
-        let action_map = ActionMap::default();
-        let mut time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
 
-        time.advance_by(Duration::from_secs(1));
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs(1));
+        let time = state.get(&world);
+
         assert_eq!(
             condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::Fired
         );
 
-        time.advance_by(Duration::ZERO);
+        world.resource_mut::<Time>().advance_by(Duration::ZERO);
+        let time = state.get(&world);
+
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,

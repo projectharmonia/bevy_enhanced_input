@@ -9,11 +9,10 @@ pub mod smooth_nudge;
 pub mod swizzle_axis;
 
 use alloc::boxed::Box;
+use bevy::utils::TypeIdMap;
 use core::{fmt::Debug, iter};
 
-use bevy::prelude::*;
-
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Pre-processor that alter the raw input values.
 ///
@@ -28,8 +27,8 @@ pub trait InputModifier: Sync + Send + Debug + 'static {
     /// Called each frame.
     fn apply(
         &mut self,
-        action_map: &ActionMap,
-        time: &Time<Virtual>,
+        action_map: &TypeIdMap<UntypedAction>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionValue;
 }

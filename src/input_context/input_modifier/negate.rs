@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::utils::TypeIdMap;
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Inverts value per axis.
 ///
@@ -71,8 +71,8 @@ impl Negate {
 impl InputModifier for Negate {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        _action_map: &TypeIdMap<UntypedAction>,
+        _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         match value {
@@ -114,13 +114,17 @@ impl InputModifier for Negate {
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
+
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn x() {
         let mut modifier = Negate::x();
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),
@@ -144,8 +148,9 @@ mod tests {
     #[test]
     fn y() {
         let mut modifier = Negate::y();
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
@@ -163,8 +168,9 @@ mod tests {
     #[test]
     fn z() {
         let mut modifier = Negate::z();
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
@@ -182,8 +188,9 @@ mod tests {
     #[test]
     fn all() {
         let mut modifier = Negate::all();
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             modifier.apply(&action_map, &time, true.into()),

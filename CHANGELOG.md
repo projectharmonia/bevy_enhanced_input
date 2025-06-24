@@ -7,21 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `Action<A>` now implements `Clone` and `Copy` for any `A`.
+
+## [0.13.0] - 2025-06-19
+
 ### Added
 
 - `Actions::mock` and related methods to mock actions.
 - Add duplicative swizzles to `SwizzleAxis.`
+- `Actions::bindings` to get bindings access.
+- `Actions::iter` and `Actions::iter_mut` to read and write actions data.
 
 ### Changed
 
 - Rename `Binding` event into `Bind`.
 - Rename `RebuildBindings` event into `RebindAll`.
+- Rename `action_instance` module into `input_context` and move `InputContext` to it.
+- Conditions and modifiers now accept the newly added `InputTime` system parameter, which dereferences to `Time`. From it, you can also access `Time<Real>` if you need time that is not affected by time dilation.
+- Rename `relative_speed` into `with_time_kind` and accept the newly added `TimeKind` enum instead of boolean.
+- All conditions with timer no longer implement `Copy`.
+- Rename `input_condition::press` into `input_condition::down` and `input_condition::just_press` into `input_condition::press`. Their structs were renamed in the previous release, but the modules weren't.
+- Merge `acton_map` module into `input_action`.
+- Move `action_binding`, `actions`, `events`, `input_action`, `input_binding`, `input_condition`, `input_modifier` and `preset` modules under `input_context` module.
+- Make all data fields of `Action` public.
+- Return the strongly typed output of an action from `Actions::value`, similar to triggers.
+- Rename `ActionOutput::as_output` into `ActionOutput::unwrap_value`.
+- Rename `Action` into `UntypedAction`.
+- `Actions::get` now returns a typed `Action<A>`.
 
 ### Removed
 
 - `BlockBy::events_only` and `ConditionKind::Blocker::events_only`. This functionality was added before the introduction of the pull-based API and caused inconsistencies in returned values. It was intended to be used with `Chord`. If you need an action to be part of a chord but only want to react to it when the chord is not active, just check its state in the observer.
 - `ActionMap::insert`. Use the new action mocking API.
 - `Action::new`, `Action::trigger_events` and `Action::update` from the public API. Use the new action mocking API.
+- `ConditionTimer`. Use Bevy's `Timer`. Use `InputTime::delta_kind` if you need a configurable time dilation.
+- `ActionMap`. Use Bevy's `TypeIdMap` instead.
+- Getters for `Action`. Use the fields, which are now public.
 
 ## [0.12.0] - 2025-05-25
 
@@ -272,8 +295,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.12.0...HEAD
-[0.11.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.11.0...v0.12.0
+[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.12.0...v0.13.0
+[0.12.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.8.0...v0.9.0

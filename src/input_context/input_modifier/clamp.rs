@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Restricts input to a certain interval independently along each axis.
 ///
@@ -80,8 +80,8 @@ impl Clamp {
 impl InputModifier for Clamp {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        _action_map: &TypeIdMap<UntypedAction>,
+        _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         match value {
@@ -99,12 +99,14 @@ impl InputModifier for Clamp {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn clamping() {
         let mut modifier = Clamp::splat(0.0, 1.0);
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());

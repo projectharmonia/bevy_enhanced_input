@@ -21,7 +21,7 @@ fn bool() -> Result<()> {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.value::<Bool>()?, true.into());
+    assert!(actions.value::<Bool>()?);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -30,7 +30,7 @@ fn bool() -> Result<()> {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.value::<Bool>()?, false.into());
+    assert!(!actions.value::<Bool>()?);
 
     Ok(())
 }
@@ -54,7 +54,7 @@ fn axis1d() -> Result<()> {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.value::<Axis1D>()?, 1.0.into());
+    assert_eq!(actions.value::<Axis1D>()?, 1.0);
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -63,7 +63,7 @@ fn axis1d() -> Result<()> {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.value::<Axis1D>()?, 0.0.into());
+    assert_eq!(actions.value::<Axis1D>()?, 0.0);
 
     Ok(())
 }
@@ -96,7 +96,7 @@ fn axis2d() -> Result<()> {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.value::<Axis2D>()?, Vec2::ZERO.into());
+    assert_eq!(actions.value::<Axis2D>()?, Vec2::ZERO);
 
     Ok(())
 }
@@ -129,7 +129,7 @@ fn axis3d() -> Result<()> {
     app.update();
 
     let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-    assert_eq!(actions.value::<Axis3D>()?, Vec3::ZERO.into());
+    assert_eq!(actions.value::<Axis3D>()?, Vec3::ZERO);
 
     Ok(())
 }

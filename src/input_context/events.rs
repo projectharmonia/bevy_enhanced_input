@@ -26,7 +26,8 @@ bitflags! {
     /// | [`ActionState::Fired`]      | [`ActionState::Ongoing`] | [`Ongoing`]               |
     /// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Completed`]             |
     ///
-    /// The meaning of each kind depends on the assigned [`InputCondition`]s.
+    /// The meaning of each kind depends on the assigned [`InputCondition`]s. The events are
+    /// fired in the action evaluation order.
     #[derive(Default, Clone, Copy, Debug, PartialEq, Eq)]
     pub struct ActionEvents: u8 {
         /// Corresponds to [`Started`].
@@ -205,6 +206,7 @@ mod tests {
     use test_log::test;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn none_none() {
@@ -261,12 +263,8 @@ mod tests {
     }
 
     fn transition(initial_state: ActionState, target_state: ActionState) -> ActionEvents {
-        let time = Time::<Virtual>::default();
-        let mut action = Action::new::<TestAction>();
-        action.update(&time, initial_state, true);
-        action.update(&time, target_state, true);
+        let (mut world, mut state) = input_time::init_world();
 
-        let mut world = World::new();
         world.init_resource::<TriggeredEvents>();
         world.add_observer(
             |_trigger: Trigger<Fired<TestAction>>, mut events: ResMut<TriggeredEvents>| {
@@ -294,7 +292,12 @@ mod tests {
             },
         );
 
+        let time = state.get(&world);
+        let mut action = UntypedAction::new::<TestAction>();
+        action.state = initial_state;
+        action.update(&time, target_state, true);
         action.trigger_events(&mut world.commands(), Entity::PLACEHOLDER);
+
         world.flush();
 
         *world.remove_resource::<TriggeredEvents>().unwrap()

@@ -1,9 +1,12 @@
-use core::{any, marker::PhantomData};
+use core::{
+    any::{self, TypeId},
+    marker::PhantomData,
+};
 
-use bevy::prelude::*;
+use bevy::utils::TypeIdMap;
 use log::warn;
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Requires another action to not be fired within the same context.
 #[derive(Debug)]
@@ -31,12 +34,12 @@ impl<A: InputAction> Copy for BlockBy<A> {}
 impl<A: InputAction> InputCondition for BlockBy<A> {
     fn evaluate(
         &mut self,
-        action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        action_map: &TypeIdMap<UntypedAction>,
+        _time: &InputTime,
         _value: ActionValue,
     ) -> ActionState {
-        if let Some(action) = action_map.action::<A>() {
-            if action.state() == ActionState::Fired {
+        if let Some(action) = action_map.get(&TypeId::of::<A>()) {
+            if action.state == ActionState::Fired {
                 return ActionState::None;
             }
         } else {
@@ -57,19 +60,20 @@ impl<A: InputAction> InputCondition for BlockBy<A> {
 
 #[cfg(test)]
 mod tests {
-    use core::any::TypeId;
-
     use bevy_enhanced_input_macros::InputAction;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn block() {
         let mut condition = BlockBy::<TestAction>::default();
-        let mut action = Action::new::<TestAction>();
-        let time = Time::default();
+        let mut action = UntypedAction::new::<TestAction>();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
+
         action.update(&time, ActionState::Fired, true);
-        let mut action_map = ActionMap::default();
+        let mut action_map = TypeIdMap::<UntypedAction>::default();
         action_map.insert(TypeId::of::<TestAction>(), action);
 
         assert_eq!(
@@ -81,8 +85,9 @@ mod tests {
     #[test]
     fn missing_action() {
         let mut condition = BlockBy::<TestAction>::default();
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             condition.evaluate(&action_map, &time, true.into()),

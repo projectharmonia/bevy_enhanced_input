@@ -1,6 +1,6 @@
-use bevy::prelude::*;
+use bevy::utils::TypeIdMap;
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Remaps input values within the range [Self::lower_threshold] to [Self::upper_threshold] onto the range 0 to 1.
 /// Values outside this range are clamped.
@@ -66,8 +66,8 @@ impl Default for DeadZone {
 impl InputModifier for DeadZone {
     fn apply(
         &mut self,
-        _action_map: &ActionMap,
-        _time: &Time<Virtual>,
+        _action_map: &TypeIdMap<UntypedAction>,
+        _time: &InputTime,
         value: ActionValue,
     ) -> ActionValue {
         match value {
@@ -120,13 +120,17 @@ pub enum DeadZoneKind {
 
 #[cfg(test)]
 mod tests {
+    use bevy::prelude::*;
+
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn radial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());
@@ -166,8 +170,9 @@ mod tests {
     #[test]
     fn axial() {
         let mut modifier = DeadZone::new(DeadZoneKind::Axial);
-        let action_map = ActionMap::default();
-        let time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(modifier.apply(&action_map, &time, true.into()), 1.0.into());
         assert_eq!(modifier.apply(&action_map, &time, false.into()), 0.0.into());

@@ -1,14 +1,14 @@
 use alloc::boxed::Box;
 
-use bevy::prelude::*;
+use bevy::utils::TypeIdMap;
 use log::trace;
 
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Helper to calculate [`ActionState`] based on its modifiers and conditions.
 ///
 /// Could be used to track both input-level state and action-level state.
-pub(crate) struct TriggerTracker {
+pub(super) struct TriggerTracker {
     value: ActionValue,
     found_explicit: bool,
     any_explicit_fired: bool,
@@ -20,7 +20,7 @@ pub(crate) struct TriggerTracker {
 
 impl TriggerTracker {
     #[must_use]
-    pub(crate) fn new(value: ActionValue) -> Self {
+    pub(super) fn new(value: ActionValue) -> Self {
         Self {
             value,
             found_explicit: false,
@@ -32,10 +32,10 @@ impl TriggerTracker {
         }
     }
 
-    pub(crate) fn apply_modifiers(
+    pub(super) fn apply_modifiers(
         &mut self,
-        action_map: &ActionMap,
-        time: &Time<Virtual>,
+        action_map: &TypeIdMap<UntypedAction>,
+        time: &InputTime,
         modifiers: &mut [Box<dyn InputModifier>],
     ) {
         for modifier in modifiers {
@@ -49,10 +49,10 @@ impl TriggerTracker {
         }
     }
 
-    pub(crate) fn apply_conditions(
+    pub(super) fn apply_conditions(
         &mut self,
-        action_map: &ActionMap,
-        time: &Time<Virtual>,
+        action_map: &TypeIdMap<UntypedAction>,
+        time: &InputTime,
         conditions: &mut [Box<dyn InputCondition>],
     ) {
         // Note: No early outs permitted!
@@ -78,7 +78,7 @@ impl TriggerTracker {
         }
     }
 
-    pub(crate) fn state(&self) -> ActionState {
+    pub(super) fn state(&self) -> ActionState {
         if self.blocked {
             return ActionState::None;
         }
@@ -100,14 +100,14 @@ impl TriggerTracker {
         }
     }
 
-    pub(crate) fn value(&self) -> ActionValue {
+    pub(super) fn value(&self) -> ActionValue {
         self.value
     }
 
     /// Replaces the state with `other`.
     ///
     /// Preserves the value dimension.
-    pub(crate) fn overwrite(&mut self, other: TriggerTracker) {
+    pub(super) fn overwrite(&mut self, other: TriggerTracker) {
         let dim = self.value.dim();
         *self = other;
         self.value = self.value.convert(dim);
@@ -116,7 +116,7 @@ impl TriggerTracker {
     /// Merges two trackers.
     ///
     /// Preserves the value dimension.
-    pub(crate) fn combine(&mut self, other: Self, accumulation: Accumulation) {
+    pub(super) fn combine(&mut self, other: Self, accumulation: Accumulation) {
         let accumulated = match accumulation {
             Accumulation::MaxAbs => {
                 let mut value = self.value.as_axis3d().to_array();

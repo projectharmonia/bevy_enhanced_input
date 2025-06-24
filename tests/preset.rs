@@ -57,7 +57,7 @@ fn keys() {
         let actions = app.world().get::<Actions<Test>>(entity).unwrap();
         assert_eq!(
             actions.value::<TestAction>().unwrap(),
-            dir.into(),
+            dir,
             "`{key:?}` should result in `{dir}`"
         );
 
@@ -96,7 +96,7 @@ fn dpad() {
         let actions = app.world().get::<Actions<Test>>(ctx_entity).unwrap();
         assert_eq!(
             actions.value::<TestAction>().unwrap(),
-            dir.into(),
+            dir,
             "`{button:?}` should result in `{dir}`"
         );
 
@@ -135,7 +135,7 @@ fn sticks() {
             let actions = app.world().get::<Actions<Test>>(ctx_entity).unwrap();
             assert_eq!(
                 actions.value::<TestAction>().unwrap(),
-                dir.into(),
+                dir,
                 "`{axis:?}` should result in `{dir}`"
             );
 

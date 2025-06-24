@@ -5,20 +5,20 @@ use core::{
     time::Duration,
 };
 
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 use log::{debug, trace};
 
-use crate::{
-    action_map::ActionMap, input_action::ActionOutput, input_condition::IntoConditions,
-    input_modifier::IntoModifiers, input_reader::InputReader, prelude::*,
+use super::{
+    input_action::ActionOutput, input_condition::IntoConditions, input_modifier::IntoModifiers,
     trigger_tracker::TriggerTracker,
 };
+use crate::{input_reader::InputReader, prelude::*};
 
 /// Bindings associated with an [`InputAction`] marker.
 ///
 /// Stored inside [`Actions`].
 ///
-/// Bindings are stored separately from [`ActionMap`] to allow reading other actions' data during evaluation.
+/// Stored separately from [`Action`] to allow reading other actions' data during evaluation.
 ///
 /// Action bindings evaluation follows these steps:
 ///
@@ -50,7 +50,7 @@ pub struct ActionBinding {
 
 impl ActionBinding {
     #[must_use]
-    pub(crate) fn new<A: InputAction>() -> Self {
+    pub(super) fn new<A: InputAction>() -> Self {
         Self {
             type_id: TypeId::of::<A>(),
             action_name: any::type_name::<A>(),
@@ -288,7 +288,7 @@ impl ActionBinding {
     }
 
     /// Type-erased version for [`Actions::mock`].
-    pub(crate) fn mock(&mut self, state: ActionState, value: ActionValue, span: MockSpan) {
+    pub(super) fn mock(&mut self, state: ActionState, value: ActionValue, span: MockSpan) {
         debug!(
             "mocking `{}` with `{state:?}` and `{value:?}` for `{span:?}`",
             self.action_name,
@@ -296,17 +296,17 @@ impl ActionBinding {
         self.mock = Some(ActionMock { state, value, span });
     }
 
-    pub(crate) fn clear_mock(&mut self) {
+    pub(super) fn clear_mock(&mut self) {
         debug!("clearing mock from `{}`", self.action_name);
         self.mock = None;
     }
 
-    pub(crate) fn update(
+    pub(super) fn update(
         &mut self,
         commands: &mut Commands,
         reader: &mut InputReader,
-        action_map: &mut ActionMap,
-        time: &Time<Virtual>,
+        action_map: &mut TypeIdMap<UntypedAction>,
+        time: &InputTime,
         entity: Entity,
     ) {
         let (state, value) = self
@@ -321,11 +321,11 @@ impl ActionBinding {
         action.trigger_events(commands, entity);
     }
 
-    pub(crate) fn update_from_reader(
+    pub(super) fn update_from_reader(
         &mut self,
         reader: &mut InputReader,
-        action_map: &mut ActionMap,
-        time: &Time<Virtual>,
+        action_map: &mut TypeIdMap<UntypedAction>,
+        time: &InputTime,
     ) -> (ActionState, ActionValue) {
         trace!("updating `{}` from input", self.action_name);
 
@@ -418,19 +418,19 @@ impl ActionBinding {
         Some((state, value))
     }
 
-    pub(crate) fn type_id(&self) -> TypeId {
+    pub(super) fn type_id(&self) -> TypeId {
         self.type_id
     }
 
-    pub(crate) fn dim(&self) -> ActionValueDim {
+    pub(super) fn dim(&self) -> ActionValueDim {
         self.dim
     }
 
-    pub(crate) fn require_reset(&self) -> bool {
+    pub(super) fn require_reset(&self) -> bool {
         self.require_reset
     }
 
-    pub(crate) fn max_mod_keys(&self) -> usize {
+    pub(super) fn max_mod_keys(&self) -> usize {
         self.inputs()
             .iter()
             .map(|b| b.input.mod_keys_count())

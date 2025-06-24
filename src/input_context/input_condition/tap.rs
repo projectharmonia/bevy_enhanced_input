@@ -1,31 +1,33 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::TypeIdMap};
 
 use super::DEFAULT_ACTUATION;
-use crate::{action_map::ActionMap, prelude::*};
+use crate::prelude::*;
 
 /// Returns [`ActionState::Ongoing`] when input becomes actuated and [`ActionState::Fired`]
-/// when the input is released within the [`Self::release_time`] seconds.
+/// when the input is released within the defined release time.
 ///
-/// Returns [`ActionState::None`] when the input is actuated more than [`Self::release_time`] seconds.
-#[derive(Clone, Copy, Debug)]
+/// Returns [`ActionState::None`] when the input is actuated more than the defined release time.
+#[derive(Clone, Debug)]
 pub struct Tap {
-    /// Time window within which the action must be released to register as a tap.
-    pub release_time: f32,
-
     /// Trigger threshold.
     pub actuation: f32,
 
-    timer: ConditionTimer,
+    /// The type of time used to advance the timer.
+    pub time_kind: TimeKind,
+
+    timer: Timer,
+
     actuated: bool,
 }
 
 impl Tap {
+    /// Creates a new instance with the given release time in seconds.
     #[must_use]
     pub fn new(release_time: f32) -> Self {
         Self {
-            release_time,
             actuation: DEFAULT_ACTUATION,
-            timer: Default::default(),
+            time_kind: Default::default(),
+            timer: Timer::from_seconds(release_time, TimerMode::Once),
             actuated: false,
         }
     }
@@ -36,10 +38,9 @@ impl Tap {
         self
     }
 
-    /// Enables or disables time dilation.
     #[must_use]
-    pub fn relative_speed(mut self, relative: bool) -> Self {
-        self.timer.relative_speed = relative;
+    pub fn with_time_kind(mut self, kind: TimeKind) -> Self {
+        self.time_kind = kind;
         self
     }
 }
@@ -47,23 +48,23 @@ impl Tap {
 impl InputCondition for Tap {
     fn evaluate(
         &mut self,
-        _action_map: &ActionMap,
-        time: &Time<Virtual>,
+        _action_map: &TypeIdMap<UntypedAction>,
+        time: &InputTime,
         value: ActionValue,
     ) -> ActionState {
         let last_actuated = self.actuated;
-        let last_held_duration = self.timer.duration();
+        let finished = self.timer.finished();
         self.actuated = value.is_actuated(self.actuation);
         if self.actuated {
-            self.timer.update(time);
+            self.timer.tick(time.delta_kind(self.time_kind));
         } else {
             self.timer.reset();
         }
 
-        if last_actuated && !self.actuated && last_held_duration <= self.release_time {
+        if last_actuated && !self.actuated && !finished {
             // Only trigger if pressed then released quickly enough.
             ActionState::Fired
-        } else if self.timer.duration() >= self.release_time {
+        } else if self.timer.finished() {
             // Once we pass the threshold halt all triggering until released.
             ActionState::None
         } else if self.actuated {
@@ -79,31 +80,43 @@ mod tests {
     use core::time::Duration;
 
     use super::*;
+    use crate::input_time;
 
     #[test]
     fn tap() {
         let mut condition = Tap::new(1.0);
-        let action_map = ActionMap::default();
-        let mut time = Time::default();
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        let time = state.get(&world);
 
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
         );
 
-        time.advance_by(Duration::from_secs(1));
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs(1));
+        let time = state.get(&world);
+
         assert_eq!(
             condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::Fired,
         );
 
-        time.advance_by(Duration::ZERO);
+        world.resource_mut::<Time>().advance_by(Duration::ZERO);
+        let time = state.get(&world);
+
         assert_eq!(
             condition.evaluate(&action_map, &time, 0.0.into()),
             ActionState::None
         );
 
-        time.advance_by(Duration::from_secs(2));
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs(2));
+        let time = state.get(&world);
+
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::None
