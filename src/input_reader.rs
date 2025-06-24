@@ -224,7 +224,7 @@ impl InputReader<'_, '_> {
 /// use bevy_enhanced_input::prelude::*;
 ///
 /// # let mut app = App::new();
-/// app.add_systems(PreUpdate, disable_mouse.before(EnhancedInputSystem));
+/// app.add_systems(PreUpdate, disable_mouse.before(EnhancedInputSet::Update));
 ///
 /// fn disable_mouse(
 ///     mut action_sources: ResMut<ActionSources>,
