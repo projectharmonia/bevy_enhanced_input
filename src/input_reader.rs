@@ -27,9 +27,9 @@ pub(crate) struct InputReader<'w, 's> {
 }
 
 impl InputReader<'_, '_> {
-    /// Resets all consumed values and reads mouse events.
+    /// Clears all consumed values and updates reset input.
     pub(crate) fn update_state(&mut self) {
-        self.consumed.reset();
+        self.consumed.clear();
 
         // Temporary take the original value to avoid issues with the borrow checker.
         let mut reset_input = core::mem::take(&mut *self.reset_input);
@@ -271,7 +271,7 @@ struct ConsumedInput {
 }
 
 impl ConsumedInput {
-    fn reset(&mut self) {
+    fn clear(&mut self) {
         self.keys.clear();
         self.mod_keys = ModKeys::empty();
         self.mouse_buttons.clear();
