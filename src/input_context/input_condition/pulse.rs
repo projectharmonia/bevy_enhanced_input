@@ -101,6 +101,7 @@ impl InputCondition for Pulse {
         } else {
             self.timer.reset();
             self.trigger_count = 0;
+            self.started_actuation = false;
             ActionState::None
         }
     }
@@ -133,6 +134,45 @@ mod tests {
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
+        );
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Fired,
+        );
+
+        world.resource_mut::<Time>().advance_by(Duration::ZERO);
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 0.0.into()),
+            ActionState::None
+        );
+    }
+
+    #[test]
+    fn fires_again_after_release() {
+        let mut condition = Pulse::new(1.0);
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Fired,
+        );
+
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(500));
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 0.0.into()),
+            ActionState::None,
         );
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
