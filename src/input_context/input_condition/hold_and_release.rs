@@ -54,11 +54,11 @@ impl InputCondition for HoldAndRelease {
         if value.is_actuated(self.actuation) {
             ActionState::Ongoing
         } else {
-            let just_finished = self.timer.just_finished();
+            let finished = self.timer.finished();
             self.timer.reset();
 
             // Trigger if we've passed the threshold and released.
-            if just_finished {
+            if finished {
                 ActionState::Fired
             } else {
                 ActionState::None
@@ -102,6 +102,86 @@ mod tests {
         assert_eq!(
             condition.evaluate(&action_map, &time, 1.0.into()),
             ActionState::Ongoing,
+        );
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 0.0.into()),
+            ActionState::None
+        );
+    }
+
+    #[test]
+    fn hold_and_release_exact_time() {
+        let mut condition = HoldAndRelease::new(1.0);
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Ongoing,
+        );
+
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs(1));
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Ongoing
+        );
+
+        world.resource_mut::<Time>().advance_by(Duration::ZERO);
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 0.0.into()),
+            ActionState::Fired
+        );
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 0.0.into()),
+            ActionState::None
+        );
+    }
+
+    #[test]
+    fn hold_and_release_delayed() {
+        let mut condition = HoldAndRelease::new(1.0);
+        let action_map = TypeIdMap::<UntypedAction>::default();
+        let (mut world, mut state) = input_time::init_world();
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Ongoing,
+        );
+
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_secs(1));
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Ongoing
+        );
+
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_nanos(1));
+        let time = state.get(&world);
+
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 1.0.into()),
+            ActionState::Ongoing,
+        );
+        assert_eq!(
+            condition.evaluate(&action_map, &time, 0.0.into()),
+            ActionState::Fired
         );
         assert_eq!(
             condition.evaluate(&action_map, &time, 0.0.into()),
