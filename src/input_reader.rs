@@ -300,7 +300,7 @@ pub(crate) struct IgnoredInputs {
 
 impl IgnoredInputs {
     fn add(&mut self, input: Input, gamepad: GamepadDevice) {
-        match input.into() {
+        match input {
             Input::Keyboard { key, mod_keys } => {
                 self.keys.insert(key);
                 self.mod_keys.insert(mod_keys);
