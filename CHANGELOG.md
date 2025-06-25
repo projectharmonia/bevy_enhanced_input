@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `Pulse` condition triggered `Fired` only on the first actuation.
+- `HoldAndRelease` condition fired only on exact duration match.
+
 ## [0.14.0] - 2025-06-25
 
 ### Changed
@@ -64,7 +69,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `JustPress` into `Press`.
 - Return `Result` from `Actions::bindings` to integrate with Bevy's unified error handling system.
 - Rename `Actions::action` into `Actions::get` and return `Result`.
-- Fix dimension cutoff when using `SwizzleAxis` with `Axis2D`.
+
+### Fixed
+
+- Dimension cutoff when using `SwizzleAxis` with `Axis2D`.
 
 ### Removed
 
