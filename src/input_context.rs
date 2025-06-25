@@ -28,7 +28,7 @@ use log::{debug, trace};
 
 use crate::{
     EnhancedInputSet,
-    input_reader::{InputReader, ResetInput},
+    input_reader::{InputReader, PendingInputs},
     prelude::*,
 };
 
@@ -191,13 +191,13 @@ fn remove_context<C: InputContext>(
     trigger: Trigger<OnReplace, Actions<C>>,
     mut commands: Commands,
     time: InputTime,
-    mut reset_input: ResMut<ResetInput>,
+    mut pending: ResMut<PendingInputs>,
     mut instances: ResMut<ActionInstances<C::Schedule>>,
     mut actions: Query<&mut Actions<C>>,
 ) {
     instances.remove::<C>(
         &mut commands,
-        &mut reset_input,
+        &mut pending,
         &time,
         &mut actions,
         trigger.target(),
@@ -210,7 +210,6 @@ fn update<S: ScheduleLabel>(
     mut instances: ResMut<ActionInstances<S>>,
     mut actions: Query<FilteredEntityMut>,
 ) {
-    reader.update_state();
     instances.update(&mut reader, &time, &mut actions);
 }
 
@@ -226,11 +225,11 @@ fn rebuild<S: ScheduleLabel>(
     _trigger: Trigger<RebindAll>,
     mut commands: Commands,
     time: InputTime,
-    mut reset_input: ResMut<ResetInput>,
+    mut pending: ResMut<PendingInputs>,
     mut instances: ResMut<ActionInstances<S>>,
     mut actions: Query<FilteredEntityMut>,
 ) {
-    instances.rebuild(&mut commands, &mut reset_input, &time, &mut actions);
+    instances.rebuild(&mut commands, &mut pending, &time, &mut actions);
 }
 
 /// Stores instantiated [`Actions`] for a schedule `S`.
@@ -250,6 +249,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
         time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
+        reader.clear_consumed::<S>();
         for instance in &mut self.instances {
             instance.update(reader, time, actions);
         }
@@ -268,12 +268,12 @@ impl<S: ScheduleLabel> ActionInstances<S> {
     pub(crate) fn rebuild(
         &mut self,
         commands: &mut Commands,
-        reset_input: &mut ResetInput,
+        pending: &mut PendingInputs,
         time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
         for instance in &mut self.instances {
-            instance.rebuild(commands, reset_input, time, actions);
+            instance.rebuild(commands, pending, time, actions);
         }
     }
 
@@ -304,7 +304,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
     fn remove<C: InputContext>(
         &mut self,
         commands: &mut Commands,
-        reset_input: &mut ResetInput,
+        pending: &mut PendingInputs,
         time: &InputTime,
         instances: &mut Query<&mut Actions<C>>,
         entity: Entity,
@@ -322,7 +322,7 @@ impl<S: ScheduleLabel> ActionInstances<S> {
         self.instances.remove(index);
 
         let mut instance = instances.get_mut(entity).unwrap();
-        instance.reset(commands, reset_input, time, entity);
+        instance.reset(commands, pending, time, entity);
     }
 }
 
@@ -369,11 +369,11 @@ impl ActionsInstance {
     fn rebuild(
         &self,
         commands: &mut Commands,
-        reset_input: &mut ResetInput,
+        pending: &mut PendingInputs,
         time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
-        (self.rebuild)(self, commands, reset_input, time, actions);
+        (self.rebuild)(self, commands, pending, time, actions);
     }
 
     fn update_typed<C: InputContext>(
@@ -394,7 +394,7 @@ impl ActionsInstance {
             .and_then(FilteredEntityMut::into_mut::<Actions<C>>)
             .expect("deinitialized instances should be previously removed");
 
-        actions.update(reader, time, self.entity);
+        actions.update::<C::Schedule>(reader, time, self.entity);
     }
 
     fn trigger_typed<C: InputContext>(
@@ -420,7 +420,7 @@ impl ActionsInstance {
     fn rebuild_typed<C: InputContext>(
         &self,
         commands: &mut Commands,
-        reset_input: &mut ResetInput,
+        pending: &mut PendingInputs,
         time: &InputTime,
         actions: &mut Query<FilteredEntityMut>,
     ) {
@@ -436,7 +436,7 @@ impl ActionsInstance {
             .and_then(FilteredEntityMut::into_mut::<Actions<C>>)
             .expect("deinitialized instances should be previously removed");
 
-        actions.reset(commands, reset_input, time, self.entity);
+        actions.reset(commands, pending, time, self.entity);
         commands.trigger_targets(Bind::<C>::new(), self.entity);
     }
 }
@@ -445,8 +445,13 @@ type UpdateFn = fn(&ActionsInstance, &mut InputReader, &InputTime, &mut Query<Fi
 
 type TriggerFn = fn(&ActionsInstance, &mut Commands, &mut Query<FilteredEntityMut>);
 
-type RebuildFn =
-    fn(&ActionsInstance, &mut Commands, &mut ResetInput, &InputTime, &mut Query<FilteredEntityMut>);
+type RebuildFn = fn(
+    &ActionsInstance,
+    &mut Commands,
+    &mut PendingInputs,
+    &InputTime,
+    &mut Query<FilteredEntityMut>,
+);
 
 /// Trigger that requests bindings creation of [`Actions`] for an entity.
 ///
@@ -518,8 +523,9 @@ pub trait InputContext: Send + Sync + 'static {
 
     /// Determines the evaluation order of [`Actions<Self>`].
     ///
-    /// Used to control how contexts are layered since some [`InputAction`]s may consume inputs.
+    /// Used to control how contexts are layered, as some [`InputAction`]s may consume inputs.
     ///
-    /// Ordering is global. Contexts with a higher priority are evaluated first.
+    /// The ordering applies per schedule: contexts in schedules that run earlier are evaluated first.
+    /// Within the same schedule, contexts with a higher priority are evaluated first.
     const PRIORITY: usize = 0;
 }
