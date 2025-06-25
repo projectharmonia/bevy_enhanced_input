@@ -154,7 +154,7 @@ mod tests {
     }
 
     #[test]
-    fn pulse_fires_again_after_release() {
+    fn fires_again_after_release() {
         let mut condition = Pulse::new(1.0);
         let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
