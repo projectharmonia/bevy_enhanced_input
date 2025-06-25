@@ -110,7 +110,7 @@ mod tests {
     }
 
     #[test]
-    fn hold_and_release_exact_time() {
+    fn exact_time() {
         let mut condition = HoldAndRelease::new(1.0);
         let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
@@ -149,7 +149,7 @@ mod tests {
     }
 
     #[test]
-    fn hold_and_release_delayed() {
+    fn delayed() {
         let mut condition = HoldAndRelease::new(1.0);
         let action_map = TypeIdMap::<UntypedAction>::default();
         let (mut world, mut state) = input_time::init_world();
