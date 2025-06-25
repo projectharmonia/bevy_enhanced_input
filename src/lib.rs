@@ -74,7 +74,7 @@ time, bindings must be assigned at runtime. They're stored inside the [`Actions<
 context. Contexts becomes active only when its component exists on an entity. You can attach multiple [`Actions<C>`]
 components to a single entity.
 
-To bind actions, use [`Actions::bind`] followed by one or more [`ActionBinding::to`] calls to define inputs. You can pass any
+To bind actions, use [`UntypedActions::bind`] followed by one or more [`ActionBinding::to`] calls to define inputs. You can pass any
 input type that implements [`IntoBindings`], including tuples for multiple inputs (similar to [`App::add_systems`] in Bevy).
 All assigned inputs will be treated as "any of". See [`ActionBinding::to`] for details.
 
@@ -284,7 +284,7 @@ The event system is highly flexible. For example, you can use the [`Hold`] condi
 
 ### Pull-style
 
-You can also query for [`Actions`] within a system. Use [`Actions::get<A>`] to retrieve an [`Action`], from which you can obtain the
+You can also query for [`Actions`] within a system. Use [`UntypedActions::get<A>`] to retrieve an [`Action`], from which you can obtain the
 current value, state, or triggered events for this tick as [`ActionEvents`] bitset.
 
 ```
@@ -340,13 +340,13 @@ pub mod input_time;
 
 pub mod prelude {
     pub use super::{
-        EnhancedInputPlugin, EnhancedInputSystem,
+        EnhancedInputPlugin, EnhancedInputSet,
         action_value::{ActionValue, ActionValueDim},
         input::{GamepadDevice, Input, InputModKeys, ModKeys},
         input_context::{
             Bind, InputContext, InputContextAppExt, RebindAll,
             action_binding::{ActionBinding, MockSpan},
-            actions::Actions,
+            actions::{Actions, UntypedActions},
             events::*,
             input_action::{Accumulation, Action, ActionState, InputAction, UntypedAction},
             input_binding::{BindingBuilder, InputBinding, IntoBindings},
@@ -376,7 +376,7 @@ use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
 ///
-/// See also [`EnhancedInputSystem`].
+/// See also [`EnhancedInputSet`].
 pub struct EnhancedInputPlugin;
 
 impl Plugin for EnhancedInputPlugin {
@@ -384,7 +384,7 @@ impl Plugin for EnhancedInputPlugin {
         app.init_resource::<ContextRegistry>()
             .init_resource::<ResetInput>()
             .init_resource::<ActionSources>()
-            .configure_sets(PreUpdate, EnhancedInputSystem.after(InputSystem));
+            .configure_sets(PreUpdate, EnhancedInputSet::Update.after(InputSystem));
     }
 
     fn finish(&self, app: &mut App) {
@@ -403,4 +403,9 @@ impl Plugin for EnhancedInputPlugin {
 ///
 /// Runs in each registered [`InputContext::Schedule`].
 #[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
-pub struct EnhancedInputSystem;
+pub enum EnhancedInputSet {
+    /// Updates the state of the input contexts from inputs and mocks.
+    Update,
+    /// Triggers events.
+    Trigger,
+}

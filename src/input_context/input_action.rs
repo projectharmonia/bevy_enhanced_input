@@ -168,7 +168,7 @@ fn trigger_and_log<A, E: Event + Debug>(commands: &mut Commands, entity: Entity,
 
 /// A strongly-typed version of [`Action`].
 ///
-/// Can be obtained from [`Actions::get`].
+/// Can be obtained from [`UntypedActions::get`].
 #[derive(Debug)]
 pub struct Action<A: InputAction> {
     /// Current state.
@@ -218,7 +218,7 @@ pub enum ActionState {
 
 /// Marker for a gameplay-related action.
 ///
-/// Needs to be bound to actions using [`Actions::bind`].
+/// Needs to be bound to actions using [`UntypedActions::bind`].
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:

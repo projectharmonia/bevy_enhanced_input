@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2025-06-25
+
 ### Changed
 
 - `Action<A>` now implements `Clone` and `Copy` for any `A`.
+- `ActionEvents` now implements `Serialize` and `Deserialize`.
+- Split `EnhancedInputSystem` into `EnhancedInputSet::Update` (reads new inputs from the `InputReader` and updates the `Actions` components) and `EnhancedInputSet::Trigger` (triggers the events corresponding to how the `Actions` components changed).
+- Move most of the `Actions<C>` functionality to an untyped struct `UntypedActions`. `Actions<C>` derefs to `UntypedActions`, so you don't have to change any call sites.
 
 ## [0.13.0] - 2025-06-19
 
@@ -295,7 +300,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release.
 
-[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.13.0...HEAD
+[unreleased]: https://github.com/projectharmonia/bevy_replicon/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/projectharmonia/bevy_replicon/compare/v0.10.0...v0.11.0
