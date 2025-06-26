@@ -7,11 +7,14 @@ use core::{
     marker::PhantomData,
 };
 
-use bevy::{platform::collections::hash_map::Entry, prelude::*, utils::TypeIdMap};
+use bevy::{
+    ecs::schedule::ScheduleLabel, platform::collections::hash_map::Entry, prelude::*,
+    utils::TypeIdMap,
+};
 use log::debug;
 
 use crate::{
-    input_reader::{InputReader, ResetInput},
+    input_reader::{InputReader, PendingInputs},
     prelude::*,
 };
 
@@ -187,7 +190,12 @@ impl UntypedActions {
         self.get::<A>().map(|action| action.events)
     }
 
-    pub(crate) fn update(&mut self, reader: &mut InputReader, time: &InputTime, entity: Entity) {
+    pub(crate) fn update<S: ScheduleLabel>(
+        &mut self,
+        reader: &mut InputReader,
+        time: &InputTime,
+        entity: Entity,
+    ) {
         if self.sort_required {
             debug!("sorting actions on `{entity}`",);
             self.bindings.sort_by_key(|b| Reverse(b.max_mod_keys()));
@@ -196,7 +204,7 @@ impl UntypedActions {
 
         reader.set_gamepad(self.gamepad);
         for binding in &mut self.bindings {
-            binding.update(reader, &mut self.action_map, time);
+            binding.update::<S>(reader, &mut self.action_map, time);
         }
     }
 
@@ -212,7 +220,7 @@ impl UntypedActions {
     pub(super) fn reset(
         &mut self,
         commands: &mut Commands,
-        reset_input: &mut ResetInput,
+        pending: &mut PendingInputs,
         time: &InputTime,
         entity: Entity,
     ) {
@@ -224,7 +232,7 @@ impl UntypedActions {
             action.update(time, ActionState::None, ActionValue::zero(binding.dim()));
             action.trigger_events(commands, entity);
             if binding.require_reset() {
-                reset_input.extend(binding.inputs().iter().map(|binding| binding.input));
+                pending.extend(binding.inputs().iter().map(|binding| binding.input));
             }
         }
 

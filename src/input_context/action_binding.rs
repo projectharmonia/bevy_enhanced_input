@@ -5,7 +5,7 @@ use core::{
     time::Duration,
 };
 
-use bevy::{prelude::*, utils::TypeIdMap};
+use bevy::{ecs::schedule::ScheduleLabel, prelude::*, utils::TypeIdMap};
 use log::{debug, trace};
 
 use super::{
@@ -301,7 +301,7 @@ impl ActionBinding {
         self.mock = None;
     }
 
-    pub(super) fn update(
+    pub(super) fn update<S: ScheduleLabel>(
         &mut self,
         reader: &mut InputReader,
         action_map: &mut TypeIdMap<UntypedAction>,
@@ -309,7 +309,7 @@ impl ActionBinding {
     ) {
         let (state, value) = self
             .update_from_mock(time.delta())
-            .unwrap_or_else(|| self.update_from_reader(reader, action_map, time));
+            .unwrap_or_else(|| self.update_from_reader::<S>(reader, action_map, time));
 
         let action = action_map
             .get_mut(&self.type_id)
@@ -318,7 +318,7 @@ impl ActionBinding {
         action.update(time, state, value);
     }
 
-    pub(super) fn update_from_reader(
+    pub(super) fn update_from_reader<S: ScheduleLabel>(
         &mut self,
         reader: &mut InputReader,
         action_map: &mut TypeIdMap<UntypedAction>,
@@ -378,7 +378,7 @@ impl ActionBinding {
         if self.consume_input {
             if state != ActionState::None {
                 for &input in &self.consume_buffer {
-                    reader.consume(input);
+                    reader.consume::<S>(input);
                 }
             }
             self.consume_buffer.clear();

@@ -369,7 +369,7 @@ pub mod prelude {
 use bevy::{input::InputSystem, prelude::*};
 
 use input_context::ContextRegistry;
-use input_reader::{ActionSources, ResetInput};
+use input_reader::{ActionSources, ConsumedInputs, PendingInputs};
 
 #[cfg(doc)]
 use prelude::*;
@@ -382,9 +382,19 @@ pub struct EnhancedInputPlugin;
 impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ContextRegistry>()
-            .init_resource::<ResetInput>()
+            .init_resource::<ConsumedInputs>()
+            .init_resource::<PendingInputs>()
             .init_resource::<ActionSources>()
-            .configure_sets(PreUpdate, EnhancedInputSet::Update.after(InputSystem));
+            .configure_sets(
+                PreUpdate,
+                (EnhancedInputSet::Prepare, EnhancedInputSet::Update)
+                    .chain()
+                    .after(InputSystem),
+            )
+            .add_systems(
+                PreUpdate,
+                input_reader::update_pending.in_set(EnhancedInputSet::Prepare),
+            );
     }
 
     fn finish(&self, app: &mut App) {
@@ -400,12 +410,18 @@ impl Plugin for EnhancedInputPlugin {
 }
 
 /// Label for the system that updates input context instances.
-///
-/// Runs in each registered [`InputContext::Schedule`].
 #[derive(Debug, PartialEq, Eq, Clone, Hash, SystemSet)]
 pub enum EnhancedInputSet {
+    /// Updates list of pending inputs to ignore.
+    ///
+    /// Runs in [`PreUpdate`].
+    Prepare,
     /// Updates the state of the input contexts from inputs and mocks.
+    ///
+    /// Runs in each registered [`InputContext::Schedule`].
     Update,
-    /// Triggers events.
+    /// Triggers events evaluated inside [`Self::Update`].
+    ///
+    /// Runs in each registered [`InputContext::Schedule`].
     Trigger,
 }
