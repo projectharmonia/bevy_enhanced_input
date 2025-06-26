@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Input consumption now works properly for contexts with different schedules.
 - `Pulse` condition triggered `Fired` only on the first actuation.
 - `HoldAndRelease` condition fired only on exact duration match.
-- Input consumption between different schedules.
 
 ## [0.14.0] - 2025-06-25
 

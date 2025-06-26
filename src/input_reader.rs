@@ -265,13 +265,21 @@ impl Default for ActionSources {
     }
 }
 
-/// All consumed input by actions in each schedule.
+/// Inputs consumed by actions in each schedule.
+///
+/// These inputs will be ignored by [`InputReader::value`] in all schedules.
+/// When a schedule runs, previously consumed inputs in it will be cleared.
+///
+/// This allows schedules like [`FixedPreUpdate`], which may run multiple times per frame,
+/// to correctly handle inputs it consumes itself, while still treating inputs consumed in
+/// [`PreUpdate`] as already consumed for all runs within the same frame.
 #[derive(Resource, Default, Deref, DerefMut)]
 pub(crate) struct ConsumedInputs(TypeIdMap<IgnoredInputs>);
 
-/// Inputs that will be ignored until they return zero.
+/// Inputs from actions with [`InputAction::REQUIRE_RESET`] enabled, whose contexts were removed or reset.
 ///
-/// Once the input becomes zero, it will be automatically removed and no longer ignored.
+/// These inputs will be ignored by [`InputReader::value`] until they become inactive.
+/// Once inactive, they will be automatically removed and no longer ignored.
 #[derive(Resource, Default)]
 pub(crate) struct PendingInputs {
     inputs: Vec<Input>,
