@@ -7,12 +7,6 @@ use syn::{DeriveInput, Ident, parse_macro_input};
 #[darling(attributes(input_action))]
 struct InputActionOpts {
     output: Ident,
-    #[darling(default)]
-    accumulation: Option<Ident>,
-    #[darling(default)]
-    consume_input: Option<bool>,
-    #[darling(default)]
-    require_reset: Option<bool>,
 }
 
 #[derive(FromDeriveInput)]
@@ -29,10 +23,7 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
     let input = parse_macro_input!(item as DeriveInput);
 
     #[expect(non_snake_case, reason = "item shortcuts")]
-    let (Accumulation, InputAction) = (
-        quote! { ::bevy_enhanced_input::prelude::Accumulation },
-        quote! { ::bevy_enhanced_input::prelude::InputAction },
-    );
+    let InputAction = quote! { ::bevy_enhanced_input::prelude::InputAction };
 
     let opts = match InputActionOpts::from_derive_input(&input) {
         Ok(value) => value,
@@ -41,38 +32,13 @@ pub fn input_action_derive(item: TokenStream) -> TokenStream {
         }
     };
 
-    let struct_name = input.ident;
     let output = opts.output;
-    let accumulation = if let Some(accumulation) = opts.accumulation {
-        quote! {
-            const ACCUMULATION: #Accumulation = #Accumulation::#accumulation;
-        }
-    } else {
-        Default::default()
-    };
-    let consume_input = if let Some(consume) = opts.consume_input {
-        quote! {
-            const CONSUME_INPUT: bool = #consume;
-        }
-    } else {
-        Default::default()
-    };
-    let require_reset = if let Some(reset) = opts.require_reset {
-        quote! {
-            const REQUIRE_RESET: bool = #reset;
-        }
-    } else {
-        Default::default()
-    };
-
+    let struct_name = input.ident;
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
 
     TokenStream::from(quote! {
         impl #impl_generics #InputAction for #struct_name #type_generics #where_clause {
             type Output = #output;
-            #accumulation
-            #consume_input
-            #require_reset
         }
     })
 }
@@ -91,7 +57,6 @@ pub fn input_context_derive(item: TokenStream) -> TokenStream {
         }
     };
 
-    let struct_name = input.ident;
     let priority = if let Some(priority) = opts.priority {
         quote! {
             const PRIORITY: usize = #priority;
@@ -104,7 +69,7 @@ pub fn input_context_derive(item: TokenStream) -> TokenStream {
     } else {
         quote! { ::bevy::app::PreUpdate }
     };
-
+    let struct_name = input.ident;
     let (impl_generics, type_generics, where_clause) = input.generics.split_for_impl();
 
     TokenStream::from(quote! {

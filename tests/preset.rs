@@ -6,14 +6,39 @@ use test_log::test;
 fn keys() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<Test>()
-        .add_observer(bind)
+        .add_input_context::<TestContext>()
         .finish();
 
-    let entity = app.world_mut().spawn(Actions::<Test>::default()).id();
+    app.world_mut().spawn((
+        TestContext,
+        actions!(
+            TestContext[(
+                Action::<Test>::new(),
+                Bindings::spawn((
+                    Cardinal::wasd_keys(),
+                    Cardinal::arrow_keys(),
+                    Bidirectional {
+                        positive: Binding::from(KeyCode::NumpadAdd),
+                        negative: Binding::from(KeyCode::NumpadSubtract),
+                    },
+                    Spatial {
+                        forward: Binding::from(KeyCode::Digit0),
+                        backward: Binding::from(KeyCode::Digit1),
+                        left: Binding::from(KeyCode::Digit2),
+                        right: Binding::from(KeyCode::Digit3),
+                        up: Binding::from(KeyCode::Digit4),
+                        down: Binding::from(KeyCode::Digit5),
+                    },
+                    Ordinal::hjklyubn(),
+                    Ordinal::numpad_keys(),
+                ))
+            )]
+        ),
+    ));
 
     app.update();
 
+    let mut actions = app.world_mut().query::<&Action<Test>>();
     for (key, dir) in [
         (KeyCode::KeyW, UP),
         (KeyCode::KeyA, LEFT),
@@ -54,12 +79,8 @@ fn keys() {
 
         app.update();
 
-        let actions = app.world().get::<Actions<Test>>(entity).unwrap();
-        assert_eq!(
-            actions.value::<TestAction>().unwrap(),
-            dir,
-            "`{key:?}` should result in `{dir}`"
-        );
+        let action = *actions.single(app.world()).unwrap();
+        assert_eq!(*action, dir, "`{key:?}` should result in `{dir}`");
 
         app.world_mut()
             .resource_mut::<ButtonInput<KeyCode>>()
@@ -73,15 +94,24 @@ fn keys() {
 fn dpad() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<Test>()
-        .add_observer(bind)
+        .add_input_context::<TestContext>()
         .finish();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
-    let ctx_entity = app.world_mut().spawn(Actions::<Test>::default()).id();
+    app.world_mut().spawn((
+        TestContext,
+        GamepadDevice::Single(gamepad_entity),
+        actions!(
+            TestContext[(
+                Action::<Test>::new(),
+                Bindings::spawn(Cardinal::dpad_buttons())
+            )]
+        ),
+    ));
 
     app.update();
 
+    let mut actions = app.world_mut().query::<&Action<Test>>();
     for (button, dir) in [
         (GamepadButton::DPadUp, UP),
         (GamepadButton::DPadLeft, LEFT),
@@ -93,12 +123,8 @@ fn dpad() {
 
         app.update();
 
-        let actions = app.world().get::<Actions<Test>>(ctx_entity).unwrap();
-        assert_eq!(
-            actions.value::<TestAction>().unwrap(),
-            dir,
-            "`{button:?}` should result in `{dir}`"
-        );
+        let action = *actions.single(app.world()).unwrap();
+        assert_eq!(*action, dir, "`{button:?}` should result in `{dir}`");
 
         let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
         gamepad.analog_mut().set(button, 0.0);
@@ -111,15 +137,24 @@ fn dpad() {
 fn sticks() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
-        .add_input_context::<Test>()
-        .add_observer(bind)
+        .add_input_context::<TestContext>()
         .finish();
 
     let gamepad_entity = app.world_mut().spawn(Gamepad::default()).id();
-    let ctx_entity = app.world_mut().spawn(Actions::<Test>::default()).id();
+    app.world_mut().spawn((
+        TestContext,
+        GamepadDevice::Single(gamepad_entity),
+        actions!(
+            TestContext[(
+                Action::<Test>::new(),
+                Bindings::spawn((Axial::left_stick(), Axial::right_stick()))
+            )]
+        ),
+    ));
 
     app.update();
 
+    let mut actions = app.world_mut().query::<&Action<Test>>();
     for (axis, dirs) in [
         (GamepadAxis::LeftStickX, [LEFT, RIGHT]),
         (GamepadAxis::RightStickX, [LEFT, RIGHT]),
@@ -132,12 +167,8 @@ fn sticks() {
 
             app.update();
 
-            let actions = app.world().get::<Actions<Test>>(ctx_entity).unwrap();
-            assert_eq!(
-                actions.value::<TestAction>().unwrap(),
-                dir,
-                "`{axis:?}` should result in `{dir}`"
-            );
+            let action = *actions.single(app.world()).unwrap();
+            assert_eq!(*action, dir, "`{axis:?}` should result in `{dir}`");
 
             let mut gamepad = app.world_mut().get_mut::<Gamepad>(gamepad_entity).unwrap();
             gamepad.analog_mut().set(axis, 0.0);
@@ -158,34 +189,9 @@ const RIGHT_DOWN: Vec3 = Vec3::new(1.0, -1.0, 0.0);
 const LEFT_DOWN: Vec3 = Vec3::new(-1.0, -1.0, 0.0);
 const LEFT_UP: Vec3 = Vec3::new(-1.0, 1.0, 0.0);
 
-fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
-    let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<TestAction>().to((
-        Cardinal::wasd_keys(),
-        Cardinal::arrow_keys(),
-        Cardinal::dpad_buttons(),
-        Bidirectional {
-            positive: KeyCode::NumpadAdd,
-            negative: KeyCode::NumpadSubtract,
-        },
-        Axial::left_stick(),
-        Axial::right_stick(),
-        Spatial {
-            forward: KeyCode::Digit0,
-            backward: KeyCode::Digit1,
-            left: KeyCode::Digit2,
-            right: KeyCode::Digit3,
-            up: KeyCode::Digit4,
-            down: KeyCode::Digit5,
-        },
-        Ordinal::hjklyubn(),
-        Ordinal::numpad_keys(),
-    ));
-}
+#[derive(Component, InputContext)]
+struct TestContext;
 
-#[derive(InputContext)]
+#[derive(InputAction)]
+#[input_action(output = Vec3)]
 struct Test;
-
-#[derive(Debug, InputAction)]
-#[input_action(output = Vec3, consume_input = true)]
-struct TestAction;

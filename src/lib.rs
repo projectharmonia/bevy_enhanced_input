@@ -32,11 +32,11 @@ To implement the trait, you can use the provided derive macro.
 ```
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct Jump;
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = Vec2)]
 struct Move;
 ```
@@ -90,7 +90,7 @@ let mut actions = Actions::<OnFoot>::default();
 actions.bind::<Jump>().to((KeyCode::Space, GamepadButton::South));
 # #[derive(InputContext)]
 # struct OnFoot;
-# #[derive(Debug, InputAction)]
+# #[derive(InputAction)]
 # #[input_action(output = bool)]
 # struct Jump;
 ```
@@ -134,7 +134,7 @@ actions
     ));
 # #[derive(InputContext)]
 # struct OnFoot;
-# #[derive(Debug, InputAction)]
+# #[derive(InputAction)]
 # #[input_action(output = Vec2)]
 # struct Move;
 ```
@@ -162,7 +162,7 @@ actions
     .with_modifiers((DeadZone::default(), SmoothNudge::default()));
 # #[derive(InputContext)]
 # struct OnFoot;
-# #[derive(Debug, InputAction)]
+# #[derive(InputAction)]
 # #[input_action(output = Vec2)]
 # struct Move;
 ```
@@ -186,7 +186,7 @@ For details about how multiple conditions are merged together, see the [`ActionB
 actions.bind::<Jump>().to(KeyCode::Space.with_conditions(Hold::new(1.0)));
 # #[derive(InputContext)]
 # struct OnFoot;
-# #[derive(Debug, InputAction)]
+# #[derive(InputAction)]
 # #[input_action(output = bool)]
 # struct Jump;
 ```
@@ -231,7 +231,7 @@ struct KeyboardSettings {
 }
 # #[derive(InputContext)]
 # struct OnFoot;
-# #[derive(Debug, InputAction)]
+# #[derive(InputAction)]
 # #[input_action(output = bool)]
 # struct Jump;
 ```
@@ -274,7 +274,7 @@ fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transfo
     // but since translation expects `Vec3`, we extend it to 3 axes.
     transform.translation += trigger.value.extend(0.0);
 }
-# #[derive(Debug, InputAction)]
+# #[derive(InputAction)]
 # #[input_action(output = Vec2)]
 # struct Move;
 ```
@@ -300,7 +300,7 @@ fn system(players: Single<(&Actions<OnFoot>, &mut Transform)>) -> Result<()> {
 }
 # #[derive(InputContext)]
 # struct OnFoot;
-# #[derive(Debug, InputAction)]
+# #[derive(InputAction)]
 # #[input_action(output = bool)]
 # struct Jump;
 ```
@@ -332,46 +332,58 @@ extern crate alloc;
 // Required for the derive macro to work within the crate.
 extern crate self as bevy_enhanced_input;
 
-pub mod action_value;
-pub mod input;
-pub mod input_context;
-pub mod input_reader;
-pub mod input_time;
+pub mod action;
+pub mod binding;
+pub mod condition;
+pub mod context;
+pub mod modifier;
+pub mod preset;
 
 pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSet,
-        action_value::{ActionValue, ActionValueDim},
-        input::{GamepadDevice, Input, InputModKeys, ModKeys},
-        input_context::{
-            Bind, InputContext, InputContextAppExt, RebindAll,
-            action_binding::{ActionBinding, MockSpan},
-            actions::{Actions, UntypedActions},
+        action::{
+            Accumulation, Action, ActionMock, ActionOutput, ActionSettings, ActionState,
+            ActionTime, InputAction, MockSpan,
             events::*,
-            input_action::{Accumulation, Action, ActionState, InputAction, UntypedAction},
-            input_binding::{BindingBuilder, InputBinding, IntoBindings},
-            input_condition::{
-                ConditionKind, InputCondition, block_by::*, chord::*, down::*, hold::*,
-                hold_and_release::*, press::*, pulse::*, release::*, tap::*,
-            },
-            input_modifier::{
-                InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
-                exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
-            },
-            preset::*,
+            relationship::{ActionOf, ActionSpawner, ActionSpawnerCommands, Actions},
+            value::{ActionValue, ActionValueDim},
         },
-        input_reader::ActionSources,
-        input_time::{InputTime, TimeKind},
+        actions,
+        binding::{
+            Binding, InputModKeys,
+            mod_keys::ModKeys,
+            relationship::{BindingOf, BindingSpawner, BindingSpawnerCommands, Bindings},
+        },
+        bindings,
+        condition::{
+            ConditionKind, InputCondition, block_by::*, chord::*, down::*,
+            fns::InputConditionAppExt, hold::*, hold_and_release::*, press::*, pulse::*,
+            release::*, tap::*,
+        },
+        context::{
+            ActionsQuery, GamepadDevice, InputContext, InputContextAppExt,
+            input_reader::ActionSources,
+            time::{ContextTime, TimeKind},
+        },
+        modifier::{
+            InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
+            exponential_curve::*, fns::InputModifierAppExt, negate::*, scale::*, smooth_nudge::*,
+            swizzle_axis::*,
+        },
+        preset::{axial::*, bidirectional::*, cardinal::*, ordinal::*, spatial::*},
     };
     pub use bevy_enhanced_input_macros::{InputAction, InputContext};
 }
 
 use bevy::{input::InputSystem, prelude::*};
 
-use input_context::ContextRegistry;
-use input_reader::{ActionSources, ConsumedInputs, PendingInputs};
-
-#[cfg(doc)]
+use condition::fns::ConditionRegistry;
+use context::{
+    ContextRegistry,
+    input_reader::{self, ConsumedInputs, PendingInputs},
+};
+use modifier::fns::ModifierRegistry;
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
@@ -385,12 +397,33 @@ impl Plugin for EnhancedInputPlugin {
             .init_resource::<ConsumedInputs>()
             .init_resource::<PendingInputs>()
             .init_resource::<ActionSources>()
+            .init_resource::<ConditionRegistry>()
+            .init_resource::<ModifierRegistry>()
+            .add_input_condition::<BlockBy>()
+            .add_input_condition::<Chord>()
+            .add_input_condition::<Down>()
+            .add_input_condition::<Hold>()
+            .add_input_condition::<HoldAndRelease>()
+            .add_input_condition::<Press>()
+            .add_input_condition::<Pulse>()
+            .add_input_condition::<Release>()
+            .add_input_condition::<Tap>()
+            .add_input_modifier::<AccumulateBy>()
+            .add_input_modifier::<Clamp>()
+            .add_input_modifier::<DeadZone>()
+            .add_input_modifier::<DeltaScale>()
+            .add_input_modifier::<ExponentialCurve>()
+            .add_input_modifier::<Negate>()
+            .add_input_modifier::<Scale>()
+            .add_input_modifier::<SmoothNudge>()
+            .add_input_modifier::<SwizzleAxis>()
             .configure_sets(
                 PreUpdate,
                 (EnhancedInputSet::Prepare, EnhancedInputSet::Update)
                     .chain()
                     .after(InputSystem),
             )
+            .add_observer(action::remove_action)
             .add_systems(
                 PreUpdate,
                 input_reader::update_pending.in_set(EnhancedInputSet::Prepare),
@@ -398,13 +431,23 @@ impl Plugin for EnhancedInputPlugin {
     }
 
     fn finish(&self, app: &mut App) {
-        let registry = app
+        let context = app
             .world_mut()
             .remove_resource::<ContextRegistry>()
-            .expect("registry should be inserted in `build`");
+            .expect("contexts registry should be inserted in `build`");
 
-        for contexts in registry.iter() {
-            contexts.setup(app);
+        let conditions = app
+            .world_mut()
+            .remove_resource::<ConditionRegistry>()
+            .expect("conditions registry should be inserted in `build`");
+
+        let modifiers = app
+            .world_mut()
+            .remove_resource::<ModifierRegistry>()
+            .expect("conditions registry should be inserted in `build`");
+
+        for contexts in &*context {
+            contexts.setup(app, &conditions, &modifiers);
         }
     }
 }

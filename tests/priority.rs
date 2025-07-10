@@ -3,83 +3,159 @@ use bevy_enhanced_input::prelude::*;
 use test_log::test;
 
 #[test]
-fn same_schedule() -> Result<()> {
+fn same_schedule() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .add_input_context::<First>()
         .add_input_context::<Second>()
-        .add_observer(bind::<First>)
-        .add_observer(bind::<Second>)
         .finish();
 
-    let entity = app
-        .world_mut()
-        .spawn((Actions::<First>::default(), Actions::<Second>::default()))
-        .id();
+    app.world_mut().spawn((
+        First,
+        actions!(First[
+            (
+                Action::<FirstConsume>::new(),
+                ActionSettings { consume_input: true, ..Default::default() },
+                bindings![CONSUME_KEY]
+            ),
+            (
+                Action::<FirstPassthrough>::new(),
+                ActionSettings { consume_input: false, ..Default::default() },
+                bindings![PASSTHROUGH_KEY]
+            )
+        ]),
+        Second,
+        actions!(Second[
+            (
+                Action::<SecondConsume>::new(),
+                ActionSettings { consume_input: true, ..Default::default() },
+                bindings![CONSUME_KEY]
+            ),
+            (
+                Action::<SecondPassthrough>::new(),
+                ActionSettings { consume_input: false, ..Default::default() },
+                bindings![PASSTHROUGH_KEY]
+            )
+        ]),
+    ));
 
     app.update();
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-    keys.press(Consume::KEY);
-    keys.press(Passthrough::KEY);
+    keys.press(CONSUME_KEY);
+    keys.press(PASSTHROUGH_KEY);
 
     app.update();
 
-    let first = app.world().get::<Actions<First>>(entity).unwrap();
-    assert_eq!(first.state::<Consume>()?, ActionState::Fired);
-    assert_eq!(first.state::<Passthrough>()?, ActionState::Fired);
+    let mut first_consume = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<FirstConsume>>>();
 
-    let second = app.world().get::<Actions<Second>>(entity).unwrap();
+    let first_consume_state = *first_consume.single(app.world()).unwrap();
+    assert_eq!(first_consume_state, ActionState::Fired);
+
+    let mut first_passthrough = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<FirstPassthrough>>>();
+
+    let first_passthrough_state = *first_passthrough.single(app.world()).unwrap();
+    assert_eq!(first_passthrough_state, ActionState::Fired);
+
+    let mut second_consume = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<SecondConsume>>>();
+
+    let second_consume_state = *second_consume.single(app.world()).unwrap();
     assert_eq!(
-        second.state::<Consume>()?,
+        second_consume_state,
         ActionState::None,
         "action should be consumed by component input with a higher priority"
     );
+
+    let mut second_passthrough = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<SecondPassthrough>>>();
+
+    let second_passthrough_state = *second_passthrough.single(app.world()).unwrap();
     assert_eq!(
-        second.state::<Passthrough>()?,
+        second_passthrough_state,
         ActionState::Fired,
         "actions that doesn't consume inputs should still be triggered"
     );
-
-    Ok(())
 }
 
 #[test]
-fn different_schedules() -> Result<()> {
+fn different_schedules() {
     let time_step = Time::<Fixed>::default().timestep() / 2;
 
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
         .add_input_context::<First>()
-        .add_input_context::<FixedSchedule>()
-        .add_observer(bind::<First>)
-        .add_observer(bind::<FixedSchedule>)
+        .add_input_context::<FixedSecond>()
         .finish();
 
-    let entity = app
-        .world_mut()
-        .spawn((
-            Actions::<First>::default(),
-            Actions::<FixedSchedule>::default(),
-        ))
-        .id();
+    app.world_mut().spawn((
+        First,
+        actions!(First[
+            (
+                Action::<FirstConsume>::new(),
+                ActionSettings { consume_input: true, ..Default::default() },
+                bindings![CONSUME_KEY]
+            ),
+            (
+                Action::<FirstPassthrough>::new(),
+                ActionSettings { consume_input: false, ..Default::default() },
+                bindings![PASSTHROUGH_KEY]
+            )
+        ]),
+        FixedSecond,
+        actions!(FixedSecond[
+            (
+                Action::<SecondConsume>::new(),
+                ActionSettings { consume_input: true, ..Default::default() },
+                bindings![CONSUME_KEY]
+            ),
+            (
+                Action::<SecondPassthrough>::new(),
+                ActionSettings { consume_input: false, ..Default::default() },
+                bindings![PASSTHROUGH_KEY]
+            )
+        ]),
+    ));
 
     let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
-    keys.press(Consume::KEY);
-    keys.press(Passthrough::KEY);
+    keys.press(CONSUME_KEY);
+    keys.press(PASSTHROUGH_KEY);
+
+    let mut first_consume = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<FirstConsume>>>();
+    let mut first_passthrough = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<FirstPassthrough>>>();
+    let mut second_consume = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<SecondConsume>>>();
+    let mut second_passthrough = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<SecondPassthrough>>>();
 
     for frame in 0..2 {
         app.update();
 
-        let actions = app.world().get::<Actions<First>>(entity).unwrap();
-        assert_eq!(actions.state::<Consume>()?, ActionState::Fired);
-        assert_eq!(actions.state::<Passthrough>()?, ActionState::Fired);
+        let first_consume_state = *first_consume.single(app.world()).unwrap();
+        assert_eq!(first_consume_state, ActionState::Fired);
 
-        let fixed_actions = app.world().get::<Actions<FixedSchedule>>(entity).unwrap();
-        assert_eq!(fixed_actions.state::<Consume>()?, ActionState::None);
+        let first_passthrough_state = *first_passthrough.single(app.world()).unwrap();
+        assert_eq!(first_passthrough_state, ActionState::Fired);
+
+        let second_consume_state = *second_consume.single(app.world()).unwrap();
+        assert_eq!(second_consume_state, ActionState::None);
+
+        let second_passthrough_state = *second_passthrough.single(app.world()).unwrap();
         assert_eq!(
-            fixed_actions.state::<Passthrough>()?,
+            second_passthrough_state,
             ActionState::None,
             "shouldn't fire on frame {frame} because the schedule hasn't run yet"
         );
@@ -88,51 +164,53 @@ fn different_schedules() -> Result<()> {
     for frame in 2..4 {
         app.update();
 
-        let actions = app.world().get::<Actions<First>>(entity).unwrap();
-        assert_eq!(actions.state::<Consume>()?, ActionState::Fired);
-        assert_eq!(actions.state::<Passthrough>()?, ActionState::Fired);
+        let first_consume_state = *first_consume.single(app.world()).unwrap();
+        assert_eq!(first_consume_state, ActionState::Fired);
 
-        let fixed_actions = app.world().get::<Actions<FixedSchedule>>(entity).unwrap();
+        let first_passthrough_state = *first_passthrough.single(app.world()).unwrap();
+        assert_eq!(first_passthrough_state, ActionState::Fired);
+
+        let second_consume_state = *second_consume.single(app.world()).unwrap();
         assert_eq!(
-            fixed_actions.state::<Consume>()?,
+            second_consume_state,
             ActionState::None,
             "shouldn't fire on frame {frame} because of the schedule evaluation order"
         );
-        assert_eq!(fixed_actions.state::<Passthrough>()?, ActionState::Fired);
+
+        let second_passthrough_state = *second_passthrough.single(app.world()).unwrap();
+        assert_eq!(second_passthrough_state, ActionState::Fired);
     }
-
-    Ok(())
 }
 
-fn bind<C: InputContext>(trigger: Trigger<Bind<C>>, mut actions: Query<&mut Actions<C>>) {
-    let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions.bind::<Consume>().to(Consume::KEY);
-    actions.bind::<Passthrough>().to(Passthrough::KEY);
-}
-
-#[derive(InputContext)]
+#[derive(Component, InputContext)]
 #[input_context(priority = 1)]
 struct First;
 
-#[derive(InputContext)]
+#[derive(Component, InputContext)]
 struct Second;
 
-#[derive(InputContext)]
+#[derive(Component, InputContext)]
 #[input_context(schedule = FixedPreUpdate, priority = 3)]
-struct FixedSchedule;
+struct FixedSecond;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = bool, consume_input = true)]
-struct Consume;
+/// A key used by all consume actions.
+const CONSUME_KEY: KeyCode = KeyCode::KeyA;
 
-impl Consume {
-    const KEY: KeyCode = KeyCode::KeyA;
-}
+/// A key used by all consume actions.
+const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyB;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = bool, consume_input = false)]
-struct Passthrough;
+#[derive(InputAction)]
+#[input_action(output = bool)]
+struct FirstConsume;
 
-impl Passthrough {
-    const KEY: KeyCode = KeyCode::KeyB;
-}
+#[derive(InputAction)]
+#[input_action(output = bool)]
+struct FirstPassthrough;
+
+#[derive(InputAction)]
+#[input_action(output = bool)]
+struct SecondConsume;
+
+#[derive(InputAction)]
+#[input_action(output = bool)]
+struct SecondPassthrough;

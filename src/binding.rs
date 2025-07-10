@@ -1,0 +1,254 @@
+pub mod mod_keys;
+pub mod relationship;
+
+use core::fmt::{self, Display, Formatter};
+
+use bevy::{
+    ecs::{component::HookContext, world::DeferredWorld},
+    prelude::*,
+};
+use serde::{Deserialize, Serialize};
+
+use crate::prelude::*;
+
+/// Wraps input from any source.
+///
+/// [Input modifiers](crate::input_context::input_modifier) can change the captured dimension.
+///
+/// If the action's dimension differs from the captured input, it will be converted using
+/// [`ActionValue::convert`](crate::action_value::ActionValue::convert).
+#[derive(Component, Reflect, Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
+#[component(on_insert = reset_first_activation, immutable)]
+#[require(FirstActivation)]
+pub enum Binding {
+    /// Keyboard button, will be captured as
+    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
+    Keyboard { key: KeyCode, mod_keys: ModKeys },
+    /// Mouse button, will be captured as
+    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
+    MouseButton {
+        button: MouseButton,
+        mod_keys: ModKeys,
+    },
+    /// Mouse movement, will be captured as
+    /// [`ActionValue::Axis2D`](crate::action_value::ActionValue::Axis2D).
+    MouseMotion { mod_keys: ModKeys },
+    /// Mouse wheel, will be captured as
+    /// [`ActionValue::Axis2D`](crate::action_value::ActionValue::Axis2D).
+    MouseWheel { mod_keys: ModKeys },
+    /// Gamepad button, will be captured as
+    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
+    GamepadButton(GamepadButton),
+    /// Gamepad stick axis, will be captured as
+    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
+    GamepadAxis(GamepadAxis),
+}
+
+impl Binding {
+    /// Returns [`Input::MouseMotion`] without keyboard modifiers.
+    #[must_use]
+    pub const fn mouse_motion() -> Self {
+        Self::MouseMotion {
+            mod_keys: ModKeys::empty(),
+        }
+    }
+
+    /// Returns [`Input::MouseWheel`] without keyboard modifiers.
+    #[must_use]
+    pub const fn mouse_wheel() -> Self {
+        Self::MouseWheel {
+            mod_keys: ModKeys::empty(),
+        }
+    }
+
+    /// Returns the amount of associated keyboard modifiers.
+    #[must_use]
+    pub fn mod_keys_count(self) -> usize {
+        self.mod_keys().iter_names().count()
+    }
+
+    /// Returns associated keyboard modifiers.
+    #[must_use]
+    pub const fn mod_keys(self) -> ModKeys {
+        match self {
+            Binding::Keyboard { mod_keys, .. }
+            | Binding::MouseButton { mod_keys, .. }
+            | Binding::MouseMotion { mod_keys }
+            | Binding::MouseWheel { mod_keys } => mod_keys,
+            Binding::GamepadButton(_) | Binding::GamepadAxis(_) => ModKeys::empty(),
+        }
+    }
+
+    /// Returns new instance without any keyboard modifiers.
+    ///
+    /// # Panics
+    ///
+    /// Panics when called on [`Self::GamepadButton`] or [`Self::GamepadAxis`].
+    #[must_use]
+    pub fn without_mod_keys(self) -> Self {
+        self.with_mod_keys(ModKeys::empty())
+    }
+}
+
+impl Display for Binding {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        let mod_keys = self.mod_keys();
+        if !mod_keys.is_empty() {
+            write!(f, "{mod_keys} + ")?;
+        }
+
+        match self {
+            Binding::Keyboard { key, .. } => write!(f, "{key:?}"),
+            Binding::MouseButton { button, .. } => write!(f, "Mouse {button:?}"),
+            Binding::MouseMotion { .. } => write!(f, "Mouse Motion"),
+            Binding::MouseWheel { .. } => write!(f, "Scroll Wheel"),
+            Binding::GamepadButton(gamepad_button) => write!(f, "{gamepad_button:?}"),
+            Binding::GamepadAxis(gamepad_axis) => write!(f, "{gamepad_axis:?}"),
+        }
+    }
+}
+
+impl From<KeyCode> for Binding {
+    fn from(key: KeyCode) -> Self {
+        Self::Keyboard {
+            key,
+            mod_keys: Default::default(),
+        }
+    }
+}
+
+impl From<MouseButton> for Binding {
+    fn from(button: MouseButton) -> Self {
+        Self::MouseButton {
+            button,
+            mod_keys: Default::default(),
+        }
+    }
+}
+
+impl From<GamepadButton> for Binding {
+    fn from(value: GamepadButton) -> Self {
+        Self::GamepadButton(value)
+    }
+}
+
+impl From<GamepadAxis> for Binding {
+    fn from(value: GamepadAxis) -> Self {
+        Self::GamepadAxis(value)
+    }
+}
+
+/// A trait to ergonomically assign keyboard modifiers to any type that can be converted into an input.
+pub trait InputModKeys {
+    /// Returns an input with assigned keyboard modifiers.
+    #[must_use]
+    fn with_mod_keys(self, mod_keys: ModKeys) -> Binding;
+}
+
+impl<I: Into<Binding>> InputModKeys for I {
+    /// Returns new instance with the replaced keyboard modifiers.
+    ///
+    /// # Panics
+    ///
+    /// Panics when called on [`Input::GamepadButton`] or [`Input::GamepadAxis`].
+    fn with_mod_keys(self, mod_keys: ModKeys) -> Binding {
+        match self.into() {
+            Binding::Keyboard { key, .. } => Binding::Keyboard { key, mod_keys },
+            Binding::MouseButton { button, .. } => Binding::MouseButton { button, mod_keys },
+            Binding::MouseMotion { .. } => Binding::MouseMotion { mod_keys },
+            Binding::MouseWheel { .. } => Binding::MouseWheel { mod_keys },
+            Binding::GamepadButton { .. } | Binding::GamepadAxis { .. } => {
+                panic!("keyboard modifiers can't be applied to gamepads")
+            }
+        }
+    }
+}
+
+fn reset_first_activation(mut world: DeferredWorld, ctx: HookContext) {
+    let mut first_activation = world.get_mut::<FirstActivation>(ctx.entity).unwrap();
+    **first_activation = true;
+}
+
+/// Whether the input output a non-zero value.
+///
+/// Prevents newly created contexts from reacting to currently held inputs
+/// until they’re released.
+///
+/// Used only if [`ActionBinding`](crate::action_binding::ActionBinding::require_reset) is set.
+#[derive(Component, Deref, DerefMut, Default)]
+pub(crate) struct FirstActivation(bool);
+
+#[cfg(test)]
+mod tests {
+    use alloc::string::ToString;
+
+    use super::*;
+
+    #[test]
+    fn pressed_mod_keys() {
+        let mut keys = ButtonInput::default();
+        keys.press(KeyCode::ControlLeft);
+        keys.press(KeyCode::ShiftLeft);
+        keys.press(KeyCode::KeyC);
+
+        let mod_keys = ModKeys::pressed(&keys);
+        assert_eq!(mod_keys, ModKeys::CONTROL | ModKeys::SHIFT);
+    }
+
+    #[test]
+    fn mod_keys_display() {
+        assert_eq!(ModKeys::CONTROL.to_string(), "Ctrl");
+        assert_eq!(ModKeys::all().to_string(), "Ctrl + Shift + Alt + Super");
+        assert_eq!(ModKeys::empty().to_string(), "");
+    }
+
+    #[test]
+    fn input_display() {
+        assert_eq!(
+            Binding::Keyboard {
+                key: KeyCode::KeyA,
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "KeyA"
+        );
+        assert_eq!(
+            Binding::Keyboard {
+                key: KeyCode::KeyA,
+                mod_keys: ModKeys::CONTROL
+            }
+            .to_string(),
+            "Ctrl + KeyA"
+        );
+        assert_eq!(
+            Binding::MouseButton {
+                button: MouseButton::Left,
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "Mouse Left"
+        );
+        assert_eq!(
+            Binding::MouseMotion {
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "Mouse Motion"
+        );
+        assert_eq!(
+            Binding::MouseWheel {
+                mod_keys: ModKeys::empty()
+            }
+            .to_string(),
+            "Scroll Wheel"
+        );
+        assert_eq!(
+            Binding::GamepadAxis(GamepadAxis::LeftStickX).to_string(),
+            "LeftStickX"
+        );
+        assert_eq!(
+            Binding::GamepadButton(GamepadButton::North).to_string(),
+            "North"
+        );
+    }
+}
