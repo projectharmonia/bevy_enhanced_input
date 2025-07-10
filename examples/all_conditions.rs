@@ -1,7 +1,7 @@
 //! Demonstrates all available input conditions.
 //! Press keys from the number row on the keyboard to trigger actions and observe the output in console.
 
-use bevy::{log::LogPlugin, prelude::*};
+use bevy::{ecs::spawn::SpawnWith, log::LogPlugin, prelude::*};
 use bevy_enhanced_input::prelude::*;
 
 fn main() {
@@ -22,63 +22,79 @@ struct GamePlugin;
 
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
-        app.add_input_context::<Test>()
-            .add_observer(bind)
+        app.add_input_context::<TestContext>()
             .add_systems(Startup, spawn);
     }
 }
 
 fn spawn(mut commands: Commands) {
-    commands.spawn(Actions::<Test>::default());
-}
+    commands.spawn((
+        TestContext,
+        Actions::<TestContext>::spawn(SpawnWith(|context: &mut ActionSpawner<_>| {
+            context.spawn((
+                Action::<PressAction>::new(),
+                bindings![PressAction::KEY],
+                Down::default(),
+            ));
+            context.spawn((
+                Action::<JustPressAction>::new(),
+                bindings![JustPressAction::KEY],
+                Press::default(),
+            ));
+            context.spawn((
+                Action::<HoldAction>::new(),
+                bindings![HoldAction::KEY],
+                Hold::new(1.0),
+            ));
+            context.spawn((
+                Action::<HoldAndReleaseAction>::new(),
+                bindings![HoldAndReleaseAction::KEY],
+                HoldAndRelease::new(1.0),
+            ));
+            context.spawn((
+                Action::<PulseAction>::new(),
+                bindings![PulseAction::KEY],
+                Pulse::new(1.0),
+            ));
+            context.spawn((
+                Action::<ReleaseAction>::new(),
+                bindings![ReleaseAction::KEY],
+                Release::default(),
+            ));
+            context.spawn((
+                Action::<TapAction>::new(),
+                bindings![TapAction::KEY],
+                Tap::new(0.5),
+            ));
 
-fn bind(trigger: Trigger<Bind<Test>>, mut actions: Query<&mut Actions<Test>>) {
-    let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions
-        .bind::<PressAction>()
-        .to(PressAction::KEY)
-        .with_conditions(Down::default());
-    actions
-        .bind::<JustPressAction>()
-        .to(JustPressAction::KEY)
-        .with_conditions(Press::default());
-    actions
-        .bind::<HoldAction>()
-        .to(HoldAction::KEY)
-        .with_conditions(Hold::new(1.0));
-    actions
-        .bind::<HoldAndReleaseAction>()
-        .to(HoldAndReleaseAction::KEY)
-        .with_conditions(HoldAndRelease::new(1.0));
-    actions
-        .bind::<PulseAction>()
-        .to(PulseAction::KEY)
-        .with_conditions(Pulse::new(1.0));
-    actions
-        .bind::<ReleaseAction>()
-        .to(ReleaseAction::KEY)
-        .with_conditions(Release::default());
-    actions
-        .bind::<TapAction>()
-        .to(TapAction::KEY)
-        .with_conditions(Tap::new(0.5));
-    actions.bind::<ChordMember1>().to(ChordMember1::KEY);
-    actions.bind::<ChordMember2>().to(ChordMember2::KEY);
-    actions.bind::<ChordAction>().with_conditions((
-        Chord::<ChordMember1>::default(),
-        Chord::<ChordMember2>::default(),
+            let chord1 = context
+                .spawn((Action::<ChordMember1>::new(), bindings![ChordMember1::KEY]))
+                .id();
+            let chord2 = context
+                .spawn((Action::<ChordMember2>::new(), bindings![ChordMember2::KEY]))
+                .id();
+
+            context.spawn((Action::<ChordAction>::new(), Chord::new([chord1, chord2])));
+
+            let blocker = context
+                .spawn((
+                    Action::<BlockerAction>::new(),
+                    bindings![BlockerAction::KEY],
+                ))
+                .id();
+            context.spawn((
+                Action::<BlockByAction>::new(),
+                bindings![BlockByAction::KEY],
+                BlockBy::single(blocker),
+            ));
+        })),
     ));
-    actions.bind::<BlockerAction>().to(BlockerAction::KEY);
-    actions
-        .bind::<BlockByAction>()
-        .to(BlockByAction::KEY)
-        .with_conditions(BlockBy::<BlockerAction>::default());
 }
 
-#[derive(InputContext)]
-struct Test;
+#[derive(Component, InputContext)]
+struct TestContext;
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct PressAction;
 
@@ -86,7 +102,7 @@ impl PressAction {
     const KEY: KeyCode = KeyCode::Digit1;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct JustPressAction;
 
@@ -94,7 +110,7 @@ impl JustPressAction {
     const KEY: KeyCode = KeyCode::Digit2;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct HoldAction;
 
@@ -102,7 +118,7 @@ impl HoldAction {
     const KEY: KeyCode = KeyCode::Digit3;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct HoldAndReleaseAction;
 
@@ -110,7 +126,7 @@ impl HoldAndReleaseAction {
     const KEY: KeyCode = KeyCode::Digit4;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct PulseAction;
 
@@ -118,7 +134,7 @@ impl PulseAction {
     const KEY: KeyCode = KeyCode::Digit5;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct ReleaseAction;
 
@@ -126,7 +142,7 @@ impl ReleaseAction {
     const KEY: KeyCode = KeyCode::Digit6;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct TapAction;
 
@@ -134,7 +150,7 @@ impl TapAction {
     const KEY: KeyCode = KeyCode::Digit7;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct ChordMember1;
 
@@ -142,7 +158,7 @@ impl ChordMember1 {
     const KEY: KeyCode = KeyCode::Digit8;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct ChordMember2;
 
@@ -150,7 +166,7 @@ impl ChordMember2 {
     const KEY: KeyCode = KeyCode::Digit9;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct BlockerAction;
 
@@ -158,11 +174,11 @@ impl BlockerAction {
     const KEY: KeyCode = KeyCode::Digit0;
 }
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct ChordAction;
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct BlockByAction;
 
