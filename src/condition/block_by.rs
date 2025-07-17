@@ -4,7 +4,7 @@ use smallvec::{SmallVec, smallvec};
 use crate::prelude::*;
 
 /// Requires another action to not be fired within the same context.
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone)]
 pub struct BlockBy {
     /// Action that blocks this condition when active.
     pub actions: SmallVec<[Entity; 2]>,

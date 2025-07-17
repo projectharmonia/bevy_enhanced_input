@@ -6,7 +6,7 @@ use crate::prelude::*;
 /// Requires action `A` to be fired within the same context.
 ///
 /// Inherits [`ActionState`] from the specified action.
-#[derive(Component, Debug, Clone)]
+#[derive(Component, Reflect, Debug, Clone)]
 pub struct Chord {
     /// Required action.
     pub actions: SmallVec<[Entity; 2]>,

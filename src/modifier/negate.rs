@@ -7,7 +7,7 @@ use crate::prelude::*;
 /// By default, all axes are inverted.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct Negate {
     /// Whether to inverse the X axis.
     pub x: bool,
@@ -125,9 +125,18 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Negate::x();
-        assert_eq!(modifier.transform(&actions, &time, true.into()), (-1.0).into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), (-0.5).into());
+        assert_eq!(
+            modifier.transform(&actions, &time, true.into()),
+            (-1.0).into()
+        );
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
+        assert_eq!(
+            modifier.transform(&actions, &time, 0.5.into()),
+            (-0.5).into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, Vec2::ONE.into()),
             (-1.0, 1.0).into()
@@ -145,7 +154,10 @@ mod tests {
 
         let mut modifier = Negate::y();
         assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.5.into());
         assert_eq!(
             modifier.transform(&actions, &time, Vec2::ONE.into()),
@@ -164,7 +176,10 @@ mod tests {
 
         let mut modifier = Negate::z();
         assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.5.into());
         assert_eq!(
             modifier.transform(&actions, &time, Vec2::ONE.into()),
@@ -182,9 +197,18 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Negate::all();
-        assert_eq!(modifier.transform(&actions, &time, true.into()), (-1.0).into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), (-0.5).into());
+        assert_eq!(
+            modifier.transform(&actions, &time, true.into()),
+            (-1.0).into()
+        );
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
+        assert_eq!(
+            modifier.transform(&actions, &time, 0.5.into()),
+            (-0.5).into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, Vec2::ONE.into()),
             Vec2::NEG_ONE.into(),

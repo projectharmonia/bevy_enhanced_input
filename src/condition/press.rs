@@ -6,7 +6,7 @@ use crate::prelude::*;
 /// Like [`super::press::Down`] but returns [`ActionState::Fired`] only once until the next actuation.
 ///
 /// Holding the input will not cause further triggers.
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct Press {
     /// Trigger threshold.
     pub actuation: f32,

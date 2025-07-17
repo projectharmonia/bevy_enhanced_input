@@ -9,7 +9,7 @@ use crate::prelude::*;
 /// Apply at the action level to ensure consistent diagonal movement speeds across different input sources.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct DeadZone {
     /// Defines how axes are processed.
     ///
@@ -133,10 +133,16 @@ mod tests {
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
 
         assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
 
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.375.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, 0.5.into()),
+            0.375.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 0.2.into()), 0.0.into());
         assert_eq!(modifier.transform(&actions, &time, 2.0.into()), 1.0.into());
 
@@ -175,9 +181,15 @@ mod tests {
         let mut modifier = DeadZone::new(DeadZoneKind::Axial);
 
         assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.375.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, 0.5.into()),
+            0.375.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 0.2.into()), 0.0.into());
         assert_eq!(modifier.transform(&actions, &time, 2.0.into()), 1.0.into());
         assert_eq!(
