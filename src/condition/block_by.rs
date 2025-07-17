@@ -31,11 +31,11 @@ impl InputCondition for BlockBy {
     ) -> ActionState {
         if actions
             .iter_many(&self.actions)
-            .all(|(_, &state, ..)| state == ActionState::Fired)
+            .any(|(_, &state, ..)| state == ActionState::Fired)
         {
-            ActionState::Fired
-        } else {
             ActionState::None
+        } else {
+            ActionState::Fired
         }
     }
 
