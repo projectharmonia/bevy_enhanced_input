@@ -5,7 +5,7 @@ use crate::prelude::*;
 
 /// Returns [`ActionState::Ongoing`] when the input exceeds the actuation threshold and
 /// [`ActionState::Fired`] once when the input drops back below the actuation threshold.
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct Release {
     /// Trigger threshold.
     pub actuation: f32,

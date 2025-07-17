@@ -5,7 +5,7 @@ use crate::prelude::*;
 /// Scales input independently along each axis by a specified factor.
 ///
 /// [`ActionValue::Bool`] will be converted into [`ActionValue::Axis1D`].
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct Scale {
     /// The factor applied to the input value.
     ///

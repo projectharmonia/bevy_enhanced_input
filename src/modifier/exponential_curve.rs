@@ -7,7 +7,7 @@ use crate::prelude::*;
 /// Apply a simple exponential response curve to input values, per axis.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct ExponentialCurve {
     /// Curve exponent.
     pub exp: Vec3,
@@ -70,7 +70,10 @@ mod tests {
 
         let mut modifier = ExponentialCurve::splat(2.0);
         assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, (-0.5).into()),
             (-0.25).into()

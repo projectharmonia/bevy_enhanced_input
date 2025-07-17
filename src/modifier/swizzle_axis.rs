@@ -12,7 +12,7 @@ use crate::prelude::*;
 /// For example, [`ActionValue::Bool`] will remain unchanged for [`Self::XZY`] (X in the first place).
 /// But for variants like [`Self::YXZ`] (where X becomes the second component), it will be
 /// converted into [`ActionValue::Axis2D`] with Y set to the value.
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub enum SwizzleAxis {
     /// Swap X and Y axis. Useful for binding 1D inputs to the Y axis for 2D actions.
     YXZ,
@@ -117,12 +117,18 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = SwizzleAxis::YXZ;
-        assert_eq!(modifier.transform(&actions, &time, true.into()), Vec2::Y.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, true.into()),
+            Vec2::Y.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, false.into()),
             Vec2::ZERO.into()
         );
-        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), Vec2::Y.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, 1.0.into()),
+            Vec2::Y.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, (0.0, 1.0).into()),
             (1.0, 0.0).into()
@@ -139,12 +145,18 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = SwizzleAxis::ZYX;
-        assert_eq!(modifier.transform(&actions, &time, true.into()), Vec3::Z.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, true.into()),
+            Vec3::Z.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, false.into()),
             Vec3::ZERO.into()
         );
-        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), Vec3::Z.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, 1.0.into()),
+            Vec3::Z.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, (0.0, 1.0).into()),
             (0.0, 1.0, 0.0).into()
@@ -162,7 +174,10 @@ mod tests {
 
         let mut modifier = SwizzleAxis::XZY;
         assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
         assert_eq!(
             modifier.transform(&actions, &time, (0.0, 1.0).into()),
@@ -180,12 +195,18 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = SwizzleAxis::YZX;
-        assert_eq!(modifier.transform(&actions, &time, true.into()), Vec3::Z.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, true.into()),
+            Vec3::Z.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, false.into()),
             Vec3::ZERO.into()
         );
-        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), Vec3::Z.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, 1.0.into()),
+            Vec3::Z.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, (0.0, 1.0).into()),
             (1.0, 0.0, 0.0).into()
@@ -202,12 +223,18 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = SwizzleAxis::ZXY;
-        assert_eq!(modifier.transform(&actions, &time, true.into()), Vec2::Y.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, true.into()),
+            Vec2::Y.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, false.into()),
             Vec2::ZERO.into()
         );
-        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), Vec2::Y.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, 1.0.into()),
+            Vec2::Y.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, (0.0, 1.0).into()),
             (0.0, 0.0, 1.0).into()
@@ -309,7 +336,10 @@ mod tests {
 
         let mut modifier = SwizzleAxis::YYZ;
         assert_eq!(modifier.transform(&actions, &time, true.into()), 0.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 2.0.into()), 0.0.into());
         assert_eq!(
             modifier.transform(&actions, &time, (1.0, 3.0).into()),
@@ -356,7 +386,10 @@ mod tests {
 
         let mut modifier = SwizzleAxis::ZZY;
         assert_eq!(modifier.transform(&actions, &time, true.into()), 0.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 4.0.into()), 0.0.into());
         assert_eq!(
             modifier.transform(&actions, &time, (1.0, 2.0).into()),
@@ -403,7 +436,10 @@ mod tests {
 
         let mut modifier = SwizzleAxis::YYY;
         assert_eq!(modifier.transform(&actions, &time, true.into()), 0.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.0.into());
         assert_eq!(
             modifier.transform(&actions, &time, (2.0, 3.0).into()),
@@ -422,7 +458,10 @@ mod tests {
 
         let mut modifier = SwizzleAxis::ZZZ;
         assert_eq!(modifier.transform(&actions, &time, true.into()), 0.0.into());
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.0.into());
         assert_eq!(
             modifier.transform(&actions, &time, (2.0, 3.0).into()),

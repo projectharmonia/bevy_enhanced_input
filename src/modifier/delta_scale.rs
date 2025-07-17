@@ -5,7 +5,7 @@ use crate::prelude::*;
 /// Multiplies the input value by delta time for this frame.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct DeltaScale;
 
 impl InputModifier for DeltaScale {
@@ -44,9 +44,18 @@ mod tests {
             .advance_by(Duration::from_millis(500));
         let (time, actions) = state.get(&world);
 
-        assert_eq!(DeltaScale.transform(&actions, &time, true.into()), 0.5.into());
-        assert_eq!(DeltaScale.transform(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(DeltaScale.transform(&actions, &time, 0.5.into()), 0.25.into());
+        assert_eq!(
+            DeltaScale.transform(&actions, &time, true.into()),
+            0.5.into()
+        );
+        assert_eq!(
+            DeltaScale.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
+        assert_eq!(
+            DeltaScale.transform(&actions, &time, 0.5.into()),
+            0.25.into()
+        );
         assert_eq!(
             DeltaScale.transform(&actions, &time, Vec2::ONE.into()),
             (0.5, 0.5).into()

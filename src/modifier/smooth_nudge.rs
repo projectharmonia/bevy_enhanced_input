@@ -7,7 +7,7 @@ use crate::prelude::*;
 /// See [`StableInterpolate::smooth_nudge`] for details.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct SmoothNudge {
     /// Multiplier for delta time, determines the rate of smoothing.
     ///
@@ -94,7 +94,10 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = SmoothNudge::default();
-        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
         assert_eq!(
             modifier.transform(&actions, &time, true.into()),
             0.55067104.into()

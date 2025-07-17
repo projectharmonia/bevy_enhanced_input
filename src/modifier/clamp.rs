@@ -40,7 +40,7 @@ use crate::prelude::*;
 /// #[input_action(output = bool)]
 /// struct Down;
 /// ```
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct Clamp {
     /// Minimum value per axis.
     pub min: Vec3,

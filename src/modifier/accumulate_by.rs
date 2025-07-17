@@ -7,7 +7,7 @@ use crate::prelude::*;
 ///
 /// Continuously adds input values together as long as action `A` is [`ActionState::Fired`].
 /// When the action is inactive, it resets the accumulation with the current frame's input value.
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct AccumulateBy {
     /// Action that activates accumulation.
     action: Entity,
