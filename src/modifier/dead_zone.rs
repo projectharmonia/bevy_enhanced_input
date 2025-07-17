@@ -64,7 +64,7 @@ impl Default for DeadZone {
 }
 
 impl InputModifier for DeadZone {
-    fn apply(
+    fn transform(
         &mut self,
         _actions: &ActionsQuery,
         _time: &ContextTime,
@@ -132,37 +132,37 @@ mod tests {
 
         let mut modifier = DeadZone::new(DeadZoneKind::Radial);
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
 
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), 0.375.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.2.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 2.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.375.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.2.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 2.0.into()), 1.0.into());
 
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec2::ONE * 0.5).into()),
+            modifier.transform(&actions, &time, (Vec2::ONE * 0.5).into()),
             (Vec2::ONE * 0.4482233).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.transform(&actions, &time, Vec2::ONE.into()),
             (Vec2::ONE * 0.70710677).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec2::ONE * 0.2).into()),
+            modifier.transform(&actions, &time, (Vec2::ONE * 0.2).into()),
             (Vec2::ONE * 0.07322331).into()
         );
 
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec3::ONE * 0.5).into()),
+            modifier.transform(&actions, &time, (Vec3::ONE * 0.5).into()),
             (Vec3::ONE * 0.48066244).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.transform(&actions, &time, Vec3::ONE.into()),
             (Vec3::ONE * 0.57735026).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec3::ONE * 0.2).into()),
+            modifier.transform(&actions, &time, (Vec3::ONE * 0.2).into()),
             (Vec3::ONE * 0.105662435).into()
         );
     }
@@ -174,34 +174,34 @@ mod tests {
 
         let mut modifier = DeadZone::new(DeadZoneKind::Axial);
 
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), 0.375.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.2.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 2.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.375.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.2.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 2.0.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec2::ONE * 0.5).into()),
+            modifier.transform(&actions, &time, (Vec2::ONE * 0.5).into()),
             (Vec2::ONE * 0.375).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.transform(&actions, &time, Vec2::ONE.into()),
             Vec2::ONE.into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec2::ONE * 0.2).into()),
+            modifier.transform(&actions, &time, (Vec2::ONE * 0.2).into()),
             Vec2::ZERO.into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec3::ONE * 0.5).into()),
+            modifier.transform(&actions, &time, (Vec3::ONE * 0.5).into()),
             (Vec3::ONE * 0.375).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.transform(&actions, &time, Vec3::ONE.into()),
             Vec3::ONE.into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec3::ONE * 0.2).into()),
+            modifier.transform(&actions, &time, (Vec3::ONE * 0.2).into()),
             Vec3::ZERO.into()
         );
     }

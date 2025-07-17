@@ -78,7 +78,7 @@ impl Clamp {
 }
 
 impl InputModifier for Clamp {
-    fn apply(
+    fn transform(
         &mut self,
         _actions: &ActionsQuery,
         _time: &ContextTime,
@@ -107,16 +107,22 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Clamp::splat(0.0, 1.0);
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 2.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, (-1.0).into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::new(-1.0, 2.0).into()),
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
+        assert_eq!(modifier.transform(&actions, &time, 2.0.into()), 1.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, (-1.0).into()),
+            0.0.into()
+        );
+        assert_eq!(
+            modifier.transform(&actions, &time, Vec2::new(-1.0, 2.0).into()),
             Vec2::new(0.0, 1.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::new(-2.0, 0.5, 3.0).into()),
+            modifier.transform(&actions, &time, Vec3::new(-2.0, 0.5, 3.0).into()),
             Vec3::new(0.0, 0.5, 1.0).into()
         );
     }

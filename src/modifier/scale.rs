@@ -27,7 +27,7 @@ impl Scale {
 }
 
 impl InputModifier for Scale {
-    fn apply(
+    fn transform(
         &mut self,
         _actions: &ActionsQuery,
         _time: &ContextTime,
@@ -56,15 +56,18 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Scale::splat(2.0);
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 2.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 2.0.into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 2.0.into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 2.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, Vec2::ONE.into()),
             (2.0, 2.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.transform(&actions, &time, Vec3::ONE.into()),
             (2.0, 2.0, 2.0).into()
         );
     }

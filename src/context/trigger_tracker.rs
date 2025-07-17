@@ -39,7 +39,7 @@ impl TriggerTracker {
     ) {
         for get_modifier in &**fns {
             let modifier = get_modifier(entity);
-            let new_value = modifier.apply(actions, time, self.value);
+            let new_value = modifier.transform(actions, time, self.value);
             trace!(
                 "`{modifier:?}` changes `{:?}` to `{new_value:?}`",
                 self.value

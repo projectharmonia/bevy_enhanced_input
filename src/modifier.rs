@@ -24,7 +24,7 @@ pub trait InputModifier: Debug {
     /// Returns pre-processed value.
     ///
     /// Called each frame.
-    fn apply(
+    fn transform(
         &mut self,
         actions: &ActionsQuery,
         time: &ContextTime,
