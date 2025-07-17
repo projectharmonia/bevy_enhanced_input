@@ -319,7 +319,7 @@ fn update<S: ScheduleLabel>(
                 trace!("updating `{action_name}` from input");
 
                 let dim = actions_data.get(action).map(|(v, ..)| v.dim()).unwrap();
-                let actions_query = actions_data.as_readonly();
+                let actions_data = actions_data.as_readonly();
                 let mut tracker = TriggerTracker::new(ActionValue::zero(dim));
                 let mut bindings_iter =
                     bindings.iter_many_mut(action_bindings.into_iter().flatten());
@@ -348,7 +348,7 @@ fn update<S: ScheduleLabel>(
                     if let Some(modifiers) = modifiers {
                         current_tracker.apply_modifiers(
                             &mut binding_entity,
-                            &actions_query,
+                            &actions_data,
                             &time,
                             modifiers,
                         );
@@ -356,7 +356,7 @@ fn update<S: ScheduleLabel>(
                     if let Some(conditions) = conditions {
                         current_tracker.apply_conditions(
                             &mut binding_entity,
-                            &actions_query,
+                            &actions_data,
                             &time,
                             conditions,
                         );
@@ -390,10 +390,10 @@ fn update<S: ScheduleLabel>(
 
                 let mut action = conds_and_mods.get_mut(action).unwrap();
                 if let Some(modifiers) = modifiers {
-                    tracker.apply_modifiers(&mut action, &actions_query, &time, modifiers);
+                    tracker.apply_modifiers(&mut action, &actions_data, &time, modifiers);
                 }
                 if let Some(conditions) = conditions {
-                    tracker.apply_conditions(&mut action, &actions_query, &time, conditions);
+                    tracker.apply_conditions(&mut action, &actions_data, &time, conditions);
                 }
 
                 let new_state = tracker.state();
