@@ -69,7 +69,7 @@ impl Negate {
 }
 
 impl InputModifier for Negate {
-    fn apply(
+    fn transform(
         &mut self,
         _actions: &ActionsQuery,
         _time: &ContextTime,
@@ -78,7 +78,7 @@ impl InputModifier for Negate {
         match value {
             ActionValue::Bool(value) => {
                 let value = if value { 1.0 } else { 0.0 };
-                self.apply(_actions, _time, value.into())
+                self.transform(_actions, _time, value.into())
             }
             ActionValue::Axis1D(value) => {
                 if self.x {
@@ -125,15 +125,15 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Negate::x();
-        assert_eq!(modifier.apply(&actions, &time, true.into()), (-1.0).into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), (-0.5).into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), (-1.0).into());
+        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), (-0.5).into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.transform(&actions, &time, Vec2::ONE.into()),
             (-1.0, 1.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.transform(&actions, &time, Vec3::ONE.into()),
             (-1.0, 1.0, 1.0).into(),
         );
     }
@@ -144,15 +144,15 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Negate::y();
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), 0.5.into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.5.into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.transform(&actions, &time, Vec2::ONE.into()),
             (1.0, -1.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.transform(&actions, &time, Vec3::ONE.into()),
             (1.0, -1.0, 1.0).into(),
         );
     }
@@ -163,15 +163,15 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Negate::z();
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), 0.5.into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.5.into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.transform(&actions, &time, Vec2::ONE.into()),
             Vec2::ONE.into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.transform(&actions, &time, Vec3::ONE.into()),
             (1.0, 1.0, -1.0).into(),
         );
     }
@@ -182,15 +182,15 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = Negate::all();
-        assert_eq!(modifier.apply(&actions, &time, true.into()), (-1.0).into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), (-0.5).into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), (-1.0).into());
+        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), (-0.5).into());
         assert_eq!(
-            modifier.apply(&actions, &time, Vec2::ONE.into()),
+            modifier.transform(&actions, &time, Vec2::ONE.into()),
             Vec2::NEG_ONE.into(),
         );
         assert_eq!(
-            modifier.apply(&actions, &time, Vec3::ONE.into()),
+            modifier.transform(&actions, &time, Vec3::ONE.into()),
             Vec3::NEG_ONE.into(),
         );
     }

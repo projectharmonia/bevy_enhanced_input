@@ -27,7 +27,7 @@ impl ExponentialCurve {
 }
 
 impl InputModifier for ExponentialCurve {
-    fn apply(
+    fn transform(
         &mut self,
         _actions: &ActionsQuery,
         _time: &ContextTime,
@@ -69,19 +69,19 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = ExponentialCurve::splat(2.0);
-        assert_eq!(modifier.apply(&actions, &time, true.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, false.into()), 0.0.into());
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, false.into()), 0.0.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (-0.5).into()),
+            modifier.transform(&actions, &time, (-0.5).into()),
             (-0.25).into()
         );
-        assert_eq!(modifier.apply(&actions, &time, 0.5.into()), 0.25.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.5.into()), 0.25.into());
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec2::ONE * 2.0).into()),
+            modifier.transform(&actions, &time, (Vec2::ONE * 2.0).into()),
             (Vec2::ONE * 4.0).into()
         );
         assert_eq!(
-            modifier.apply(&actions, &time, (Vec3::ONE * 2.0).into()),
+            modifier.transform(&actions, &time, (Vec3::ONE * 2.0).into()),
             (Vec3::ONE * 4.0).into()
         );
     }

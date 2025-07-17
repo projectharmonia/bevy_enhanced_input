@@ -26,7 +26,7 @@ impl AccumulateBy {
 }
 
 impl InputModifier for AccumulateBy {
-    fn apply(
+    fn transform(
         &mut self,
         actions: &ActionsQuery,
         _time: &ContextTime,
@@ -67,8 +67,8 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = AccumulateBy::new(action);
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 2.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 2.0.into());
     }
 
     #[test]
@@ -78,8 +78,8 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = AccumulateBy::new(action);
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
     }
 
     #[test]
@@ -88,8 +88,8 @@ mod tests {
         let (time, actions) = state.get(&world);
 
         let mut modifier = AccumulateBy::new(Entity::PLACEHOLDER);
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
-        assert_eq!(modifier.apply(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
     }
 
     #[derive(InputAction)]
