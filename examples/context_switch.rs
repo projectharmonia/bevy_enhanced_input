@@ -33,7 +33,8 @@ fn open_inventory(trigger: Trigger<Started<OpenInventory>>, mut commands: Comman
     info!("opening inventory");
     commands
         .entity(trigger.target())
-        .remove::<(Player, Actions<Player>)>()
+        .remove::<Player>()
+        .despawn_related::<Actions<Player>>()
         .insert((
             Inventory,
             actions!(Inventory[
@@ -62,7 +63,8 @@ fn close_inventory(trigger: Trigger<Started<CloseInventory>>, mut commands: Comm
     info!("closing inventory");
     commands
         .entity(trigger.target())
-        .remove::<(Inventory, Actions<Inventory>)>()
+        .remove::<Inventory>()
+        .despawn_related::<Actions<Inventory>>()
         .insert(player());
 }
 
