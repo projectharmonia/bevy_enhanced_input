@@ -43,6 +43,15 @@ pub struct Axial<X: Bundle, Y: Bundle> {
     pub y: Y,
 }
 
+impl<X: Bundle, Y: Bundle> Axial<X, Y> {
+    pub fn with<T: Bundle + Clone>(self, bundle: T) -> Axial<(X, T), (Y, T)> {
+        Axial::<(X, T), (Y, T)> {
+            x: (self.x, bundle.clone()),
+            y: (self.y, bundle),
+        }
+    }
+}
+
 impl Axial<Binding, Binding> {
     /// Maps left stick as 2-dimensional input.
     pub fn left_stick() -> Self {

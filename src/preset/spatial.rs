@@ -23,6 +23,30 @@ where
     pub down: D,
 }
 
+impl<F, B, L, R, U, D> Spatial<F, B, L, R, U, D>
+where
+    F: Bundle,
+    B: Bundle,
+    L: Bundle,
+    R: Bundle,
+    U: Bundle,
+    D: Bundle,
+{
+    pub fn with<T: Bundle + Clone>(
+        self,
+        bundle: T,
+    ) -> Spatial<(F, T), (B, T), (L, T), (R, T), (U, T), (D, T)> {
+        Spatial::<(F, T), (B, T), (L, T), (R, T), (U, T), (D, T)> {
+            forward: (self.forward, bundle.clone()),
+            backward: (self.backward, bundle.clone()),
+            left: (self.left, bundle.clone()),
+            right: (self.right, bundle.clone()),
+            up: (self.up, bundle.clone()),
+            down: (self.down, bundle),
+        }
+    }
+}
+
 impl Spatial<Binding, Binding, Binding, Binding, Binding, Binding> {
     /// Maps WASD keys for horizontal (XZ) inputs and takes in up/down mappings.
     pub fn wasd_and(up: KeyCode, down: KeyCode) -> Self {

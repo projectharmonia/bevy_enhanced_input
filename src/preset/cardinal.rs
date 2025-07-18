@@ -56,6 +56,17 @@ pub struct Cardinal<N: Bundle, E: Bundle, S: Bundle, W: Bundle> {
     pub west: W,
 }
 
+impl<N: Bundle, E: Bundle, S: Bundle, W: Bundle> Cardinal<N, E, S, W> {
+    pub fn with<T: Bundle + Clone>(self, bundle: T) -> Cardinal<(N, T), (E, T), (S, T), (W, T)> {
+        Cardinal::<(N, T), (E, T), (S, T), (W, T)> {
+            north: (self.north, bundle.clone()),
+            east: (self.east, bundle.clone()),
+            south: (self.south, bundle.clone()),
+            west: (self.west, bundle),
+        }
+    }
+}
+
 impl Cardinal<Binding, Binding, Binding, Binding> {
     /// Maps WASD keys as 2-dimensional input.
     #[must_use]
