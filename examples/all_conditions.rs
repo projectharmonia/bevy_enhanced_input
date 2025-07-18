@@ -33,38 +33,38 @@ fn spawn(mut commands: Commands) {
         Actions::<TestContext>::spawn(SpawnWith(|context: &mut ActionSpawner<_>| {
             context.spawn((
                 Action::<PressAction>::new(),
-                bindings![PressAction::KEY],
                 Down::default(),
+                bindings![PressAction::KEY],
             ));
             context.spawn((
                 Action::<JustPressAction>::new(),
-                bindings![JustPressAction::KEY],
                 Press::default(),
+                bindings![JustPressAction::KEY],
             ));
             context.spawn((
                 Action::<HoldAction>::new(),
-                bindings![HoldAction::KEY],
                 Hold::new(1.0),
+                bindings![HoldAction::KEY],
             ));
             context.spawn((
                 Action::<HoldAndReleaseAction>::new(),
-                bindings![HoldAndReleaseAction::KEY],
                 HoldAndRelease::new(1.0),
+                bindings![HoldAndReleaseAction::KEY],
             ));
             context.spawn((
                 Action::<PulseAction>::new(),
-                bindings![PulseAction::KEY],
                 Pulse::new(1.0),
+                bindings![PulseAction::KEY],
             ));
             context.spawn((
                 Action::<ReleaseAction>::new(),
-                bindings![ReleaseAction::KEY],
                 Release::default(),
+                bindings![ReleaseAction::KEY],
             ));
             context.spawn((
                 Action::<TapAction>::new(),
-                bindings![TapAction::KEY],
                 Tap::new(0.5),
+                bindings![TapAction::KEY],
             ));
 
             let chord1 = context
@@ -84,8 +84,8 @@ fn spawn(mut commands: Commands) {
                 .id();
             context.spawn((
                 Action::<BlockByAction>::new(),
-                bindings![BlockByAction::KEY],
                 BlockBy::single(blocker),
+                bindings![BlockByAction::KEY],
             ));
         })),
     ));
