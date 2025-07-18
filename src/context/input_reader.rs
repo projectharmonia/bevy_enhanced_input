@@ -293,7 +293,7 @@ pub(crate) struct PendingInputs {
 impl PendingInputs {
     pub(crate) fn extend(&mut self, iter: impl Iterator<Item = Binding>) {
         self.inputs
-            .extend(iter.inspect(|input| trace!("ignoring '{input}' until reset")));
+            .extend(iter.inspect(|input| debug!("ignoring '{input}' until reset")));
     }
 }
 
