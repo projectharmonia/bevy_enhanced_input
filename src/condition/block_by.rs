@@ -29,14 +29,19 @@ impl InputCondition for BlockBy {
         _time: &ContextTime,
         _value: ActionValue,
     ) -> ActionState {
-        if actions
-            .iter_many(&self.actions)
-            .any(|(_, &state, ..)| state == ActionState::Fired)
-        {
-            ActionState::None
-        } else {
-            ActionState::Fired
+        for &action in &self.actions {
+            let Ok((_, &state, ..)) = actions.get(action) else {
+                // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
+                warn!("`{action}` is not a valid action");
+                continue;
+            };
+
+            if state == ActionState::Fired {
+                return ActionState::None;
+            }
         }
+
+        ActionState::Fired
     }
 
     fn kind(&self) -> ConditionKind {

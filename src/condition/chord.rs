@@ -32,11 +32,20 @@ impl InputCondition for Chord {
         _value: ActionValue,
     ) -> ActionState {
         // Inherit state from the most significant chorded action.
-        actions
-            .iter_many(&self.actions)
-            .map(|(_, &state, ..)| state)
-            .max()
-            .unwrap_or(ActionState::None)
+        let mut max_state = Default::default();
+        for &action in &self.actions {
+            let Ok((_, &state, ..)) = actions.get(action) else {
+                // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
+                warn!("`{action}` is not a valid action");
+                continue;
+            };
+
+            if state > max_state {
+                max_state = state;
+            }
+        }
+
+        max_state
     }
 
     fn kind(&self) -> ConditionKind {
