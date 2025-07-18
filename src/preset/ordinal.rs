@@ -27,6 +27,34 @@ where
     pub north_west: NW,
 }
 
+impl<N, NE, E, SE, S, SW, W, NW> Ordinal<N, NE, E, SE, S, SW, W, NW>
+where
+    N: Bundle,
+    NE: Bundle,
+    E: Bundle,
+    SE: Bundle,
+    S: Bundle,
+    SW: Bundle,
+    W: Bundle,
+    NW: Bundle,
+{
+    pub fn with<T: Bundle + Clone>(
+        self,
+        bundle: T,
+    ) -> Ordinal<(N, T), (NE, T), (E, T), (SE, T), (S, T), (SW, T), (W, T), (NW, T)> {
+        Ordinal::<(N, T), (NE, T), (E, T), (SE, T), (S, T), (SW, T), (W, T), (NW, T)> {
+            north: (self.north, bundle.clone()),
+            north_east: (self.north_east, bundle.clone()),
+            east: (self.east, bundle.clone()),
+            south_east: (self.south_east, bundle.clone()),
+            south: (self.south, bundle.clone()),
+            south_west: (self.south_west, bundle.clone()),
+            west: (self.west, bundle.clone()),
+            north_west: (self.north_west, bundle),
+        }
+    }
+}
+
 impl Ordinal<Binding, Binding, Binding, Binding, Binding, Binding, Binding, Binding> {
     /// Maps numpad keys as 2-dimensional input.
     pub fn numpad_keys() -> Self {

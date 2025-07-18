@@ -12,8 +12,8 @@ pub struct Bidirectional<P: Bundle, N: Bundle> {
 }
 
 impl<P: Bundle, N: Bundle> Bidirectional<P, N> {
-    pub fn with<A: Bundle + Clone>(self, bundle: A) -> Bidirectional<(P, A), (N, A)> {
-        Bidirectional::<(P, A), (N, A)> {
+    pub fn with<T: Bundle + Clone>(self, bundle: T) -> Bidirectional<(P, T), (N, T)> {
+        Bidirectional::<(P, T), (N, T)> {
             positive: (self.positive, bundle.clone()),
             negative: (self.negative, bundle),
         }
