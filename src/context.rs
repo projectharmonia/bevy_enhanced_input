@@ -264,7 +264,15 @@ fn update<S: ScheduleLabel>(
         };
 
         context_actions.sort_by_cached_key(|&action| {
-            let (.., action_bindings, _, _, _) = actions.get(action).unwrap();
+            let Ok((.., action_bindings, _, _, _)) = actions.get(action) else {
+                // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
+                warn!(
+                    "action `{action}` from context `{}` missing action components",
+                    instance.name
+                );
+                return Reverse(0);
+            };
+
             let value = bindings
                 .iter_many(action_bindings.into_iter().flatten())
                 .map(|(_, b, ..)| b.mod_keys_count())
