@@ -7,7 +7,6 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
         .add_input_context::<FlyCam>() // All contexts should be registered.
-        .add_observer(bind) // Add observer to setup bindings.
         .add_observer(apply_movement)
         .add_observer(capture_cursor)
         .add_observer(release_cursor)
@@ -24,11 +23,36 @@ fn setup(
 ) {
     grab_cursor(&mut window, true);
 
-    // Spawn a camera with `Actions` component.
+    // Spawn a camera with the input context component.
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
-        Actions::<FlyCam>::default(),
+        FlyCam,
+        actions!(FlyCam[
+            (
+                // Bindings like WASD or sticks are very common,
+                // so we provide built-ins to assign all keys/axes at once.
+                // We don't assign any conditions and in this case the action will
+                // be triggered with any non-zero value.
+                // An action can have multiple inputs bound to it
+                // and will respond to any of them.
+                Action::<Move>::new(),
+                DeadZone::default(), // Apply non-uniform normalization that works for both digital and analog inputs, otherwise diagonal movement will be faster.
+                SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
+                Scale::splat(0.3), // Additionally multiply by a constant to achieve the desired speed.
+                Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
+            ),
+            (
+                Action::<Rotate>::new(),
+                Bindings::spawn((
+                    // You can attach modifiers to individual inputs as well.
+                    Spawn((Binding::mouse_motion(), Scale::splat(0.1), Negate::all())),
+                    Axial::right_stick().with((Scale::splat(2.0), Negate::x())),
+                )),
+            ),
+            (Action::<CaptureCursor>::new(), bindings![MouseButton::Left]),
+            (Action::<ReleaseCursor>::new(), bindings![KeyCode::Escape]),
+        ]),
     ));
 
     // Setup simple 3D scene.
@@ -48,37 +72,6 @@ fn setup(
         },
         Transform::from_xyz(4.0, 8.0, 4.0),
     ));
-}
-
-// To define bindings for actions, write an observer for `Bind`.
-// It's also possible to create bindings before the insertion,
-// but this way you can conveniently reload bindings when settings change.
-fn bind(trigger: Trigger<Bind<FlyCam>>, mut players: Query<&mut Actions<FlyCam>>) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-
-    // Bindings like WASD or sticks are very common,
-    // so we provide built-ins to assign all keys/axes at once.
-    // We don't assign any conditions and in this case the action will
-    // be triggered with any non-zero value.
-    // An action can have multiple inputs bound to it
-    // and will respond to any of them.
-    actions
-        .bind::<Move>()
-        .to((Cardinal::wasd_keys(), Axial::left_stick()))
-        .with_modifiers((
-            DeadZone::default(), // Apply non-uniform normalization to ensure consistent speed, otherwise diagonal movement will be faster.
-            SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
-            Scale::splat(0.3), // Additionally multiply by a constant to achieve the desired speed.
-        ));
-
-    actions.bind::<Rotate>().to((
-        // You can attach modifiers to individual inputs as well.
-        Input::mouse_motion().with_modifiers((Scale::splat(0.1), Negate::all())),
-        Axial::right_stick().with_modifiers_each((Scale::splat(2.0), Negate::x())),
-    ));
-
-    actions.bind::<CaptureCursor>().to(MouseButton::Left);
-    actions.bind::<ReleaseCursor>().to(KeyCode::Escape);
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut transforms: Query<&mut Transform>) {
@@ -133,24 +126,24 @@ fn grab_cursor(window: &mut Window, grab: bool) {
 
 // Since it's possible to have multiple `Actions` components, you need
 // to define a marker and derive `InputContext` trait.
-#[derive(InputContext)]
+#[derive(Component, InputContext)]
 struct FlyCam;
 
 // All actions should implement the `InputAction` trait.
 // It can be done manually, but we provide a derive for convenience.
 // The only necessary parameter is `output`, which defines the output type.
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = Vec2)]
 struct Move;
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct CaptureCursor;
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = bool)]
 struct ReleaseCursor;
 
-#[derive(Debug, InputAction)]
+#[derive(InputAction)]
 #[input_action(output = Vec2)]
 struct Rotate;
