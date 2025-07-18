@@ -125,6 +125,7 @@ impl InputReader<'_, '_> {
                         .get(entity)
                         .ok()
                         .and_then(|gamepad| gamepad.get(button)),
+                    GamepadDevice::None => return 0.0.into(),
                 };
 
                 value.unwrap_or_default().into()
@@ -145,6 +146,7 @@ impl InputReader<'_, '_> {
                         .get(entity)
                         .ok()
                         .and_then(|gamepad| gamepad.get(axis)),
+                    GamepadDevice::None => return 0.0.into(),
                 };
 
                 let value = value.unwrap_or_default();
@@ -570,6 +572,24 @@ mod tests {
 
         reader.consume::<PreUpdate>(axis2);
         assert_eq!(reader.value(axis2), ActionValue::Axis1D(0.0));
+    }
+
+    #[test]
+    fn no_gamepad() {
+        let (mut world, mut state) = init_world();
+
+        let value = 1.0;
+        let axis = GamepadAxis::LeftStickX;
+        let button = GamepadButton::South;
+        let mut gamepad = Gamepad::default();
+        gamepad.analog_mut().set(axis, value);
+        gamepad.analog_mut().set(button, value);
+        world.spawn(gamepad);
+
+        let mut reader = state.get_mut(&mut world);
+        reader.set_gamepad(None);
+        assert_eq!(reader.value(button), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
     }
 
     #[test]

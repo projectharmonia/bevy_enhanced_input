@@ -541,11 +541,22 @@ pub enum GamepadDevice {
     Any,
     /// Matches input from specific gamepad.
     Single(Entity),
+    /// Ignores all gamepad input.
+    None,
 }
 
 impl From<Entity> for GamepadDevice {
     fn from(value: Entity) -> Self {
         Self::Single(value)
+    }
+}
+
+impl From<Option<Entity>> for GamepadDevice {
+    fn from(value: Option<Entity>) -> Self {
+        match value {
+            Some(entity) => GamepadDevice::Single(entity),
+            None => GamepadDevice::None,
+        }
     }
 }
 
