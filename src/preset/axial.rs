@@ -33,7 +33,7 @@ use crate::prelude::*;
 /// #[derive(InputContext)]
 /// struct Player;
 ///
-/// #[derive(Debug, InputAction)]
+/// #[derive(InputAction)]
 /// #[input_action(output = Vec2)]
 /// struct Move;
 /// ```
