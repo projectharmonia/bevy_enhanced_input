@@ -381,15 +381,12 @@ mod tests {
         world.resource_mut::<ButtonInput<KeyCode>>().press(key);
 
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(key), ActionValue::Bool(true));
-        assert_eq!(reader.value(KeyCode::Escape), ActionValue::Bool(false));
-        assert_eq!(
-            reader.value(key.with_mod_keys(ModKeys::ALT)),
-            ActionValue::Bool(false)
-        );
+        assert_eq!(reader.value(key), true.into());
+        assert_eq!(reader.value(KeyCode::Escape), false.into());
+        assert_eq!(reader.value(key.with_mod_keys(ModKeys::ALT)), false.into());
 
         reader.consume::<PreUpdate>(key);
-        assert_eq!(reader.value(key), ActionValue::Bool(false));
+        assert_eq!(reader.value(key), false.into());
     }
 
     #[test]
@@ -402,15 +399,15 @@ mod tests {
             .press(button);
 
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(button), ActionValue::Bool(true));
-        assert_eq!(reader.value(MouseButton::Right), ActionValue::Bool(false));
+        assert_eq!(reader.value(button), true.into());
+        assert_eq!(reader.value(MouseButton::Right), false.into());
         assert_eq!(
             reader.value(button.with_mod_keys(ModKeys::CONTROL)),
-            ActionValue::Bool(false)
+            false.into()
         );
 
         reader.consume::<PreUpdate>(button);
-        assert_eq!(reader.value(button), ActionValue::Bool(false));
+        assert_eq!(reader.value(button), false.into());
     }
 
     #[test]
@@ -423,14 +420,14 @@ mod tests {
         let input = Binding::mouse_motion();
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(reader.value(input), value.into());
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SHIFT)),
-            ActionValue::Axis2D(Vec2::ZERO)
+            Vec2::ZERO.into()
         );
 
         reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+        assert_eq!(reader.value(input), Vec2::ZERO.into());
     }
 
     #[test]
@@ -446,14 +443,14 @@ mod tests {
         let input = Binding::mouse_wheel();
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
+        assert_eq!(reader.value(input), value.into());
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SUPER)),
-            ActionValue::Axis2D(Vec2::ZERO)
+            Vec2::ZERO.into()
         );
 
         reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+        assert_eq!(reader.value(input), Vec2::ZERO.into());
     }
 
     #[test]
@@ -473,16 +470,16 @@ mod tests {
 
         let mut reader = state.get_mut(&mut world);
         reader.set_gamepad(gamepad_entity);
-        assert_eq!(reader.value(button1), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(button1), value.into());
         assert_eq!(
             reader.value(button2),
-            ActionValue::Axis1D(0.0),
+            0.0.into(),
             "should read only from `{gamepad_entity:?}`"
         );
-        assert_eq!(reader.value(GamepadButton::North), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(GamepadButton::North), 0.0.into());
 
         reader.consume::<PreUpdate>(button1);
-        assert_eq!(reader.value(button1), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(button1), 0.0.into());
     }
 
     #[test]
@@ -501,15 +498,15 @@ mod tests {
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(button1), ActionValue::Axis1D(value));
-        assert_eq!(reader.value(button2), ActionValue::Axis1D(value));
-        assert_eq!(reader.value(GamepadButton::North), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(button1), value.into());
+        assert_eq!(reader.value(button2), value.into());
+        assert_eq!(reader.value(GamepadButton::North), 0.0.into());
 
         reader.consume::<PreUpdate>(button1);
-        assert_eq!(reader.value(button1), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(button1), 0.0.into());
 
         reader.consume::<PreUpdate>(button2);
-        assert_eq!(reader.value(button2), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(button2), 0.0.into());
     }
 
     #[test]
@@ -529,19 +526,16 @@ mod tests {
 
         let mut reader = state.get_mut(&mut world);
         reader.set_gamepad(gamepad_entity);
-        assert_eq!(reader.value(axis1), ActionValue::Axis1D(value));
+        assert_eq!(reader.value(axis1), value.into());
         assert_eq!(
             reader.value(axis2),
-            ActionValue::Axis1D(0.0),
+            0.0.into(),
             "should read only from `{gamepad_entity:?}`"
         );
-        assert_eq!(
-            reader.value(GamepadAxis::RightStickX),
-            ActionValue::Axis1D(0.0)
-        );
+        assert_eq!(reader.value(GamepadAxis::RightStickX), 0.0.into());
 
         reader.consume::<PreUpdate>(axis1);
-        assert_eq!(reader.value(axis1), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(axis1), 0.0.into());
     }
 
     #[test]
@@ -560,18 +554,15 @@ mod tests {
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(axis1), ActionValue::Axis1D(value));
-        assert_eq!(reader.value(axis2), ActionValue::Axis1D(value));
-        assert_eq!(
-            reader.value(GamepadAxis::RightStickX),
-            ActionValue::Axis1D(0.0)
-        );
+        assert_eq!(reader.value(axis1), value.into());
+        assert_eq!(reader.value(axis2), value.into());
+        assert_eq!(reader.value(GamepadAxis::RightStickX), 0.0.into());
 
         reader.consume::<PreUpdate>(axis1);
-        assert_eq!(reader.value(axis1), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(axis1), 0.0.into());
 
         reader.consume::<PreUpdate>(axis2);
-        assert_eq!(reader.value(axis2), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(axis2), 0.0.into());
     }
 
     #[test]
@@ -588,8 +579,8 @@ mod tests {
 
         let mut reader = state.get_mut(&mut world);
         reader.set_gamepad(None);
-        assert_eq!(reader.value(button), ActionValue::Axis1D(0.0));
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(button), 0.0.into());
+        assert_eq!(reader.value(axis), 0.0.into());
     }
 
     #[test]
@@ -606,14 +597,11 @@ mod tests {
         world.spawn(gamepad2);
 
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.003));
-        assert_eq!(
-            reader.value(GamepadAxis::RightStickX),
-            ActionValue::Axis1D(0.0)
-        );
+        assert_eq!(reader.value(axis), 0.003.into());
+        assert_eq!(reader.value(GamepadAxis::RightStickX), 0.0.into());
 
         reader.consume::<PreUpdate>(axis);
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(axis), 0.0.into());
     }
 
     #[test]
@@ -628,19 +616,19 @@ mod tests {
 
         let input = key.with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(input), ActionValue::Bool(true));
-        assert_eq!(reader.value(key), ActionValue::Bool(true));
+        assert_eq!(reader.value(input), true.into());
+        assert_eq!(reader.value(key), true.into());
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::ALT)),
-            ActionValue::Bool(false)
+            false.into()
         );
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
-            ActionValue::Bool(false)
+            false.into()
         );
 
         reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), ActionValue::Bool(false));
+        assert_eq!(reader.value(input), false.into());
 
         // Try another key, but with the same modifier that was consumed.
         let other_key = KeyCode::Enter;
@@ -649,8 +637,8 @@ mod tests {
             .press(other_key);
         let other_input = other_key.with_mod_keys(modifier.into());
         let reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(other_input), ActionValue::Bool(false));
-        assert_eq!(reader.value(other_key), ActionValue::Bool(true));
+        assert_eq!(reader.value(other_input), false.into());
+        assert_eq!(reader.value(other_key), true.into());
     }
 
     #[test]
@@ -666,19 +654,19 @@ mod tests {
 
         let input = button.with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(input), ActionValue::Bool(true));
-        assert_eq!(reader.value(button), ActionValue::Bool(true));
+        assert_eq!(reader.value(input), true.into());
+        assert_eq!(reader.value(button), true.into());
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::CONTROL)),
-            ActionValue::Bool(false)
+            false.into()
         );
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
-            ActionValue::Bool(false)
+            false.into()
         );
 
         reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), ActionValue::Bool(false));
+        assert_eq!(reader.value(input), false.into());
     }
 
     #[test]
@@ -693,22 +681,19 @@ mod tests {
         let input = Binding::mouse_motion().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
-        assert_eq!(
-            reader.value(input.without_mod_keys()),
-            ActionValue::Axis2D(value)
-        );
+        assert_eq!(reader.value(input), value.into());
+        assert_eq!(reader.value(input.without_mod_keys()), value.into());
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SUPER)),
-            ActionValue::Axis2D(Vec2::ZERO)
+            Vec2::ZERO.into()
         );
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
-            ActionValue::Axis2D(Vec2::ZERO)
+            Vec2::ZERO.into()
         );
 
         reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+        assert_eq!(reader.value(input), Vec2::ZERO.into());
     }
 
     #[test]
@@ -726,22 +711,19 @@ mod tests {
         let input = Binding::mouse_wheel().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), ActionValue::Axis2D(value));
-        assert_eq!(
-            reader.value(input.without_mod_keys()),
-            ActionValue::Axis2D(value)
-        );
+        assert_eq!(reader.value(input), value.into());
+        assert_eq!(reader.value(input.without_mod_keys()), value.into());
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SHIFT)),
-            ActionValue::Axis2D(Vec2::ZERO)
+            Vec2::ZERO.into()
         );
         assert_eq!(
             reader.value(input.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
-            ActionValue::Axis2D(Vec2::ZERO)
+            Vec2::ZERO.into()
         );
 
         reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), ActionValue::Axis2D(Vec2::ZERO));
+        assert_eq!(reader.value(input), Vec2::ZERO.into());
     }
 
     #[test]
@@ -780,18 +762,12 @@ mod tests {
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
 
-        assert_eq!(reader.value(key), ActionValue::Bool(false));
-        assert_eq!(reader.value(mouse_button), ActionValue::Bool(false));
-        assert_eq!(
-            reader.value(Binding::mouse_motion()),
-            ActionValue::Axis2D(Vec2::ZERO)
-        );
-        assert_eq!(
-            reader.value(Binding::mouse_wheel()),
-            ActionValue::Axis2D(Vec2::ZERO)
-        );
-        assert_eq!(reader.value(gamepad_button), ActionValue::Axis1D(0.0));
-        assert_eq!(reader.value(axis), ActionValue::Axis1D(0.0));
+        assert_eq!(reader.value(key), false.into());
+        assert_eq!(reader.value(mouse_button), false.into());
+        assert_eq!(reader.value(Binding::mouse_motion()), Vec2::ZERO.into());
+        assert_eq!(reader.value(Binding::mouse_wheel()), Vec2::ZERO.into());
+        assert_eq!(reader.value(gamepad_button), 0.0.into());
+        assert_eq!(reader.value(axis), 0.0.into());
     }
 
     fn init_world<'w, 's>() -> (World, SystemState<InputReader<'w, 's>>) {
