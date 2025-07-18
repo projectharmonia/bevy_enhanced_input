@@ -442,10 +442,10 @@ fn trigger<S: ScheduleLabel>(
     mut actions: Query<EntityMut, With<ActionFns>>,
 ) {
     for instance in &**instances {
-        let Ok(entity) = contexts.get(instance.entity) else {
+        let Ok(context_entity) = contexts.get(instance.entity) else {
             continue;
         };
-        let Some(context_actions) = instance.actions(&entity) else {
+        let Some(context_actions) = instance.actions(&context_entity) else {
             continue;
         };
 
@@ -455,15 +455,22 @@ fn trigger<S: ScheduleLabel>(
         );
 
         let mut actions_iter = actions.iter_many_mut(context_actions);
-        while let Some(mut entity) = actions_iter.fetch_next() {
-            let fns = *entity.get::<ActionFns>().unwrap();
-            let value = *entity.get::<ActionValue>().unwrap();
-            fns.store_value(&mut entity, value);
+        while let Some(mut action_entity) = actions_iter.fetch_next() {
+            let fns = *action_entity.get::<ActionFns>().unwrap();
+            let value = *action_entity.get::<ActionValue>().unwrap();
+            fns.store_value(&mut action_entity, value);
 
-            let state = *entity.get::<ActionState>().unwrap();
-            let events = *entity.get::<ActionEvents>().unwrap();
-            let time = *entity.get::<ActionTime>().unwrap();
-            fns.trigger(&mut commands, entity.id(), state, events, value, time);
+            let state = *action_entity.get::<ActionState>().unwrap();
+            let events = *action_entity.get::<ActionEvents>().unwrap();
+            let time = *action_entity.get::<ActionTime>().unwrap();
+            fns.trigger(
+                &mut commands,
+                context_entity.id(),
+                state,
+                events,
+                value,
+                time,
+            );
         }
     }
 }
