@@ -19,7 +19,9 @@ fn removal() {
 
     app.update();
 
-    app.world_mut().entity_mut(context).remove::<TestContext>();
+    app.world_mut()
+        .entity_mut(context)
+        .remove_with_requires::<TestContext>();
 
     app.world_mut()
         .resource_mut::<ButtonInput<KeyCode>>()
@@ -32,7 +34,7 @@ fn removal() {
     app.update();
 }
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct TestContext;
 
 #[derive(InputAction)]

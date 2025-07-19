@@ -7,19 +7,17 @@ use bevy::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::context::InputContext;
-
 /// Context entity associated with this action entity.
 #[derive(Component, Deref, Reflect, Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[relationship(relationship_target = Actions<C>)]
-pub struct ActionOf<C: InputContext> {
+pub struct ActionOf<C: Component> {
     #[deref]
     #[relationship]
     entity: Entity,
     marker: PhantomData<C>,
 }
 
-impl<C: InputContext> ActionOf<C> {
+impl<C: Component> ActionOf<C> {
     pub fn new(entity: Entity) -> Self {
         Self {
             entity,
@@ -31,14 +29,14 @@ impl<C: InputContext> ActionOf<C> {
 /// Action entities associated with this context entity.
 #[derive(Component, Deref, Reflect, Debug, Default, PartialEq, Eq)]
 #[relationship_target(relationship = ActionOf<C>, linked_spawn)]
-pub struct Actions<C: InputContext> {
+pub struct Actions<C: Component> {
     #[deref]
     #[relationship]
     entities: Vec<Entity>,
     marker: PhantomData<C>,
 }
 
-impl<'a, C: InputContext> IntoIterator for &'a Actions<C> {
+impl<'a, C: Component> IntoIterator for &'a Actions<C> {
     type Item = Entity;
     type IntoIter = Copied<slice::Iter<'a, Entity>>;
 

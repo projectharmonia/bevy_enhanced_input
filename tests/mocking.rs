@@ -132,7 +132,7 @@ fn manual() {
     assert_eq!(events, ActionEvents::COMPLETED);
 }
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct TestContext;
 
 #[derive(InputAction)]

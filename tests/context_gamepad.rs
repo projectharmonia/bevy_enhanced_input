@@ -80,7 +80,7 @@ fn by_id() {
     assert_eq!(state, ActionState::None);
 }
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct TestContext;
 
 #[derive(InputAction)]

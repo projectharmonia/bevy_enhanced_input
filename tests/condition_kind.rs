@@ -199,7 +199,7 @@ fn blocker() {
     assert_eq!(test_state, ActionState::Fired);
 }
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct TestContext;
 
 #[derive(InputAction)]

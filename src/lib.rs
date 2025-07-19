@@ -359,7 +359,7 @@ pub mod prelude {
             release::*, tap::*,
         },
         context::{
-            ActionsQuery, GamepadDevice, InputContext, InputContextAppExt,
+            ActionsQuery, ContextPriority, GamepadDevice, InputContextAppExt,
             input_reader::ActionSources,
             time::{ContextTime, TimeKind},
         },
@@ -370,7 +370,7 @@ pub mod prelude {
         },
         preset::{axial::*, bidirectional::*, cardinal::*, ordinal::*, spatial::*},
     };
-    pub use bevy_enhanced_input_macros::{InputAction, InputContext};
+    pub use bevy_enhanced_input_macros::InputAction;
 }
 
 use bevy::{input::InputSystem, prelude::*};

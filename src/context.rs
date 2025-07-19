@@ -6,6 +6,7 @@ mod trigger_tracker;
 use core::{
     any::{self, TypeId},
     cmp::{Ordering, Reverse},
+    marker::PhantomData,
 };
 
 #[cfg(test)]
@@ -39,22 +40,26 @@ pub trait InputContextAppExt {
     ///
     /// Any struct `C` that implements [`InputContext`] must be registered,
     /// otherwise [`Actions<C>`] won't be evaluated.
-    fn add_input_context<C: InputContext>(&mut self) -> &mut Self;
+    fn add_input_context<C: Component>(&mut self) -> &mut Self {
+        self.add_input_context_to::<PreUpdate, C>()
+    }
+
+    fn add_input_context_to<S: ScheduleLabel + Default, C: Component>(&mut self) -> &mut Self;
 }
 
 impl InputContextAppExt for App {
-    fn add_input_context<C: InputContext>(&mut self) -> &mut Self {
+    fn add_input_context_to<S: ScheduleLabel + Default, C: Component>(&mut self) -> &mut Self {
         debug!(
             "registering `{}` for `{}`",
             any::type_name::<C>(),
-            any::type_name::<C::Schedule>(),
+            any::type_name::<S>(),
         );
 
         let id = self.world_mut().register_component::<Actions<C>>();
         let mut registry = self.world_mut().resource_mut::<ContextRegistry>();
         if let Some(contexts) = registry
             .iter_mut()
-            .find(|c| c.schedule_id == TypeId::of::<C::Schedule>())
+            .find(|c| c.schedule_id == TypeId::of::<S>())
         {
             debug_assert!(
                 !contexts.action_ids.contains(&id),
@@ -63,13 +68,14 @@ impl InputContextAppExt for App {
             );
             contexts.action_ids.push(id);
         } else {
-            let mut contexts = ScheduleContexts::new::<C::Schedule>();
+            let mut contexts = ScheduleContexts::new::<S>();
             contexts.action_ids.push(id);
             registry.push(contexts);
         }
 
-        self.add_observer(add_context::<C>)
-            .add_observer(remove_context::<C>);
+        self.register_required_components::<C, ContextPriority<C>>()
+            .add_observer(register_instance::<C, S>)
+            .add_observer(remove_context::<C, S>);
 
         self
     }
@@ -192,9 +198,10 @@ impl ScheduleContexts {
     }
 }
 
-fn add_context<C: InputContext>(
-    trigger: Trigger<OnInsert, C>,
-    mut instances: ResMut<ContextInstances<C::Schedule>>,
+fn register_instance<C: Component, S: ScheduleLabel>(
+    trigger: Trigger<OnInsert, ContextPriority<C>>,
+    mut instances: ResMut<ContextInstances<S>>,
+    contexts: Query<&ContextPriority<C>>,
 ) {
     debug!(
         "adding input context `{}` to `{}`",
@@ -202,12 +209,13 @@ fn add_context<C: InputContext>(
         trigger.target(),
     );
 
-    instances.add::<C>(trigger.target());
+    let priority = **contexts.get(trigger.target()).unwrap();
+    instances.add::<C>(trigger.target(), priority);
 }
 
-fn remove_context<C: InputContext>(
-    trigger: Trigger<OnRemove, C>,
-    mut instances: ResMut<ContextInstances<C::Schedule>>,
+fn remove_context<C: Component, S: ScheduleLabel>(
+    trigger: Trigger<OnReplace, ContextPriority<C>>,
+    mut instances: ResMut<ContextInstances<S>>,
 ) {
     debug!(
         "removing input context `{}` from `{}`",
@@ -483,56 +491,42 @@ fn trigger<S: ScheduleLabel>(
     }
 }
 
-/// Marker for a gameplay-related input context that a player can be in.
+/// Determines the evaluation order of [`Actions<Self>`].
 ///
-/// Used to differentiate [`Actions`] components and configure how associated actions will be evaluated.
+/// Used to control how contexts are layered, as some [`InputAction`]s may consume inputs.
 ///
-/// All structs that implement this trait need to be registered
-/// using [`InputContextAppExt::add_input_context`].
-///
-/// # Examples
-///
-/// To implement the trait you can use the [`InputContext`]
-/// derive to reduce boilerplate:
-///
-/// ```
-/// # use bevy::prelude::*;
-/// # use bevy_enhanced_input::prelude::*;
-/// #[derive(InputContext)]
-/// struct Player;
-/// ```
-///
-/// Optionally you can pass `priority` and/or `schedule`:
-///
-/// ```
-/// # use bevy::prelude::*;
-/// # use bevy_enhanced_input::prelude::*;
-/// #[derive(InputContext)]
-/// #[input_context(priority = 1, schedule = FixedPreUpdate)]
-/// struct Player;
-/// ```
-///
-/// All parameters match corresponding data in the trait.
-pub trait InputContext: Component {
-    /// Schedule in which the context will be evaluated.
-    ///
-    /// Associated type defaults are not stabilized in Rust yet,
-    /// but the macro uses [`PreUpdate`] by default.
-    ///
-    /// Set this to [`FixedPreUpdate`] if game logic relies on actions from this context
-    /// in [`FixedUpdate`]. For example, if [`FixedMain`](bevy::app::FixedMain) runs twice
-    /// in a single frame and an action triggers, you will get [`Started`]
-    /// and [`Fired`] on the first run and only [`Fired`] on the second run.
-    type Schedule: ScheduleLabel + Default;
-
-    /// Determines the evaluation order of [`Actions<Self>`].
-    ///
-    /// Used to control how contexts are layered, as some [`InputAction`]s may consume inputs.
-    ///
-    /// The ordering applies per schedule: contexts in schedules that run earlier are evaluated first.
-    /// Within the same schedule, contexts with a higher priority are evaluated first.
-    const PRIORITY: usize = 0;
+/// The ordering applies per schedule: contexts in schedules that run earlier are evaluated first.
+/// Within the same schedule, contexts with a higher priority are evaluated first.
+#[derive(Component, Reflect, Deref)]
+#[component(immutable)]
+pub struct ContextPriority<C> {
+    #[deref]
+    value: usize,
+    marker: PhantomData<C>,
 }
+
+impl<C> ContextPriority<C> {
+    pub const fn new(value: usize) -> Self {
+        Self {
+            value,
+            marker: PhantomData,
+        }
+    }
+}
+
+impl<C> Default for ContextPriority<C> {
+    fn default() -> Self {
+        Self::new(0)
+    }
+}
+
+impl<C> Clone for ContextPriority<C> {
+    fn clone(&self) -> Self {
+        *self
+    }
+}
+
+impl<C> Copy for ContextPriority<C> {}
 
 /// Associated gamepad.
 #[derive(

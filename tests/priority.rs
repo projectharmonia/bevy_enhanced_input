@@ -12,6 +12,7 @@ fn same_schedule() {
 
     app.world_mut().spawn((
         First,
+        ContextPriority::<First>::new(1),
         actions!(First[
             (
                 Action::<FirstConsume>::new(),
@@ -92,7 +93,7 @@ fn different_schedules() {
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
         .add_input_context::<First>()
-        .add_input_context::<FixedSecond>()
+        .add_input_context_to::<FixedPreUpdate, Second>()
         .finish();
 
     app.world_mut().spawn((
@@ -109,8 +110,9 @@ fn different_schedules() {
                 bindings![PASSTHROUGH_KEY]
             )
         ]),
-        FixedSecond,
-        actions!(FixedSecond[
+        Second,
+        ContextPriority::<Second>::new(1),
+        actions!(Second[
             (
                 Action::<SecondConsume>::new(),
                 ActionSettings { consume_input: true, ..Default::default() },
@@ -182,16 +184,93 @@ fn different_schedules() {
     }
 }
 
-#[derive(Component, InputContext)]
-#[input_context(priority = 1)]
+#[test]
+fn change() {
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<First>()
+        .add_input_context::<Second>()
+        .finish();
+
+    let contexts = app
+        .world_mut()
+        .spawn((
+            First,
+            ContextPriority::<First>::new(1),
+            actions!(First[
+                (
+                    Action::<FirstConsume>::new(),
+                    ActionSettings { consume_input: true, ..Default::default() },
+                    bindings![CONSUME_KEY]
+                ),
+                (
+                    Action::<FirstPassthrough>::new(),
+                    ActionSettings { consume_input: false, ..Default::default() },
+                    bindings![PASSTHROUGH_KEY]
+                )
+            ]),
+            Second,
+            actions!(Second[
+                (
+                    Action::<SecondConsume>::new(),
+                    ActionSettings { consume_input: true, ..Default::default() },
+                    bindings![CONSUME_KEY]
+                ),
+                (
+                    Action::<SecondPassthrough>::new(),
+                    ActionSettings { consume_input: false, ..Default::default() },
+                    bindings![PASSTHROUGH_KEY]
+                )
+            ]),
+        ))
+        .id();
+
+    app.update();
+
+    app.world_mut()
+        .entity_mut(contexts)
+        .insert(ContextPriority::<Second>::new(2));
+
+    let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+    keys.press(CONSUME_KEY);
+    keys.press(PASSTHROUGH_KEY);
+
+    app.update();
+
+    let mut first_consume = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<FirstConsume>>>();
+
+    let first_consume_state = *first_consume.single(app.world()).unwrap();
+    assert_eq!(first_consume_state, ActionState::None);
+
+    let mut first_passthrough = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<FirstPassthrough>>>();
+
+    let first_passthrough_state = *first_passthrough.single(app.world()).unwrap();
+    assert_eq!(first_passthrough_state, ActionState::Fired);
+
+    let mut second_consume = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<SecondConsume>>>();
+
+    let second_consume_state = *second_consume.single(app.world()).unwrap();
+    assert_eq!(second_consume_state, ActionState::Fired);
+
+    let mut second_passthrough = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<SecondPassthrough>>>();
+
+    let second_passthrough_state = *second_passthrough.single(app.world()).unwrap();
+    assert_eq!(second_passthrough_state, ActionState::Fired);
+}
+
+#[derive(Component)]
 struct First;
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct Second;
-
-#[derive(Component, InputContext)]
-#[input_context(schedule = FixedPreUpdate, priority = 3)]
-struct FixedSecond;
 
 /// A key used by all consume actions.
 const CONSUME_KEY: KeyCode = KeyCode::KeyA;

@@ -565,7 +565,7 @@ impl Default for KeyboardSettings {
 #[derive(Event)]
 struct SettingsChanged;
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct Player;
 
 fn player_bundle(settings: KeyboardSettings) -> impl Bundle {

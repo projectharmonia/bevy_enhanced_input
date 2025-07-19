@@ -33,7 +33,7 @@ fn open_inventory(trigger: Trigger<Started<OpenInventory>>, mut commands: Comman
     info!("opening inventory");
     commands
         .entity(trigger.target())
-        .remove::<Player>()
+        .remove_with_requires::<Player>() // Necessary to also remove `ContextPriority`.
         .despawn_related::<Actions<Player>>()
         .insert((
             Inventory,
@@ -63,7 +63,7 @@ fn close_inventory(trigger: Trigger<Started<CloseInventory>>, mut commands: Comm
     info!("closing inventory");
     commands
         .entity(trigger.target())
-        .remove::<Inventory>()
+        .remove_with_requires::<Inventory>()
         .despawn_related::<Actions<Inventory>>()
         .insert(player_bundle());
 }
@@ -93,7 +93,7 @@ fn player_bundle() -> impl Bundle {
     )
 }
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct Player;
 
 #[derive(InputAction)]
@@ -112,7 +112,7 @@ struct Attack;
 #[action_output(bool)]
 struct OpenInventory;
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct Inventory;
 
 #[derive(InputAction)]
