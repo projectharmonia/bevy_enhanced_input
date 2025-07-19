@@ -76,12 +76,6 @@ impl<A: InputAction> Action<A> {
     }
 }
 
-impl<A: InputAction> Default for Action<A> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// Marker for a gameplay-related action.
 ///
 /// Needs to be bound to actions using [`UntypedActions::bind`].
