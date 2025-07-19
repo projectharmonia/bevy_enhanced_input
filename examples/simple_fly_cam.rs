@@ -126,7 +126,7 @@ fn grab_cursor(window: &mut Window, grab: bool) {
 
 // Since it's possible to have multiple `Actions` components, you need
 // to define a marker and derive `InputContext` trait.
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct FlyCam;
 
 // All actions should implement the `InputAction` trait.

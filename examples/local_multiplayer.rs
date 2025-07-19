@@ -138,7 +138,7 @@ fn player_bundle(
 }
 
 /// Used as both input context and component.
-#[derive(InputContext, Component, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
 enum Player {
     First,
     Second,

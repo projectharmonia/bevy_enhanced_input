@@ -25,15 +25,15 @@ pub(crate) struct ContextInstances<S: ScheduleLabel> {
 }
 
 impl<S: ScheduleLabel> ContextInstances<S> {
-    pub(super) fn add<C: InputContext>(&mut self, entity: Entity) {
-        let instance = ContextInstance::new::<C>(entity);
-        match self.binary_search_by_key(&Reverse(C::PRIORITY), |inst| Reverse(inst.priority)) {
+    pub(super) fn add<C: Component>(&mut self, entity: Entity, priority: usize) {
+        let instance = ContextInstance::new::<C>(entity, priority);
+        match self.binary_search_by_key(&Reverse(priority), |inst| Reverse(inst.priority)) {
             Ok(index) => {
                 // Insert last to preserve entry creation order.
                 let last_priority_index = self
                     .iter()
                     .skip(index + 1)
-                    .position(|inst| inst.priority != C::PRIORITY)
+                    .position(|inst| inst.priority != priority)
                     .unwrap_or_default();
                 self.instances
                     .insert(index + last_priority_index + 1, instance);
@@ -42,7 +42,7 @@ impl<S: ScheduleLabel> ContextInstances<S> {
         };
     }
 
-    pub(super) fn remove<C: InputContext>(&mut self, entity: Entity) {
+    pub(super) fn remove<C: Component>(&mut self, entity: Entity) {
         let index = self
             .iter()
             .position(|inst| inst.entity == entity && inst.type_id == TypeId::of::<C>())
@@ -62,12 +62,12 @@ pub(crate) struct ContextInstance {
 }
 
 impl ContextInstance {
-    fn new<C: InputContext>(entity: Entity) -> Self {
+    fn new<C: Component>(entity: Entity, priority: usize) -> Self {
         Self {
             entity,
             name: any::type_name::<C>(),
             type_id: TypeId::of::<C>(),
-            priority: C::PRIORITY,
+            priority,
             actions: Self::actions_typed::<C>,
             actions_mut: Self::actions_mut_typed::<C>,
         }
@@ -84,14 +84,14 @@ impl ContextInstance {
         (self.actions_mut)(self, contexts)
     }
 
-    fn actions_typed<'a, C: InputContext>(
+    fn actions_typed<'a, C: Component>(
         &self,
         entity: &'a FilteredEntityRef,
     ) -> Option<&'a [Entity]> {
         entity.get::<Actions<C>>().map(|actions| &***actions)
     }
 
-    fn actions_mut_typed<'a, C: InputContext>(
+    fn actions_mut_typed<'a, C: Component>(
         &self,
         entity: &'a mut FilteredEntityMut,
     ) -> Option<&'a mut [Entity]> {

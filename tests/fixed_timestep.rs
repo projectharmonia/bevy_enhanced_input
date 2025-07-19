@@ -9,7 +9,7 @@ fn once_in_two_frames() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
-        .add_input_context::<TestContext>()
+        .add_input_context_to::<FixedPreUpdate, TestContext>()
         .finish();
 
     app.world_mut().spawn((
@@ -49,7 +49,7 @@ fn twice_in_one_frame() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
         .insert_resource(TimeUpdateStrategy::ManualDuration(time_step))
-        .add_input_context::<TestContext>()
+        .add_input_context_to::<FixedPreUpdate, TestContext>()
         .finish();
 
     app.world_mut().spawn((
@@ -80,8 +80,7 @@ fn twice_in_one_frame() {
     );
 }
 
-#[derive(Component, InputContext)]
-#[input_context(schedule = FixedPreUpdate)]
+#[derive(Component)]
 struct TestContext;
 
 #[derive(InputAction)]

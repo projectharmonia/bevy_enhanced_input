@@ -12,6 +12,7 @@ fn layering() {
 
     app.world_mut().spawn((
         First,
+        ContextPriority::<First>::new(1),
         actions!(
             First[(
                 Action::<OnFirst>::new(),
@@ -87,6 +88,7 @@ fn switching() {
         .world_mut()
         .spawn((
             First,
+            ContextPriority::<First>::new(1),
             actions!(
                 First[(
                     Action::<OnFirst>::new(),
@@ -115,7 +117,7 @@ fn switching() {
 
     app.world_mut()
         .entity_mut(context)
-        .remove::<First>()
+        .remove_with_requires::<First>()
         .despawn_related::<Actions<First>>()
         .insert((
             Second,
@@ -147,11 +149,10 @@ fn switching() {
     assert_eq!(second_state, ActionState::Fired);
 }
 
-#[derive(Component, InputContext)]
-#[input_context(priority = 1)]
+#[derive(Component)]
 struct First;
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct Second;
 
 /// A key used by all actions.

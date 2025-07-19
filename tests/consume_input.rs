@@ -291,7 +291,7 @@ fn modifiers() {
     assert_eq!(second_state, ActionState::Fired);
 }
 
-#[derive(Component, InputContext, Clone, Copy)]
+#[derive(Component, Clone, Copy)]
 struct TestContext;
 
 /// Keys used by all actions.

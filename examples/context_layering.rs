@@ -53,6 +53,7 @@ fn enter_car(trigger: Trigger<Started<EnterCar>>, mut commands: Commands) {
     info!("entering car");
     commands.entity(trigger.target()).insert((
         Driving,
+        ContextPriority::<Driving>::new(1),
         actions!(Driving[
             (
                 Action::<Brake>::new(),
@@ -78,11 +79,11 @@ fn exit_car(trigger: Trigger<Started<ExitCar>>, mut commands: Commands) {
     info!("exiting car");
     commands
         .entity(trigger.target())
-        .remove::<Driving>()
+        .remove_with_requires::<Driving>() // Necessary to also remove `ContextPriority`.
         .despawn_related::<Actions<Driving>>();
 }
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct Player;
 
 #[derive(InputAction)]
@@ -99,8 +100,7 @@ struct Jump;
 struct EnterCar;
 
 /// Overrides some actions from [`Player`].
-#[derive(Component, InputContext)]
-#[input_context(priority = 1)]
+#[derive(Component)]
 struct Driving;
 
 /// This action overrides [`Jump`] when the player is [`Driving`].

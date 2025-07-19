@@ -189,7 +189,7 @@ const RIGHT_DOWN: Vec3 = Vec3::new(1.0, -1.0, 0.0);
 const LEFT_DOWN: Vec3 = Vec3::new(-1.0, -1.0, 0.0);
 const LEFT_UP: Vec3 = Vec3::new(-1.0, 1.0, 0.0);
 
-#[derive(Component, InputContext)]
+#[derive(Component)]
 struct TestContext;
 
 #[derive(InputAction)]
