@@ -18,7 +18,7 @@ fn main() {
 }
 
 fn spawn(mut commands: Commands) {
-    commands.spawn(player());
+    commands.spawn(player_bundle());
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>) {
@@ -65,10 +65,10 @@ fn close_inventory(trigger: Trigger<Started<CloseInventory>>, mut commands: Comm
         .entity(trigger.target())
         .remove::<Inventory>()
         .despawn_related::<Actions<Inventory>>()
-        .insert(player());
+        .insert(player_bundle());
 }
 
-fn player() -> impl Bundle {
+fn player_bundle() -> impl Bundle {
     (
         Player,
         actions!(Player[

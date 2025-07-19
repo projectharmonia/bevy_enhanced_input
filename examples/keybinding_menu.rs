@@ -91,7 +91,7 @@ fn setup(mut commands: Commands) {
                 ..Default::default()
             },
             children![
-                actions_grid(settings.clone()),
+                actions_grid_bundle(settings.clone()),
                 (
                     Node {
                         align_items: AlignItems::End,
@@ -137,7 +137,7 @@ struct BindingInfo {
     index: usize,
 }
 
-fn actions_grid(settings: KeyboardSettings) -> impl Bundle {
+fn actions_grid_bundle(settings: KeyboardSettings) -> impl Bundle {
     (
         Node {
             display: Display::Grid,
