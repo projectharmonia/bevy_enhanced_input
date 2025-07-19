@@ -149,5 +149,5 @@ enum Player {
 struct Gamepads(Vec<Entity>);
 
 #[derive(Debug, InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Move;

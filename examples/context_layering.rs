@@ -86,16 +86,16 @@ fn exit_car(trigger: Trigger<Started<ExitCar>>, mut commands: Commands) {
 struct Player;
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Move;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Jump;
 
 /// Adds [`Driving`].
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct EnterCar;
 
 /// Overrides some actions from [`Player`].
@@ -105,7 +105,7 @@ struct Driving;
 
 /// This action overrides [`Jump`] when the player is [`Driving`].
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Brake;
 
 /// Removes [`Driving`].
@@ -113,5 +113,5 @@ struct Brake;
 /// We set `require_reset` to `true` because [`EnterWater`] action uses the same input,
 /// and we want it to be triggerable only after the button is released.
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct ExitCar;

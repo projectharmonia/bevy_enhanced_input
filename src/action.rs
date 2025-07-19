@@ -93,7 +93,7 @@ impl<A: InputAction> Default for Action<A> {
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(InputAction)]
-/// #[input_action(output = Vec2)]
+/// #[action_output(Vec2)]
 /// struct Move;
 /// ```
 ///
@@ -103,7 +103,7 @@ impl<A: InputAction> Default for Action<A> {
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
 /// #[derive(InputAction)]
-/// #[input_action(output = Vec2, accumulation = Cumulative, consume_input = false)]
+/// #[action_output(Vec2, accumulation = Cumulative, consume_input = false)]
 /// struct Move;
 /// ```
 ///

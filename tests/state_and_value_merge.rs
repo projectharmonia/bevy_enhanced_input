@@ -285,7 +285,7 @@ fn both_levels() {
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Test;
 
 impl Test {
@@ -294,7 +294,7 @@ impl Test {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct ChordMember;
 
 impl ChordMember {
@@ -302,7 +302,7 @@ impl ChordMember {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Blocker;
 
 impl Blocker {

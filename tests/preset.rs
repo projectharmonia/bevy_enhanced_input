@@ -193,5 +193,5 @@ const LEFT_UP: Vec3 = Vec3::new(-1.0, 1.0, 0.0);
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = Vec3)]
+#[action_output(Vec3)]
 struct Test;

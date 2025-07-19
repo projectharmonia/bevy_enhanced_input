@@ -614,17 +614,17 @@ fn player_bundle(settings: KeyboardSettings) -> impl Bundle {
 }
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Move;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Jump;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Run;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Fire;

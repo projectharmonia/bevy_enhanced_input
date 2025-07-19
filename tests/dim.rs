@@ -146,7 +146,7 @@ fn axis3d() {
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Bool;
 
 impl Bool {
@@ -154,7 +154,7 @@ impl Bool {
 }
 
 #[derive(InputAction)]
-#[input_action(output = f32)]
+#[action_output(f32)]
 struct Axis1D;
 
 impl Axis1D {
@@ -162,7 +162,7 @@ impl Axis1D {
 }
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Axis2D;
 
 impl Axis2D {
@@ -170,7 +170,7 @@ impl Axis2D {
 }
 
 #[derive(InputAction)]
-#[input_action(output = Vec3)]
+#[action_output(Vec3)]
 struct Axis3D;
 
 impl Axis3D {

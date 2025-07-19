@@ -203,7 +203,7 @@ fn blocker() {
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Test;
 
 impl Test {
@@ -211,7 +211,7 @@ impl Test {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct OnRelease;
 
 impl OnRelease {

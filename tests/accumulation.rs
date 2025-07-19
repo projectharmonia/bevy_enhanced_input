@@ -74,5 +74,5 @@ fn cumulative() {
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Test;

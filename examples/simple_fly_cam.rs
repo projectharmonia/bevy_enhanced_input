@@ -133,17 +133,17 @@ struct FlyCam;
 // It can be done manually, but we provide a derive for convenience.
 // The only necessary parameter is `output`, which defines the output type.
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Move;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct CaptureCursor;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct ReleaseCursor;
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Rotate;

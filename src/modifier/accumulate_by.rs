@@ -93,6 +93,6 @@ mod tests {
     }
 
     #[derive(InputAction)]
-    #[input_action(output = bool)]
+    #[action_output(bool)]
     struct TestAction;
 }

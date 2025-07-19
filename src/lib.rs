@@ -33,16 +33,13 @@ To implement the trait, you can use the provided derive macro.
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Jump;
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Move;
 ```
-
-We also require [`Debug`], which we use for logging. The `output` is the only required parameter.
-you can provide additional parameters, see the [`InputAction`] documentation.
 
 ## Defining input contexts
 
@@ -91,7 +88,7 @@ actions.bind::<Jump>().to((KeyCode::Space, GamepadButton::South));
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(InputAction)]
-# #[input_action(output = bool)]
+# #[action_output(bool)]
 # struct Jump;
 ```
 
@@ -135,7 +132,7 @@ actions
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(InputAction)]
-# #[input_action(output = Vec2)]
+# #[action_output(Vec2)]
 # struct Move;
 ```
 
@@ -163,7 +160,7 @@ actions
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(InputAction)]
-# #[input_action(output = Vec2)]
+# #[action_output(Vec2)]
 # struct Move;
 ```
 
@@ -187,7 +184,7 @@ actions.bind::<Jump>().to(KeyCode::Space.with_conditions(Hold::new(1.0)));
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(InputAction)]
-# #[input_action(output = bool)]
+# #[action_output(bool)]
 # struct Jump;
 ```
 
@@ -232,7 +229,7 @@ struct KeyboardSettings {
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(InputAction)]
-# #[input_action(output = bool)]
+# #[action_output(bool)]
 # struct Jump;
 ```
 
@@ -275,7 +272,7 @@ fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transfo
     transform.translation += trigger.value.extend(0.0);
 }
 # #[derive(InputAction)]
-# #[input_action(output = Vec2)]
+# #[action_output(Vec2)]
 # struct Move;
 ```
 
@@ -301,7 +298,7 @@ fn system(players: Single<(&Actions<OnFoot>, &mut Transform)>) -> Result<()> {
 # #[derive(InputContext)]
 # struct OnFoot;
 # #[derive(InputAction)]
-# #[input_action(output = bool)]
+# #[action_output(bool)]
 # struct Jump;
 ```
 
