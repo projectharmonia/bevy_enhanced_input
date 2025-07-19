@@ -58,7 +58,7 @@ pub struct Cardinal<N: Bundle, E: Bundle, S: Bundle, W: Bundle> {
 
 impl<N: Bundle, E: Bundle, S: Bundle, W: Bundle> Cardinal<N, E, S, W> {
     pub fn with<T: Bundle + Clone>(self, bundle: T) -> Cardinal<(N, T), (E, T), (S, T), (W, T)> {
-        Cardinal::<(N, T), (E, T), (S, T), (W, T)> {
+        Cardinal {
             north: (self.north, bundle.clone()),
             east: (self.east, bundle.clone()),
             south: (self.south, bundle.clone()),

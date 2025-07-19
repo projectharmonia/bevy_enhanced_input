@@ -42,7 +42,7 @@ where
         self,
         bundle: T,
     ) -> Ordinal<(N, T), (NE, T), (E, T), (SE, T), (S, T), (SW, T), (W, T), (NW, T)> {
-        Ordinal::<(N, T), (NE, T), (E, T), (SE, T), (S, T), (SW, T), (W, T), (NW, T)> {
+        Ordinal {
             north: (self.north, bundle.clone()),
             north_east: (self.north_east, bundle.clone()),
             east: (self.east, bundle.clone()),

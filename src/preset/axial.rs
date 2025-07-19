@@ -45,7 +45,7 @@ pub struct Axial<X: Bundle, Y: Bundle> {
 
 impl<X: Bundle, Y: Bundle> Axial<X, Y> {
     pub fn with<T: Bundle + Clone>(self, bundle: T) -> Axial<(X, T), (Y, T)> {
-        Axial::<(X, T), (Y, T)> {
+        Axial {
             x: (self.x, bundle.clone()),
             y: (self.y, bundle),
         }

@@ -36,7 +36,7 @@ where
         self,
         bundle: T,
     ) -> Spatial<(F, T), (B, T), (L, T), (R, T), (U, T), (D, T)> {
-        Spatial::<(F, T), (B, T), (L, T), (R, T), (U, T), (D, T)> {
+        Spatial {
             forward: (self.forward, bundle.clone()),
             backward: (self.backward, bundle.clone()),
             left: (self.left, bundle.clone()),
