@@ -14,6 +14,7 @@ pub struct ActionOf<C: Component> {
     #[deref]
     #[relationship]
     entity: Entity,
+    #[reflect(ignore)]
     marker: PhantomData<C>,
 }
 
@@ -33,6 +34,7 @@ pub struct Actions<C: Component> {
     #[deref]
     #[relationship]
     entities: Vec<Entity>,
+    #[reflect(ignore)]
     marker: PhantomData<C>,
 }
 
