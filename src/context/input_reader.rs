@@ -152,6 +152,7 @@ impl InputReader<'_, '_> {
                 let value = value.unwrap_or_default();
                 value.into()
             }
+            Binding::None => false.into(),
         }
     }
 
@@ -201,6 +202,7 @@ impl InputReader<'_, '_> {
                 };
                 iter.any(|inputs| inputs.gamepad_axes.contains(&input))
             }
+            Binding::None => false,
         }
     }
 
@@ -343,6 +345,7 @@ impl IgnoredInputs {
 
                 self.gamepad_axes.insert(input);
             }
+            Binding::None => (),
         }
     }
 
