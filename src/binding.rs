@@ -21,27 +21,23 @@ use crate::prelude::*;
 #[component(on_insert = reset_first_activation, immutable)]
 #[require(FirstActivation)]
 pub enum Binding {
-    /// Keyboard button, will be captured as
-    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
+    /// Keyboard button, will be captured as [`ActionValue::Bool`].
     Keyboard { key: KeyCode, mod_keys: ModKeys },
-    /// Mouse button, will be captured as
-    /// [`ActionValue::Bool`](crate::action_value::ActionValue::Bool).
+    /// Mouse button, will be captured as [`ActionValue::Bool`].
     MouseButton {
         button: MouseButton,
         mod_keys: ModKeys,
     },
-    /// Mouse movement, will be captured as
-    /// [`ActionValue::Axis2D`](crate::action_value::ActionValue::Axis2D).
+    /// Mouse movement, will be captured as [`ActionValue::Axis2D`].
     MouseMotion { mod_keys: ModKeys },
-    /// Mouse wheel, will be captured as
-    /// [`ActionValue::Axis2D`](crate::action_value::ActionValue::Axis2D).
+    /// Mouse wheel, will be captured as [`ActionValue::Axis2D`].
     MouseWheel { mod_keys: ModKeys },
-    /// Gamepad button, will be captured as
-    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
+    /// Gamepad button, will be captured as [`ActionValue::Axis1D`].
     GamepadButton(GamepadButton),
-    /// Gamepad stick axis, will be captured as
-    /// [`ActionValue::Axis1D`](crate::action_value::ActionValue::Axis1D).
+    /// Gamepad stick axis, will be captured as [`ActionValue::Axis1D`].
     GamepadAxis(GamepadAxis),
+    /// Doesn't correspond to any input, will be captured as [`ActionValue::Bool`] with `false`.
+    None,
 }
 
 impl Binding {
@@ -75,7 +71,7 @@ impl Binding {
             | Binding::MouseButton { mod_keys, .. }
             | Binding::MouseMotion { mod_keys }
             | Binding::MouseWheel { mod_keys } => mod_keys,
-            Binding::GamepadButton(_) | Binding::GamepadAxis(_) => ModKeys::empty(),
+            Binding::GamepadButton(_) | Binding::GamepadAxis(_) | Binding::None => ModKeys::empty(),
         }
     }
 
@@ -104,6 +100,7 @@ impl Display for Binding {
             Binding::MouseWheel { .. } => write!(f, "Scroll Wheel"),
             Binding::GamepadButton(gamepad_button) => write!(f, "{gamepad_button:?}"),
             Binding::GamepadAxis(gamepad_axis) => write!(f, "{gamepad_axis:?}"),
+            Binding::None => write!(f, "None"),
         }
     }
 }
@@ -157,8 +154,8 @@ impl<I: Into<Binding>> InputModKeys for I {
             Binding::MouseButton { button, .. } => Binding::MouseButton { button, mod_keys },
             Binding::MouseMotion { .. } => Binding::MouseMotion { mod_keys },
             Binding::MouseWheel { .. } => Binding::MouseWheel { mod_keys },
-            Binding::GamepadButton { .. } | Binding::GamepadAxis { .. } => {
-                panic!("keyboard modifiers can't be applied to gamepads")
+            Binding::GamepadButton { .. } | Binding::GamepadAxis { .. } | Binding::None => {
+                panic!("keyboard modifiers can be applied only to mouse and keyboard")
             }
         }
     }
