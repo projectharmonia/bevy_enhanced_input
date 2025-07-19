@@ -8,7 +8,7 @@ use bevy::{
     prelude::*,
     utils::TypeIdMap,
 };
-use log::trace;
+use log::{debug, trace};
 
 use crate::prelude::*;
 
