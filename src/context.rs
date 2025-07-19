@@ -19,7 +19,7 @@ use bevy::{
     },
     prelude::*,
 };
-use log::{debug, trace};
+use log::{debug, trace, warn};
 use serde::{Deserialize, Serialize};
 
 use crate::{
