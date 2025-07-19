@@ -48,14 +48,14 @@ fn spawn(
     let capsule = meshes.add(Capsule3d::new(0.5, 2.0));
 
     // Spawn two players with different controls.
-    commands.spawn(player(
+    commands.spawn(player_bundle(
         Player::First,
         gamepad1,
         capsule.clone(),
         materials.add(Color::srgb_u8(124, 144, 255)),
         Transform::from_xyz(0.0, 1.5, 8.0),
     ));
-    commands.spawn(player(
+    commands.spawn(player_bundle(
         Player::Second,
         gamepad2,
         capsule,
@@ -106,7 +106,7 @@ fn update_gamepads(
     }
 }
 
-fn player(
+fn player_bundle(
     player: Player,
     gamepad: Option<Entity>,
     mesh: impl Into<Mesh3d>,
