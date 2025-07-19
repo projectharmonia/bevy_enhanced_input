@@ -200,17 +200,17 @@ const CONSUME_KEY: KeyCode = KeyCode::KeyA;
 const PASSTHROUGH_KEY: KeyCode = KeyCode::KeyB;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct FirstConsume;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct FirstPassthrough;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct SecondConsume;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct SecondPassthrough;

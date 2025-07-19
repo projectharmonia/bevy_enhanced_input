@@ -95,7 +95,7 @@ fn spawn(mut commands: Commands) {
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct PressAction;
 
 impl PressAction {
@@ -103,7 +103,7 @@ impl PressAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct JustPressAction;
 
 impl JustPressAction {
@@ -111,7 +111,7 @@ impl JustPressAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct HoldAction;
 
 impl HoldAction {
@@ -119,7 +119,7 @@ impl HoldAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct HoldAndReleaseAction;
 
 impl HoldAndReleaseAction {
@@ -127,7 +127,7 @@ impl HoldAndReleaseAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct PulseAction;
 
 impl PulseAction {
@@ -135,7 +135,7 @@ impl PulseAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct ReleaseAction;
 
 impl ReleaseAction {
@@ -143,7 +143,7 @@ impl ReleaseAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct TapAction;
 
 impl TapAction {
@@ -151,7 +151,7 @@ impl TapAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct ChordMember1;
 
 impl ChordMember1 {
@@ -159,7 +159,7 @@ impl ChordMember1 {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct ChordMember2;
 
 impl ChordMember2 {
@@ -167,7 +167,7 @@ impl ChordMember2 {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct BlockerAction;
 
 impl BlockerAction {
@@ -175,11 +175,11 @@ impl BlockerAction {
 }
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct ChordAction;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct BlockByAction;
 
 impl BlockByAction {

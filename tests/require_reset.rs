@@ -158,9 +158,9 @@ struct Second;
 const KEY: KeyCode = KeyCode::KeyA;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct OnFirst;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct OnSecond;

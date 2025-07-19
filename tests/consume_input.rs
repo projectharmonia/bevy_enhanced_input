@@ -299,9 +299,9 @@ const KEY: KeyCode = KeyCode::KeyA;
 const MOD: ModKeys = ModKeys::CONTROL;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct First;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Second;

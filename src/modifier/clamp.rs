@@ -33,11 +33,11 @@ use crate::prelude::*;
 /// struct Ui;
 ///
 /// #[derive(InputAction)]
-/// #[input_action(output = bool)]
+/// #[action_output(bool)]
 /// struct Up;
 ///
 /// #[derive(InputAction)]
-/// #[input_action(output = bool)]
+/// #[action_output(bool)]
 /// struct Down;
 /// ```
 #[derive(Component, Reflect, Debug, Clone, Copy)]

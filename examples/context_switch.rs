@@ -97,11 +97,11 @@ fn player_bundle() -> impl Bundle {
 struct Player;
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Move;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Attack;
 
 /// Switches context to [`Inventory`].
@@ -109,19 +109,19 @@ struct Attack;
 /// We set `require_reset` to `true` because [`CloseInventory`] action uses the same input,
 /// and we want it to be triggerable only after the button is released.
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct OpenInventory;
 
 #[derive(Component, InputContext)]
 struct Inventory;
 
 #[derive(InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct NavigateInventory;
 
 /// Switches context to [`Player`].
 ///
 /// See [`OpenInventory`] for details about `require_reset`.
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct CloseInventory;

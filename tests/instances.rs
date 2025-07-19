@@ -36,7 +36,7 @@ fn removal() {
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Test;
 
 impl Test {

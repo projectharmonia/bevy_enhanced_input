@@ -85,7 +85,7 @@ fn twice_in_one_frame() {
 struct TestContext;
 
 #[derive(InputAction)]
-#[input_action(output = bool)]
+#[action_output(bool)]
 struct Test;
 
 impl Test {

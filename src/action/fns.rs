@@ -235,6 +235,6 @@ mod tests {
     struct TriggeredEvents(ActionEvents);
 
     #[derive(InputAction)]
-    #[input_action(output = bool)]
+    #[action_output(bool)]
     struct TestAction;
 }
