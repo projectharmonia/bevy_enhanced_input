@@ -12,10 +12,12 @@ pub struct BlockBy {
 }
 
 impl BlockBy {
+    #[must_use]
     pub fn single(action: Entity) -> Self {
         Self::new(smallvec![action])
     }
 
+    #[must_use]
     pub fn new(actions: impl Into<SmallVec<[Entity; 2]>>) -> Self {
         Self {
             actions: actions.into(),
