@@ -34,6 +34,29 @@ fn removal() {
     app.update();
 }
 
+#[test]
+fn invalid_hierarchy() {
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<TestContext>()
+        .finish();
+
+    app.world_mut().spawn((
+        TestContext,
+        actions!(TestContext[
+            (
+                // Action without bindings.
+                Action::<Test>::new(),
+                Bindings::spawn((Spawn(Down::default()), Spawn(Scale::splat(1.0))))
+            ),
+            // Bindings without action.
+            bindings![Test::KEY],
+        ]),
+    ));
+
+    app.update();
+}
+
 #[derive(Component)]
 struct TestContext;
 
