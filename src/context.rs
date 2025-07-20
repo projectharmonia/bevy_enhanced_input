@@ -181,18 +181,18 @@ impl ScheduleContexts {
             ParamBuilder,
         )
             .build_state(app.world_mut())
-            .build_system(trigger::<S>);
+            .build_system(apply::<S>);
 
         app.init_resource::<ContextInstances<S>>()
             .configure_sets(
                 S::default(),
-                (EnhancedInputSet::Update, EnhancedInputSet::Trigger).chain(),
+                (EnhancedInputSet::Update, EnhancedInputSet::Apply).chain(),
             )
             .add_systems(
                 S::default(),
                 (
                     update.in_set(EnhancedInputSet::Update),
-                    trigger.in_set(EnhancedInputSet::Trigger),
+                    trigger.in_set(EnhancedInputSet::Apply),
                 ),
             );
     }
@@ -451,7 +451,7 @@ pub type ActionsQuery<'w, 's> = Query<
     ),
 >;
 
-fn trigger<S: ScheduleLabel>(
+fn apply<S: ScheduleLabel>(
     mut commands: Commands,
     instances: Res<ContextInstances<S>>,
     contexts: Query<FilteredEntityRef, Without<ActionFns>>,

@@ -488,8 +488,9 @@ pub enum EnhancedInputSet {
     ///
     /// Runs in each registered [`InputContext::Schedule`].
     Update,
-    /// Triggers events evaluated inside [`Self::Update`].
+    /// Applies the value from [`ActionValue`] to [`Action`] and triggers
+    /// events evaluated from [`Self::Update`].
     ///
     /// Runs in each registered [`InputContext::Schedule`].
-    Trigger,
+    Apply,
 }
