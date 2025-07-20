@@ -18,8 +18,10 @@ use crate::prelude::*;
 /// Input modifiers are useful for applying sensitivity settings, smoothing input over multiple frames,
 /// or changing how input maps to axes.
 ///
-/// Can be applied both to inputs and actions.
-/// See [`ActionBinding::with_modifiers`] and [`BindingBuilder::with_modifiers`].
+/// Can be attached both to bindings and actions.
+///
+/// If you create a custom modifier, it needs to be registered using
+/// [`InputModifierAppExt::add_input_modifier`].
 pub trait InputModifier: Debug {
     /// Returns pre-processed value.
     ///

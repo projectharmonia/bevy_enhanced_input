@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::{context::input_reader::PendingInputs, prelude::*};
 use fns::ActionFns;
 
+/// Resets action data and triggers corresponding events on removal.
 pub(crate) fn remove_action(
     trigger: Trigger<OnRemove, ActionValue>,
     mut commands: Commands,
@@ -50,6 +51,14 @@ pub(crate) fn remove_action(
     }
 }
 
+/// Component that represents a user action.
+///
+/// Entities with this component needs to be spawned with [`ActionOf<C>`]
+/// relationship in order to be evaluated.
+///
+/// Holds value defined by [`InputAction::Output`].
+/// See also required components for other data associated with the action
+/// without static typing.
 #[derive(Component, Deref, DerefMut)]
 #[require(
     Name::new(any::type_name::<A>()),
@@ -78,7 +87,7 @@ impl<A: InputAction> Action<A> {
 
 /// Marker for a gameplay-related action.
 ///
-/// Needs to be bound to actions using [`UntypedActions::bind`].
+/// Used together with [`Action<C>`] and [`events`] to statically define the type.
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate:
@@ -90,27 +99,12 @@ impl<A: InputAction> Action<A> {
 /// #[action_output(Vec2)]
 /// struct Move;
 /// ```
-///
-/// Optionally you can pass `consume_input` and/or `accumulation`:
-///
-/// ```
-/// # use bevy::prelude::*;
-/// # use bevy_enhanced_input::prelude::*;
-/// #[derive(InputAction)]
-/// #[action_output(Vec2, accumulation = Cumulative, consume_input = false)]
-/// struct Move;
-/// ```
-///
-/// All parameters match corresponding data in the trait.
 pub trait InputAction: 'static {
     /// What type of value this action will output.
     ///
     /// - Use [`bool`] for button-like actions (e.g., `Jump`).
     /// - Use [`f32`] for single-axis actions (e.g., `Zoom`).
     /// - For multi-axis actions, like `Move`, use [`Vec2`] or [`Vec3`].
-    ///
-    /// This type will also be used for `value` field on events
-    /// e.g. [`Fired::value`], [`Canceled::value`].
     type Output: ActionOutput;
 }
 
@@ -171,8 +165,50 @@ impl ActionOutput for Vec3 {
     }
 }
 
+/// Behavior configuration for [`Action<C>`].
+#[derive(Component, Reflect, Debug, Serialize, Deserialize, Clone, Copy)]
+pub struct ActionSettings {
+    /// Accumulation behavior.
+    ///
+    /// By default set to [`Accumulation::default`].
+    pub accumulation: Accumulation,
+
+    /// Require inputs to be inactive before the first activation and continue to consume them
+    /// even after context removal until inputs become inactive again.
+    ///
+    /// This way new instances won't react to currently held inputs until they are released.
+    /// This prevents unintended behavior where switching or layering contexts using the same key
+    /// could cause an immediate switch back, as buttons are rarely pressed for only a single frame.
+    ///
+    /// By default set to `false`.
+    pub require_reset: bool,
+
+    /// Specifies whether this action should swallow any [`Bindings`]
+    /// bound to it or allow them to pass through to affect other actions.
+    ///
+    /// Inputs are consumed when the action state is not equal to
+    /// [`ActionState::None`].
+    ///
+    /// Consuming is global and affect actions in all contexts.
+    ///
+    /// By default set to `true`.
+    pub consume_input: bool,
+}
+
+impl Default for ActionSettings {
+    fn default() -> Self {
+        Self {
+            accumulation: Default::default(),
+            require_reset: false,
+            consume_input: true,
+        }
+    }
+}
+
 /// Defines how [`ActionValue`] is calculated when multiple inputs are evaluated with the
 /// same most significant [`ActionState`] (excluding [`ActionState::None`]).
+///
+/// Stored inside [`ActionSettings`].
 #[derive(Reflect, Debug, Default, Serialize, Deserialize, Clone, Copy)]
 pub enum Accumulation {
     /// Cumulatively add the key values for each mapping.
@@ -188,11 +224,12 @@ pub enum Accumulation {
     MaxAbs,
 }
 
-/// State for [`Action`].
+/// State for [`Action<C>`].
 ///
-/// States are ordered by their significance.
+/// Updated from [`Bindings`] and associated [`conditions`](crate::condition),
+/// or overridden by [`ActionMock`] if present.
 ///
-/// See also [`ActionEvents`] and [`ActionBinding`].
+/// During evaluation, [`ActionEvents`] are derived from the previous and current state.
 #[derive(
     Component,
     Reflect,
@@ -220,6 +257,7 @@ pub enum ActionState {
     Fired,
 }
 
+/// Timing information for [`Action<C>`].
 #[derive(Component, Reflect, Debug, Default, Clone, Copy)]
 pub struct ActionTime {
     /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
@@ -248,39 +286,56 @@ impl ActionTime {
     }
 }
 
-#[derive(Component, Reflect, Debug, Serialize, Deserialize, Clone, Copy)]
-pub struct ActionSettings {
-    /// Accumulation behavior.
-    pub accumulation: Accumulation,
-
-    /// Require inputs to be inactive before the first activation and continue to consume them
-    /// even after context removal until inputs become inactive again.
-    ///
-    /// This way new instances won't react to currently held inputs until they are released.
-    /// This prevents unintended behavior where switching or layering contexts using the same key
-    /// could cause an immediate switch back, as buttons are rarely pressed for only a single frame.
-    pub require_reset: bool,
-
-    /// Specifies whether this action should swallow any [`Input`]s
-    /// bound to it or allow them to pass through to affect other actions.
-    ///
-    /// Inputs are consumed when the action state is not equal to
-    /// [`ActionState::None`]. For details, see [`Actions`].
-    ///
-    /// Consuming is global and affect actions in all contexts.
-    pub consume_input: bool,
-}
-
-impl Default for ActionSettings {
-    fn default() -> Self {
-        Self {
-            accumulation: Default::default(),
-            require_reset: false,
-            consume_input: true,
-        }
-    }
-}
-
+/// Mocks the state and value of [`Action<C>`] for a specified span.
+///
+/// While active, input evaluation, conditions, and modifiers are skipped. Instead,
+/// the action reports the provided state and value. All state transition events
+/// (e.g., [`Started<A>`], [`Fired<A>`]) will still be triggered as usual.
+///
+/// Once the span expires, [`Self::enabled`] is set to `false`, and the action resumes
+/// evaluating real input. The component is not removed automatically, allowing you
+/// to reuse it for future mocking.
+///
+/// Mocking does not take effect immediately - it is applied during the next context evaluation.
+/// For more details, see the [evaluation](../index.html#evaluation) section in the quick start guide.
+///
+/// # Examples
+///
+/// Spawn and move up for 2 seconds:
+///
+/// ```
+/// # use core::time::Duration;
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut world = World::new();
+/// world.spawn((
+///     OnFoot,
+///     actions!(OnFoot[
+///         (
+///             Action::<Move>::new(),
+///             ActionMock::new(ActionState::Fired, Vec2::Y, Duration::from_secs(2)),
+///             Bindings::spawn(Cardinal::wasd_keys()), // Bindings will be ignored while mocked.
+///         ),
+///     ]),
+/// ));
+/// # #[derive(Component)]
+/// # struct OnFoot;
+/// # #[derive(InputAction)]
+/// # #[action_output(Vec2)]
+/// # struct Move;
+/// ```
+///
+/// Mock previously spawned jump action for the next frame:
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// fn mock_jump(mut commands: Commands, jump: Single<Entity, With<Action<Jump>>>) {
+///     commands.entity(*jump).insert(ActionMock::once(ActionState::Fired, true));
+/// }
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct Jump;
 #[derive(Component, Reflect, Debug, Serialize, Deserialize, Clone, Copy)]
 pub struct ActionMock {
     pub state: ActionState,
@@ -290,10 +345,12 @@ pub struct ActionMock {
 }
 
 impl ActionMock {
+    /// Creates a new instance that will mock state and value only for a single context evaluation.
     pub fn once(state: ActionState, value: impl Into<ActionValue>) -> Self {
         Self::new(state, value, MockSpan::Updates(1))
     }
 
+    /// Creates a new instance that will mock state and value for the given span.
     pub fn new(
         state: ActionState,
         value: impl Into<ActionValue>,
@@ -308,16 +365,15 @@ impl ActionMock {
     }
 }
 
-/// Specifies how long a mock input should remain active.
-///
-/// See also [`UntypedActions::mock`].
+/// Specifies how long [`ActionMock`] should remain active.
 #[derive(Reflect, Serialize, Deserialize, Debug, Clone, Copy)]
 pub enum MockSpan {
-    /// Mock for a fixed number of context evaluations.
+    /// Active for a fixed number of context evaluations.
     Updates(u32),
-    /// Mock for a real-time duration.
+    /// Active for a real-time [`Duration`].
     Duration(Duration),
-    /// Mock until manually cleared.
+    /// Remains active until [`ActionMock::enabled`] is manually set to `false`,
+    /// or the [`ActionMock`] component is removed from the action entity.
     Manual,
 }
 

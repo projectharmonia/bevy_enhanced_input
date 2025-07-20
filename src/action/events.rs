@@ -6,11 +6,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
-/// Bitset with events triggered by updating [`ActionState`] for an action.
+/// Bitset with events caused by state transitions of [`ActionState`].
 ///
-/// Stored inside [`Action`].
-///
-/// On transition, events will be triggered with dedicated types that correspond to bitflags.
+/// During [`EnhancedInputSet::Apply`], events that correspond to bitflags will be triggered.
 ///
 /// Table of state transitions:
 ///

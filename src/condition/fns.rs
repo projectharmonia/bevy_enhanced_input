@@ -11,6 +11,9 @@ use bevy::{
 use crate::prelude::*;
 
 pub trait InputConditionAppExt {
+    /// Registers an input condition, making it accessible during context evaluation.
+    ///
+    /// All built-in conditions are already registered.
     fn add_input_condition<C: InputCondition + Component<Mutability = Mutable>>(
         &mut self,
     ) -> &mut Self;
@@ -50,9 +53,20 @@ fn unregister_condition<C: InputCondition + Component<Mutability = Mutable>>(
     fns.0.remove(index);
 }
 
+/// IDs of all registered input conditions.
+///
+/// Used to dynamically register access for [`FilteredEntityMut`].
+///
+/// Exists only during the plugin initialization.
 #[derive(Resource, Deref, Default)]
 pub(crate) struct ConditionRegistry(Vec<ComponentId>);
 
+/// Functions to retrieve condition components currently present on the entity.
+///
+/// Since we don't know the exact conditions on an entity ahead of time,
+/// we dynamically get them as the trait from [`FilteredEntityMut`].
+///
+/// Updated automatically using triggers.
 #[derive(Component, Deref, Default)]
 pub(crate) struct ConditionFns(Vec<GetConditionFn>);
 

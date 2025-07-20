@@ -11,6 +11,9 @@ use bevy::{
 use crate::prelude::*;
 
 pub trait InputModifierAppExt {
+    /// Registers an input modifier, making it accessible during context evaluation.
+    ///
+    /// All built-in modifiers are already registered.
     fn add_input_modifier<M: InputModifier + Component<Mutability = Mutable>>(
         &mut self,
     ) -> &mut Self;
@@ -50,9 +53,20 @@ fn unregister_modifier<M: InputModifier + Component<Mutability = Mutable>>(
     fns.0.remove(index);
 }
 
+/// IDs of all registered input modifiers.
+///
+/// Used to dynamically register access for [`FilteredEntityMut`].
+///
+/// Exists only during the plugin initialization.
 #[derive(Resource, Deref, Default)]
 pub(crate) struct ModifierRegistry(Vec<ComponentId>);
 
+/// Functions to retrieve modifier components currently present on the entity as the trait.
+///
+/// Since we don't know the exact modifiers on an entity ahead of time,
+/// we dynamically get them as the trait from [`FilteredEntityMut`].
+///
+/// Updated automatically using triggers.
 #[derive(Component, Deref, Default)]
 pub(crate) struct ModifierFns(Vec<GetModifierFn>);
 

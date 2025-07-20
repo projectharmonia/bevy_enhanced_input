@@ -11,25 +11,26 @@ use crate::prelude::*;
 /// Bind only positive or negative direction of [`GamepadAxis::LeftStickY`].
 ///
 /// ```
-/// use bevy::prelude::*;
-/// use bevy_enhanced_input::prelude::*;
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut world = World::new();
+/// world.spawn((
+///     Ui,
+///     actions!(Ui[
+///         (
+///             Action::<Up>::new(),
+///             Clamp::pos(),
+///             bindings![GamepadAxis::LeftStickY],
+///         ),
+///         (
+///             Action::<Down>::new(),
+///             Clamp::neg(),
+///             bindings![GamepadAxis::LeftStickY],
+///         ),
+///     ])
+/// ));
 ///
-/// fn bind(
-///     trigger: Trigger<Bind<Ui>>,
-///     mut ui: Query<&mut Actions<Ui>>,
-/// ) {
-///     let mut actions = ui.get_mut(trigger.target()).unwrap();
-///     actions
-///         .bind::<Up>()
-///         .to(GamepadAxis::LeftStickY)
-///         .with_modifiers(Clamp::pos());
-///     actions
-///         .bind::<Down>()
-///         .to(GamepadAxis::LeftStickY)
-///         .with_modifiers(Clamp::neg());
-/// }
-///
-/// #[derive(InputContext)]
+/// #[derive(Component)]
 /// struct Ui;
 ///
 /// #[derive(InputAction)]

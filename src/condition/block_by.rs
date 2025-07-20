@@ -4,19 +4,21 @@ use smallvec::{SmallVec, smallvec};
 
 use crate::prelude::*;
 
-/// Requires another action to not be fired within the same context.
+/// Returns [`ActionState::None`] when specific actions are active.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct BlockBy {
-    /// Action that blocks this condition when active.
+    /// Actions that block this action when they are firing.
     pub actions: SmallVec<[Entity; 2]>,
 }
 
 impl BlockBy {
+    /// Creates a new instance for a single action.
     #[must_use]
     pub fn single(action: Entity) -> Self {
         Self::new(smallvec![action])
     }
 
+    /// Creates a new instance for multiple actions.
     #[must_use]
     pub fn new(actions: impl Into<SmallVec<[Entity; 2]>>) -> Self {
         Self {

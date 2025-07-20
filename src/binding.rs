@@ -11,37 +11,40 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
-/// Wraps input from any source.
+/// Input from any source associated with an action.
 ///
-/// [Input modifiers](crate::input_context::input_modifier) can change the captured dimension.
+/// [Input modifiers](crate::modifier) can change the captured dimension.
 ///
 /// If the action's dimension differs from the captured input, it will be converted using
-/// [`ActionValue::convert`](crate::action_value::ActionValue::convert).
+/// [`ActionValue::convert`](crate::action::value::ActionValue::convert).
 #[derive(Component, Reflect, Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 #[component(on_insert = reset_first_activation, immutable)]
 #[require(FirstActivation)]
 pub enum Binding {
-    /// Keyboard button, will be captured as [`ActionValue::Bool`].
+    /// Keyboard button, captured as [`ActionValue::Bool`].
     Keyboard { key: KeyCode, mod_keys: ModKeys },
-    /// Mouse button, will be captured as [`ActionValue::Bool`].
+    /// Mouse button, captured as [`ActionValue::Bool`].
     MouseButton {
         button: MouseButton,
         mod_keys: ModKeys,
     },
-    /// Mouse movement, will be captured as [`ActionValue::Axis2D`].
+    /// Mouse movement, captured as [`ActionValue::Axis2D`].
     MouseMotion { mod_keys: ModKeys },
-    /// Mouse wheel, will be captured as [`ActionValue::Axis2D`].
+    /// Mouse wheel, captured as [`ActionValue::Axis2D`].
+    ///
+    /// In Bevy vertical scroll maps to the Y axis. If you want to bind vertical scroll
+    /// to an action with [`ActionValue::Axis1D`], apply [`SwizzleAxis::YXZ`] modifier.
     MouseWheel { mod_keys: ModKeys },
-    /// Gamepad button, will be captured as [`ActionValue::Axis1D`].
+    /// Gamepad button, captured as [`ActionValue::Axis1D`].
     GamepadButton(GamepadButton),
-    /// Gamepad stick axis, will be captured as [`ActionValue::Axis1D`].
+    /// Gamepad stick axis, captured as [`ActionValue::Axis1D`].
     GamepadAxis(GamepadAxis),
-    /// Doesn't correspond to any input, will be captured as [`ActionValue::Bool`] with `false`.
+    /// Doesn't correspond to any input, captured as [`ActionValue::Bool`] with `false`.
     None,
 }
 
 impl Binding {
-    /// Returns [`Input::MouseMotion`] without keyboard modifiers.
+    /// Returns [`Self::MouseMotion`] without keyboard modifiers.
     #[must_use]
     pub const fn mouse_motion() -> Self {
         Self::MouseMotion {
@@ -49,7 +52,7 @@ impl Binding {
         }
     }
 
-    /// Returns [`Input::MouseWheel`] without keyboard modifiers.
+    /// Returns [`Self::MouseWheel`] without keyboard modifiers.
     #[must_use]
     pub const fn mouse_wheel() -> Self {
         Self::MouseWheel {
@@ -147,7 +150,7 @@ impl<I: Into<Binding>> InputModKeys for I {
     ///
     /// # Panics
     ///
-    /// Panics when called on [`Input::GamepadButton`] or [`Input::GamepadAxis`].
+    /// Panics when called on [`Binding::GamepadButton`], [`Binding::GamepadAxis`] or [`Binding::None`].
     fn with_mod_keys(self, mod_keys: ModKeys) -> Binding {
         match self.into() {
             Binding::Keyboard { key, .. } => Binding::Keyboard { key, mod_keys },
@@ -169,9 +172,9 @@ fn reset_first_activation(mut world: DeferredWorld, ctx: HookContext) {
 /// Whether the input output a non-zero value.
 ///
 /// Prevents newly created contexts from reacting to currently held inputs
-/// until they’re released.
+/// until they're released.
 ///
-/// Used only if [`ActionBinding`](crate::action_binding::ActionBinding::require_reset) is set.
+/// Used only if [`ActionSettings::require_reset`] is set.
 #[derive(Component, Deref, DerefMut, Default)]
 pub(crate) struct FirstActivation(bool);
 

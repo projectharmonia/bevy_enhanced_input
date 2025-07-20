@@ -3,9 +3,10 @@ use core::fmt::Debug;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Value from [`Input`](crate::input::Input) for [`Action`](crate::input_context::input_action::Action).
+/// Value for [`Action<C>`] in dynamically typed form.
 ///
-/// Can be optionally modified by [`InputModifier`](crate::input_context::input_modifier::InputModifier)
+/// Updated from [`Bindings`] and optionally modified by [`modifiers`](crate::modifier),
+/// or overridden by [`ActionMock`] if present.
 #[derive(Component, Reflect, Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub enum ActionValue {
     Bool(bool),

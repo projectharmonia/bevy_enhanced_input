@@ -4,21 +4,23 @@ use smallvec::{SmallVec, smallvec};
 
 use crate::prelude::*;
 
-/// Requires action `A` to be fired within the same context.
+/// Returns the maximum [`ActionState`] of the specified actions if they are firing.
 ///
-/// Inherits [`ActionState`] from the specified action.
+/// Allows one action to inherit the state of others, similar to a chorded input.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct Chord {
-    /// Required action.
+    /// Actions whose state will be inherited when they are firing.
     pub actions: SmallVec<[Entity; 2]>,
 }
 
 impl Chord {
+    /// Creates a new instance for a single action.
     #[must_use]
     pub fn single(action: Entity) -> Self {
         Self::new(smallvec![action])
     }
 
+    /// Creates a new instance for multiple actions.
     #[must_use]
     pub fn new(actions: impl Into<SmallVec<[Entity; 2]>>) -> Self {
         Self {

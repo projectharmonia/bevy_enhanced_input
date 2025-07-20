@@ -5,6 +5,9 @@ use log::debug;
 
 use crate::prelude::*;
 
+/// Functions for type `A` associated with [`Action<A>`] component.
+///
+/// Used to trigger events for it and update its value.
 #[derive(Component, Clone, Copy)]
 #[component(immutable)]
 pub(crate) struct ActionFns {
@@ -13,6 +16,7 @@ pub(crate) struct ActionFns {
 }
 
 impl ActionFns {
+    /// Creates a new instance with function pointers for action marker `A`.
     pub(super) fn new<A: InputAction>() -> Self {
         Self {
             store_value: store_value::<A>,
@@ -20,10 +24,12 @@ impl ActionFns {
         }
     }
 
+    /// Stores the given value in the entity's [`Action<A>`] component for which this instance was created.
     pub(crate) fn store_value(&self, entity: &mut EntityMut, value: ActionValue) {
         (self.store_value)(entity, value);
     }
 
+    /// Triggers events based on [`ActionEvents`] for the action marker `A` for which this instance was created.
     pub(crate) fn trigger(
         &self,
         commands: &mut Commands,
@@ -190,33 +196,33 @@ mod tests {
 
         world.init_resource::<TriggeredEvents>();
         world.add_observer(
-            |_trigger: Trigger<Fired<TestAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Fired<Test>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::FIRED);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Started<TestAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Started<Test>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::STARTED);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Ongoing<TestAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Ongoing<Test>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::ONGOING);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Completed<TestAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Completed<Test>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::COMPLETED);
             },
         );
         world.add_observer(
-            |_trigger: Trigger<Canceled<TestAction>>, mut events: ResMut<TriggeredEvents>| {
+            |_trigger: Trigger<Canceled<Test>>, mut events: ResMut<TriggeredEvents>| {
                 events.insert(ActionEvents::CANCELED);
             },
         );
 
         let events = ActionEvents::new(initial_state, target_state);
-        let fns = ActionFns::new::<TestAction>();
+        let fns = ActionFns::new::<Test>();
         fns.trigger(
             &mut world.commands(),
             Entity::PLACEHOLDER,
@@ -236,5 +242,5 @@ mod tests {
 
     #[derive(InputAction)]
     #[action_output(bool)]
-    struct TestAction;
+    struct Test;
 }

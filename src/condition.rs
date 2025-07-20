@@ -22,8 +22,10 @@ pub const DEFAULT_ACTUATION: f32 = 0.5;
 /// and validating patterns like short taps, prolonged holds, or the typical "press"
 /// or "release" events.
 ///
-/// Can be applied both to inputs and actions.
-/// See [`ActionBinding::with_conditions`] and [`BindingBuilder::with_conditions`].
+/// Can be attached both to bindings and actions.
+///
+/// If you create a custom condition, it needs to be registered using
+/// [`InputConditionAppExt::add_input_condition`].
 pub trait InputCondition: Debug {
     /// Returns calculates state.
     ///

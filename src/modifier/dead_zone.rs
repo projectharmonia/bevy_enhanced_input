@@ -2,11 +2,13 @@ use bevy::prelude::*;
 
 use crate::prelude::*;
 
-/// Remaps input values within the range [Self::lower_threshold] to [Self::upper_threshold] onto the range 0 to 1.
-/// Values outside this range are clamped.
+/// Applies non-uniform normalization, suitable for both analog and digital inputs (e.g., keyboards and gamepad sticks).
 ///
-/// This modifier acts as a normalizer, suitable for both analog and digital inputs (e.g., keyboards and gamepad sticks).
-/// Apply at the action level to ensure consistent diagonal movement speeds across different input sources.
+/// Input values within the range [Self::lower_threshold] -> [Self::upper_threshold] will be remapped from 0 -> 1.
+/// Values outside this range are clamped. For more details read
+/// [Doing Thumbstick Dead Zones Right](https://web.archive.org/web/20210830071724/https://www.gamedeveloper.com/disciplines/doing-thumbstick-dead-zones-right)
+///
+/// Useful to ensure consistent diagonal movement speed.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`].
 #[derive(Component, Reflect, Debug, Clone, Copy)]
