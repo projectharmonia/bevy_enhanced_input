@@ -29,7 +29,7 @@ fn keys() {
                         up: Binding::from(KeyCode::Digit4),
                         down: Binding::from(KeyCode::Digit5),
                     },
-                    Ordinal::hjklyubn(),
+                    Ordinal::hjklyubn_keys(),
                     Ordinal::numpad_keys(),
                 ))
             )]

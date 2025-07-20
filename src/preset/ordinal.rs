@@ -80,7 +80,7 @@ impl Ordinal<Binding, Binding, Binding, Binding, Binding, Binding, Binding, Bind
     /// b   j   n
     /// ```
     /// Common for roguelikes.
-    pub fn hjklyubn() -> Self {
+    pub fn hjklyubn_keys() -> Self {
         Self {
             north: KeyCode::KeyK.into(),
             north_east: KeyCode::KeyU.into(),
