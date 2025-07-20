@@ -16,12 +16,12 @@ pub struct Scale {
 impl Scale {
     /// Creates a new instance with all axes set to `value`.
     #[must_use]
-    pub fn splat(value: f32) -> Self {
+    pub const fn splat(value: f32) -> Self {
         Self::new(Vec3::splat(value))
     }
 
     #[must_use]
-    pub fn new(factor: Vec3) -> Self {
+    pub const fn new(factor: Vec3) -> Self {
         Self { factor }
     }
 }

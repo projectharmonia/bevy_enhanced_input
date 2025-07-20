@@ -29,7 +29,7 @@ pub struct DeadZone {
 
 impl DeadZone {
     #[must_use]
-    pub fn new(kind: DeadZoneKind) -> Self {
+    pub const fn new(kind: DeadZoneKind) -> Self {
         Self {
             kind,
             lower_threshold: 0.2,
@@ -38,13 +38,13 @@ impl DeadZone {
     }
 
     #[must_use]
-    pub fn with_lower_threshold(mut self, lower_threshold: f32) -> Self {
+    pub const fn with_lower_threshold(mut self, lower_threshold: f32) -> Self {
         self.lower_threshold = lower_threshold;
         self
     }
 
     #[must_use]
-    pub fn with_upper_threshold(mut self, upper_threshold: f32) -> Self {
+    pub const fn with_upper_threshold(mut self, upper_threshold: f32) -> Self {
         self.upper_threshold = upper_threshold;
         self
     }

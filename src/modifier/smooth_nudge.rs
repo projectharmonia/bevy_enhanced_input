@@ -19,10 +19,10 @@ pub struct SmoothNudge {
 
 impl SmoothNudge {
     #[must_use]
-    pub fn new(decay_rate: f32) -> Self {
+    pub const fn new(decay_rate: f32) -> Self {
         Self {
             decay_rate,
-            current_value: Default::default(),
+            current_value: Vec3::ZERO,
         }
     }
 }

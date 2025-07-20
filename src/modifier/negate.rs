@@ -20,9 +20,9 @@ pub struct Negate {
 }
 
 impl Negate {
-    /// Returns [`Self`] with inversion for all axes set to `invert`
+    /// Returns [`Self`] with inversion for all axes set to `invert`.
     #[must_use]
-    pub fn splat(invert: bool) -> Self {
+    pub const fn splat(invert: bool) -> Self {
         Self {
             x: invert,
             y: invert,
@@ -31,18 +31,18 @@ impl Negate {
     }
 
     /// Returns [`Self`] with none of the axes inverted.
-    pub fn none() -> Self {
+    pub const fn none() -> Self {
         Self::splat(false)
     }
 
     /// Returns [`Self`] with all of the axes inverted.
-    pub fn all() -> Self {
+    pub const fn all() -> Self {
         Self::splat(true)
     }
 
     /// Returns [`Self`] with the X axis inverted.
     #[must_use]
-    pub fn x() -> Self {
+    pub const fn x() -> Self {
         Self {
             x: true,
             ..Self::none()
@@ -51,7 +51,7 @@ impl Negate {
 
     /// Returns [`Self`] with the Y axis inverted.
     #[must_use]
-    pub fn y() -> Self {
+    pub const fn y() -> Self {
         Self {
             y: true,
             ..Self::none()
@@ -60,7 +60,7 @@ impl Negate {
 
     /// Returns [`Self`] with the Z axis inverted.
     #[must_use]
-    pub fn z() -> Self {
+    pub const fn z() -> Self {
         Self {
             z: true,
             ..Self::none()

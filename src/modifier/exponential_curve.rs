@@ -16,12 +16,12 @@ pub struct ExponentialCurve {
 impl ExponentialCurve {
     /// Creates a new exponential curve with all axes set to `value`
     #[must_use]
-    pub fn splat(value: f32) -> Self {
+    pub const fn splat(value: f32) -> Self {
         Self::new(Vec3::splat(value))
     }
 
     #[must_use]
-    pub fn new(exp: Vec3) -> Self {
+    pub const fn new(exp: Vec3) -> Self {
         Self { exp }
     }
 }

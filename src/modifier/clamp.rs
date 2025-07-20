@@ -53,7 +53,7 @@ impl Clamp {
     ///
     /// Any negative values will become 0.0.
     #[must_use]
-    pub fn pos() -> Self {
+    pub const fn pos() -> Self {
         Self::splat(0.0, f32::MAX)
     }
 
@@ -61,18 +61,18 @@ impl Clamp {
     ///
     /// Any positive values will become 0.0.
     #[must_use]
-    pub fn neg() -> Self {
+    pub const fn neg() -> Self {
         Self::splat(f32::MIN, 0.0)
     }
 
     /// Creates a new instance with all axes set to `min` and `max`.
     #[must_use]
-    pub fn splat(min: f32, max: f32) -> Self {
+    pub const fn splat(min: f32, max: f32) -> Self {
         Self::new(Vec3::splat(min), Vec3::splat(max))
     }
 
     #[must_use]
-    pub fn new(min: Vec3, max: Vec3) -> Self {
+    pub const fn new(min: Vec3, max: Vec3) -> Self {
         Self { min, max }
     }
 }

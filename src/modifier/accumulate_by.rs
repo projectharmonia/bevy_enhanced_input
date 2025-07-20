@@ -17,10 +17,11 @@ pub struct AccumulateBy {
 }
 
 impl AccumulateBy {
-    pub fn new(action: Entity) -> Self {
+    #[must_use]
+    pub const fn new(action: Entity) -> Self {
         Self {
             action,
-            value: Default::default(),
+            value: Vec3::ZERO,
         }
     }
 }
