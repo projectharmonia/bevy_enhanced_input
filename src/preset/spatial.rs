@@ -6,15 +6,7 @@ use crate::prelude::*;
 ///
 /// See [`Cardinal`] for a usage example.
 #[derive(Debug, Clone, Copy)]
-pub struct Spatial<F, B, L, R, U, D>
-where
-    F: Bundle,
-    B: Bundle,
-    L: Bundle,
-    R: Bundle,
-    U: Bundle,
-    D: Bundle,
-{
+pub struct Spatial<F, B, L, R, U, D> {
     pub forward: F,
     pub backward: B,
     pub left: L,
@@ -23,19 +15,10 @@ where
     pub down: D,
 }
 
-impl<F, B, L, R, U, D> Spatial<F, B, L, R, U, D>
-where
-    F: Bundle,
-    B: Bundle,
-    L: Bundle,
-    R: Bundle,
-    U: Bundle,
-    D: Bundle,
-{
-    pub fn with<T: Bundle + Clone>(
-        self,
-        bundle: T,
-    ) -> Spatial<(F, T), (B, T), (L, T), (R, T), (U, T), (D, T)> {
+impl<F, B, L, R, U, D, T: Clone> WithBundle<T> for Spatial<F, B, L, R, U, D> {
+    type Output = Spatial<(F, T), (B, T), (L, T), (R, T), (U, T), (D, T)>;
+
+    fn with(self, bundle: T) -> Self::Output {
         Spatial {
             forward: (self.forward, bundle.clone()),
             backward: (self.backward, bundle.clone()),

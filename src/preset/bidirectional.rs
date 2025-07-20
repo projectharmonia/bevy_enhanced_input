@@ -6,13 +6,15 @@ use crate::prelude::*;
 ///
 /// See [`Cardinal`] for a usage example.
 #[derive(Debug, Clone, Copy)]
-pub struct Bidirectional<P: Bundle, N: Bundle> {
+pub struct Bidirectional<P, N> {
     pub positive: P,
     pub negative: N,
 }
 
-impl<P: Bundle, N: Bundle> Bidirectional<P, N> {
-    pub fn with<T: Bundle + Clone>(self, bundle: T) -> Bidirectional<(P, T), (N, T)> {
+impl<P, N, T: Clone> WithBundle<T> for Bidirectional<P, N> {
+    type Output = Bidirectional<(P, T), (N, T)>;
+
+    fn with(self, bundle: T) -> Self::Output {
         Bidirectional {
             positive: (self.positive, bundle.clone()),
             negative: (self.negative, bundle),

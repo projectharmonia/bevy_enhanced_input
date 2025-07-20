@@ -38,13 +38,15 @@ use crate::prelude::*;
 /// struct Move;
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct Axial<X: Bundle, Y: Bundle> {
+pub struct Axial<X, Y> {
     pub x: X,
     pub y: Y,
 }
 
-impl<X: Bundle, Y: Bundle> Axial<X, Y> {
-    pub fn with<T: Bundle + Clone>(self, bundle: T) -> Axial<(X, T), (Y, T)> {
+impl<X, Y, T: Clone> WithBundle<T> for Axial<X, Y> {
+    type Output = Axial<(X, T), (Y, T)>;
+
+    fn with(self, bundle: T) -> Self::Output {
         Axial {
             x: (self.x, bundle.clone()),
             y: (self.y, bundle),

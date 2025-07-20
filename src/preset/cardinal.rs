@@ -49,15 +49,17 @@ use crate::prelude::*;
 /// struct Move;
 /// ```
 #[derive(Debug, Clone, Copy)]
-pub struct Cardinal<N: Bundle, E: Bundle, S: Bundle, W: Bundle> {
+pub struct Cardinal<N, E, S, W> {
     pub north: N,
     pub east: E,
     pub south: S,
     pub west: W,
 }
 
-impl<N: Bundle, E: Bundle, S: Bundle, W: Bundle> Cardinal<N, E, S, W> {
-    pub fn with<T: Bundle + Clone>(self, bundle: T) -> Cardinal<(N, T), (E, T), (S, T), (W, T)> {
+impl<N, E, S, W, T: Clone> WithBundle<T> for Cardinal<N, E, S, W> {
+    type Output = Cardinal<(N, T), (E, T), (S, T), (W, T)>;
+
+    fn with(self, bundle: T) -> Self::Output {
         Cardinal {
             north: (self.north, bundle.clone()),
             east: (self.east, bundle.clone()),

@@ -368,7 +368,7 @@ pub mod prelude {
             exponential_curve::*, fns::InputModifierAppExt, negate::*, scale::*, smooth_nudge::*,
             swizzle_axis::*,
         },
-        preset::{axial::*, bidirectional::*, cardinal::*, ordinal::*, spatial::*},
+        preset::{WithBundle, axial::*, bidirectional::*, cardinal::*, ordinal::*, spatial::*},
     };
     pub use bevy_enhanced_input_macros::InputAction;
 }

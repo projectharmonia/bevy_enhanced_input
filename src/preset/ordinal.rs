@@ -6,17 +6,7 @@ use crate::prelude::*;
 ///
 /// See [`Cardinal`] for a usage example.
 #[derive(Debug, Clone, Copy)]
-pub struct Ordinal<N, NE, E, SE, S, SW, W, NW>
-where
-    N: Bundle,
-    NE: Bundle,
-    E: Bundle,
-    SE: Bundle,
-    S: Bundle,
-    SW: Bundle,
-    W: Bundle,
-    NW: Bundle,
-{
+pub struct Ordinal<N, NE, E, SE, S, SW, W, NW> {
     pub north: N,
     pub north_east: NE,
     pub east: E,
@@ -27,21 +17,10 @@ where
     pub north_west: NW,
 }
 
-impl<N, NE, E, SE, S, SW, W, NW> Ordinal<N, NE, E, SE, S, SW, W, NW>
-where
-    N: Bundle,
-    NE: Bundle,
-    E: Bundle,
-    SE: Bundle,
-    S: Bundle,
-    SW: Bundle,
-    W: Bundle,
-    NW: Bundle,
-{
-    pub fn with<T: Bundle + Clone>(
-        self,
-        bundle: T,
-    ) -> Ordinal<(N, T), (NE, T), (E, T), (SE, T), (S, T), (SW, T), (W, T), (NW, T)> {
+impl<N, NE, E, SE, S, SW, W, NW, T: Clone> WithBundle<T> for Ordinal<N, NE, E, SE, S, SW, W, NW> {
+    type Output = Ordinal<(N, T), (NE, T), (E, T), (SE, T), (S, T), (SW, T), (W, T), (NW, T)>;
+
+    fn with(self, bundle: T) -> Self::Output {
         Ordinal {
             north: (self.north, bundle.clone()),
             north_east: (self.north_east, bundle.clone()),
