@@ -15,7 +15,7 @@ pub struct Press {
 
 impl Press {
     #[must_use]
-    pub fn new(actuation: f32) -> Self {
+    pub const fn new(actuation: f32) -> Self {
         Self {
             actuation,
             actuated: false,

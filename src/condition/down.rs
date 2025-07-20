@@ -12,7 +12,7 @@ pub struct Down {
 
 impl Down {
     #[must_use]
-    pub fn new(actuation: f32) -> Self {
+    pub const fn new(actuation: f32) -> Self {
         Self { actuation }
     }
 }
