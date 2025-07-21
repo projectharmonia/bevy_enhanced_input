@@ -37,12 +37,36 @@ use instance::ContextInstances;
 /// An extension trait for [`App`] to assign input to components.
 pub trait InputContextAppExt {
     /// Registers type `C` as an input context, whose actions will be evaluated during [`PreUpdate`].
+    ///
+    /// Action evaluation follows these steps:
+    ///
+    /// - If the action has an [`ActionMock`] component, use the mocked [`ActionValue`] and [`ActionState`] directly.
+    /// - Otherwise, evaluate the action from its bindings:
+    ///     1. Iterate over each binding from the [`Bindings`] component.
+    ///         1.1 Read the input as an [`ActionValue`], or [`ActionValue::zero`] if the input was already consumed by another action.
+    ///           The enum variant depends on the input source.
+    ///         1.2 Apply all binding-level [`InputModifier`]s.
+    ///         1.3 Evaluate all input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
+    ///     2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine them using the
+    ///        [`ActionSettings::accumulation`] strategy.
+    ///     3. Convert the combined value to [`ActionOutput::DIM`] using [`ActionValue::convert`].
+    ///     4. Apply all action-level [`InputModifier`]s.
+    ///     5. Evaluate all action-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
+    ///     6. Convert the final value to [`ActionOutput::DIM`] again using [`ActionValue::convert`].
+    ///     7. Apply the resulting [`ActionState`] and [`ActionValue`] to the action entity.
+    ///     8. If the final state is not [`ActionState::None`], consume the input value.
+    ///
+    /// This logic may look complicated, but you don't have to memorize it. It behaves surprisingly intuitively.
     fn add_input_context<C: Component>(&mut self) -> &mut Self {
         self.add_input_context_to::<PreUpdate, C>()
     }
 
     /// Like [`Self::add_input_context`], but allows specifying the schedule
     /// in which the context's actions will be evaluated.
+    ///
+    /// For example, if your game logic runs inside [`FixedMain`](bevy::app::FixedMain), you can set the schedule
+    /// to [`FixedPreUpdate`]. This way, if the schedule runs multiple times per frame, events like [`Started`] or
+    /// [`Completed`] will be triggered only once per schedule run.
     fn add_input_context_to<S: ScheduleLabel + Default, C: Component>(&mut self) -> &mut Self;
 }
 
@@ -493,6 +517,32 @@ fn apply<S: ScheduleLabel>(
 ///
 /// The ordering applies per schedule: contexts in schedules that run earlier are evaluated first.
 /// Within the same schedule, contexts with a higher priority are evaluated first.
+///
+/// Ordering matters because actions may "consume" inputs, making them unavailable to other actions
+/// until the context that consumed them is evaluated again. This allows contexts layering, where
+/// some actions take priority over others. This behavior can be customized per-action by setting
+/// [`ActionSettings::consume_input`] to `false`.
+///
+/// # Examples
+///
+/// ```
+/// use bevy::prelude::*;
+/// use bevy_enhanced_input::prelude::*;
+///
+/// # let mut world = World::new();
+/// world.spawn((
+///     OnFoot,
+///     InCar,
+///     ContextPriority::<InCar>::new(1), // `InCar` context will be evaluated earlier.
+///     // Actions...
+/// ));
+///
+/// #[derive(Component)]
+/// struct OnFoot;
+///
+/// #[derive(Component)]
+/// struct InCar;
+/// ```
 #[derive(Component, Reflect, Deref)]
 #[component(immutable)]
 pub struct ContextPriority<C> {

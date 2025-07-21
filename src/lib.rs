@@ -20,108 +20,43 @@ let mut app = App::new();
 app.add_plugins((MinimalPlugins, EnhancedInputPlugin));
 ```
 
-## Input contexts
+## Core Concepts
 
-Contexts are regular components that represent a certain input state the player can be in,
-like "In Car" or "On Foot". Depending on your type of game, you may have a single global context
-or multiple contexts for different gameplay states.
+- **Actions** represent something a player can do, like "Jump", "Move", or "Open Menu". They are not tied to specific input.
+- **Bindings** connect those actions to real input sources such as keyboard keys, mouse buttons, gamepad axes, etc.
+- **Contexts** represent a certain input state the player can be in, such as "On foot" or "In car". They associate actions with
+entities and define when those actions are evaluated.
 
-All contexts need to be registered in the app using [`InputContextAppExt::add_input_context`].
+Contexts are regular components. Depending on your type of game, you may have a single global context
+or multiple contexts for different gameplay states. To register a component as an input context, you need to call
+[`InputContextAppExt::add_input_context`]. By default, contexts are evaluated during [`PreUpdate`], but you can customize this
+by using [`InputContextAppExt::add_input_context_to`] instead.
+
+Actions are represented by entities with the [`Action<A>`] component, where `A` is a user-defined marker that implements the
+[`InputAction`] trait, which defines [`InputAction::Output`] type - the value the action produces. It could be [`bool`], [`f32`],
+[`Vec2`] or [`Vec3`]. Actions associated with contexts via [`ActionOf`] relationship. We provide the [`actions!`] macro, which is
+similar to [`related!`], but for actions. The relationship is generic over `C` because a single entity can have multiple associated
+contexts.
+
+Bindings are represented by entities with the [`Binding`] component. It can be constructed from various input types, such as
+[`KeyCode`], [`MouseButton`], [`GamepadAxis`], etc. Bindings associated with actions via [`BindingOf`] relationship. Similar to [`actions!`],
+we provide the [`bindings!`] macro to spawn related bindings. But unlike [`ActionOf<C>`], it's not generic, since each action is represented
+by a separate entity.
+
 
 ```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
+use bevy::prelude::*;
+use bevy_enhanced_input::prelude::*;
+
 # let mut app = App::new();
 # app.add_plugins(EnhancedInputPlugin);
-app.add_input_context::<OnFoot>();
+app.add_input_context::<Player>();
 
-#[derive(Component)]
-struct OnFoot;
-```
-
-By default, contexts evaluated during [`PreUpdate`], but you can override this using
-[`InputContextAppExt::add_input_context_to`]. For example, if your game logic runs inside
-[`FixedMain`](bevy::app::FixedMain), you should set the schedule to [`FixedPreUpdate`].
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-# let mut app = App::new();
-# app.add_plugins(EnhancedInputPlugin);
-app.add_input_context_to::<FixedPreUpdate, Player>();
-
-#[derive(Component)]
-struct Player;
-```
-
-## Input Actions
-
-Actions represent something the user can do, like "Crouch" or "Fire Weapon". They are represented
-by the [`Action<A>`] component, where `A` is a user-defined marker that implements the [`InputAction`] trait.
-Each action has an associated [`InputAction::Output`] type - this is the value the action produces
-when you assign bindings to it. More on that later.
-
-To implement the trait, you can use the provided derive macro.
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-#[derive(InputAction)]
-#[action_output(bool)]
-struct Jump;
-
-#[derive(InputAction)]
-#[action_output(Vec2)]
-struct Move;
-```
-
-## Spawning
-
-Contexts can be associated with actions using the [`ActionOf`] relationship. We provide the [`actions!`] macro,
-which is similar to [`related!`], but instead of specifying [`Actions<C>`], you only write `C` itself.
-The relationship is generic over `C` because a single entity can have multiple associated contexts.
-Each item should be a bundle that will be spawned as its own entity.
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-# let mut world = World::new();
-// Spawn an entity with `OnFoot` context component and actions with `ActionOf<OnFoot>` relationship.
-world.spawn((
-    OnFoot,
-    actions!(OnFoot[
-        Action::<Jump>::new(),
-        Action::<Fire>::new(),
-    ])
-));
-# #[derive(Component)]
-# struct OnFoot;
-# #[derive(InputAction)]
-# #[action_output(bool)]
-# struct Jump;
-# #[derive(InputAction)]
-# #[action_output(Vec2)]
-# struct Fire;
-```
-
-## Bindings
-
-Actions need to be bound to inputs, such as a gamepad or keyboard. These bindings are represented by the [`Binding`]
-which can be constructed from various input types. Bindings can be associated with actions using the [`BindingOf`]
-relationship. Similar to [`actions!`], we provide the [`bindings!`] macro to spawn related bindings. But unlike
-[`ActionOf<C>`], it's not generic, since each action is represented by a separate entity. Items can either be individual
-values that implement [`Into<Binding>`], or tuples where the first element implements [`Into<Binding>`] and the remaining
-elements are regular components or bundles.
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
 # let mut world = World::new();
 world.spawn((
-    OnFoot,
-    actions!(OnFoot[
+    Player,
+    actions!(Player[
         (
-            // Spawn an entity with `Action<Jump>` action component and bindings with `BindingOf` relationship.
             Action::<Jump>::new(),
             bindings![KeyCode::Space, GamepadButton::South],
         ),
@@ -131,26 +66,39 @@ world.spawn((
         ),
     ])
 ));
-# #[derive(Component)]
-# struct OnFoot;
-# #[derive(InputAction)]
-# #[action_output(bool)]
-# struct Jump;
-# #[derive(InputAction)]
-# #[action_output(bool)]
-# struct Fire;
+
+#[derive(Component)]
+struct Player;
+
+#[derive(InputAction)]
+#[action_output(bool)]
+struct Jump;
+
+#[derive(InputAction)]
+#[action_output(bool)]
+struct Fire;
 ```
+
+By default, input is read from all connected gamepads. You can customize this by adding the [`GamepadDevice`] component to the
+context entity.
+
+Context actions will be evaluated in the schedule associated at context registration. Contexts registered in the same
+schedule will be evaluated in their spawning order, but you can override it by adding the [`ContextPriority`] component.
+
+Actions also have [`ActionSettings`] component that customizes their behavior.
 
 ## Input modifiers
 
-Action values are stored inside the [`Action<C>`] component in a typed form, and in the [`ActionValue`] component in a dynamically
-typed form (which is one of the required components of [`Action<C>`]).
+Action values are stored in two forms:
+- In a typed form, as the [`Action<C>`] component.
+- In a dynamically typed form, as the [`ActionValue`], which is one of the required components of [`Action<C>`].
+  Its variant depends on the [`InputAction::Output`].
 
-During [`EnhancedInputSet::Update`], we read input for each [`Binding`] as an [`ActionValue`] (the variant depends on
-the input source) and convert it to the [`ActionValue`] on the associated action entity. For example, key inputs are captured
-as [`bool`], but if your action’s output type is [`Vec2`], the value will be assigned to the X axis as `0.0` or `1.0`.
-See the [`Binding`] documentation for how each source is captured, and [`ActionValue::convert`] for details on how
-values are converted. It's very straightforward,
+During [`EnhancedInputSet::Update`], input is read for each [`Binding`] as an [`ActionValue`], with the variant depending
+on the input source. This value is then converted into the [`ActionValue`] on the associated action entity. For example,
+key inputs are captured as [`bool`], but if the action's output type is [`Vec2`], the value will be assigned to the X axis
+as `0.0` or `1.0`. See [`Binding`] for details on how each source is captured, and [`ActionValue::convert`] for how values
+are transformed.
 
 Then, during [`EnhancedInputSet::Apply`], the value from [`ActionValue`] is written into [`Action<C>`].
 
@@ -160,12 +108,13 @@ be attached to both actions and bindings. Binding-level modifiers are applied fi
 Use action-level modifiers as global modifiers that are applied to all bindings of the action.
 
 ```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
+use bevy::prelude::*;
+use bevy_enhanced_input::prelude::*;
+
 # let mut world = World::new();
 world.spawn((
-    OnFoot,
-    actions!(OnFoot[
+    Player,
+    actions!(Player[
         (
             Action::<Move>::new(),
             // Modifier components at the action level.
@@ -186,18 +135,21 @@ world.spawn((
         ),
     ]),
 ));
-# #[derive(Component)]
-# struct OnFoot;
-# #[derive(InputAction)]
-# #[action_output(Vec2)]
-# struct Move;
+
+#[derive(Component)]
+struct Player;
+
+#[derive(InputAction)]
+#[action_output(Vec2)]
+struct Move;
 ```
 
 ### Presets
 
 Some bindings are very common. It would be inconvenient to bind WASD keys and analog sticks manually, like in the example above,
 every time. To solve this, we provide [presets](crate::preset) - structs that implement [`SpawnableList`] and store bindings that
-will be spawned with predefined modifiers.
+will be spawned with predefined modifiers. To spawn them, you need to to call [`SpawnRelated::spawn`] implemented for [`Bindings`]
+directly instead of the [`bindings!`] macro.
 
 For example, you can use [`Cardinal`] and [`Axial`] presets to simplify the example above.
 
@@ -206,8 +158,8 @@ For example, you can use [`Cardinal`] and [`Axial`] presets to simplify the exam
 # use bevy_enhanced_input::prelude::*;
 # let mut world = World::new();
 world.spawn((
-    OnFoot,
-    actions!(OnFoot[
+    Player,
+    actions!(Player[
         (
             Action::<Move>::new(),
             DeadZone::default(),
@@ -215,36 +167,18 @@ world.spawn((
             Bindings::spawn((
                 Cardinal::wasd_keys(),
                 Axial::left_stick(),
-                // You can also pass additional bindings here, but you'll need to
-                // use `Binding::from`, which the macro previously handled for you.
             )),
         ),
     ]),
 ));
 # #[derive(Component)]
-# struct OnFoot;
+# struct Player;
 # #[derive(InputAction)]
 # #[action_output(Vec2)]
 # struct Move;
 ```
 
-You can assign custom bindings or attach additional components by manually initializing the preset fields. You can pass anything that
-implements [`Bundle`]. Each built-in preset also implements [`WithBundle`] trait to conveniently attach components to every field
-using [`WithBundle::with`].
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-Bindings::spawn((
-    Cardinal {
-        north: Binding::from(KeyCode::KeyI),
-        east: Binding::from(KeyCode::KeyL),
-        south: Binding::from(KeyCode::KeyK),
-        west: Binding::from(KeyCode::KeyJ),
-    },
-    Axial::left_stick().with((Scale::splat(1.0), SmoothNudge::default())),
-));
-```
+You can also assign custom bindings or attach additional modifiers, see the [preset] module for more details.
 
 ## Input conditions
 
@@ -264,8 +198,8 @@ meaning it will trigger on any non-zero input value.
 # use bevy_enhanced_input::prelude::*;
 # let mut world = World::new();
 world.spawn((
-    OnFoot,
-    actions!(OnFoot[
+    Player,
+    actions!(Player[
         (
             // The action will trigger only if held for 1 second.
             Action::<Jump>::new(),
@@ -283,7 +217,7 @@ world.spawn((
     ])
 ));
 # #[derive(Component)]
-# struct OnFoot;
+# struct Player;
 # #[derive(InputAction)]
 # #[action_output(bool)]
 # struct Jump;
@@ -294,61 +228,9 @@ world.spawn((
 
 ## Mocking
 
-You can also mock an action value using the [`ActionMock`] component. Simply insert it into the action with the desired values, and it will drive
+You can also mock actions using the [`ActionMock`] component. When it's present on an action with [`ActionMock::enabled`], it will drive
 the [`ActionState`] and [`ActionValue`] for the specified [`MockSpan`] duration. During this time, all bindings for this action will be ignored.
 For more details, see the [`ActionMock`] documentation.
-
-## Evaluation
-
-Context hierarchies will be evaluated in the schedule associated at context registration. Contexts registered in the same
-schedule will be evaluated in their spawning order. But you can override this with [`ContextPriority`] component. By default
-the priority is 0. Contexts with higher priority evaluated first.
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-# let mut world = World::new();
-world.spawn((
-    OnFoot,
-    ContextPriority::<OnFoot>::new(1), // `OnFoot` context will be evaluated earlier.
-    InCar,
-    // Actions...
-));
-# #[derive(Component)]
-# struct OnFoot;
-# #[derive(Component)]
-# struct InCar;
-```
-
-Ordering matters because actions "consume" inputs, making them unavailable to other actions until the context that consumed them
-is evaluated again. This enables layered contexts, where some actions replace others. Importantly, this does **not** affect
-the underlying Bevy input - only the action evaluation logic is impacted. This behavior can be disabled per-action by setting
-[`ActionSettings::consume_input`] to `false`. For more details, see the [`ActionSettings`] component documentation.
-
-Actions are ordered by the maximum number of keyboard modifiers in their bindings. For example, an action with a `Ctrl + C` binding
-is evaluated before one with just a `C` binding. If actions have the same modifier count, they are ordered by their spawn order.
-
-Action evaluation follows these steps:
-
-- If the action has an [`ActionMock`] component, use the mocked [`ActionValue`] and [`ActionState`] directly.
-- Otherwise, evaluate the action from its bindings:
-    1. Iterate over each binding from the [`Bindings`] component.
-        1.1 Read the input as an [`ActionValue`], or [`ActionValue::zero`] if the input was already consumed by another action.
-          The enum variant depends on the input source.
-        1.2 Apply all binding-level [`InputModifier`]s.
-        1.3 Evaluate all input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
-    2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine them using the
-       [`ActionSettings::accumulation`] strategy.
-    3. Convert the combined value to [`ActionOutput::DIM`] using [`ActionValue::convert`].
-    4. Apply all action-level [`InputModifier`]s.
-    5. Evaluate all action-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
-    6. Convert the final value to [`ActionOutput::DIM`] again using [`ActionValue::convert`].
-    7. Apply the resulting [`ActionState`] and [`ActionValue`] to the action entity.
-    8. If the final state is not [`ActionState::None`], consume the input value.
-
-This logic may seem complex, but you don’t need to memorize it—its behavior is surprisingly intuitive in practice.
-
-This logic may look complicated, but you don't have to memorize it. It behaves surprisingly intuitively.
 
 ## Reacting on actions
 
@@ -394,19 +276,15 @@ The event system is highly flexible. For example, you can use the [`Hold`] condi
 
 ### Pull-style
 
-During [`EnhancedInputSet::Apply`], the value from the [`ActionValue`] component is written to the [`Action<C>`] component.
-
 You can simply query [`Action<C>`] in a system to get the action value in a strongly typed form.
-Alternatively, you can access [`ActionValue`] in its dynamically typed form, which is primarily intended for use during input evaluation
-or when integrating with networking or scripting crates.
+Alternatively, you can query [`ActionValue`] in its dynamically typed form.
 
-To access the action state, use the [`ActionState`] component. State transitions are recorded in the [`ActionEvents`]
-component, which lets you detect when an action has just started or stopped triggering. It effectively acts as a bitset
-representation of all transition events triggered during the current evaluation.
+To access the action state, use the [`ActionState`] component. State transitions from the last action evaluation are recorded
+in the [`ActionEvents`] component, which lets you detect when an action has just started or stopped triggering.
 
 Timing information provided via [`ActionTime`] component.
 
-You can also use Bevy's change detection on components - they're only marked as changed if their values actually change.
+You can also use Bevy's change detection - these components marked as changed only if their values actually change.
 
 ```
 # use bevy::prelude::*;

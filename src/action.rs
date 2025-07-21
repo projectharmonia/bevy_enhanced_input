@@ -185,12 +185,18 @@ pub struct ActionSettings {
     pub require_reset: bool,
 
     /// Specifies whether this action should swallow any [`Bindings`]
-    /// bound to it or allow them to pass through to affect other actions.
+    /// bound to it or allow them to pass through to affect actions that evaluated later.
     ///
-    /// Inputs are consumed when the action state is not equal to
+    /// Actions are ordered by the maximum number of keyboard modifiers in their bindings.
+    /// For example, an action with a `Ctrl + C` binding is evaluated before one with just
+    /// a `C` binding. If actions have the same modifier count, they are ordered by their
+    /// spawn order.
+    ///
+    /// Consuming is global and affect actions in all contexts. Importantly, this does
+    /// **not** affect the underlying Bevy input - only the action evaluation logic is impacted.
+    ///
+    /// Inputs are consumed only when the action state is not equal to
     /// [`ActionState::None`].
-    ///
-    /// Consuming is global and affect actions in all contexts.
     ///
     /// By default set to `true`.
     pub consume_input: bool,
@@ -310,8 +316,8 @@ impl ActionTime {
 /// # use bevy_enhanced_input::prelude::*;
 /// # let mut world = World::new();
 /// world.spawn((
-///     OnFoot,
-///     actions!(OnFoot[
+///     Player,
+///     actions!(Player[
 ///         (
 ///             Action::<Move>::new(),
 ///             ActionMock::new(ActionState::Fired, Vec2::Y, Duration::from_secs(2)),
@@ -320,7 +326,7 @@ impl ActionTime {
 ///     ]),
 /// ));
 /// # #[derive(Component)]
-/// # struct OnFoot;
+/// # struct Player;
 /// # #[derive(InputAction)]
 /// # #[action_output(Vec2)]
 /// # struct Move;

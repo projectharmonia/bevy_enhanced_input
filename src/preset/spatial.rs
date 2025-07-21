@@ -3,8 +3,6 @@ use bevy::{ecs::spawn::SpawnableList, prelude::*};
 use crate::prelude::*;
 
 /// A preset to map 6 buttons as 3-dimensional input.
-///
-/// See [`Cardinal`] for usage examples.
 #[derive(Debug, Clone, Copy)]
 pub struct Spatial<F, B, L, R, U, D> {
     pub forward: F,

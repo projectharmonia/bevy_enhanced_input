@@ -2,111 +2,11 @@ use bevy::{ecs::spawn::SpawnableList, prelude::*};
 
 use crate::prelude::*;
 
-/**
-A preset to 4 map buttons as 2-dimensional input.
-
-In Bevy's 3D space, the -Z axis points forward and the +Z axis points
-toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
-you will need to invert Y and apply it to Z inside your observer.
-
-# Examples
-
-Attach modifiers to fields.
-
-```
-use bevy::prelude::*;
-use bevy_enhanced_input::prelude::*;
-
-# let mut world = World::new();
-world.spawn((
-    Player,
-    actions!(Player[
-        (
-            Action::<Move>::new(),
-            Bindings::spawn((
-                Cardinal::wasd_keys().with(Scale::splat(2.0)), // You can attach modifiers to all fields thanks to `WithBundle` impl.
-                Cardinal {
-                    // The struct consists of bundles, so you can also attach modifiers to individual fields.
-                    north: Binding::from(KeyCode::KeyI),
-                    east: (Binding::from(KeyCode::KeyL), Scale::splat(2.0)),
-                    south: Binding::from(KeyCode::KeyK),
-                    west: (Binding::from(KeyCode::KeyJ), Scale::splat(2.0)),
-                },
-            )),
-        ),
-    ]),
-));
-
-#[derive(Component)]
-struct Player;
-
-#[derive(InputAction)]
-#[action_output(Vec2)]
-struct Move;
-```
-
-Loading from settings.
-
-```
-use bevy::prelude::*;
-use bevy_enhanced_input::prelude::*;
-use serde::{Serialize, Deserialize};
-
-// Could be loaded from a file.
-// `Binding::None` represents unbound inputs.
-let settings = InputSettings {
-    forward: [Binding::from(KeyCode::KeyW), Binding::None],
-    right: [Binding::from(KeyCode::KeyA), Binding::None],
-    backward: [Binding::from(KeyCode::KeyS), Binding::None],
-    left: [Binding::from(KeyCode::KeyD), Binding::None],
-};
-
-# let mut world = World::new();
-world.spawn((
-    Player,
-    actions!(Player[
-        (
-            Action::<Move>::new(),
-            Bindings::spawn((
-                Cardinal {
-                    north: settings.forward[0],
-                    east: settings.right[0],
-                    south: settings.backward[0],
-                    west: settings.left[0],
-                },
-                Cardinal {
-                    north: settings.forward[1],
-                    east: settings.right[1],
-                    south: settings.backward[1],
-                    west: settings.left[1],
-                },
-            )),
-        ),
-    ]),
-));
-
-/// Bindings for actions.
+/// A preset to 4 map buttons as 2-dimensional input.
 ///
-/// Represented as arrays because in games you usually
-/// have 2 or 3 bindings for a single action.
-///
-/// Usually stored as a resource.
-#[derive(Resource, Serialize, Deserialize)]
-struct InputSettings {
-    forward: [Binding; 2],
-    right: [Binding; 2],
-    backward: [Binding; 2],
-    left: [Binding; 2],
-}
-
-#[derive(Component)]
-struct Player;
-
-#[derive(InputAction)]
-#[action_output(Vec2)]
-struct Move;
-```
-*/
+/// In Bevy's 3D space, the -Z axis points forward and the +Z axis points
+/// toward the camera. To map movement correctly in 3D space for [`Transform::translation`],
+/// you will need to invert Y and apply it to Z inside your observer.
 #[derive(Debug, Clone, Copy)]
 pub struct Cardinal<N, E, S, W> {
     pub north: N,

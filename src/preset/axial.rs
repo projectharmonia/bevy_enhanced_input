@@ -3,8 +3,6 @@ use bevy::{ecs::spawn::SpawnableList, prelude::*};
 use crate::prelude::*;
 
 /// A preset to map 2 axes as 2-dimensional input.
-///
-/// See [`Cardinal`] for usage examples.
 #[derive(Debug, Clone, Copy)]
 pub struct Axial<X, Y> {
     pub x: X,

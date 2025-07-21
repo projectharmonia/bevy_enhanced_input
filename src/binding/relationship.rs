@@ -17,35 +17,6 @@ pub struct BindingOf(pub Entity);
 /// Binding entities associated with this action entity.
 ///
 /// See also the [`bindings!`](crate::prelude::bindings) macro for conveniently spawning associated actions.
-///
-/// # Examples
-///
-/// Spawning a preset.
-///
-/// ```
-/// # use bevy::prelude::*;
-/// # use bevy_enhanced_input::prelude::*;
-/// # let mut world = World::new();
-/// world.spawn((
-///     Player,
-///     actions!(Player[
-///         (
-///             Action::<Move>::new(),
-///             Bindings::spawn((
-///                 Cardinal::wasd_keys(),
-///                 Axial::left_stick(),
-///                 // You can also pass additional bindings here, but you'll need to
-///                 // use `Binding::from` and wrap it into `Spawn`, which is what `bindings!` macro does.
-///             )),
-///         ),
-///     ]),
-/// ));
-/// # #[derive(Component)]
-/// # struct Player;
-/// # #[derive(InputAction)]
-/// # #[action_output(Vec2)]
-/// # struct Move;
-/// ```
 #[derive(Component, Deref, Reflect, Debug, Default, PartialEq, Eq)]
 #[relationship_target(relationship = BindingOf, linked_spawn)]
 pub struct Bindings(Vec<Entity>);
@@ -78,8 +49,7 @@ pub type BindingSpawnerCommands<'w> = RelatedSpawnerCommands<'w, BindingOf>;
 /// Due to `macro_rules!` limitations, you can't mix tuples and individual elements. However, you can wrap individual elements in braces
 /// to use them alongside tuples.
 ///
-/// The macro can't be used to spawn [presets](crate::preset). Similar to other [`SpawnableList`]s, like [`SpawnWith`](bevy::ecs::spawn::SpawnWith)
-/// or [`SpawnIter`](bevy::ecs::spawn::SpawnIter), you need to use [`Bindings`] directly.
+/// The macro can't be used to spawn [presets](crate::preset). See the module documentation for more details.
 ///
 /// See also [`actions!`](crate::prelude::actions).
 ///

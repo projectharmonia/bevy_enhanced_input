@@ -3,8 +3,6 @@ use bevy::{ecs::spawn::SpawnableList, prelude::*};
 use crate::prelude::*;
 
 /// A preset to 8 map buttons as 2-dimensional input.
-///
-/// See [`Cardinal`] for usage examples.
 #[derive(Debug, Clone, Copy)]
 pub struct Ordinal<N, NE, E, SE, S, SW, W, NW> {
     pub north: N,
