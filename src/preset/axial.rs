@@ -4,39 +4,7 @@ use crate::prelude::*;
 
 /// A preset to map 2 axes as 2-dimensional input.
 ///
-/// # Examples
-///
-/// Maps gamepad axes into a 2D movement action.
-///
-/// ```
-/// use bevy::prelude::*;
-/// use bevy_enhanced_input::prelude::*;
-///
-/// fn bind(
-///     trigger: Trigger<Bind<Player>>,
-///     settings: Res<GamepadSettings>,
-///     mut players: Query<&mut Actions<Player>>,
-/// ) {
-///     let mut actions = players.get_mut(trigger.target()).unwrap();
-///     actions.bind::<Move>().to(Axial {
-///         x: &settings.horizontal_movement,
-///         y: &settings.vertical_movement,
-///     });
-/// }
-///
-/// #[derive(Resource)]
-/// struct GamepadSettings {
-///     horizontal_movement: Vec<GamepadAxis>,
-///     vertical_movement: Vec<GamepadAxis>,
-/// }
-///
-/// #[derive(InputContext)]
-/// struct Player;
-///
-/// #[derive(InputAction)]
-/// #[action_output(Vec2)]
-/// struct Move;
-/// ```
+/// See [`Cardinal`] for usage examples.
 #[derive(Debug, Clone, Copy)]
 pub struct Axial<X, Y> {
     pub x: X,

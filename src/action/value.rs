@@ -3,10 +3,10 @@ use core::fmt::Debug;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Value for [`Action<C>`] in dynamically typed form.
+/// Value for [`Action<C>`](super::Action) in dynamically typed form.
 ///
-/// Updated from [`Bindings`] and optionally modified by [`modifiers`](crate::modifier),
-/// or overridden by [`ActionMock`] if present.
+/// Updated from [`Bindings`](crate::prelude::Bindings) and optionally modified by
+/// [`modifiers`](crate::modifier), or overridden by [`ActionMock`](super::ActionMock) if present.
 #[derive(Component, Reflect, Debug, Serialize, Deserialize, PartialEq, Clone, Copy)]
 pub enum ActionValue {
     Bool(bool),

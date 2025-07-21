@@ -108,7 +108,7 @@ world.spawn((
 
 Actions need to be bound to inputs, such as a gamepad or keyboard. These bindings are represented by the [`Binding`]
 which can be constructed from various input types. Bindings can be associated with actions using the [`BindingOf`]
-relationship. Similar to [`actions!`], we provide the [`binding!`] macro to spawn related bindings. But unlike
+relationship. Similar to [`actions!`], we provide the [`bindings!`] macro to spawn related bindings. But unlike
 [`ActionOf<C>`], it's not generic, since each action is represented by a separate entity. Items can either be individual
 values that implement [`Into<Binding>`], or tuples where the first element implements [`Into<Binding>`] and the remaining
 elements are regular components or bundles.
@@ -198,10 +198,6 @@ world.spawn((
 Some bindings are very common. It would be inconvenient to bind WASD keys and analog sticks manually, like in the example above,
 every time. To solve this, we provide [presets](crate::preset) - structs that implement [`SpawnableList`] and store bindings that
 will be spawned with predefined modifiers.
-
-Due to how relationship spawning works in Bevy, you can't use [`SpawnableList`]s with the macro; instead, you need to pass them
-to [`Bindings::spawn`], similar to how you would use [`Children::spawn`] when working with [`SpawnWith`](bevy::ecs::spawn::SpawnWith)
-or any other struct that implements [`SpawnableList`].
 
 For example, you can use [`Cardinal`] and [`Axial`] presets to simplify the example above.
 
@@ -327,7 +323,7 @@ world.spawn((
 Ordering matters because actions "consume" inputs, making them unavailable to other actions until the context that consumed them
 is evaluated again. This enables layered contexts, where some actions replace others. Importantly, this does **not** affect
 the underlying Bevy input - only the action evaluation logic is impacted. This behavior can be disabled per-action by setting
-[`ActionSettings::consume_input`] to `false`. For more details, see the [`ActionSetting`] component documentation.
+[`ActionSettings::consume_input`] to `false`. For more details, see the [`ActionSettings`] component documentation.
 
 Actions are ordered by the maximum number of keyboard modifiers in their bindings. For example, an action with a `Ctrl + C` binding
 is evaluated before one with just a `C` binding. If actions have the same modifier count, they are ordered by their spawn order.
@@ -625,11 +621,11 @@ pub enum EnhancedInputSet {
     Prepare,
     /// Updates the state of the input contexts from inputs and mocks.
     ///
-    /// Runs in each registered [`InputContext::Schedule`].
+    /// Executes in every schedule where a context is registered.
     Update,
     /// Applies the value from [`ActionValue`] to [`Action`] and triggers
     /// events evaluated from [`Self::Update`].
     ///
-    /// Runs in each registered [`InputContext::Schedule`].
+    /// Executes in every schedule where a context is registered.
     Apply,
 }

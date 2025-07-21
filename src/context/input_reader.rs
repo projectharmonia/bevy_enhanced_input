@@ -67,7 +67,7 @@ impl InputReader<'_, '_> {
         *self.gamepad_device = gamepad.into();
     }
 
-    /// Returns the [`ActionValue`] for the given [`Input`].
+    /// Returns the [`ActionValue`] for the given [`Binding`].
     ///
     /// See also [`Self::consume`] and [`Self::set_gamepad`].
     pub(crate) fn value(&self, input: impl Into<Binding>) -> ActionValue {
@@ -280,7 +280,7 @@ impl Default for ActionSources {
 #[derive(Resource, Default, Deref, DerefMut)]
 pub(crate) struct ConsumedInputs(TypeIdMap<IgnoredInputs>);
 
-/// Inputs from actions with [`InputAction::REQUIRE_RESET`] enabled, whose contexts were removed or reset.
+/// Inputs from actions with [`ActionSettings::require_reset`] enabled that were removed.
 ///
 /// These inputs will be ignored by [`InputReader::value`] until they become inactive.
 /// Once inactive, they will be automatically removed and no longer ignored.

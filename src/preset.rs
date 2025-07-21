@@ -5,6 +5,8 @@ pub mod ordinal;
 pub mod spatial;
 
 /// Helper trait for attaching a bundle to a preset.
+///
+/// See [Cardinal](cardinal::Cardinal) for a usage example.
 pub trait WithBundle<T> {
     type Output;
 

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
-/// Input from any source associated with an action.
+/// Input from any source associated with [`Action<C>`].
 ///
 /// [Input modifiers](crate::modifier) can change the captured dimension.
 ///

@@ -4,7 +4,7 @@ use crate::prelude::*;
 
 /// A preset to map 2 buttons as 1-dimensional input.
 ///
-/// See [`Cardinal`] for a usage example.
+/// See [`Cardinal`] for usage examples.
 #[derive(Debug, Clone, Copy)]
 pub struct Bidirectional<P, N> {
     pub positive: P,

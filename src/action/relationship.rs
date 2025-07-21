@@ -7,9 +7,9 @@ use bevy::{
 };
 use serde::{Deserialize, Serialize};
 
-/// Entity with context `C` associated with this action entity.
+/// Context entity associated with this action entity.
 ///
-/// See also the [`actions!`] macro for conveniently spawning associated actions.
+/// See also the [`actions!`](crate::prelude::actions) macro for conveniently spawning associated actions.
 #[derive(Component, Deref, Reflect, Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[relationship(relationship_target = Actions<C>)]
 pub struct ActionOf<C: Component> {
@@ -31,7 +31,7 @@ impl<C: Component> ActionOf<C> {
 
 /// Action entities associated with context `C`.
 ///
-/// See also the [`actions!`] macro for conveniently spawning associated actions.
+/// See also the [`actions!`](crate::prelude::actions) macro for conveniently spawning associated actions.
 #[derive(Component, Deref, Reflect, Debug, Default, PartialEq, Eq)]
 #[relationship_target(relationship = ActionOf<C>, linked_spawn)]
 pub struct Actions<C: Component> {
@@ -57,44 +57,72 @@ pub type ActionSpawner<'w, C> = RelatedSpawner<'w, ActionOf<C>>;
 /// A type alias over [`RelatedSpawnerCommands`] used to spawn action entities containing an [`ActionOf`] relationship.
 pub type ActionSpawnerCommands<'w, C> = RelatedSpawnerCommands<'w, ActionOf<C>>;
 
-/// Returns a [`SpawnRelatedBundle`] that will insert the [`Actions<C>`] component and
-/// spawn a [`SpawnableList`] of entities with given bundles that relate to the context entity via the [`ActionOf<C>`] component.
+/// Returns a [`SpawnRelatedBundle`](bevy::ecs::spawn::SpawnRelatedBundle) that will insert the [`Actions<C>`] component and
+/// spawn a [`SpawnableList`](bevy::ecs::spawn::SpawnableList) of entities with given bundles that relate to the context entity
+/// via the [`ActionOf<C>`] component.
 ///
 /// Similar to [`related!`], but instead of specifying [`Actions<C>`], you only write `C` itself.
 ///
-/// See also [`bindings!`].
+/// See also [`bindings!`](crate::prelude::bindings).
 ///
 /// # Examples
 ///
-/// Spawn a context with associated actions.
+/// List of single elements. You usually spawn actions with at least [`Bindings`](crate::prelude::Bindings),
+/// but actions alone could be used for networking or for later mocking.
 ///
 /// ```
 /// # use bevy::prelude::*;
 /// # use bevy_enhanced_input::prelude::*;
-/// # let mut world = World::new();
-/// world.spawn((
-///     OnFoot,
-///     // Equivalent to `related!(Actions::<OnFoot>[`.
-///     actions!(OnFoot[
-///         (
-///             Action::<Move>::new(),
-///             Bindings::spawn(Cardinal::wasd_keys()),
-///         ),
-///         (
-///             Action::<EnterCar>::new(),
-///             ActionSettings { require_reset: true, Default::default() },
-///             bindings![KeyCode::Enter],
-///         ),
-///     ])
+/// # use core::any;
+/// let from_macro = actions!(Player[
+///     Action::<Fire>::new(),
+///     Action::<Jump>::new()
+/// ]);
+/// // Expands to the following:
+/// let manual = Actions::<Player>::spawn((
+///     Spawn(Action::<Fire>::new()),
+///     Spawn(Action::<Jump>::new()),
 /// ));
+///
+/// assert_eq!(any::type_name_of_val(&from_macro), any::type_name_of_val(&manual));
 /// # #[derive(Component)]
-/// # struct OnFoot;
+/// # struct Player;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct Fire;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct Jump;
+/// ```
+///
+/// With tuples.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # use core::any;
+/// let from_macro = actions!(Player[
+///     (
+///         Action::<Move>::new(),
+///         Bindings::spawn(Cardinal::wasd_keys())
+///     ),
+///     Action::<Jump>::new(), // Unlike with `bindings!`, single values could be mixed with tuples.
+/// ]);
+/// // Expands to the following:
+/// let manual = Actions::<Player>::spawn((
+///     Spawn((Action::<Move>::new(), Bindings::spawn(Cardinal::wasd_keys()))),
+///     Spawn(Action::<Jump>::new()),
+/// ));
+///
+/// assert_eq!(any::type_name_of_val(&from_macro), any::type_name_of_val(&manual));
+/// # #[derive(Component)]
+/// # struct Player;
 /// # #[derive(InputAction)]
 /// # #[action_output(Vec2)]
 /// # struct Move;
 /// # #[derive(InputAction)]
 /// # #[action_output(bool)]
-/// # struct EnterCar;
+/// # struct Jump;
 /// ```
 #[macro_export]
 macro_rules! actions {

@@ -57,8 +57,9 @@ pub(crate) fn remove_action(
 /// relationship in order to be evaluated.
 ///
 /// Holds value defined by [`InputAction::Output`].
-/// See also required components for other data associated with the action
-/// without static typing.
+///
+/// See the required components for other data associated with the action
+/// that can be accessed without static typing.
 #[derive(Component, Deref, DerefMut)]
 #[require(
     Name::new(any::type_name::<A>()),

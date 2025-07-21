@@ -8,11 +8,44 @@ use bevy::{
 use serde::{Deserialize, Serialize};
 
 /// Action entity associated with this binding entity.
+///
+/// See also the [`bindings!`](crate::prelude::bindings) macro for conveniently spawning associated actions.
 #[derive(Component, Deref, Reflect, Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 #[relationship(relationship_target = Bindings)]
 pub struct BindingOf(pub Entity);
 
 /// Binding entities associated with this action entity.
+///
+/// See also the [`bindings!`](crate::prelude::bindings) macro for conveniently spawning associated actions.
+///
+/// # Examples
+///
+/// Spawning a preset.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut world = World::new();
+/// world.spawn((
+///     Player,
+///     actions!(Player[
+///         (
+///             Action::<Move>::new(),
+///             Bindings::spawn((
+///                 Cardinal::wasd_keys(),
+///                 Axial::left_stick(),
+///                 // You can also pass additional bindings here, but you'll need to
+///                 // use `Binding::from` and wrap it into `Spawn`, which is what `bindings!` macro does.
+///             )),
+///         ),
+///     ]),
+/// ));
+/// # #[derive(Component)]
+/// # struct Player;
+/// # #[derive(InputAction)]
+/// # #[action_output(Vec2)]
+/// # struct Move;
+/// ```
 #[derive(Component, Deref, Reflect, Debug, Default, PartialEq, Eq)]
 #[relationship_target(relationship = BindingOf, linked_spawn)]
 pub struct Bindings(Vec<Entity>);
@@ -32,6 +65,62 @@ pub type BindingSpawner<'w> = RelatedSpawner<'w, BindingOf>;
 /// A type alias over [`RelatedSpawnerCommands`] used to spawn binding entities containing a [`BindingOf`] relationship.
 pub type BindingSpawnerCommands<'w> = RelatedSpawnerCommands<'w, BindingOf>;
 
+/// Returns a [`SpawnRelatedBundle`](bevy::ecs::spawn::SpawnRelatedBundle) that will insert the [`Bindings`] component and
+/// spawn a [`SpawnableList`] of entities with given bundles that relate to the context entity via the
+/// [`BindingOf`] component.
+///
+/// Similar to [`related!`], but allows you to omit the explicit [`Bindings`] type and automatically wraps elements using
+/// [`Binding::from`](crate::prelude::Binding::from).
+///
+/// The macro accepts either individual elements that implement [`Into<Binding>`], or tuples where the first element implements
+/// [`Into<Binding>`] and the remaining elements are bundles.
+///
+/// Due to `macro_rules!` limitations, you can't mix tuples and individual elements. However, you can wrap individual elements in braces
+/// to use them alongside tuples.
+///
+/// The macro can't be used to spawn [presets](crate::preset). Similar to other [`SpawnableList`]s, like [`SpawnWith`](bevy::ecs::spawn::SpawnWith)
+/// or [`SpawnIter`](bevy::ecs::spawn::SpawnIter), you need to use [`Bindings`] directly.
+///
+/// See also [`actions!`](crate::prelude::actions).
+///
+/// # Examples
+///
+/// List of single elements.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # use core::any;
+/// let from_macro = bindings![KeyCode::Space, GamepadButton::South];
+/// // Expands to the following:
+/// let manual = Bindings::spawn((
+///     Spawn(Binding::from(KeyCode::Space)),
+///     Spawn(Binding::from(GamepadButton::South)),
+/// ));
+///
+/// assert_eq!(any::type_name_of_val(&from_macro), any::type_name_of_val(&manual));
+/// ```
+///
+/// List of tuples.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # use core::any;
+/// let from_macro = bindings![
+///     (GamepadButton::RightTrigger2, Down::new(0.3)),
+///     (MouseButton::Left), // Necessary to wrap in braces since we use a tuple above.
+/// ];
+/// // Expands to the following:
+/// let manual = Bindings::spawn((
+///     Spawn((Binding::from(GamepadButton::RightTrigger2), Down::new(0.3))),
+///     Spawn((Binding::from(MouseButton::Left),)), // Extra braces could be omitted here, but necessary for the check below.
+/// ));
+///
+/// assert_eq!(any::type_name_of_val(&from_macro), any::type_name_of_val(&manual));
+/// ```
+///
+/// [`SpawnableList`]: bevy::ecs::spawn::SpawnableList
 #[macro_export]
 macro_rules! bindings {
     [ $( ( $first:expr $(, $rest:expr )* ) ),* $(,)? ] => {

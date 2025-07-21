@@ -60,7 +60,7 @@ const PANEL_BACKGROUND: BackgroundColor = BackgroundColor(Color::srgb(0.8, 0.8, 
 const DARK_TEXT: TextColor = TextColor(Color::srgb(0.1, 0.1, 0.1));
 
 fn setup(mut commands: Commands) {
-    let settings = match KeyboardSettings::read(SETTINGS_PATH) {
+    let settings = match InputSettings::read(SETTINGS_PATH) {
         Ok(settings) => {
             info!("loading settings from '{SETTINGS_PATH}'");
             settings
@@ -137,7 +137,7 @@ struct BindingInfo {
     index: usize,
 }
 
-fn actions_grid_bundle(settings: KeyboardSettings) -> impl Bundle {
+fn actions_grid_bundle(settings: InputSettings) -> impl Bundle {
     (
         Node {
             display: Display::Grid,
@@ -361,7 +361,7 @@ fn cancel_replace_binding(
 fn apply(
     _trigger: Trigger<Pointer<Click>>,
     mut commands: Commands,
-    mut settings: ResMut<KeyboardSettings>,
+    mut settings: ResMut<InputSettings>,
     buttons: Query<(&BindingButton, &BindingInfo)>,
 ) {
     settings.clear();
@@ -408,7 +408,7 @@ fn update_button_background(
 fn reload_bindings(
     _trigger: Trigger<SettingsChanged>,
     mut commands: Commands,
-    settings: Res<KeyboardSettings>,
+    settings: Res<InputSettings>,
     player: Single<Entity, With<Player>>,
 ) {
     commands
@@ -495,9 +495,11 @@ struct ConflictDialog {
 ///
 /// If you want to assign a specific part of the axis, such as the positive part of [`GamepadAxis::LeftStickX`],
 /// you need to create your own input enum. However, this approach is mostly used in emulators rather than games.
+///
+/// So in this example we assign only keyboard and mouse bindings.
 #[derive(Resource, Reflect, Clone, Deserialize, Serialize)]
 #[serde(default)]
-pub struct KeyboardSettings {
+pub struct InputSettings {
     pub forward: [Binding; BINDINGS_COUNT],
     pub left: [Binding; BINDINGS_COUNT],
     pub backward: [Binding; BINDINGS_COUNT],
@@ -507,7 +509,7 @@ pub struct KeyboardSettings {
     pub fire: [Binding; BINDINGS_COUNT],
 }
 
-impl KeyboardSettings {
+impl InputSettings {
     fn read(path: &str) -> Result<Self, Box<dyn Error>> {
         let string = fs::read_to_string(path)?;
         let settings = ron::from_str(&string)?;
@@ -531,7 +533,7 @@ impl KeyboardSettings {
     }
 }
 
-impl Default for KeyboardSettings {
+impl Default for InputSettings {
     fn default() -> Self {
         Self {
             forward: [KeyCode::KeyW.into(), KeyCode::ArrowUp.into(), Binding::None],
@@ -568,7 +570,7 @@ struct SettingsChanged;
 #[derive(Component)]
 struct Player;
 
-fn player_bundle(settings: KeyboardSettings) -> impl Bundle {
+fn player_bundle(settings: InputSettings) -> impl Bundle {
     (
         Player,
         actions!(

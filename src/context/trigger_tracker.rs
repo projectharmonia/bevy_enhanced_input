@@ -3,9 +3,9 @@ use log::trace;
 
 use crate::{condition::fns::ConditionFns, modifier::fns::ModifierFns, prelude::*};
 
-/// Helper to calculate [`ActionState`] based on its modifiers and conditions.
+/// Helper for computing [`ActionState`] and [`ActionValue`] based on modifiers and conditions.
 ///
-/// Could be used to track both input-level state and action-level state.
+/// Can be used at both the input level and the action level.
 pub(super) struct TriggerTracker {
     value: ActionValue,
     found_explicit: bool,

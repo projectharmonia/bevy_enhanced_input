@@ -14,7 +14,7 @@ use bevy::{
 
 use crate::prelude::*;
 
-/// Stores instantiated [`Actions`] for a schedule `S`.
+/// Stores information about instantiated contexts for a schedule `S`.
 ///
 /// Used to iterate over them in a defined order and operate in a type-erased manner.
 #[derive(Resource, Default, Deref)]
@@ -46,12 +46,12 @@ impl<S: ScheduleLabel> ContextInstances<S> {
         let index = self
             .iter()
             .position(|inst| inst.entity == entity && inst.type_id == TypeId::of::<C>())
-            .expect("input entry should be created before removal");
+            .expect("context instance should be created before removal");
         self.instances.remove(index);
     }
 }
 
-/// Meta information for [`Actions`] on an entity.
+/// Meta information for context on an entity.
 pub(crate) struct ContextInstance {
     pub(super) entity: Entity,
     pub(super) name: &'static str,
@@ -62,6 +62,7 @@ pub(crate) struct ContextInstance {
 }
 
 impl ContextInstance {
+    /// Creates a new instance for context `C`.
     fn new<C: Component>(entity: Entity, priority: usize) -> Self {
         Self {
             entity,
@@ -73,10 +74,14 @@ impl ContextInstance {
         }
     }
 
+    /// Returns a reference to entities from [`Actions<C>`], for which this instance was created.
     pub(super) fn actions<'a>(&self, contexts: &'a FilteredEntityRef) -> Option<&'a [Entity]> {
         (self.actions)(self, contexts)
     }
 
+    /// Returns a mutable reference to entities from [`Actions<C>`], for which this instance was created.
+    ///
+    /// Used only to sort entities.
     pub(super) fn actions_mut<'a>(
         &self,
         contexts: &'a mut FilteredEntityMut,

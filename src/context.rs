@@ -36,14 +36,13 @@ use instance::ContextInstances;
 
 /// An extension trait for [`App`] to assign input to components.
 pub trait InputContextAppExt {
-    /// Registers type `C` as an input context.
-    ///
-    /// Any struct `C` that implements [`InputContext`] must be registered,
-    /// otherwise [`Actions<C>`] won't be evaluated.
+    /// Registers type `C` as an input context, whose actions will be evaluated during [`PreUpdate`].
     fn add_input_context<C: Component>(&mut self) -> &mut Self {
         self.add_input_context_to::<PreUpdate, C>()
     }
 
+    /// Like [`Self::add_input_context`], but allows specifying the schedule
+    /// in which the context's actions will be evaluated.
     fn add_input_context_to<S: ScheduleLabel + Default, C: Component>(&mut self) -> &mut Self;
 }
 
@@ -62,14 +61,14 @@ impl InputContextAppExt for App {
             .find(|c| c.schedule_id == TypeId::of::<S>())
         {
             debug_assert!(
-                !contexts.action_ids.contains(&id),
+                !contexts.actions_ids.contains(&id),
                 "context `{}` shouldn't be added more then once",
                 any::type_name::<C>()
             );
-            contexts.action_ids.push(id);
+            contexts.actions_ids.push(id);
         } else {
             let mut contexts = ScheduleContexts::new::<S>();
-            contexts.action_ids.push(id);
+            contexts.actions_ids.push(id);
             registry.push(contexts);
         }
 
@@ -81,7 +80,7 @@ impl InputContextAppExt for App {
     }
 }
 
-/// Tracks registered input contexts for each [`InputContext::Schedule`].
+/// Tracks registered input contexts for each schedule.
 ///
 /// In Bevy, it’s impossible to know which schedule is used inside a system,
 /// so we genericize update systems over schedules.
@@ -97,8 +96,8 @@ pub(crate) struct ScheduleContexts {
     /// Schedule ID for which all actions were registered.
     schedule_id: TypeId,
 
-    /// IDs of [`Actions`].
-    action_ids: Vec<ComponentId>,
+    /// IDs of [`Actions<C>`].
+    actions_ids: Vec<ComponentId>,
 
     /// Configures the app for this schedule.
     setup: fn(&Self, &mut App, &ConditionRegistry, &ModifierRegistry),
@@ -111,7 +110,7 @@ impl ScheduleContexts {
     fn new<S: ScheduleLabel + Default>() -> Self {
         Self {
             schedule_id: TypeId::of::<S>(),
-            action_ids: Default::default(),
+            actions_ids: Default::default(),
             // Since the type is not present in the function signature, we can store
             // functions for specific type without making the struct generic.
             setup: Self::setup_typed::<S>,
@@ -135,7 +134,7 @@ impl ScheduleContexts {
         conditions: &ConditionRegistry,
         modifiers: &ModifierRegistry,
     ) {
-        debug!("registering functions for `{}`", any::type_name::<S>());
+        debug!("setting up systems for `{}`", any::type_name::<S>());
 
         let update = (
             ParamBuilder,
@@ -146,7 +145,7 @@ impl ScheduleContexts {
                 builder
                     .data::<Option<&GamepadDevice>>()
                     .optional(|builder| {
-                        for &id in &self.action_ids {
+                        for &id in &self.actions_ids {
                             builder.mut_id(id);
                         }
                     });
@@ -173,7 +172,7 @@ impl ScheduleContexts {
             ParamBuilder,
             QueryParamBuilder::new(|builder| {
                 builder.optional(|builder| {
-                    for &id in &self.action_ids {
+                    for &id in &self.actions_ids {
                         builder.ref_id(id);
                     }
                 });
@@ -204,7 +203,7 @@ fn register_instance<C: Component, S: ScheduleLabel>(
     contexts: Query<&ContextPriority<C>>,
 ) {
     debug!(
-        "adding input context `{}` to `{}`",
+        "registering `{}` to `{}`",
         any::type_name::<C>(),
         trigger.target(),
     );
@@ -218,7 +217,7 @@ fn remove_context<C: Component, S: ScheduleLabel>(
     mut instances: ResMut<ContextInstances<S>>,
 ) {
     debug!(
-        "removing input context `{}` from `{}`",
+        "unregistering `{}` from `{}`",
         any::type_name::<C>(),
         trigger.target(),
     );
@@ -289,10 +288,7 @@ fn update<S: ScheduleLabel>(
             Reverse(value)
         });
 
-        trace!(
-            "updating input context `{}` on `{}`",
-            instance.name, instance.entity
-        );
+        trace!("updating `{}` on `{}`", instance.name, instance.entity);
 
         reader.set_gamepad(gamepad);
 
@@ -466,7 +462,7 @@ fn apply<S: ScheduleLabel>(
         };
 
         trace!(
-            "running triggers for input context `{}` on `{}`",
+            "running triggers for `{}` on `{}`",
             instance.name, instance.entity,
         );
 
@@ -491,9 +487,9 @@ fn apply<S: ScheduleLabel>(
     }
 }
 
-/// Determines the evaluation order of [`Actions<Self>`].
+/// Determines the evaluation order of the input context `C` on the entity.
 ///
-/// Used to control how contexts are layered, as some [`InputAction`]s may consume inputs.
+/// Used to control how contexts are layered, as some [`Action<C>`]s may consume inputs.
 ///
 /// The ordering applies per schedule: contexts in schedules that run earlier are evaluated first.
 /// Within the same schedule, contexts with a higher priority are evaluated first.
@@ -528,7 +524,9 @@ impl<C> Clone for ContextPriority<C> {
 
 impl<C> Copy for ContextPriority<C> {}
 
-/// Associated gamepad.
+/// Associated gamepad for all input contexts on this entity.
+///
+/// If not present, input will be read from all connected gamepads.
 #[derive(
     Component, Reflect, Debug, Serialize, Deserialize, Default, Hash, PartialEq, Eq, Clone, Copy,
 )]
@@ -537,8 +535,6 @@ pub enum GamepadDevice {
     ///
     /// For an axis, the [`ActionValue`] will be calculated as the sum of inputs from all gamepads.
     /// For a button, the [`ActionValue`] will be `true` if any gamepad has this button pressed.
-    ///
-    /// [`ActionValue`]: crate::action_value::ActionValue
     #[default]
     Any,
     /// Matches input from specific gamepad.
