@@ -9,7 +9,6 @@ use bevy_enhanced_input::prelude::*;
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
-        .init_resource::<Gamepads>()
         .add_input_context::<Player>()
         .add_observer(apply_movement)
         .add_systems(Startup, spawn)
@@ -137,16 +136,11 @@ fn player_bundle(
     )
 }
 
-/// Used as both input context and component.
 #[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
 enum Player {
     First,
     Second,
 }
-
-/// A resource that tracks all connected gamepads to pick them by index.
-#[derive(Resource, Default, Deref, DerefMut)]
-struct Gamepads(Vec<Entity>);
 
 #[derive(Debug, InputAction)]
 #[action_output(Vec2)]
