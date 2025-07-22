@@ -83,6 +83,8 @@ fn player_bundle() -> impl Bundle {
             ),
             (
                 Action::<OpenInventory>::new(),
+                // We set `require_reset` to `true` because `CloseInventory` action uses the same input,
+                // and we want it to be triggerable only after the button is released.
                 ActionSettings {
                     require_reset: true,
                     ..Default::default()
@@ -105,9 +107,6 @@ struct Move;
 struct Attack;
 
 /// Switches context to [`Inventory`].
-///
-/// We set `require_reset` to `true` because [`CloseInventory`] action uses the same input,
-/// and we want it to be triggerable only after the button is released.
 #[derive(InputAction)]
 #[action_output(bool)]
 struct OpenInventory;
@@ -120,8 +119,6 @@ struct Inventory;
 struct NavigateInventory;
 
 /// Switches context to [`Player`].
-///
-/// See [`OpenInventory`] for details about `require_reset`.
 #[derive(InputAction)]
 #[action_output(bool)]
 struct CloseInventory;
