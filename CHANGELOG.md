@@ -18,7 +18,7 @@ This update features a big rewrite into a component-based API. The core concepts
 - Derive macro for `InputAction` now uses `action_output` attribute that accepts only the type.
 - Bindings for actions now represented by entities with `BindingOf<A>` relations, where `Bindings<C>` is the target located on an action entity.
 - Rename `Input` into `Binding` which now a component that represents the assigned binding.
-- Modifiers and conditions now regular components on action and binding entities. Custom modifiers and conditions now needs to be registered using `InputModifierAppExt::add_input_modifier` and `InputConditionAppExt::add_input_condition` respectively.
+- Modifiers and conditions now regular components on action and binding entities. Custom modifiers and conditions now needs to be registered using `InputModifierAppExt::add_input_modifier` and `InputConditionAppExt::add_input_condition` respectively. To access other actions, these traits now accept a query instead of `TypeIdMap<UntypedAction>`.
 - Mocking now represented by `ActionMock` component that can be added to action entities.
 - Presets now represented by `SpawnableList`s and store bundles. To assign multiple items as before, just spawn multiple presets. For empty bindings inside presets we now provide convenient `Binding::None`.
 - Rename `EnhancedInputSet::Trigger` to `EnhancedInputSet::Apply` since we now also update `Action<C>` from `ActionValue` here.
