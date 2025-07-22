@@ -359,16 +359,18 @@ fn update<S: ScheduleLabel>(
                     bindings.iter_many_mut(action_bindings.into_iter().flatten());
                 while let Some((
                     binding_entity,
-                    binding,
+                    &binding,
                     mut first_activation,
                     modifiers,
                     conditions,
                 )) = bindings_iter.fetch_next()
                 {
-                    let new_value = reader.value(*binding);
+                    let new_value = reader.value(binding);
                     if action_settings.require_reset && **first_activation {
                         // Ignore until we read zero for this mapping.
                         if new_value.as_bool() {
+                            // Mark the input as consumed regardless of the end action state.
+                            reader.consume::<S>(binding);
                             continue;
                         } else {
                             **first_activation = false;
@@ -409,14 +411,14 @@ fn update<S: ScheduleLabel>(
                         Ordering::Equal => {
                             tracker.combine(current_tracker, action_settings.accumulation);
                             if action_settings.consume_input {
-                                consume_buffer.push(*binding);
+                                consume_buffer.push(binding);
                             }
                         }
                         Ordering::Greater => {
                             tracker.overwrite(current_tracker);
                             if action_settings.consume_input {
                                 consume_buffer.clear();
-                                consume_buffer.push(*binding);
+                                consume_buffer.push(binding);
                             }
                         }
                     }

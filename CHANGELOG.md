@@ -23,6 +23,7 @@ This update features a big rewrite into a component-based API. The core concepts
 - Presets now represented by `SpawnableList`s and store bundles. To assign multiple items as before, just spawn multiple presets. For empty bindings inside presets we now provide convenient `Binding::None`.
 - Rename `EnhancedInputSet::Trigger` to `EnhancedInputSet::Apply` since we now also update `Action<C>` from `ActionValue` here.
 - Rename `InputModifier::apply` to `InputModifier::transform` to avoid name collision with `Reflect::apply`.
+- Mark the input as consumed on first actuation regardless of the end action state. This produces a more expected behavior.
 
 ### Removed
 

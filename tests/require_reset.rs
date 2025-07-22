@@ -10,7 +10,30 @@ fn layering() {
         .add_input_context::<Second>()
         .finish();
 
-    app.world_mut().spawn((
+    let context = app
+        .world_mut()
+        .spawn((
+            Second,
+            actions!(Second[(Action::<OnSecond>::new(), bindings![KEY])]),
+        ))
+        .id();
+
+    app.update();
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(KEY);
+
+    app.update();
+
+    let mut second_actions = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<OnSecond>>>();
+
+    let second_state = *second_actions.single(app.world()).unwrap();
+    assert_eq!(second_state, ActionState::Fired);
+
+    app.world_mut().entity_mut(context).insert((
         First,
         ContextPriority::<First>::new(1),
         actions!(
@@ -23,41 +46,26 @@ fn layering() {
                 bindings![KEY]
             )]
         ),
-        Second,
-        actions!(Second[(Action::<OnSecond>::new(), bindings![KEY])]),
     ));
-
-    app.update();
-
-    app.world_mut()
-        .resource_mut::<ButtonInput<KeyCode>>()
-        .press(KEY);
 
     app.update();
 
     let mut first_actions = app
         .world_mut()
-        .query_filtered::<(Entity, &ActionState), With<Action<OnFirst>>>();
+        .query_filtered::<&ActionState, With<Action<OnFirst>>>();
 
-    let (first_action, &first_state) = first_actions.single(app.world()).unwrap();
-    assert_eq!(first_state, ActionState::Fired);
-
-    let mut second_actions = app
-        .world_mut()
-        .query_filtered::<&ActionState, With<Action<OnSecond>>>();
-
-    let second_state = *second_actions.single(app.world()).unwrap();
-    assert_eq!(second_state, ActionState::None);
-
-    app.world_mut().entity_mut(first_action).despawn();
-
-    app.update();
+    let first_state = *first_actions.single(app.world()).unwrap();
+    assert_eq!(
+        first_state,
+        ActionState::None,
+        "shouldn't fire because the input should stop actuating first"
+    );
 
     let second_state = *second_actions.single(app.world()).unwrap();
     assert_eq!(
         second_state,
         ActionState::None,
-        "action should still be consumed even after removal"
+        "shouldn't fire because consumed by the first action"
     );
 
     app.world_mut()
@@ -72,8 +80,11 @@ fn layering() {
 
     app.update();
 
+    let first_state = *first_actions.single(app.world()).unwrap();
+    assert_eq!(first_state, ActionState::Fired);
+
     let second_state = *second_actions.single(app.world()).unwrap();
-    assert_eq!(second_state, ActionState::Fired);
+    assert_eq!(second_state, ActionState::None);
 }
 
 #[test]
