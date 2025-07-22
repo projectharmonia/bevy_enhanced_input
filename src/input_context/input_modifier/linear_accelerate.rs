@@ -30,11 +30,15 @@ impl InputModifier for LinearAccelerate {
             return value;
         }
         let difference = target_value.length() - self.current_value.length();
-        match difference {
-            0.0.. => self.current_value += self.step_rate * target_value,
-            ..0.0 => self.current_value -= self.step_rate * self.current_value.signum(),
-            _ => {}
+        if difference == 0.0 {
+            return;
         }
+        if difference > 0.0 {
+            self.current_value += self.step_rate * target_value;
+        } else {
+            self.current_value -= self.step_rate * self.current_value.signum(),
+        }
+
         ActionValue::Axis3D(self.current_value).convert(value.dim())
     }
 }

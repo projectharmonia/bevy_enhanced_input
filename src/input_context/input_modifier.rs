@@ -3,10 +3,10 @@ pub mod clamp;
 pub mod dead_zone;
 pub mod delta_scale;
 pub mod exponential_curve;
+pub mod linear_accelerate;
 pub mod negate;
 pub mod scale;
 pub mod smooth_nudge;
-pub mod linear_accelerate;
 pub mod swizzle_axis;
 
 use alloc::boxed::Box;
