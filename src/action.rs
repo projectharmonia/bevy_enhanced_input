@@ -97,7 +97,7 @@ impl<A: InputAction> Action<A> {
 /// Used together with [`Action<C>`] and [`events`] to statically define the type.
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
-/// derive to reduce boilerplate:
+/// derive to reduce boilerplate. Just specify `action_output` attribute with the type.
 ///
 /// ```
 /// # use bevy::prelude::*;

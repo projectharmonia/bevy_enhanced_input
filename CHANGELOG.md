@@ -15,6 +15,7 @@ This update features a big rewrite into a component-based API. The core concepts
 - Actions for contexts now represented by entities with an `ActionOf<C>` relation, where `Actions<C>` is the target located on the context entity (which now only stores entities).
 - `Action` now holds only the action value and its fields, with `ActionState`, `ActionValue`, and `ActionEvents` now being components. Timing is now stored in a new `ActionTime` component.
 - `InputAction` now only contains the associated `Output` type. All action settings are now expressed by the `ActionSettings` component, which can be modified at runtime.
+- Derive macro for `InputAction` now uses `action_output` attribute that accepts only the type.
 - Bindings for actions now represented by entities with `BindingOf<A>` relations, where `Bindings<C>` is the target located on an action entity.
 - Rename `Input` into `Binding` which now a component that represents the assigned binding.
 - Modifiers and conditions now regular components on action and binding entities. Custom modifiers and conditions now needs to be registered using `InputModifierAppExt::add_input_modifier` and `InputConditionAppExt::add_input_condition` respectively.
