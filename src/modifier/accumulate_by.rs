@@ -7,6 +7,42 @@ use crate::prelude::*;
 ///
 /// Continuously adds input values together as long as action `A` is [`ActionState::Fired`].
 /// When the action is inactive, it resets the accumulation with the current frame's input value.
+///
+/// # Examples
+///
+/// To get action entities during spawning, you could use [`SpawnWith`](bevy::ecs::spawn::SpawnWith).
+///
+/// ```
+/// use bevy::{ecs::spawn::SpawnWith, prelude::*};
+/// use bevy_enhanced_input::prelude::*;
+///
+/// Actions::<TestContext>::spawn(SpawnWith(|context: &mut ActionSpawner<_>| {
+///     let accelerate = context
+///         .spawn((
+///             Action::<Accelerate>::new(),
+///             bindings![KeyCode::ShiftLeft, KeyCode::ShiftRight],
+///         ))
+///         .id();
+///
+///     // Sums movement when `Accelerate` is pressed.
+///     context.spawn((
+///         Action::<Move>::new(),
+///         AccumulateBy::new(accelerate),
+///         Bindings::spawn(Cardinal::wasd_keys().with(DeadZone::default())),
+///     ));
+/// }));
+///
+/// #[derive(Component)]
+/// struct TestContext;
+///
+/// #[derive(InputAction)]
+/// #[action_output(bool)]
+/// struct Accelerate;
+///
+/// #[derive(InputAction)]
+/// #[action_output(f32)]
+/// struct Move;
+/// ```
 #[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct AccumulateBy {
     /// Action that activates accumulation.
