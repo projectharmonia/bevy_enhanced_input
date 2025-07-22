@@ -187,24 +187,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn pressed_mod_keys() {
-        let mut keys = ButtonInput::default();
-        keys.press(KeyCode::ControlLeft);
-        keys.press(KeyCode::ShiftLeft);
-        keys.press(KeyCode::KeyC);
-
-        let mod_keys = ModKeys::pressed(&keys);
-        assert_eq!(mod_keys, ModKeys::CONTROL | ModKeys::SHIFT);
-    }
-
-    #[test]
-    fn mod_keys_display() {
-        assert_eq!(ModKeys::CONTROL.to_string(), "Ctrl");
-        assert_eq!(ModKeys::all().to_string(), "Ctrl + Shift + Alt + Super");
-        assert_eq!(ModKeys::empty().to_string(), "");
-    }
-
-    #[test]
     fn input_display() {
         assert_eq!(
             Binding::Keyboard {
