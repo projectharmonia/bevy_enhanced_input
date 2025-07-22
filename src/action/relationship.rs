@@ -21,7 +21,8 @@ pub struct ActionOf<C: Component> {
 }
 
 impl<C: Component> ActionOf<C> {
-    pub fn new(entity: Entity) -> Self {
+    #[must_use]
+    pub const fn new(entity: Entity) -> Self {
         Self {
             entity,
             marker: PhantomData,

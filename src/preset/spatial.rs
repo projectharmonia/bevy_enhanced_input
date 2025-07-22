@@ -30,6 +30,7 @@ impl<F, B, L, R, U, D, T: Clone> WithBundle<T> for Spatial<F, B, L, R, U, D> {
 
 impl Spatial<Binding, Binding, Binding, Binding, Binding, Binding> {
     /// Maps WASD keys for horizontal (XZ) inputs and takes in up/down mappings.
+    #[must_use]
     pub fn wasd_and(up: KeyCode, down: KeyCode) -> Self {
         Spatial {
             forward: KeyCode::KeyW.into(),
@@ -42,6 +43,7 @@ impl Spatial<Binding, Binding, Binding, Binding, Binding, Binding> {
     }
 
     /// Maps arrow keys for horizontal (XZ) inputs and takes in up/down mappings.
+    #[must_use]
     pub fn arrows_and(up: KeyCode, down: KeyCode) -> Self {
         Spatial {
             forward: KeyCode::ArrowUp.into(),

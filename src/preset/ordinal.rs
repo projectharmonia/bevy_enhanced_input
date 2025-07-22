@@ -34,6 +34,7 @@ impl<N, NE, E, SE, S, SW, W, NW, T: Clone> WithBundle<T> for Ordinal<N, NE, E, S
 
 impl Ordinal<Binding, Binding, Binding, Binding, Binding, Binding, Binding, Binding> {
     /// Maps numpad keys as 2-dimensional input.
+    #[must_use]
     pub fn numpad_keys() -> Self {
         Self {
             north: KeyCode::Numpad8.into(),
@@ -57,6 +58,7 @@ impl Ordinal<Binding, Binding, Binding, Binding, Binding, Binding, Binding, Bind
     /// b   j   n
     /// ```
     /// Common for roguelikes.
+    #[must_use]
     pub fn hjklyubn_keys() -> Self {
         Self {
             north: KeyCode::KeyK.into(),

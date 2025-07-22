@@ -63,6 +63,7 @@ pub(crate) struct ContextInstance {
 
 impl ContextInstance {
     /// Creates a new instance for context `C`.
+    #[must_use]
     fn new<C: Component>(entity: Entity, priority: usize) -> Self {
         Self {
             entity,

@@ -17,7 +17,8 @@ pub enum ActionValue {
 
 impl ActionValue {
     /// Creates a zero-initialized value for the specified dimension.
-    pub fn zero(dim: ActionValueDim) -> Self {
+    #[must_use]
+    pub const fn zero(dim: ActionValueDim) -> Self {
         match dim {
             ActionValueDim::Bool => ActionValue::Bool(false),
             ActionValueDim::Axis1D => ActionValue::Axis1D(0.0),
@@ -27,7 +28,8 @@ impl ActionValue {
     }
 
     /// Returns dimension.
-    pub fn dim(self) -> ActionValueDim {
+    #[must_use]
+    pub const fn dim(self) -> ActionValueDim {
         match self {
             Self::Bool(_) => ActionValueDim::Bool,
             Self::Axis1D(_) => ActionValueDim::Axis1D,
@@ -40,6 +42,7 @@ impl ActionValue {
     ///
     /// If the new dimension is larger, the additional axes will be set to zero.
     /// If the new dimension is smaller, the extra axes will be discarded.
+    #[must_use]
     pub fn convert(self, dim: ActionValueDim) -> Self {
         match dim {
             ActionValueDim::Bool => self.as_bool().into(),
@@ -50,6 +53,7 @@ impl ActionValue {
     }
 
     /// Returns `true` if the value in sufficiently large.
+    #[must_use]
     pub fn is_actuated(self, actuation: f32) -> bool {
         self.as_axis3d().length_squared() >= actuation * actuation
     }
@@ -58,6 +62,7 @@ impl ActionValue {
     ///
     /// If the value is not [`ActionValue::Bool`],
     /// it returns `false` if the value is zero, and `true` otherwise.
+    #[must_use]
     pub fn as_bool(self) -> bool {
         match self {
             Self::Bool(value) => value,
@@ -71,7 +76,8 @@ impl ActionValue {
     ///
     /// For [`ActionValue::Bool`], it returns `1.0` if `true`, otherwise `0.0`.
     /// For multi-dimensional values, it returns the X axis.
-    pub fn as_axis1d(self) -> f32 {
+    #[must_use]
+    pub const fn as_axis1d(self) -> f32 {
         match self {
             Self::Bool(value) => {
                 if value {
@@ -91,6 +97,7 @@ impl ActionValue {
     /// For [`ActionValue::Bool`], it returns [`Vec2::X`] if `true`, otherwise [`Vec2::ZERO`].
     /// For [`ActionValue::Axis1D`], it maps the value to the X axis.
     /// For [`ActionValue::Axis3D`], it returns the X and Y axes.
+    #[must_use]
     pub fn as_axis2d(self) -> Vec2 {
         match self {
             Self::Bool(value) => {
@@ -111,6 +118,7 @@ impl ActionValue {
     /// For [`ActionValue::Bool`], it returns [`Vec3::X`] if `true`, otherwise [`Vec3::ZERO`].
     /// For [`ActionValue::Axis1D`], it maps the value to the X axis.
     /// For [`ActionValue::Axis2D`], it maps the value to the X and Y axes.
+    #[must_use]
     pub fn as_axis3d(self) -> Vec3 {
         match self {
             Self::Bool(value) => {

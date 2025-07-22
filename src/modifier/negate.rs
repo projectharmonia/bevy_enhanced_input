@@ -31,11 +31,13 @@ impl Negate {
     }
 
     /// Returns [`Self`] with none of the axes inverted.
+    #[must_use]
     pub const fn none() -> Self {
         Self::splat(false)
     }
 
     /// Returns [`Self`] with all of the axes inverted.
+    #[must_use]
     pub const fn all() -> Self {
         Self::splat(true)
     }

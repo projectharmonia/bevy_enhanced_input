@@ -365,11 +365,13 @@ pub struct ActionMock {
 
 impl ActionMock {
     /// Creates a new instance that will mock state and value only for a single context evaluation.
+    #[must_use]
     pub fn once(state: ActionState, value: impl Into<ActionValue>) -> Self {
         Self::new(state, value, MockSpan::Updates(1))
     }
 
     /// Creates a new instance that will mock state and value for the given span.
+    #[must_use]
     pub fn new(
         state: ActionState,
         value: impl Into<ActionValue>,
