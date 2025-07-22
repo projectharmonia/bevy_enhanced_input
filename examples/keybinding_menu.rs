@@ -206,7 +206,7 @@ fn delete_binding(
     let delete_button = delete_buttons.get(trigger.target()).unwrap();
     let (name, mut binding_button) = binding_buttons
         .get_mut(delete_button.binding_button)
-        .expect("delete button should point to an input button");
+        .expect("delete button should point to a binding button");
     info!("deleting binding for '{name}'");
     binding_button.binding = Binding::None;
 }
@@ -314,7 +314,7 @@ fn bind(
     } else {
         let (_, name, mut button) = buttons
             .get_mut(dialog.binding_button)
-            .expect("binding dialog should point to a button with input");
+            .expect("binding dialog should point to a button with binding");
         info!("assigning '{binding}' to '{name}'");
         button.binding = binding;
     }
@@ -494,7 +494,7 @@ struct ConflictDialog {
 /// actions like "forward" to [`GamepadAxis::LeftStickX`].
 ///
 /// If you want to assign a specific part of the axis, such as the positive part of [`GamepadAxis::LeftStickX`],
-/// you need to create your own input enum. However, this approach is mostly used in emulators rather than games.
+/// you need to create your own binding enum. However, this approach is mostly used in emulators rather than games.
 ///
 /// So in this example we assign only keyboard and mouse bindings.
 #[derive(Resource, Reflect, Clone, Deserialize, Serialize)]

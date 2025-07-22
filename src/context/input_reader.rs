@@ -18,7 +18,7 @@ pub(crate) fn update_pending(mut reader: InputReader) {
 
 /// Input state for actions.
 ///
-/// Actions can read input values and optionally consume them without affecting Bevy input resources.
+/// Actions can read binding values and optionally consume them without affecting Bevy input resources.
 #[derive(SystemParam)]
 pub(crate) struct InputReader<'w, 's> {
     keys: Res<'w, ButtonInput<KeyCode>>,
@@ -28,7 +28,7 @@ pub(crate) struct InputReader<'w, 's> {
     gamepads: Query<'w, 's, &'static Gamepad>,
     action_sources: Res<'w, ActionSources>,
     consumed: ResMut<'w, ConsumedInputs>,
-    pending: ResMut<'w, PendingInputs>,
+    pending: ResMut<'w, PendingBindings>,
     gamepad_device: Local<'s, GamepadDevice>,
     skip_ignore_check: Local<'s, bool>,
 }
@@ -43,12 +43,12 @@ impl InputReader<'_, '_> {
         // Temporary take the original value to avoid issues with the borrow checker.
         let mut pending = mem::take(&mut *self.pending);
         pending.ignored.clear();
-        pending.inputs.retain(|&input| {
-            if self.value(input).as_bool() {
-                pending.ignored.add(input, *self.gamepad_device);
+        pending.bindings.retain(|&binding| {
+            if self.value(binding).as_bool() {
+                pending.ignored.add(binding, *self.gamepad_device);
                 true
             } else {
-                trace!("'{input}' reset and no longer ignored");
+                trace!("'{binding}' reset and no longer ignored");
                 false
             }
         });
@@ -70,14 +70,14 @@ impl InputReader<'_, '_> {
     /// Returns the [`ActionValue`] for the given [`Binding`].
     ///
     /// See also [`Self::consume`] and [`Self::set_gamepad`].
-    pub(crate) fn value(&self, input: impl Into<Binding>) -> ActionValue {
-        let input = input.into();
-        match input {
+    pub(crate) fn value(&self, binding: impl Into<Binding>) -> ActionValue {
+        let binding = binding.into();
+        match binding {
             Binding::Keyboard { key, mod_keys } => {
                 let pressed = self.action_sources.keyboard
                     && self.keys.pressed(key)
                     && self.mod_keys_pressed(mod_keys)
-                    && !self.ignored(input);
+                    && !self.ignored(binding);
 
                 pressed.into()
             }
@@ -85,14 +85,14 @@ impl InputReader<'_, '_> {
                 let pressed = self.action_sources.mouse_buttons
                     && self.mouse_buttons.pressed(button)
                     && self.mod_keys_pressed(mod_keys)
-                    && !self.ignored(input);
+                    && !self.ignored(binding);
 
                 pressed.into()
             }
             Binding::MouseMotion { mod_keys } => {
                 if !self.action_sources.mouse_motion
                     || !self.mod_keys_pressed(mod_keys)
-                    || self.ignored(input)
+                    || self.ignored(binding)
                 {
                     return Vec2::ZERO.into();
                 }
@@ -102,7 +102,7 @@ impl InputReader<'_, '_> {
             Binding::MouseWheel { mod_keys } => {
                 if !self.action_sources.mouse_wheel
                     || !self.mod_keys_pressed(mod_keys)
-                    || self.ignored(input)
+                    || self.ignored(binding)
                 {
                     return Vec2::ZERO.into();
                 }
@@ -110,7 +110,7 @@ impl InputReader<'_, '_> {
                 self.mouse_scroll.delta.into()
             }
             Binding::GamepadButton(button) => {
-                if !self.action_sources.gamepad_button || self.ignored(input) {
+                if !self.action_sources.gamepad_button || self.ignored(binding) {
                     return 0.0.into();
                 }
 
@@ -131,7 +131,7 @@ impl InputReader<'_, '_> {
                 value.unwrap_or_default().into()
             }
             Binding::GamepadAxis(axis) => {
-                if !self.action_sources.gamepad_axis || self.ignored(input) {
+                if !self.action_sources.gamepad_axis || self.ignored(binding) {
                     return 0.0.into();
                 }
 
@@ -170,13 +170,13 @@ impl InputReader<'_, '_> {
         true
     }
 
-    fn ignored(&self, input: Binding) -> bool {
+    fn ignored(&self, binding: Binding) -> bool {
         if *self.skip_ignore_check {
             return false;
         }
 
         let mut iter = iter::once(&self.pending.ignored).chain(self.consumed.values());
-        match input {
+        match binding {
             Binding::Keyboard { key, mod_keys } => iter
                 .any(|inputs| inputs.keys.contains(&key) || inputs.mod_keys.intersects(mod_keys)),
             Binding::MouseButton { button, mod_keys } => iter.any(|inputs| {
@@ -206,14 +206,14 @@ impl InputReader<'_, '_> {
         }
     }
 
-    /// Consumes the input, making it unavailable for [`Self::value`].
+    /// Consumes the binding input, making it unavailable for [`Self::value`].
     ///
     /// Clears for this schedule with [`Self::clear_consumed`].
-    pub(crate) fn consume<S: ScheduleLabel>(&mut self, input: impl Into<Binding>) {
+    pub(crate) fn consume<S: ScheduleLabel>(&mut self, binding: impl Into<Binding>) {
         self.consumed
             .entry(TypeId::of::<S>())
             .or_default()
-            .add(input.into(), *self.gamepad_device);
+            .add(binding.into(), *self.gamepad_device);
     }
 }
 
@@ -280,22 +280,22 @@ impl Default for ActionSources {
 #[derive(Resource, Default, Deref, DerefMut)]
 pub(crate) struct ConsumedInputs(TypeIdMap<IgnoredInputs>);
 
-/// Inputs from actions with [`ActionSettings::require_reset`] enabled that were removed.
+/// Bindings from actions with [`ActionSettings::require_reset`] enabled that were removed.
 ///
-/// These inputs will be ignored by [`InputReader::value`] until they become inactive.
+/// Their inputs will be ignored by [`InputReader::value`] until they become inactive.
 /// Once inactive, they will be automatically removed and no longer ignored.
 #[derive(Resource, Default)]
-pub(crate) struct PendingInputs {
-    inputs: Vec<Binding>,
+pub(crate) struct PendingBindings {
+    bindings: Vec<Binding>,
 
-    /// Computed from [`Self::inputs`].
+    /// Computed from [`Self::bindings`].
     ignored: IgnoredInputs,
 }
 
-impl PendingInputs {
+impl PendingBindings {
     pub(crate) fn extend(&mut self, iter: impl Iterator<Item = Binding>) {
-        self.inputs
-            .extend(iter.inspect(|input| debug!("ignoring '{input}' until reset")));
+        self.bindings
+            .extend(iter.inspect(|binding| debug!("ignoring '{binding}' until reset")));
     }
 }
 
@@ -311,8 +311,8 @@ pub(crate) struct IgnoredInputs {
 }
 
 impl IgnoredInputs {
-    fn add(&mut self, input: Binding, gamepad: GamepadDevice) {
-        match input {
+    fn add(&mut self, binding: Binding, gamepad: GamepadDevice) {
+        match binding {
             Binding::Keyboard { key, mod_keys } => {
                 self.keys.insert(key);
                 self.mod_keys.insert(mod_keys);
@@ -420,17 +420,17 @@ mod tests {
         let value = Vec2::ONE;
         world.insert_resource(AccumulatedMouseMotion { delta: value });
 
-        let input = Binding::mouse_motion();
+        let binding = Binding::mouse_motion();
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), value.into());
+        assert_eq!(reader.value(binding), value.into());
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::SHIFT)),
+            reader.value(binding.with_mod_keys(ModKeys::SHIFT)),
             Vec2::ZERO.into()
         );
 
-        reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), Vec2::ZERO.into());
+        reader.consume::<PreUpdate>(binding);
+        assert_eq!(reader.value(binding), Vec2::ZERO.into());
     }
 
     #[test]
@@ -443,17 +443,17 @@ mod tests {
             delta: value,
         });
 
-        let input = Binding::mouse_wheel();
+        let binding = Binding::mouse_wheel();
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), value.into());
+        assert_eq!(reader.value(binding), value.into());
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::SUPER)),
+            reader.value(binding.with_mod_keys(ModKeys::SUPER)),
             Vec2::ZERO.into()
         );
 
-        reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), Vec2::ZERO.into());
+        reader.consume::<PreUpdate>(binding);
+        assert_eq!(reader.value(binding), Vec2::ZERO.into());
     }
 
     #[test]
@@ -617,21 +617,21 @@ mod tests {
         keys.press(modifier);
         keys.press(key);
 
-        let input = key.with_mod_keys(modifier.into());
+        let binding = key.with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(input), true.into());
+        assert_eq!(reader.value(binding), true.into());
         assert_eq!(reader.value(key), true.into());
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::ALT)),
+            reader.value(binding.with_mod_keys(ModKeys::ALT)),
             false.into()
         );
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
+            reader.value(binding.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
             false.into()
         );
 
-        reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), false.into());
+        reader.consume::<PreUpdate>(binding);
+        assert_eq!(reader.value(binding), false.into());
 
         // Try another key, but with the same modifier that was consumed.
         let other_key = KeyCode::Enter;
@@ -655,21 +655,21 @@ mod tests {
             .resource_mut::<ButtonInput<MouseButton>>()
             .press(button);
 
-        let input = button.with_mod_keys(modifier.into());
+        let binding = button.with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
-        assert_eq!(reader.value(input), true.into());
+        assert_eq!(reader.value(binding), true.into());
         assert_eq!(reader.value(button), true.into());
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::CONTROL)),
+            reader.value(binding.with_mod_keys(ModKeys::CONTROL)),
             false.into()
         );
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
+            reader.value(binding.with_mod_keys(ModKeys::CONTROL | ModKeys::ALT)),
             false.into()
         );
 
-        reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), false.into());
+        reader.consume::<PreUpdate>(binding);
+        assert_eq!(reader.value(binding), false.into());
     }
 
     #[test]
@@ -681,22 +681,22 @@ mod tests {
         world.resource_mut::<ButtonInput<KeyCode>>().press(modifier);
         world.insert_resource(AccumulatedMouseMotion { delta: value });
 
-        let input = Binding::mouse_motion().with_mod_keys(modifier.into());
+        let binding = Binding::mouse_motion().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), value.into());
-        assert_eq!(reader.value(input.without_mod_keys()), value.into());
+        assert_eq!(reader.value(binding), value.into());
+        assert_eq!(reader.value(binding.without_mod_keys()), value.into());
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::SUPER)),
+            reader.value(binding.with_mod_keys(ModKeys::SUPER)),
             Vec2::ZERO.into()
         );
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
+            reader.value(binding.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
             Vec2::ZERO.into()
         );
 
-        reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), Vec2::ZERO.into());
+        reader.consume::<PreUpdate>(binding);
+        assert_eq!(reader.value(binding), Vec2::ZERO.into());
     }
 
     #[test]
@@ -711,22 +711,22 @@ mod tests {
             delta: value,
         });
 
-        let input = Binding::mouse_wheel().with_mod_keys(modifier.into());
+        let binding = Binding::mouse_wheel().with_mod_keys(modifier.into());
         let mut reader = state.get_mut(&mut world);
         reader.clear_consumed::<PreUpdate>();
-        assert_eq!(reader.value(input), value.into());
-        assert_eq!(reader.value(input.without_mod_keys()), value.into());
+        assert_eq!(reader.value(binding), value.into());
+        assert_eq!(reader.value(binding.without_mod_keys()), value.into());
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::SHIFT)),
+            reader.value(binding.with_mod_keys(ModKeys::SHIFT)),
             Vec2::ZERO.into()
         );
         assert_eq!(
-            reader.value(input.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
+            reader.value(binding.with_mod_keys(ModKeys::SHIFT | ModKeys::SUPER)),
             Vec2::ZERO.into()
         );
 
-        reader.consume::<PreUpdate>(input);
-        assert_eq!(reader.value(input), Vec2::ZERO.into());
+        reader.consume::<PreUpdate>(binding);
+        assert_eq!(reader.value(binding), Vec2::ZERO.into());
     }
 
     #[test]
@@ -784,7 +784,7 @@ mod tests {
         world.init_resource::<AccumulatedMouseMotion>();
         world.init_resource::<AccumulatedMouseScroll>();
         world.init_resource::<ConsumedInputs>();
-        world.init_resource::<PendingInputs>();
+        world.init_resource::<PendingBindings>();
         world.init_resource::<ActionSources>();
 
         let state = SystemState::<InputReader>::new(&mut world);

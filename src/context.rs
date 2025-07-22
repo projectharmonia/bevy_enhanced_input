@@ -43,7 +43,7 @@ pub trait InputContextAppExt {
     /// - If the action has an [`ActionMock`] component, use the mocked [`ActionValue`] and [`ActionState`] directly.
     /// - Otherwise, evaluate the action from its bindings:
     ///     1. Iterate over each binding from the [`Bindings`] component.
-    ///         1. Read the input as an [`ActionValue`], or [`ActionValue::zero`] if the input was already consumed by another action.
+    ///         1. Read the binding input as an [`ActionValue`], or [`ActionValue::zero`] if the input was already consumed by another action.
     ///            The enum variant depends on the input source.
     ///         2. Apply all binding-level [`InputModifier`]s.
     ///         3. Evaluate all input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
@@ -54,7 +54,7 @@ pub trait InputContextAppExt {
     ///     5. Evaluate all action-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
     ///     6. Convert the final value to [`ActionOutput::DIM`] again using [`ActionValue::convert`].
     ///     7. Apply the resulting [`ActionState`] and [`ActionValue`] to the action entity.
-    ///     8. If the final state is not [`ActionState::None`], consume the input value.
+    ///     8. If the final state is not [`ActionState::None`], consume the binding input value.
     ///
     /// This logic may look complicated, but you don't have to memorize it. It behaves surprisingly intuitively.
     fn add_input_context<C: Component>(&mut self) -> &mut Self {
@@ -369,7 +369,7 @@ fn update<S: ScheduleLabel>(
                     if action_settings.require_reset && **first_activation {
                         // Ignore until we read zero for this mapping.
                         if new_value.as_bool() {
-                            // Mark the input as consumed regardless of the end action state.
+                            // Mark the binding input as consumed regardless of the end action state.
                             reader.consume::<S>(binding);
                             continue;
                         } else {
@@ -437,8 +437,8 @@ fn update<S: ScheduleLabel>(
 
                 if action_settings.consume_input {
                     if new_state != ActionState::None {
-                        for &input in &consume_buffer {
-                            reader.consume::<S>(input);
+                        for &binding in &consume_buffer {
+                            reader.consume::<S>(binding);
                         }
                     }
                     consume_buffer.clear();

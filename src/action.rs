@@ -8,14 +8,14 @@ use core::{any, fmt::Debug, time::Duration};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{context::input_reader::PendingInputs, prelude::*};
+use crate::{context::input_reader::PendingBindings, prelude::*};
 use fns::ActionFns;
 
 /// Resets action data and triggers corresponding events on removal.
 pub(crate) fn remove_action(
     trigger: Trigger<OnRemove, ActionValue>,
     mut commands: Commands,
-    mut pending: ResMut<PendingInputs>,
+    mut pending: ResMut<PendingBindings>,
     mut actions: Query<(
         Option<&Bindings>,
         &ActionSettings,
@@ -301,12 +301,12 @@ impl ActionTime {
 
 /// Mocks the state and value of [`Action<C>`] for a specified span.
 ///
-/// While active, input evaluation, conditions, and modifiers are skipped. Instead,
+/// While active, input reading, conditions, and modifiers are skipped. Instead,
 /// the action reports the provided state and value. All state transition events
 /// (e.g., [`Started<A>`], [`Fired<A>`]) will still be triggered as usual.
 ///
 /// Once the span expires, [`Self::enabled`] is set to `false`, and the action resumes
-/// evaluating real input. The component is not removed automatically, allowing you
+/// the regular evaluation. The component is not removed automatically, allowing you
 /// to reuse it for future mocking.
 ///
 /// Mocking does not take effect immediately - it is applied during the next context evaluation.

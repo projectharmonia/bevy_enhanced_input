@@ -4,9 +4,9 @@ use smallvec::{SmallVec, smallvec};
 
 use crate::prelude::*;
 
-/// Returns the maximum [`ActionState`] of the specified actions if they are firing.
+/// Returns the maximum [`ActionState`] among the given actions.
 ///
-/// Allows one action to inherit the state of others, similar to a chorded input.
+/// Useful for defining a composite action that fires only when all listed actions are active.
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct Chord {
     /// Actions whose state will be inherited when they are firing.

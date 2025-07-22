@@ -70,7 +70,7 @@ fn same_schedule() {
     assert_eq!(
         second_consume_state,
         ActionState::None,
-        "action should be consumed by component input with a higher priority"
+        "input should be consumed from a context with a higher priority"
     );
 
     let mut second_passthrough = app

@@ -36,8 +36,6 @@ fn setup(
                 // so we provide built-ins to assign all keys/axes at once.
                 // We don't assign any conditions and in this case the action will
                 // be triggered with any non-zero value.
-                // An action can have multiple inputs bound to it
-                // and will respond to any of them.
                 Action::<Move>::new(),
                 // Conditions are components.
                 DeadZone::default(), // Apply non-uniform normalization that works for both digital and analog inputs, otherwise diagonal movement will be faster.
@@ -45,6 +43,7 @@ fn setup(
                 // Modifiers also components.
                 Scale::splat(0.3), // Additionally multiply by a constant to achieve the desired speed.
                 // Bindings are entities related to actions.
+                // An action can have multiple bindings and will respond to any of them.
                 Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
             ),
             (
@@ -130,14 +129,14 @@ fn grab_cursor(window: &mut Window, grab: bool) {
     window.cursor_options.visible = !grab;
 }
 
-// Since it's possible to have multiple `Actions` components, you need
-// to define a marker and derive `InputContext` trait.
+// Since it's possible to have multiple input contexts on a single entity,
+// you need to define a marker component and register it in the app.
 #[derive(Component)]
 struct FlyCam;
 
 // All actions should implement the `InputAction` trait.
 // It can be done manually, but we provide a derive for convenience.
-// The only necessary parameter is `output`, which defines the output type.
+// The only attribute is `action_output`, which defines the output type.
 #[derive(InputAction)]
 #[action_output(Vec2)]
 struct Move;

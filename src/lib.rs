@@ -391,7 +391,7 @@ use bevy::{input::InputSystem, prelude::*};
 use condition::fns::ConditionRegistry;
 use context::{
     ContextRegistry,
-    input_reader::{self, ConsumedInputs, PendingInputs},
+    input_reader::{self, ConsumedInputs, PendingBindings},
 };
 use modifier::fns::ModifierRegistry;
 use prelude::*;
@@ -405,7 +405,7 @@ impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ContextRegistry>()
             .init_resource::<ConsumedInputs>()
-            .init_resource::<PendingInputs>()
+            .init_resource::<PendingBindings>()
             .init_resource::<ActionSources>()
             .init_resource::<ConditionRegistry>()
             .init_resource::<ModifierRegistry>()

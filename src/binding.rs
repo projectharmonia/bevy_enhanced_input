@@ -140,9 +140,9 @@ impl From<GamepadAxis> for Binding {
     }
 }
 
-/// A trait to ergonomically assign keyboard modifiers to any type that can be converted into an input.
+/// A trait to ergonomically assign keyboard modifiers to any type that can be converted into a binding.
 pub trait InputModKeys {
-    /// Returns an input with assigned keyboard modifiers.
+    /// Returns a binding with assigned keyboard modifiers.
     #[must_use]
     fn with_mod_keys(self, mod_keys: ModKeys) -> Binding;
 }
