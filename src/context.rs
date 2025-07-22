@@ -131,6 +131,7 @@ impl ScheduleContexts {
     /// Creates a new instance for schedule `S`.
     ///
     /// [`Self::setup`] will configure the app for `S`.
+    #[must_use]
     fn new<S: ScheduleLabel + Default>() -> Self {
         Self {
             schedule_id: TypeId::of::<S>(),
@@ -296,7 +297,7 @@ fn update<S: ScheduleLabel>(
             let Ok((.., action_bindings, _, _, _)) = actions.get(action) else {
                 // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
                 warn!(
-                    "action `{action}` from context `{}` missing action components",
+                    "`{action}` from `{}` missing action components",
                     instance.name
                 );
                 return Reverse(0);
