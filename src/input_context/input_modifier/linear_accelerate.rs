@@ -1,6 +1,9 @@
 use crate::prelude::*;
 use bevy::{prelude::*, utils::TypeIdMap};
 
+/// Linearly accelerates the input value
+///
+/// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`]
 #[derive(Clone, Copy, Debug)]
 pub struct LinearAccelerate {
     pub step_rate: f32,
