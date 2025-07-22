@@ -313,6 +313,41 @@ fn apply_input(
 # struct Move;
 ```
 
+## Removing contexts
+
+To remove a context from an entity, you need to remove it with required components **and** despawn its actions.
+
+```
+# use bevy::prelude::*;
+# use bevy_enhanced_input::prelude::*;
+# let mut world = World::new();
+let mut player = world.spawn((
+    OnFoot,
+    actions!(OnFoot[
+        (Action::<Jump>::new(), bindings![KeyCode::Space, GamepadButton::South]),
+        (Action::<Fire>::new(), bindings![MouseButton::Left, GamepadButton::RightTrigger2]),
+    ])
+));
+
+player
+    .remove_with_requires::<OnFoot>()
+    .despawn_related::<Actions<OnFoot>>();
+
+assert_eq!(world.entities().len(), 1, "only the player entity should be left");
+# #[derive(Component)]
+# struct OnFoot;
+# #[derive(InputAction)]
+# #[action_output(bool)]
+# struct Jump;
+# #[derive(InputAction)]
+# #[action_output(bool)]
+# struct Fire;
+```
+
+Actions aren't despawned automatically via [`EntityWorldMut::remove_with_requires`], since Bevy doesn't automatically
+despawn related entities when their relationship targets (like [`Actions<C>`]) are removed. For this reason, [`Actions<C>`]
+is not a required component for `C`. See [this issue](https://github.com/bevyengine/bevy/issues/20252) for more details.
+
 ## Input and UI
 
 Currently, we don't integrate `bevy_input_focus` directly. But we provide [`ActionSources`] resource
