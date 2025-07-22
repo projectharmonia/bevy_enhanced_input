@@ -23,11 +23,13 @@ fn setup(
 ) {
     grab_cursor(&mut window, true);
 
-    // Spawn a camera with the input context component.
+    // Spawn a camera with an input context.
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(-2.5, 4.5, 9.0).looking_at(Vec3::ZERO, Vec3::Y),
         FlyCam,
+        // Similar to `related!`, but you only specify the context type.
+        // Actions are related to specific context since a single entity can have multiple contexts.
         actions!(FlyCam[
             (
                 // Bindings like WASD or sticks are very common,
@@ -37,19 +39,23 @@ fn setup(
                 // An action can have multiple inputs bound to it
                 // and will respond to any of them.
                 Action::<Move>::new(),
+                // Conditions are components.
                 DeadZone::default(), // Apply non-uniform normalization that works for both digital and analog inputs, otherwise diagonal movement will be faster.
                 SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
+                // Modifiers also components.
                 Scale::splat(0.3), // Additionally multiply by a constant to achieve the desired speed.
+                // Bindings are entities related to actions.
                 Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
             ),
             (
                 Action::<Rotate>::new(),
                 Bindings::spawn((
-                    // You can attach modifiers to individual inputs as well.
+                    // You can attach modifiers to individual bindings as well.
                     Spawn((Binding::mouse_motion(), Scale::splat(0.1), Negate::all())),
                     Axial::right_stick().with((Scale::splat(2.0), Negate::x())),
                 )),
             ),
+            // For bindings we also have a macro similar to `children!`.
             (Action::<CaptureCursor>::new(), bindings![MouseButton::Left]),
             (Action::<ReleaseCursor>::new(), bindings![KeyCode::Escape]),
         ]),
