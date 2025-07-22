@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+This update features a big rewrite into a component-based API. The core concepts remain the same, but are now expressed through ECS. It's recommended to revisit the quick start guide.
+
+### Changed
+
+- Input contexts now components.
+- Actions for contexts now represented by entities with an `ActionOf<C>` relation, where `Actions<C>` is the target located on the context entity (which now only stores entities).
+- `Action` now holds only the action value and its fields, with `ActionState`, `ActionValue`, and `ActionEvents` now being components. Timing is now stored in a new `ActionTime` component.
+- `InputAction` now only contains the associated `Output` type. All action settings are now expressed by the `ActionSettings` component, which can be modified at runtime.
+- Bindings for actions now represented by entities with `BindingOf<A>` relations, where `Bindings<C>` is the target located on an action entity.
+- Rename `Input` into `Binding` which now a component that represents the assigned binding.
+- Modifiers and conditions now regular components on action and binding entities. Custom modifiers and conditions now needs to be registered using `InputModifierAppExt::add_input_modifier` and `InputConditionAppExt::add_input_condition` respectively.
+- Mocking now represented by `ActionMock` component that can be added to action entities.
+- Presets now represented by `SpawnableList`s and store bundles. To assign multiple items as before, just spawn multiple presets. For empty bindings inside presets we now provide convenient `Binding::None`.
+- Rename `EnhancedInputSet::Trigger` to `EnhancedInputSet::Apply` since we now also update `Action<C>` from `ActionValue` here.
+- Rename `InputModifier::apply` to `InputModifier::transform` to avoid name collision with `Reflect::apply`.
+
+### Removed
+
+- `InputContext`. The schedule now can be set during registration via `InputContextAppExt::add_input_context_to`. Priority can be dynamically controlled by `ContextPriority` component, which you can set as a required component with specific value.
+
 ## [0.14.1] - 2025-06-26
 
 ### Fixed
