@@ -22,6 +22,7 @@ impl<X, Y, T: Clone> WithBundle<T> for Axial<X, Y> {
 
 impl Axial<Binding, Binding> {
     /// Maps left stick as 2-dimensional input.
+    #[must_use]
     pub fn left_stick() -> Self {
         Self {
             x: GamepadAxis::LeftStickX.into(),
@@ -30,6 +31,7 @@ impl Axial<Binding, Binding> {
     }
 
     /// Maps right stick as 2-dimensional input.
+    #[must_use]
     pub fn right_stick() -> Self {
         Self {
             x: GamepadAxis::RightStickX.into(),
