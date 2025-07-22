@@ -40,6 +40,8 @@ pub enum Binding {
     /// Gamepad stick axis, captured as [`ActionValue::Axis1D`].
     GamepadAxis(GamepadAxis),
     /// Doesn't correspond to any input, captured as [`ActionValue::Bool`] with `false`.
+    ///
+    /// Useful for expressing empty bindings in [presets](crate::preset).
     None,
 }
 
