@@ -49,7 +49,7 @@ fn jump(_trigger: Trigger<Started<Jump>>) {
 fn enter_car(trigger: Trigger<Started<EnterCar>>, mut commands: Commands) {
     // `Player` has lower priority, so `Brake` and `ExitCar` consume inputs first,
     // preventing `Rotate` and `EnterWater` from being triggered.
-    // The consuming behavior can be configured in the `InputAction` trait.
+    // The consuming behavior can be configured using `ActionSettings` component.
     info!("entering car");
     commands.entity(trigger.target()).insert((
         Driving,
@@ -81,7 +81,7 @@ fn exit_car(trigger: Trigger<Started<ExitCar>>, mut commands: Commands) {
     info!("exiting car");
     commands
         .entity(trigger.target())
-        .remove_with_requires::<Driving>() // Necessary to also remove `ContextPriority`.
+        .remove_with_requires::<Driving>() // Necessary to fully remove the context.
         .despawn_related::<Actions<Driving>>();
 }
 

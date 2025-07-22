@@ -33,7 +33,7 @@ fn open_inventory(trigger: Trigger<Started<OpenInventory>>, mut commands: Comman
     info!("opening inventory");
     commands
         .entity(trigger.target())
-        .remove_with_requires::<Player>() // Necessary to also remove `ContextPriority`.
+        .remove_with_requires::<Player>() // Necessary to fully remove the context.
         .despawn_related::<Actions<Player>>()
         .insert((
             Inventory,
