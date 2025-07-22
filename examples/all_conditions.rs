@@ -168,15 +168,15 @@ impl ChordMember2 {
 
 #[derive(InputAction)]
 #[action_output(bool)]
+struct ChordAction;
+
+#[derive(InputAction)]
+#[action_output(bool)]
 struct BlockerAction;
 
 impl BlockerAction {
     const KEY: KeyCode = KeyCode::Digit0;
 }
-
-#[derive(InputAction)]
-#[action_output(bool)]
-struct ChordAction;
 
 #[derive(InputAction)]
 #[action_output(bool)]

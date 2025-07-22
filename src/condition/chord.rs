@@ -7,6 +7,42 @@ use crate::prelude::*;
 /// Returns the maximum [`ActionState`] among the given actions.
 ///
 /// Useful for defining a composite action that fires only when all listed actions are active.
+///
+/// # Examples
+///
+/// To get action entities during spawning, you could use [`SpawnWith`](bevy::ecs::spawn::SpawnWith).
+///
+/// ```
+/// use bevy::{ecs::spawn::SpawnWith, prelude::*};
+/// use bevy_enhanced_input::prelude::*;
+///
+/// Actions::<TestContext>::spawn(SpawnWith(|context: &mut ActionSpawner<_>| {
+///     let combo1 = context
+///         .spawn((Action::<Combo1>::new(), bindings![KeyCode::KeyQ]))
+///         .id();
+///     let combo2 = context
+///         .spawn((Action::<Combo2>::new(), bindings![KeyCode::KeyX]))
+///         .id();
+///
+///     // Will trigger when both `Combo1` and `Combo2` fire.
+///     context.spawn((Action::<SuperCombo>::new(), Chord::new([combo1, combo2])));
+/// }));
+///
+/// #[derive(Component)]
+/// struct TestContext;
+///
+/// #[derive(InputAction)]
+/// #[action_output(bool)]
+/// struct Combo1;
+///
+/// #[derive(InputAction)]
+/// #[action_output(bool)]
+/// struct Combo2;
+///
+/// #[derive(InputAction)]
+/// #[action_output(bool)]
+/// struct SuperCombo;
+/// ```
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct Chord {
     /// Actions whose state will be inherited when they are firing.

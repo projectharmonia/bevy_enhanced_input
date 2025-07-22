@@ -5,6 +5,42 @@ use smallvec::{SmallVec, smallvec};
 use crate::prelude::*;
 
 /// Returns [`ActionState::None`] when specific actions are active.
+///
+/// # Examples
+///
+/// To get action entities during spawning, you could use [`SpawnWith`](bevy::ecs::spawn::SpawnWith).
+///
+/// ```
+/// use bevy::{ecs::spawn::SpawnWith, prelude::*};
+/// use bevy_enhanced_input::prelude::*;
+///
+/// Actions::<TestContext>::spawn(SpawnWith(|context: &mut ActionSpawner<_>| {
+///     let fly = context
+///         .spawn((
+///             Action::<Fly>::new(),
+///             bindings![KeyCode::Space],
+///         ))
+///         .id();
+///
+///     // Requires `Fly` to be inactive in order to trigger.
+///     context.spawn((
+///         Action::<Melee>::new(),
+///         BlockBy::single(fly),
+///         bindings![KeyCode::KeyF],
+///     ));
+/// }));
+///
+/// #[derive(Component)]
+/// struct TestContext;
+///
+/// #[derive(InputAction)]
+/// #[action_output(bool)]
+/// struct Fly;
+///
+/// #[derive(InputAction)]
+/// #[action_output(bool)]
+/// struct Melee;
+/// ```
 #[derive(Component, Reflect, Debug, Clone)]
 pub struct BlockBy {
     /// Actions that block this action when they are firing.
