@@ -313,7 +313,7 @@ fn apply_input(
 # struct Move;
 ```
 
-# Input and UI
+## Input and UI
 
 Currently, we don't integrate `bevy_input_focus` directly. But we provide [`ActionSources`] resource
 that could be used to prevents actions from triggering during UI interactions. See its docs for details.
