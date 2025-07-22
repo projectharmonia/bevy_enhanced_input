@@ -26,6 +26,7 @@ This update features a big rewrite into a component-based API. The core concepts
 ### Removed
 
 - `InputContext`. The schedule now can be set during registration via `InputContextAppExt::add_input_context_to`. Priority can be dynamically controlled by `ContextPriority` component, which you can set as a required component with specific value.
+- `RebindAll` and `Bind`. If you already have settings and want to reload them, you probably have an event for that anyway, since you'll likely need to change multiple things - not just bindings.
 
 ## [0.14.1] - 2025-06-26
 
