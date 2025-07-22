@@ -21,6 +21,8 @@ This update features a big rewrite into a component-based API. The core concepts
 - Modifiers and conditions now regular components on action and binding entities. Custom modifiers and conditions now needs to be registered using `InputModifierAppExt::add_input_modifier` and `InputConditionAppExt::add_input_condition` respectively. To access other actions, these traits now accept a query instead of `TypeIdMap<UntypedAction>`.
 - Mocking now represented by `ActionMock` component that can be added to action entities.
 - Presets now represented by `SpawnableList`s and store bundles. To assign multiple items as before, just spawn multiple presets. For empty bindings inside presets we now provide convenient `Binding::None`.
+- `GamepadDevice` is now a component on entities with input contexts. It now includes `GamepadDevice::None` variant to conveniently disable input from any gamepad.
+- Rename `InputTime` to `ContextTime`.
 - Rename `EnhancedInputSet::Trigger` to `EnhancedInputSet::Apply` since we now also update `Action<C>` from `ActionValue` here.
 - Rename `InputModifier::apply` to `InputModifier::transform` to avoid name collision with `Reflect::apply`.
 - Mark the input as consumed on first actuation regardless of the end action state. This produces a more expected behavior.
