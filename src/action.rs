@@ -80,6 +80,12 @@ impl<A: InputAction> Clone for Action<A> {
 
 impl<A: InputAction> Copy for Action<A> {}
 
+impl<A: InputAction> Default for Action<A> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<A: InputAction> Action<A> {
     pub fn new() -> Self {
         Self(Default::default())

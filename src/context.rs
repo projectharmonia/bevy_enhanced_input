@@ -43,10 +43,10 @@ pub trait InputContextAppExt {
     /// - If the action has an [`ActionMock`] component, use the mocked [`ActionValue`] and [`ActionState`] directly.
     /// - Otherwise, evaluate the action from its bindings:
     ///     1. Iterate over each binding from the [`Bindings`] component.
-    ///         1.1 Read the input as an [`ActionValue`], or [`ActionValue::zero`] if the input was already consumed by another action.
-    ///           The enum variant depends on the input source.
-    ///         1.2 Apply all binding-level [`InputModifier`]s.
-    ///         1.3 Evaluate all input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
+    ///         1. Read the input as an [`ActionValue`], or [`ActionValue::zero`] if the input was already consumed by another action.
+    ///            The enum variant depends on the input source.
+    ///         2. Apply all binding-level [`InputModifier`]s.
+    ///         3. Evaluate all input-level [`InputCondition`]s, combining their results based on their [`InputCondition::kind`].
     ///     2. Select all [`ActionValue`]s with the most significant [`ActionState`] and combine them using the
     ///        [`ActionSettings::accumulation`] strategy.
     ///     3. Convert the combined value to [`ActionOutput::DIM`] using [`ActionValue::convert`].

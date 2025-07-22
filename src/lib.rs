@@ -25,7 +25,7 @@ app.add_plugins((MinimalPlugins, EnhancedInputPlugin));
 - **Actions** represent something a player can do, like "Jump", "Move", or "Open Menu". They are not tied to specific input.
 - **Bindings** connect those actions to real input sources such as keyboard keys, mouse buttons, gamepad axes, etc.
 - **Contexts** represent a certain input state the player can be in, such as "On foot" or "In car". They associate actions with
-entities and define when those actions are evaluated.
+  entities and define when those actions are evaluated.
 
 Contexts are regular components. Depending on your type of game, you may have a single global context
 or multiple contexts for different gameplay states. To register a component as an input context, you need to call
