@@ -92,9 +92,9 @@ impl<A: InputAction> Action<A> {
     }
 }
 
-/// Marker for a gameplay-related action.
+/// A gameplay-related action which can be bound to inputs.
 ///
-/// Used together with [`Action<C>`] and [`events`] to statically define the type.
+/// Used to statically define the type for [`Action<C>`] and [`events`].
 ///
 /// To implement the trait you can use the [`InputAction`](bevy_enhanced_input_macros::InputAction)
 /// derive to reduce boilerplate. Just specify `action_output` attribute with the type.
@@ -115,12 +115,16 @@ pub trait InputAction: 'static {
     type Output: ActionOutput;
 }
 
-/// Marks a type which can be used as [`InputAction::Output`].
+/// Type which can be used as [`InputAction::Output`].
 pub trait ActionOutput: Into<ActionValue> + Default + Send + Sync + Debug + Clone + Copy {
     /// Dimension of this output.
+    ///
+    /// Used for [`ActionValue`] initialization.
     const DIM: ActionValueDim;
 
     /// Converts the value into the action output type.
+    ///
+    /// Used to write the value into [`Action<C>`].
     ///
     /// # Panics
     ///

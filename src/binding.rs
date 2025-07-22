@@ -11,7 +11,10 @@ use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
-/// Input from any source associated with [`Action<C>`].
+/// A an input bound to an [`Action<C>`].
+///
+/// Should be stored on a separate entity from the action,
+/// and related to it using the [`BindingOf`] relationship.
 ///
 /// [Input modifiers](crate::modifier) can change the captured dimension.
 ///
@@ -140,7 +143,7 @@ impl From<GamepadAxis> for Binding {
     }
 }
 
-/// A trait to ergonomically assign keyboard modifiers to any type that can be converted into a binding.
+/// A trait to ergonomically assign keyboard modifiers to any type that can be converted into a [`Binding`].
 pub trait InputModKeys {
     /// Returns a binding with assigned keyboard modifiers.
     #[must_use]
@@ -171,9 +174,9 @@ fn reset_first_activation(mut world: DeferredWorld, ctx: HookContext) {
     **first_activation = true;
 }
 
-/// Whether the input output a non-zero value.
+/// Tracks whether the input defined by [`Binding`] was active at least once.
 ///
-/// Prevents newly created contexts from reacting to currently held inputs
+/// Used to prevent newly created contexts from reacting to currently active inputs
 /// until they're released.
 ///
 /// Used only if [`ActionSettings::require_reset`] is set.

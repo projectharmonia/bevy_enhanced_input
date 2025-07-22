@@ -106,7 +106,7 @@ impl InputContextAppExt for App {
 
 /// Tracks registered input contexts for each schedule.
 ///
-/// In Bevy, it’s impossible to know which schedule is used inside a system,
+/// In Bevy, it's impossible to know which schedule is used inside a system,
 /// so we genericize update systems over schedules.
 ///
 /// This resource stores registered contexts per-schedule in a type-erased way

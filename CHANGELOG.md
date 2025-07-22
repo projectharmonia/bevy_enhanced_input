@@ -11,7 +11,7 @@ This update features a big rewrite into a component-based API. The core concepts
 
 ### Changed
 
-- Input contexts are now components.
+- Input contexts are now regular components. Instead of inserting `Actions<C>`, you insert the `C` component directly.
 - Actions for contexts are now represented by entities with an `ActionOf<C>` relation, where `Actions<C>` is the target located on the context entity (which now only stores entities).
 - `Action` now holds only the action value and its fields, with `ActionState`, `ActionValue`, and `ActionEvents` now being components. Timing is now stored in a new `ActionTime` component.
 - `InputAction` now only contains the associated `Output` type. All action settings are now expressed by the `ActionSettings` component, which can be modified at runtime.
