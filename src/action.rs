@@ -263,10 +263,16 @@ pub enum ActionState {
     None,
     /// Condition has started triggering, but has not yet finished.
     ///
-    /// For example, [`Hold`] condition requires its state to be
-    /// maintained over several frames.
+    /// For example, with the [`Hold`] condition, this state is set while
+    /// the key is held down, until the required duration is met.
     Ongoing,
     /// The condition has been met.
+    ///
+    /// For example, with the [`Down`] condition, this state remains active
+    /// as long as the key is held down. If you want to respond only
+    /// on the first or last frame this state is active, see [`ActionEvents::STARTED`]
+    /// or [`ActionEvents::COMPLETED`] respectively. For this condition,
+    /// these correspond to "just pressed" and "just released".
     Fired,
 }
 

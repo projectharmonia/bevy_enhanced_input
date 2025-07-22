@@ -10,6 +10,8 @@ use crate::prelude::*;
 ///
 /// During [`EnhancedInputSet::Apply`], events that correspond to bitflags will be triggered.
 ///
+/// You can use this component directly in systems or react on corresponding events in observers.
+///
 /// Table of state transitions:
 ///
 /// | Last state                  | New state                | Events                    |
@@ -141,7 +143,10 @@ impl<A: InputAction> Copy for Ongoing<A> {}
 /// Triggers every frame when an action state is [`ActionState::Fired`].
 ///
 /// For example, with the [`Down`] condition, this event is triggered
-/// every frame the key is held down.
+/// every frame while the key is held down. If you want to respond only
+/// on the first or last frame this state is active, see [`Started`] or
+/// [`Completed`] respectively. For this condition, these correspond to
+/// "just pressed" and "just released".
 ///
 /// See [`ActionEvents`] for all transitions.
 #[derive(Event)]
