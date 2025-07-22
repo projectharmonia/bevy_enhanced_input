@@ -286,9 +286,7 @@ fn update<S: ScheduleLabel>(
     reader.clear_consumed::<S>();
 
     for instance in &**instances {
-        let Ok(mut context) = contexts.get_mut(instance.entity) else {
-            continue;
-        };
+        let mut context = contexts.get_mut(instance.entity).unwrap();
         let gamepad = context.get::<GamepadDevice>().copied().unwrap_or_default();
         let Some(context_actions) = instance.actions_mut(&mut context) else {
             continue;
