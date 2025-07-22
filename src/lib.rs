@@ -20,224 +20,217 @@ let mut app = App::new();
 app.add_plugins((MinimalPlugins, EnhancedInputPlugin));
 ```
 
-## Defining actions
+## Core Concepts
 
-Actions represent something that the user can do, like "Crouch" or "Fire Weapon". They are
-represented by unit structs that implement the [`InputAction`] trait. Each action has an
-associated [`InputAction::Output`] type. It’s the value the action outputs when you assign
-bindings to it. More on that later.
+- **Actions** represent something a player can do, like "Jump", "Move", or "Open Menu". They are not tied to specific input.
+- **Bindings** connect those actions to real input sources such as keyboard keys, mouse buttons, gamepad axes, etc.
+- **Contexts** represent a certain input state the player can be in, such as "On foot" or "In car". They associate actions with
+  entities and define when those actions are evaluated.
 
-To implement the trait, you can use the provided derive macro.
+Contexts are regular components. Depending on your type of game, you may have a single global context
+or multiple contexts for different gameplay states. To register a component as an input context, you need to call
+[`InputContextAppExt::add_input_context`]. By default, contexts are evaluated during [`PreUpdate`], but you can customize this
+by using [`InputContextAppExt::add_input_context_to`] instead.
+
+Actions are represented by entities with the [`Action<A>`] component, where `A` is a user-defined marker that implements the
+[`InputAction`] trait, which defines [`InputAction::Output`] type - the value the action produces. It could be [`bool`], [`f32`],
+[`Vec2`] or [`Vec3`]. Actions associated with contexts via [`ActionOf`] relationship. We provide the [`actions!`] macro, which is
+similar to [`related!`], but for actions. The relationship is generic over `C` because a single entity can have multiple associated
+contexts.
+
+Bindings are represented by entities with the [`Binding`] component. It can be constructed from various input types, such as
+[`KeyCode`], [`MouseButton`], [`GamepadAxis`], etc. Bindings associated with actions via [`BindingOf`] relationship. Similar to [`actions!`],
+we provide the [`bindings!`] macro to spawn related bindings. But unlike [`ActionOf<C>`], it's not generic, since each action is represented
+by a separate entity.
+
 
 ```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-#[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+use bevy::prelude::*;
+use bevy_enhanced_input::prelude::*;
+
+# let mut app = App::new();
+# app.add_plugins(EnhancedInputPlugin);
+app.add_input_context::<Player>();
+
+# let mut world = World::new();
+world.spawn((
+    Player,
+    actions!(Player[
+        (
+            Action::<Jump>::new(),
+            bindings![KeyCode::Space, GamepadButton::South],
+        ),
+        (
+            Action::<Fire>::new(),
+            bindings![MouseButton::Left, GamepadButton::RightTrigger2],
+        ),
+    ])
+));
+
+#[derive(Component)]
+struct Player;
+
+#[derive(InputAction)]
+#[action_output(bool)]
 struct Jump;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = Vec2)]
+#[derive(InputAction)]
+#[action_output(bool)]
+struct Fire;
+```
+
+By default, input is read from all connected gamepads. You can customize this by adding the [`GamepadDevice`] component to the
+context entity.
+
+Context actions will be evaluated in the schedule associated at context registration. Contexts registered in the same
+schedule will be evaluated in their spawning order, but you can override it by adding the [`ContextPriority`] component.
+
+Actions also have [`ActionSettings`] component that customizes their behavior.
+
+## Input modifiers
+
+Action values are stored in two forms:
+- In a typed form, as the [`Action<C>`] component.
+- In a dynamically typed form, as the [`ActionValue`], which is one of the required components of [`Action<C>`].
+  Its variant depends on the [`InputAction::Output`].
+
+During [`EnhancedInputSet::Update`], input is read for each [`Binding`] as an [`ActionValue`], with the variant depending
+on the input source. This value is then converted into the [`ActionValue`] on the associated action entity. For example,
+key inputs are captured as [`bool`], but if the action's output type is [`Vec2`], the value will be assigned to the X axis
+as `0.0` or `1.0`. See [`Binding`] for details on how each source is captured, and [`ActionValue::convert`] for how values
+are transformed.
+
+Then, during [`EnhancedInputSet::Apply`], the value from [`ActionValue`] is written into [`Action<C>`].
+
+However, you might want to apply preprocessing first - for example, invert values, apply sensitivity, or remap axes. This is
+where [input modifiers](crate::modifier) come in. They are components that implement the [`InputModifier`] trait and can
+be attached to both actions and bindings. Binding-level modifiers are applied first, followed by action-level modifiers.
+Use action-level modifiers as global modifiers that are applied to all bindings of the action.
+
+```
+use bevy::prelude::*;
+use bevy_enhanced_input::prelude::*;
+
+# let mut world = World::new();
+world.spawn((
+    Player,
+    actions!(Player[
+        (
+            Action::<Move>::new(),
+            // Modifier components at the action level.
+            DeadZone::default(),    // Applies non-uniform normalization.
+            SmoothNudge::default(), // Smoothes movement.
+            bindings![
+                // Keyboard keys captured as `bool`, but the output of `Move` is defined as `Vec2`,
+                // so you need to assign keys to axes using swizzle to reorder them and negation.
+                (KeyCode::KeyW, SwizzleAxis::YXZ),
+                (KeyCode::KeyA, Negate::all()),
+                (KeyCode::KeyS, Negate::all(), SwizzleAxis::YXZ),
+                (KeyCode::KeyD),
+                // In Bevy sticks split by axes and captured as 1-dimensional inputs,
+                // so Y stick needs to be sweezled into Y axis.
+                (GamepadAxis::LeftStickX),
+                (GamepadAxis::LeftStickY, SwizzleAxis::YXZ),
+            ]
+        ),
+    ]),
+));
+
+#[derive(Component)]
+struct Player;
+
+#[derive(InputAction)]
+#[action_output(Vec2)]
 struct Move;
 ```
 
-We also require [`Debug`], which we use for logging. The `output` is the only required parameter.
-you can provide additional parameters, see the [`InputAction`] documentation.
-
-## Defining input contexts
-
-Input contexts are a collection of actions that represents a certain context that the player can be in,
-like "In car" or "On foot". They describe the rules for what triggers a given action. Contexts can be
-dynamically added, removed, or prioritized for each user. Depending on your type of game, you may have
-a single global context or multiple contexts for different gameplay states.
-
-Input contexts are represented by unit structs that implement the [`InputContext`] trait. You can use the provided derive
-macro for this. Unlike actions, all contexts need to be registered in the app using [`InputContextAppExt::add_input_context`].
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-# let mut app = App::new();
-# app.add_plugins(EnhancedInputPlugin);
-app.add_input_context::<OnFoot>();
-
-#[derive(InputContext)]
-struct OnFoot;
-```
-
-You can provide additional parameters, see the [`InputContext`] documentation.
-
-## Binding actions
-
-Actions must be bound to inputs such as gamepad or keyboard. While input contexts are defined statically at compile
-time, bindings must be assigned at runtime. They're stored inside the [`Actions<C>`] component, where `C` is an input
-context. Contexts becomes active only when its component exists on an entity. You can attach multiple [`Actions<C>`]
-components to a single entity.
-
-To bind actions, use [`UntypedActions::bind`] followed by one or more [`ActionBinding::to`] calls to define inputs. You can pass any
-input type that implements [`IntoBindings`], including tuples for multiple inputs (similar to [`App::add_systems`] in Bevy).
-All assigned inputs will be treated as "any of". See [`ActionBinding::to`] for details.
-
-Actions evaluated in their binding order, but actions with modifiers are automatically reordered to be evaluated first.
-For example, if you have actions bound to `Ctrl + C` and just `C`, the `Ctrl + C` action will be evaluated first to work
-nicely with [`InputAction::CONSUME_INPUT`].
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-let mut actions = Actions::<OnFoot>::default();
-// The action will trigger when space or gamepad south button is pressed.
-actions.bind::<Jump>().to((KeyCode::Space, GamepadButton::South));
-# #[derive(InputContext)]
-# struct OnFoot;
-# #[derive(Debug, InputAction)]
-# #[input_action(output = bool)]
-# struct Jump;
-```
-
-### Input modifiers
-
-Actions know nothing about input sources and simply convert raw values into the [`InputAction::Output`]. Input is read as the
-[`ActionValue`] enum, with the variant depending on the input source. For example, key inputs are captured as [`bool`], but
-if your action’s output type is [`Vec2`], the value will be assigned to the X axis. See the [`Input`] documentation for how each
-source is captured and [`ActionValue::convert`] for details about how values are converted.
-
-However, you might want to apply preprocessing first. For example, invert values, apply sensitivity, or remap axes. This is
-where [input modifiers](crate::input_context::input_modifier) come in. They represented as structs that implement the [`InputModifier`] trait.
-You can attach modifiers to inputs using [`BindingBuilder::with_modifiers`]. Thanks to traits, this works with any input type.
-You can also attach modifiers globally via [`ActionBinding::with_modifiers`], which applies to all inputs. For details about
-how multiple modifiers are merged together, see the [`ActionBinding`] documentation. Both methods also support tuple syntax
-for assigning multiple modifiers at once.
-
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-# let mut actions = Actions::<OnFoot>::default();
-actions
-    .bind::<Move>()
-    .to((
-        // Keyboard keys captured as `bool`, but the output of `Move` is defined as `Vec2`,
-        // so you need to assign keys to axes using swizzle to reorder them and negation.
-        KeyCode::KeyW.with_modifiers(SwizzleAxis::YXZ),
-        KeyCode::KeyA.with_modifiers(Negate::all()),
-        KeyCode::KeyS.with_modifiers((Negate::all(), SwizzleAxis::YXZ)),
-        KeyCode::KeyD,
-        // In Bevy sticks split by axes and captured as 1-dimensional inputs,
-        // so Y stick needs to be sweezled into Y axis.
-        GamepadAxis::LeftStickX,
-        GamepadAxis::LeftStickY.with_modifiers(SwizzleAxis::YXZ),
-    ))
-    .with_modifiers((
-        // Modifiers applied at the action level.
-        DeadZone::default(),    // Normalizes movement.
-        SmoothNudge::default(), // Smoothes movement.
-    ));
-# #[derive(InputContext)]
-# struct OnFoot;
-# #[derive(Debug, InputAction)]
-# #[input_action(output = Vec2)]
-# struct Move;
-```
-
-You can also attach modifiers to input tuples using [`IntoBindings::with_modifiers_each`]. It works similarly to
-[`IntoScheduleConfigs::distributive_run_if`] in Bevy.
-
 ### Presets
 
-Some bindings are very common. It would be inconvenient to bind WASD and sticks like in the example above every time.
-To solve this, we provide [presets](crate::input_context::preset) - structs that store bindings and apply predefined modifiers.
-They implement [`IntoBindings`], so you can pass them directly into [`ActionBinding::to`].
+Some bindings are very common. It would be inconvenient to bind WASD keys and analog sticks manually, like in the example above,
+every time. To solve this, we provide [presets](crate::preset) - structs that implement [`SpawnableList`] and store bindings that
+will be spawned with predefined modifiers. To spawn them, you need to to call [`SpawnRelated::spawn`] implemented for [`Bindings`]
+directly instead of the [`bindings!`] macro.
 
 For example, you can use [`Cardinal`] and [`Axial`] presets to simplify the example above.
 
 ```
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
-# let mut actions = Actions::<OnFoot>::default();
-// We provide a `with_wasd` method for quick prototyping, but you can
-// construct this struct with any input.
-actions
-    .bind::<Move>()
-    .to((Cardinal::wasd_keys(), Axial::left_stick()))
-    .with_modifiers((DeadZone::default(), SmoothNudge::default()));
-# #[derive(InputContext)]
-# struct OnFoot;
-# #[derive(Debug, InputAction)]
-# #[input_action(output = Vec2)]
+# let mut world = World::new();
+world.spawn((
+    Player,
+    actions!(Player[
+        (
+            Action::<Move>::new(),
+            DeadZone::default(),
+            SmoothNudge::default(),
+            Bindings::spawn((
+                Cardinal::wasd_keys(),
+                Axial::left_stick(),
+            )),
+        ),
+    ]),
+));
+# #[derive(Component)]
+# struct Player;
+# #[derive(InputAction)]
+# #[action_output(Vec2)]
 # struct Move;
 ```
 
-### Input conditions
+You can also assign custom bindings or attach additional modifiers, see the [preset] module for more details.
 
-Instead of hardcoded states like "pressed" or "released", all actions internally have an abstract [`ActionState`].
-Its meaning depends on assigned [input conditions](crate::input_context::input_condition), which decide when the action triggers.
-This allows to define flexible conditions, such as "hold for 1 second".
+## Input conditions
 
-Input conditions are structs that implement [`InputCondition`]. Similar to modifiers, you can use
-[`BindingBuilder::with_conditions`] for per-input conditions or [`ActionBinding::with_conditions`]
-to define a condition that applies to all action's inputs. Conditions are evaluated after input modifiers.
-For details about how multiple conditions are merged together, see the [`ActionBinding`] documentation.
+Instead of hardcoded states like "pressed" or "released", all actions use an abstract [`ActionState`] component
+(which is a required component of [`Action<C>`]). Its meaning depends on the assigned [input conditions](crate::condition),
+which determine when the action is triggered. This allows you to define flexible behaviors, such as "hold for 1 second".
 
-```
-# use bevy::prelude::*;
-# use bevy_enhanced_input::prelude::*;
-# let mut actions = Actions::<OnFoot>::default();
-// The action will trigger only if held for 1 second.
-actions.bind::<Jump>().to(KeyCode::Space.with_conditions(Hold::new(1.0)));
-# #[derive(InputContext)]
-# struct OnFoot;
-# #[derive(Debug, InputAction)]
-# #[input_action(output = bool)]
-# struct Jump;
-```
+Input conditions are components that implement [`InputCondition`] trait. Similar to modifiers, you can attach them to
+both actions and bindings. They also evaluated during [`EnhancedInputSet::Update`] right after modifiers and update
+[`ActionState`] on the associated action entity.
 
-If no conditions are assigned, the action will be triggered by any non-zero value.
-
-Similar to modifiers, you can also attach conditions to input tuples using [`IntoBindings::with_conditions_each`].
-
-### Organizing bindings
-
-It's convenient to define bindings in a single function that used every time you activate the context
-or reload your application settings.
-
-To achieve this, we provide a special [`Bind<C>`] event that triggers when you insert or replace
-[`Actions<C>`] component. Just create an observer for it and define all your bindings there:
+If no conditions are attached, the action behaves like with [`Down`] condition with a zero actuation threshold,
+meaning it will trigger on any non-zero input value.
 
 ```
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
-# let mut app = App::new();
-app.add_observer(bind_actions);
-
-/// Setups bindings for [`OnFoot`] context from application settings.
-fn bind_actions(
-    trigger: Trigger<Bind<OnFoot>>,
-    settings: Res<AppSettings>,
-    mut actions: Query<&mut Actions<OnFoot>>
-) {
-    let mut actions = actions.get_mut(trigger.target()).unwrap();
-    actions
-        .bind::<Jump>()
-        .to((settings.keyboard.jump, GamepadButton::South));
-}
-
-#[derive(Resource)]
-struct AppSettings {
-    keyboard: KeyboardSettings,
-}
-
-struct KeyboardSettings {
-    jump: KeyCode,
-}
-# #[derive(InputContext)]
-# struct OnFoot;
-# #[derive(Debug, InputAction)]
-# #[input_action(output = bool)]
+# let mut world = World::new();
+world.spawn((
+    Player,
+    actions!(Player[
+        (
+            // The action will trigger only if held for 1 second.
+            Action::<Jump>::new(),
+            Hold::new(1.0),
+            bindings![KeyCode::Space, GamepadButton::South],
+        ),
+        (
+            Action::<Fire>::new(),
+            Pulse::new(0.5), // The action will trigger every 0.5 seconds while held.
+            bindings![
+                (GamepadButton::RightTrigger2, Down::new(0.3)), // Additionally the right trigger only counts if its value is greater than 0.3.
+                (MouseButton::Left),
+            ]
+        ),
+    ])
+));
+# #[derive(Component)]
+# struct Player;
+# #[derive(InputAction)]
+# #[action_output(bool)]
 # struct Jump;
+# #[derive(InputAction)]
+# #[action_output(bool)]
+# struct Fire;
 ```
 
-We also provide a user-triggerable [`RebindAll`] event that resets bindings for all inserted
-[`Actions`] and also triggers [`Bind`] event for them.
+## Mocking
+
+You can also mock actions using the [`ActionMock`] component. When it's present on an action with [`ActionMock::enabled`], it will drive
+the [`ActionState`] and [`ActionValue`] for the specified [`MockSpan`] duration. During this time, all bindings for this action will be ignored.
+For more details, see the [`ActionMock`] documentation.
 
 ## Reacting on actions
 
@@ -246,18 +239,17 @@ We provide both push-style (via observers) and pull-style (by checking component
 
 ### Push-style
 
-It's recommended to always use the observer API when possible. Don’t worry about losing parallelism - running a system
-has its own overhead, so for small logic, it’s actually faster to execute it outside a system. Just avoid heavy logic in
+It's recommended to use the observer API, especially for actions that trigger rarely. Don't worry about losing parallelism - running
+a system has its own overhead, so for small logic, it's actually faster to execute it outside a system. Just avoid heavy logic in
 action observers.
 
-After each input processing cycle, we calculate a new [`ActionState`] and trigger events based on state transition
-(including transition between identical states). For details about transition logic and event types, see the [`ActionEvents`]
-documentation.
+During [`EnhancedInputSet::Apply`], events are triggered based on transitions of [`ActionState`], such as
+[`Started<A>`], [`Fired<A>`], and others, where `A` is your action type. This includes transitions between identical states.
+For a full list of transition events, see the [`ActionEvents`] component documentation.
 
-Triggered events are stored as [`ActionEvents`] bitset, but triggered using dedicated types that correspond to bitflags -
-[`Started<A>`], [`Fired<A>`], etc., where `A` is your action type. The trigger target will be the entity with the [`Actions`] component
-and the output type will match the action’s [`InputAction::Output`]. Events also store other information, such as timings. See the
-documentation on specific event type for more information.
+The event target will be the entity with the context component, and the output type will match the action's [`InputAction::Output`].
+Events also include additional data, such as timings and state. See the documentation for each [event type](crate::action::events)
+for more details.
 
 ```
 # use bevy::prelude::*;
@@ -274,8 +266,8 @@ fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transfo
     // but since translation expects `Vec3`, we extend it to 3 axes.
     transform.translation += trigger.value.extend(0.0);
 }
-# #[derive(Debug, InputAction)]
-# #[input_action(output = Vec2)]
+# #[derive(InputAction)]
+# #[action_output(Vec2)]
 # struct Move;
 ```
 
@@ -284,30 +276,81 @@ The event system is highly flexible. For example, you can use the [`Hold`] condi
 
 ### Pull-style
 
-You can also query for [`Actions`] within a system. Use [`UntypedActions::get<A>`] to retrieve an [`Action`], from which you can obtain the
-current value, state, or triggered events for this tick as [`ActionEvents`] bitset.
+You can simply query [`Action<C>`] in a system to get the action value in a strongly typed form.
+Alternatively, you can query [`ActionValue`] in its dynamically typed form.
+
+To access the action state, use the [`ActionState`] component. State transitions from the last action evaluation are recorded
+in the [`ActionEvents`] component, which lets you detect when an action has just started or stopped triggering.
+
+Timing information provided via [`ActionTime`] component.
+
+You can also use Bevy's change detection - these components marked as changed only if their values actually change.
 
 ```
 # use bevy::prelude::*;
 # use bevy_enhanced_input::prelude::*;
-/// Apply movemenet when `Move` action considered fired.
-fn system(players: Single<(&Actions<OnFoot>, &mut Transform)>) -> Result<()> {
-    let (actions, mut transform) = players.into_inner();
-    if actions.state::<Jump>()? == ActionState::Fired {
-        // Apply logic...
+fn apply_input(
+    jump_events: Single<&ActionEvents, With<Action<Jump>>>,
+    move_action: Single<&Action<Move>>,
+    mut player_transform: Single<&mut Transform, With<Player>>,
+) {
+    // Jumped this frame
+    if jump_events.contains(ActionEvents::STARTED) {
+        // User logic...
     }
-#   Ok(())
+
+    // We defined the output of `Move` as `Vec2`,
+    // but since translation expects `Vec3`, we extend it to 3 axes.
+    player_transform.translation = move_action.extend(0.0);
 }
-# #[derive(InputContext)]
-# struct OnFoot;
-# #[derive(Debug, InputAction)]
-# #[input_action(output = bool)]
+# #[derive(Component)]
+# struct Player;
+# #[derive(InputAction)]
+# #[action_output(bool)]
 # struct Jump;
+# #[derive(InputAction)]
+# #[action_output(Vec2)]
+# struct Move;
 ```
 
-# Input and UI
+## Removing contexts
 
-Currently, Bevy doesn't have focus management or navigation APIs. But we provide [`ActionSources`] resource
+To remove a context from an entity, you need to remove it with required components **and** despawn its actions.
+
+```
+# use bevy::prelude::*;
+# use bevy_enhanced_input::prelude::*;
+# let mut world = World::new();
+let mut player = world.spawn((
+    OnFoot,
+    actions!(OnFoot[
+        (Action::<Jump>::new(), bindings![KeyCode::Space, GamepadButton::South]),
+        (Action::<Fire>::new(), bindings![MouseButton::Left, GamepadButton::RightTrigger2]),
+    ])
+));
+
+player
+    .remove_with_requires::<OnFoot>()
+    .despawn_related::<Actions<OnFoot>>();
+
+assert_eq!(world.entities().len(), 1, "only the player entity should be left");
+# #[derive(Component)]
+# struct OnFoot;
+# #[derive(InputAction)]
+# #[action_output(bool)]
+# struct Jump;
+# #[derive(InputAction)]
+# #[action_output(bool)]
+# struct Fire;
+```
+
+Actions aren't despawned automatically via [`EntityWorldMut::remove_with_requires`], since Bevy doesn't automatically
+despawn related entities when their relationship targets (like [`Actions<C>`]) are removed. For this reason, [`Actions<C>`]
+is not a required component for `C`. See [this issue](https://github.com/bevyengine/bevy/issues/20252) for more details.
+
+## Input and UI
+
+Currently, we don't integrate `bevy_input_focus` directly. But we provide [`ActionSources`] resource
 that could be used to prevents actions from triggering during UI interactions. See its docs for details.
 
 # Troubleshooting
@@ -323,6 +366,8 @@ RUST_LOG=bevy_enhanced_input=debug cargo run
 The exact method depends on the OS shell.
 
 Alternatively you can configure `LogPlugin` to make it permanent.
+
+[`SpawnableList`]: bevy::ecs::spawn::SpawnableList
 */
 
 #![no_std]
@@ -332,46 +377,58 @@ extern crate alloc;
 // Required for the derive macro to work within the crate.
 extern crate self as bevy_enhanced_input;
 
-pub mod action_value;
-pub mod input;
-pub mod input_context;
-pub mod input_reader;
-pub mod input_time;
+pub mod action;
+pub mod binding;
+pub mod condition;
+pub mod context;
+pub mod modifier;
+pub mod preset;
 
 pub mod prelude {
     pub use super::{
         EnhancedInputPlugin, EnhancedInputSet,
-        action_value::{ActionValue, ActionValueDim},
-        input::{GamepadDevice, Input, InputModKeys, ModKeys},
-        input_context::{
-            Bind, InputContext, InputContextAppExt, RebindAll,
-            action_binding::{ActionBinding, MockSpan},
-            actions::{Actions, UntypedActions},
+        action::{
+            Accumulation, Action, ActionMock, ActionOutput, ActionSettings, ActionState,
+            ActionTime, InputAction, MockSpan,
             events::*,
-            input_action::{Accumulation, Action, ActionState, InputAction, UntypedAction},
-            input_binding::{BindingBuilder, InputBinding, IntoBindings},
-            input_condition::{
-                ConditionKind, InputCondition, block_by::*, chord::*, down::*, hold::*,
-                hold_and_release::*, press::*, pulse::*, release::*, tap::*,
-            },
-            input_modifier::{
-                InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
-                exponential_curve::*, negate::*, scale::*, smooth_nudge::*, swizzle_axis::*,
-            },
-            preset::*,
+            relationship::{ActionOf, ActionSpawner, ActionSpawnerCommands, Actions},
+            value::{ActionValue, ActionValueDim},
         },
-        input_reader::ActionSources,
-        input_time::{InputTime, TimeKind},
+        actions,
+        binding::{
+            Binding, InputModKeys,
+            mod_keys::ModKeys,
+            relationship::{BindingOf, BindingSpawner, BindingSpawnerCommands, Bindings},
+        },
+        bindings,
+        condition::{
+            ConditionKind, InputCondition, block_by::*, chord::*, down::*,
+            fns::InputConditionAppExt, hold::*, hold_and_release::*, press::*, pulse::*,
+            release::*, tap::*,
+        },
+        context::{
+            ActionsQuery, ContextPriority, GamepadDevice, InputContextAppExt,
+            input_reader::ActionSources,
+            time::{ContextTime, TimeKind},
+        },
+        modifier::{
+            InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
+            exponential_curve::*, fns::InputModifierAppExt, negate::*, scale::*, smooth_nudge::*,
+            swizzle_axis::*,
+        },
+        preset::{WithBundle, axial::*, bidirectional::*, cardinal::*, ordinal::*, spatial::*},
     };
-    pub use bevy_enhanced_input_macros::{InputAction, InputContext};
+    pub use bevy_enhanced_input_macros::InputAction;
 }
 
 use bevy::{input::InputSystem, prelude::*};
 
-use input_context::ContextRegistry;
-use input_reader::{ActionSources, ConsumedInputs, PendingInputs};
-
-#[cfg(doc)]
+use condition::fns::ConditionRegistry;
+use context::{
+    ContextRegistry,
+    input_reader::{self, ConsumedInputs, PendingBindings},
+};
+use modifier::fns::ModifierRegistry;
 use prelude::*;
 
 /// Initializes contexts and feeds inputs to them.
@@ -383,14 +440,63 @@ impl Plugin for EnhancedInputPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ContextRegistry>()
             .init_resource::<ConsumedInputs>()
-            .init_resource::<PendingInputs>()
+            .init_resource::<PendingBindings>()
             .init_resource::<ActionSources>()
+            .init_resource::<ConditionRegistry>()
+            .init_resource::<ModifierRegistry>()
+            .register_type::<ActionValue>()
+            .register_type::<ActionState>()
+            .register_type::<ActionTime>()
+            .register_type::<ActionEvents>()
+            .register_type::<ActionSettings>()
+            .register_type::<ActionMock>()
+            .register_type::<Binding>()
+            .register_type::<Bindings>()
+            .register_type::<BindingOf>()
+            .register_type::<GamepadDevice>()
+            .register_type::<BlockBy>()
+            .register_type::<Chord>()
+            .register_type::<Down>()
+            .register_type::<Hold>()
+            .register_type::<HoldAndRelease>()
+            .register_type::<Press>()
+            .register_type::<Pulse>()
+            .register_type::<Release>()
+            .register_type::<Tap>()
+            .register_type::<AccumulateBy>()
+            .register_type::<Clamp>()
+            .register_type::<DeadZone>()
+            .register_type::<DeltaScale>()
+            .register_type::<ExponentialCurve>()
+            .register_type::<Negate>()
+            .register_type::<Scale>()
+            .register_type::<SmoothNudge>()
+            .register_type::<SwizzleAxis>()
+            .add_input_condition::<BlockBy>()
+            .add_input_condition::<Chord>()
+            .add_input_condition::<Down>()
+            .add_input_condition::<Hold>()
+            .add_input_condition::<HoldAndRelease>()
+            .add_input_condition::<Press>()
+            .add_input_condition::<Pulse>()
+            .add_input_condition::<Release>()
+            .add_input_condition::<Tap>()
+            .add_input_modifier::<AccumulateBy>()
+            .add_input_modifier::<Clamp>()
+            .add_input_modifier::<DeadZone>()
+            .add_input_modifier::<DeltaScale>()
+            .add_input_modifier::<ExponentialCurve>()
+            .add_input_modifier::<Negate>()
+            .add_input_modifier::<Scale>()
+            .add_input_modifier::<SmoothNudge>()
+            .add_input_modifier::<SwizzleAxis>()
             .configure_sets(
                 PreUpdate,
                 (EnhancedInputSet::Prepare, EnhancedInputSet::Update)
                     .chain()
                     .after(InputSystem),
             )
+            .add_observer(action::remove_action)
             .add_systems(
                 PreUpdate,
                 input_reader::update_pending.in_set(EnhancedInputSet::Prepare),
@@ -398,13 +504,23 @@ impl Plugin for EnhancedInputPlugin {
     }
 
     fn finish(&self, app: &mut App) {
-        let registry = app
+        let context = app
             .world_mut()
             .remove_resource::<ContextRegistry>()
-            .expect("registry should be inserted in `build`");
+            .expect("contexts registry should be inserted in `build`");
 
-        for contexts in registry.iter() {
-            contexts.setup(app);
+        let conditions = app
+            .world_mut()
+            .remove_resource::<ConditionRegistry>()
+            .expect("conditions registry should be inserted in `build`");
+
+        let modifiers = app
+            .world_mut()
+            .remove_resource::<ModifierRegistry>()
+            .expect("conditions registry should be inserted in `build`");
+
+        for contexts in &*context {
+            contexts.setup(app, &conditions, &modifiers);
         }
     }
 }
@@ -418,10 +534,11 @@ pub enum EnhancedInputSet {
     Prepare,
     /// Updates the state of the input contexts from inputs and mocks.
     ///
-    /// Runs in each registered [`InputContext::Schedule`].
+    /// Executes in every schedule where a context is registered.
     Update,
-    /// Triggers events evaluated inside [`Self::Update`].
+    /// Applies the value from [`ActionValue`] to [`Action`] and triggers
+    /// events evaluated from [`Self::Update`].
     ///
-    /// Runs in each registered [`InputContext::Schedule`].
-    Trigger,
+    /// Executes in every schedule where a context is registered.
+    Apply,
 }
