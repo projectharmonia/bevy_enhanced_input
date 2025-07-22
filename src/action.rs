@@ -82,13 +82,13 @@ impl<A: InputAction> Copy for Action<A> {}
 
 impl<A: InputAction> Default for Action<A> {
     fn default() -> Self {
-        Self::new()
+        Self(Default::default())
     }
 }
 
 impl<A: InputAction> Action<A> {
     pub fn new() -> Self {
-        Self(Default::default())
+        Self::default()
     }
 }
 
