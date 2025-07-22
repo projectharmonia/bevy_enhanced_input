@@ -17,12 +17,6 @@ impl LinearAccelerate {
     }
 }
 
-impl Default for LinearAccelerate {
-    fn default() -> Self {
-        Self::new(0.1)
-    }
-}
-
 impl InputModifier for LinearAccelerate {
     fn apply(
         &mut self,
