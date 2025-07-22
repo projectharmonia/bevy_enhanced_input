@@ -299,11 +299,11 @@ fn bind(
                             column_gap: GAP,
                             ..Default::default()
                         },
-                        Children::spawn(SpawnWith(|parent: &mut RelatedSpawner<_>| {
-                            parent
+                        Children::spawn(SpawnWith(|spawner: &mut RelatedSpawner<_>| {
+                            spawner
                                 .spawn((SettingsButton, children![Text::new("Replace")]))
                                 .observe(replace_binding);
-                            parent
+                            spawner
                                 .spawn((SettingsButton, children![Text::new("Cancel")]))
                                 .observe(cancel_replace_binding);
                         }))
