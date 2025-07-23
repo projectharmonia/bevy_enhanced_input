@@ -1,25 +1,24 @@
 //! Two players that use the same context type, but with different bindings.
 
-use bevy::{input::gamepad::GamepadConnectionEvent, prelude::*};
+use bevy::{
+    input::gamepad::{GamepadConnection, GamepadConnectionEvent},
+    prelude::*,
+};
 use bevy_enhanced_input::prelude::*;
 
 fn main() {
     App::new()
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
-        .init_resource::<Gamepads>()
         .add_input_context::<Player>()
-        .add_observer(bind)
         .add_observer(apply_movement)
         .add_systems(Startup, spawn)
-        .add_systems(
-            Update,
-            update_gamepads.run_if(on_event::<GamepadConnectionEvent>),
-        )
+        .add_systems(Update, update_gamepads)
         .run();
 }
 
 fn spawn(
     mut commands: Commands,
+    gamepads: Query<Entity, With<Gamepad>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
@@ -40,58 +39,28 @@ fn spawn(
         Transform::from_xyz(4.0, 8.0, 4.0),
     ));
 
-    // Spawn two players with different assigned indices.
-    let capsule = meshes.add(Capsule3d::new(0.5, 2.0));
-    commands.spawn((
-        Mesh3d(capsule.clone()),
-        MeshMaterial3d(materials.add(Color::srgb_u8(124, 144, 255))),
-        Transform::from_xyz(0.0, 1.5, 8.0),
-        Actions::<Player>::default(),
-        Player::First,
-    ));
-
-    commands.spawn((
-        Mesh3d(capsule),
-        MeshMaterial3d(materials.add(Color::srgb_u8(220, 90, 90))),
-        Transform::from_xyz(0.0, 1.5, -8.0),
-        Actions::<Player>::default(),
-        Player::Second,
-    ));
-}
-
-fn bind(
-    trigger: Trigger<Bind<Player>>,
-    gamepads: Query<Entity, With<Gamepad>>,
-    mut players: Query<(&Player, &mut Actions<Player>)>,
-) {
-    let (&player, mut actions) = players.get_mut(trigger.target()).unwrap();
-
     // By default actions read inputs from all gamepads,
     // but for local multiplayer we need assign specific
-    // gamepad index. If no gamepad with the given exists,
-    // use a placeholder to disable gamepad input.
-    let gamepad_entity = gamepads.iter().nth(player as usize);
-    actions.set_gamepad(gamepad_entity.unwrap_or(Entity::PLACEHOLDER));
+    // gamepad index.
+    let mut gamepads = gamepads.iter();
+    let (gamepad1, gamepad2) = (gamepads.next(), gamepads.next());
+    let capsule = meshes.add(Capsule3d::new(0.5, 2.0));
 
-    // Assign different bindings based player index.
-    match player {
-        Player::First => {
-            actions
-                .bind::<Move>()
-                .to((Cardinal::wasd_keys(), Axial::left_stick()));
-        }
-        Player::Second => {
-            actions
-                .bind::<Move>()
-                .to((Cardinal::arrow_keys(), Axial::left_stick()));
-        }
-    }
-
-    // Can be called multiple times extend bindings.
-    // In our case we add modifiers for all players.
-    actions
-        .bind::<Move>()
-        .with_modifiers((DeadZone::default(), SmoothNudge::default()));
+    // Spawn two players with different controls.
+    commands.spawn(player_bundle(
+        Player::First,
+        gamepad1,
+        capsule.clone(),
+        materials.add(Color::srgb_u8(124, 144, 255)),
+        Transform::from_xyz(0.0, 1.5, 8.0),
+    ));
+    commands.spawn(player_bundle(
+        Player::Second,
+        gamepad2,
+        capsule,
+        materials.add(Color::srgb_u8(220, 90, 90)),
+        Transform::from_xyz(0.0, 1.5, -8.0),
+    ));
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transform>) {
@@ -106,21 +75,73 @@ fn apply_movement(trigger: Trigger<Fired<Move>>, mut players: Query<&mut Transfo
     transform.translation.x = transform.translation.x.clamp(-10.0, 10.0);
 }
 
-fn update_gamepads(mut commands: Commands) {
-    commands.trigger(RebindAll);
+fn update_gamepads(
+    mut event_reader: EventReader<GamepadConnectionEvent>,
+    mut players: Query<&mut GamepadDevice>,
+) {
+    for event in event_reader.read() {
+        match event.connection {
+            GamepadConnection::Connected { .. } => {
+                // Assign to a player without a gamepad.
+                if let Some(mut gamepad) = players
+                    .iter_mut()
+                    .find(|gamepad| **gamepad == GamepadDevice::None)
+                {
+                    *gamepad = event.gamepad.into();
+                }
+            }
+            GamepadConnection::Disconnected => {
+                // Unassign the disconnected gamepad.
+                // Not necessary to do, but allows us conveniently
+                // detect which player don't have a gamepad.
+                if let Some(mut gamepad) = players
+                    .iter_mut()
+                    .find(|gamepad| **gamepad == event.gamepad.into())
+                {
+                    *gamepad = GamepadDevice::None;
+                }
+            }
+        }
+    }
 }
 
-/// Used as both input context and component.
-#[derive(InputContext, Component, Clone, Copy, PartialEq, Eq, Hash)]
+fn player_bundle(
+    player: Player,
+    gamepad: Option<Entity>,
+    mesh: impl Into<Mesh3d>,
+    material: impl Into<MeshMaterial3d<StandardMaterial>>,
+    transform: Transform,
+) -> impl Bundle {
+    // Assign different bindings based on the player index.
+    let move_bindings = match player {
+        Player::First => Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
+        Player::Second => Bindings::spawn((Cardinal::arrow_keys(), Axial::left_stick())),
+    };
+
+    (
+        player,
+        GamepadDevice::from(gamepad),
+        mesh.into(),
+        material.into(),
+        transform,
+        actions!(
+            Player[(
+                Action::<Move>::new(),
+                DeadZone::default(),
+                SmoothNudge::default(),
+                Scale::splat(0.4),
+                move_bindings,
+            )]
+        ),
+    )
+}
+
+#[derive(Component, Clone, Copy, PartialEq, Eq, Hash)]
 enum Player {
     First,
     Second,
 }
 
-/// A resource that tracks all connected gamepads to pick them by index.
-#[derive(Resource, Default, Deref, DerefMut)]
-struct Gamepads(Vec<Entity>);
-
 #[derive(Debug, InputAction)]
-#[input_action(output = Vec2)]
+#[action_output(Vec2)]
 struct Move;

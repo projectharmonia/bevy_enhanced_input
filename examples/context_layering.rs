@@ -8,8 +8,6 @@ fn main() {
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
         .add_input_context::<Player>()
         .add_input_context::<Driving>()
-        .add_observer(bind_regular)
-        .add_observer(bind_swimming)
         .add_observer(apply_movement)
         .add_observer(jump)
         .add_observer(exit_car)
@@ -20,34 +18,24 @@ fn main() {
 }
 
 fn spawn(mut commands: Commands) {
-    commands.spawn(Actions::<Player>::default());
-}
-
-fn bind_regular(trigger: Trigger<Bind<Player>>, mut players: Query<&mut Actions<Player>>) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-    actions
-        .bind::<Move>()
-        .to((Cardinal::wasd_keys(), Axial::left_stick()))
-        .with_modifiers(DeadZone::default());
-    actions
-        .bind::<Jump>()
-        .to((KeyCode::Space, GamepadButton::South));
-    actions
-        .bind::<EnterCar>()
-        .to((KeyCode::Enter, GamepadButton::North));
-}
-
-fn bind_swimming(trigger: Trigger<Bind<Driving>>, mut players: Query<&mut Actions<Driving>>) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-    // `Player` has lower priority, so `Brake` and `ExitCar` consume inputs first,
-    // preventing `Rotate` and `EnterWater` from being triggered.
-    // The consuming behavior can be configured in the `InputAction` trait.
-    actions
-        .bind::<Brake>()
-        .to((KeyCode::Space, GamepadButton::East));
-    actions
-        .bind::<ExitCar>()
-        .to((KeyCode::Enter, GamepadButton::North));
+    commands.spawn((
+        Player,
+        actions!(Player[
+            (
+                Action::<Move>::new(),
+                DeadZone::default(),
+                Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
+            ),
+            (
+                Action::<Jump>::new(),
+                bindings![KeyCode::Space, GamepadButton::South]
+            ),
+            (
+                Action::<EnterCar>::new(),
+                bindings![KeyCode::Enter, GamepadButton::North]
+            ),
+        ]),
+    ));
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>) {
@@ -59,10 +47,30 @@ fn jump(_trigger: Trigger<Started<Jump>>) {
 }
 
 fn enter_car(trigger: Trigger<Started<EnterCar>>, mut commands: Commands) {
+    // `Player` has lower priority, so `Brake` and `ExitCar` consume inputs first,
+    // preventing `Rotate` and `EnterWater` from being triggered.
+    // The consuming behavior can be configured using `ActionSettings` component.
     info!("entering car");
-    commands
-        .entity(trigger.target())
-        .insert(Actions::<Driving>::default());
+    commands.entity(trigger.target()).insert((
+        Driving,
+        ContextPriority::<Driving>::new(1),
+        actions!(Driving[
+            (
+                Action::<Brake>::new(),
+                bindings![KeyCode::Space, GamepadButton::South]
+            ),
+            (
+                Action::<ExitCar>::new(),
+                ActionSettings {
+                    // We set `require_reset` to `true` because `EnterWater` action uses the same input,
+                    // and we want it to be triggerable only after the button is released.
+                    require_reset: true,
+                    ..Default::default()
+                },
+                bindings![KeyCode::Enter, GamepadButton::North]
+            ),
+        ]),
+    ));
 }
 
 fn brake(_trigger: Trigger<Fired<Brake>>) {
@@ -73,39 +81,36 @@ fn exit_car(trigger: Trigger<Started<ExitCar>>, mut commands: Commands) {
     info!("exiting car");
     commands
         .entity(trigger.target())
-        .remove::<Actions<Driving>>();
+        .remove_with_requires::<Driving>() // Necessary to fully remove the context.
+        .despawn_related::<Actions<Driving>>();
 }
 
-#[derive(InputContext)]
+#[derive(Component)]
 struct Player;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = Vec2)]
+#[derive(InputAction)]
+#[action_output(Vec2)]
 struct Move;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+#[derive(InputAction)]
+#[action_output(bool)]
 struct Jump;
 
 /// Adds [`Driving`].
-#[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+#[derive(InputAction)]
+#[action_output(bool)]
 struct EnterCar;
 
 /// Overrides some actions from [`Player`].
-#[derive(InputContext)]
-#[input_context(priority = 1)]
+#[derive(Component)]
 struct Driving;
 
 /// This action overrides [`Jump`] when the player is [`Driving`].
-#[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+#[derive(InputAction)]
+#[action_output(bool)]
 struct Brake;
 
 /// Removes [`Driving`].
-///
-/// We set `require_reset` to `true` because [`EnterWater`] action uses the same input,
-/// and we want it to be triggerable only after the button is released.
-#[derive(Debug, InputAction)]
-#[input_action(output = bool, require_reset = true)]
+#[derive(InputAction)]
+#[action_output(bool)]
 struct ExitCar;

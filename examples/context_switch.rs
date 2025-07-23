@@ -8,8 +8,6 @@ fn main() {
         .add_plugins((DefaultPlugins, EnhancedInputPlugin))
         .add_input_context::<Player>()
         .add_input_context::<Inventory>()
-        .add_observer(bind_player)
-        .add_observer(bind_inventory)
         .add_observer(apply_movement)
         .add_observer(attack)
         .add_observer(open_inventory)
@@ -20,32 +18,7 @@ fn main() {
 }
 
 fn spawn(mut commands: Commands) {
-    commands.spawn(Actions::<Player>::default());
-}
-
-fn bind_player(trigger: Trigger<Bind<Player>>, mut players: Query<&mut Actions<Player>>) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-    actions
-        .bind::<Move>()
-        .to((Cardinal::wasd_keys(), Axial::left_stick()))
-        .with_modifiers(DeadZone::default());
-    actions
-        .bind::<Attack>()
-        .to((MouseButton::Left, GamepadButton::West));
-    actions
-        .bind::<OpenInventory>()
-        .to((KeyCode::KeyI, GamepadButton::Select));
-}
-
-fn bind_inventory(trigger: Trigger<Bind<Inventory>>, mut players: Query<&mut Actions<Inventory>>) {
-    let mut actions = players.get_mut(trigger.target()).unwrap();
-    actions
-        .bind::<NavigateInventory>()
-        .to((Cardinal::wasd_keys(), Axial::left_stick()))
-        .with_conditions(Pulse::new(0.2)); // Avoid triggering every frame on hold for UI.
-    actions
-        .bind::<CloseInventory>()
-        .to((KeyCode::KeyI, GamepadButton::Select));
+    commands.spawn(player_bundle());
 }
 
 fn apply_movement(trigger: Trigger<Fired<Move>>) {
@@ -60,8 +33,26 @@ fn open_inventory(trigger: Trigger<Started<OpenInventory>>, mut commands: Comman
     info!("opening inventory");
     commands
         .entity(trigger.target())
-        .remove::<Actions<Player>>()
-        .insert(Actions::<Inventory>::default());
+        .remove_with_requires::<Player>() // Necessary to fully remove the context.
+        .despawn_related::<Actions<Player>>()
+        .insert((
+            Inventory,
+            actions!(Inventory[
+                (
+                    Action::<NavigateInventory>::new(),
+                    Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
+                    Pulse::new(0.2), // Avoid triggering every frame on hold for UI.
+                ),
+                (
+                    Action::<CloseInventory>::new(),
+                    ActionSettings {
+                        require_reset: true,
+                        ..Default::default()
+                    },
+                    bindings![KeyCode::KeyI, GamepadButton::Select],
+                )
+            ]),
+        ));
 }
 
 fn navigate_inventory(_trigger: Trigger<Fired<NavigateInventory>>) {
@@ -72,39 +63,62 @@ fn close_inventory(trigger: Trigger<Started<CloseInventory>>, mut commands: Comm
     info!("closing inventory");
     commands
         .entity(trigger.target())
-        .remove::<Actions<Inventory>>()
-        .insert(Actions::<Player>::default());
+        .remove_with_requires::<Inventory>()
+        .despawn_related::<Actions<Inventory>>()
+        .insert(player_bundle());
 }
 
-#[derive(InputContext)]
+fn player_bundle() -> impl Bundle {
+    (
+        Player,
+        actions!(Player[
+            (
+                Action::<Move>::new(),
+                DeadZone::default(),
+                Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
+            ),
+            (
+                Action::<Attack>::new(),
+                bindings![MouseButton::Left, GamepadButton::West],
+            ),
+            (
+                Action::<OpenInventory>::new(),
+                // We set `require_reset` to `true` because `CloseInventory` action uses the same input,
+                // and we want it to be triggerable only after the button is released.
+                ActionSettings {
+                    require_reset: true,
+                    ..Default::default()
+                },
+                bindings![KeyCode::KeyI, GamepadButton::Select],
+            ),
+        ]),
+    )
+}
+
+#[derive(Component)]
 struct Player;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = Vec2)]
+#[derive(InputAction)]
+#[action_output(Vec2)]
 struct Move;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = bool)]
+#[derive(InputAction)]
+#[action_output(bool)]
 struct Attack;
 
 /// Switches context to [`Inventory`].
-///
-/// We set `require_reset` to `true` because [`CloseInventory`] action uses the same input,
-/// and we want it to be triggerable only after the button is released.
-#[derive(Debug, InputAction)]
-#[input_action(output = bool, require_reset = true)]
+#[derive(InputAction)]
+#[action_output(bool)]
 struct OpenInventory;
 
-#[derive(InputContext)]
+#[derive(Component)]
 struct Inventory;
 
-#[derive(Debug, InputAction)]
-#[input_action(output = Vec2)]
+#[derive(InputAction)]
+#[action_output(Vec2)]
 struct NavigateInventory;
 
 /// Switches context to [`Player`].
-///
-/// See [`OpenInventory`] for details about `require_reset`.
-#[derive(Debug, InputAction)]
-#[input_action(output = bool, require_reset = true)]
+#[derive(InputAction)]
+#[action_output(bool)]
 struct CloseInventory;
