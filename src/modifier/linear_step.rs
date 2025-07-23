@@ -1,5 +1,3 @@
-use core::cmp::Ordering;
-
 use bevy::prelude::*;
 use log::warn;
 
@@ -67,5 +65,62 @@ impl InputModifier for LinearStep {
         }
 
         ActionValue::Axis3D(self.current_value).convert(value.dim())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use core::time::Duration;
+
+    use super::*;
+    use crate::context;
+
+    #[test]
+    fn stepping() {
+        let (mut world, mut state) = context::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(100));
+        let (time, actions) = state.get(&world);
+
+        let mut modifier = LinearStep::new(0.1);
+        // Forward
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.1.into());
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.2.into());
+
+        // Backward
+        assert_eq!(modifier.transform(&actions, &time, 0.0.into()), 0.1.into());
+        assert_eq!(modifier.transform(&actions, &time, 0.0.into()), 0.0.into());
+    }
+
+    #[test]
+    fn bool_as_axis1d() {
+        let (mut world, mut state) = context::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(100));
+        let (time, actions) = state.get(&world);
+
+        let mut modifier = LinearStep::new(0.1);
+        assert_eq!(
+            modifier.transform(&actions, &time, false.into()),
+            0.0.into()
+        );
+        assert_eq!(modifier.transform(&actions, &time, true.into()), 0.1.into());
+    }
+
+    #[test]
+    fn snapping() {
+        let (mut world, mut state) = context::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(100));
+        let (time, actions) = state.get(&world);
+
+        let mut modifier = LinearStep {
+            current_value: Vec3::X * 0.95,
+            step_rate: 0.1,
+        };
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
     }
 }
