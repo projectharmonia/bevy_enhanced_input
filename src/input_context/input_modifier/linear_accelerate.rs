@@ -1,7 +1,9 @@
 use crate::prelude::*;
 use bevy::{prelude::*, utils::TypeIdMap};
 
-/// Linearly accelerates the input value
+/// Linearly accelerates the input value by `step_rate` each frame.
+/// 
+/// Value must be between `0.0` and `1.0`
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`]
 #[derive(Clone, Copy, Debug)]
