@@ -2,15 +2,17 @@ use bevy::prelude::*;
 
 use crate::prelude::*;
 
-/// Linearly accelerates the input value by `step_rate` each frame.
-///
-/// Value must be between `0.0` and `1.0`
+/// Gradually steps the input value toward the current value at a constant linear rate.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`]
 #[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct LinearStep {
+    /// The fraction of the distance to step per frame.
+    ///
+    /// Must be between `0.0` and `1.0`, where `0.0` results
+    /// in no movement and `1.0` snaps directly to the current value.
     pub step_rate: f32,
-    current_value: Vec3,
+    previous_value: Vec3,
 }
 
 impl LinearStep {
@@ -18,7 +20,7 @@ impl LinearStep {
     pub const fn new(step_rate: f32) -> Self {
         Self {
             step_rate,
-            current_value: Vec3::ZERO,
+            previous_value: Vec3::ZERO,
         }
     }
 }
@@ -37,20 +39,20 @@ impl InputModifier for LinearStep {
         }
 
         let target_value = value.as_axis3d();
-        if (0.0..self.step_rate).contains(&self.current_value.distance_squared(target_value)) {
-            self.current_value = target_value;
+        if (0.0..self.step_rate).contains(&self.previous_value.distance_squared(target_value)) {
+            self.previous_value = target_value;
             return value;
         }
-        let difference = target_value.length() - self.current_value.length();
+        let difference = target_value.length() - self.previous_value.length();
         if difference == 0.0 {
             return value;
         }
         if difference > 0.0 {
-            self.current_value += self.step_rate * target_value;
+            self.previous_value += self.step_rate * target_value;
         } else {
-            self.current_value -= self.step_rate * self.current_value.signum();
+            self.previous_value -= self.step_rate * self.previous_value.signum();
         }
 
-        ActionValue::Axis3D(self.current_value).convert(value.dim())
+        ActionValue::Axis3D(self.previous_value).convert(value.dim())
     }
 }
