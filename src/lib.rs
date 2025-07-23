@@ -413,8 +413,8 @@ pub mod prelude {
         },
         modifier::{
             InputModifier, accumulate_by::*, clamp::*, dead_zone::*, delta_scale::*,
-            exponential_curve::*, fns::InputModifierAppExt, negate::*, scale::*, smooth_nudge::*,
-            swizzle_axis::*,
+            exponential_curve::*, fns::InputModifierAppExt, linear_accelerate::*, negate::*,
+            scale::*, smooth_nudge::*, swizzle_axis::*,
         },
         preset::{WithBundle, axial::*, bidirectional::*, cardinal::*, ordinal::*, spatial::*},
     };
@@ -468,6 +468,7 @@ impl Plugin for EnhancedInputPlugin {
             .register_type::<DeadZone>()
             .register_type::<DeltaScale>()
             .register_type::<ExponentialCurve>()
+            .register_type::<LinearAccelerate>()
             .register_type::<Negate>()
             .register_type::<Scale>()
             .register_type::<SmoothNudge>()
@@ -486,6 +487,7 @@ impl Plugin for EnhancedInputPlugin {
             .add_input_modifier::<DeadZone>()
             .add_input_modifier::<DeltaScale>()
             .add_input_modifier::<ExponentialCurve>()
+            .add_input_modifier::<LinearAccelerate>()
             .add_input_modifier::<Negate>()
             .add_input_modifier::<Scale>()
             .add_input_modifier::<SmoothNudge>()

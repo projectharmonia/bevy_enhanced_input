@@ -7,7 +7,7 @@ use crate::prelude::*;
 /// Value must be between `0.0` and `1.0`
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`]
-#[derive(Clone, Copy, Debug)]
+#[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct LinearAccelerate {
     pub step_rate: f32,
     current_value: Vec3,
@@ -15,10 +15,10 @@ pub struct LinearAccelerate {
 
 impl LinearAccelerate {
     #[must_use]
-    pub fn new(step_rate: f32) -> Self {
+    pub const fn new(step_rate: f32) -> Self {
         Self {
             step_rate,
-            current_value: Default::default(),
+            current_value: Vec3::ZERO,
         }
     }
 }
