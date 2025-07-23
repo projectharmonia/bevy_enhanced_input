@@ -8,12 +8,12 @@ use crate::prelude::*;
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`]
 #[derive(Component, Reflect, Debug, Clone, Copy)]
-pub struct LinearAccelerate {
+pub struct LinearStep {
     pub step_rate: f32,
     current_value: Vec3,
 }
 
-impl LinearAccelerate {
+impl LinearStep {
     #[must_use]
     pub const fn new(step_rate: f32) -> Self {
         Self {
@@ -23,7 +23,7 @@ impl LinearAccelerate {
     }
 }
 
-impl InputModifier for LinearAccelerate {
+impl InputModifier for LinearStep {
     fn transform(
         &mut self,
         _actions: &ActionsQuery,
