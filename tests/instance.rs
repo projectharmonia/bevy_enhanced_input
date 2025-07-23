@@ -97,6 +97,41 @@ fn disabled() {
     app.world_mut().despawn(with_disabled_action);
 }
 
+#[test]
+fn enabling_back() {
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, InputPlugin, EnhancedInputPlugin))
+        .add_input_context::<TestContext>()
+        .finish();
+
+    let context = app
+        .world_mut()
+        .spawn((
+            TestContext,
+            Disabled,
+            actions!(TestContext[(Action::<Test>::new(), bindings![Test::KEY])]),
+        ))
+        .id();
+
+    app.update();
+
+    // Re-enable the context entity.
+    app.world_mut().entity_mut(context).remove::<Disabled>();
+
+    app.world_mut()
+        .resource_mut::<ButtonInput<KeyCode>>()
+        .press(Test::KEY);
+
+    app.update();
+
+    let mut actions = app
+        .world_mut()
+        .query_filtered::<&ActionState, With<Action<Test>>>();
+
+    let state = *actions.single(app.world()).unwrap();
+    assert_eq!(state, ActionState::Fired);
+}
+
 #[derive(Component)]
 struct TestContext;
 
