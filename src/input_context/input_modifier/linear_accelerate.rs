@@ -30,6 +30,9 @@ impl InputModifier for LinearAccelerate {
         value: ActionValue,
     ) -> ActionValue {
         let target_value = value.as_axis3d();
+        if !(0.0..1.0).contains(&self.step_rate) {
+            warn!("`step_rate` should be between 0.0 and 1.0")
+        }
         if (0.0..self.step_rate).contains(&self.current_value.distance_squared(target_value)) {
             self.current_value = target_value;
             return value;
