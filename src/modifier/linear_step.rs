@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::prelude::*;
 
-/// Gradually steps the input value toward the current value at a constant linear rate.
+/// Gradually steps the input value toward the target value at a constant linear rate.
 ///
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`]
 #[derive(Component, Reflect, Debug, Clone, Copy)]
@@ -10,9 +10,10 @@ pub struct LinearStep {
     /// The fraction of the distance to step per frame.
     ///
     /// Must be between `0.0` and `1.0`, where `0.0` results
-    /// in no movement and `1.0` snaps directly to the current value.
+    /// in no movement and `1.0` snaps directly to the target value.
     pub step_rate: f32,
-    previous_value: Vec3,
+
+    current_value: Vec3,
 }
 
 impl LinearStep {
@@ -20,7 +21,7 @@ impl LinearStep {
     pub const fn new(step_rate: f32) -> Self {
         Self {
             step_rate,
-            previous_value: Vec3::ZERO,
+            current_value: Vec3::ZERO,
         }
     }
 }
@@ -38,21 +39,23 @@ impl InputModifier for LinearStep {
             return value;
         }
 
-        let target_value = value.as_axis3d();
-        if (0.0..self.step_rate).contains(&self.previous_value.distance_squared(target_value)) {
-            self.previous_value = target_value;
-            return value;
-        }
-        let difference = target_value.length() - self.previous_value.length();
-        if difference == 0.0 {
-            return value;
-        }
-        if difference > 0.0 {
-            self.previous_value += self.step_rate * target_value;
-        } else {
-            self.previous_value -= self.step_rate * self.previous_value.signum();
+        if let ActionValue::Bool(value) = value {
+            let value = if value { 1.0 } else { 0.0 };
+            return self.transform(_actions, _time, value.into());
         }
 
-        ActionValue::Axis3D(self.previous_value).convert(value.dim())
+        let target_value = value.as_axis3d();
+
+        // Snap if distance is less than one step.
+        let distance = self.current_value.distance(target_value);
+        if distance <= self.step_rate {
+            self.current_value = target_value;
+            return value;
+        }
+
+        let diff = target_value - self.current_value;
+        self.current_value += diff * self.step_rate;
+
+        ActionValue::Axis3D(self.current_value).convert(value.dim())
     }
 }
