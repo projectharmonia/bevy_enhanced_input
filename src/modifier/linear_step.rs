@@ -1,3 +1,5 @@
+use core::cmp::Ordering;
+
 use bevy::prelude::*;
 use log::warn;
 
@@ -54,8 +56,15 @@ impl InputModifier for LinearStep {
             return value;
         }
 
-        let diff = target_value - self.current_value;
-        self.current_value += diff * self.step_rate;
+        let diff = target_value.length() - self.current_value.length();
+        if diff == 0.0 {
+            return value;
+        }
+        if diff > 0.0 {
+            self.current_value += self.step_rate * target_value;
+        } else {
+            self.current_value -= self.step_rate * self.current_value.signum();
+        }
 
         ActionValue::Axis3D(self.current_value).convert(value.dim())
     }
