@@ -14,6 +14,7 @@ use bevy::ecs::system::SystemState;
 use bevy::{
     ecs::{
         component::ComponentId,
+        entity_disabling::Disabled,
         schedule::ScheduleLabel,
         system::{ParamBuilder, QueryParamBuilder},
         world::{FilteredEntityMut, FilteredEntityRef},
@@ -225,7 +226,8 @@ impl ScheduleContexts {
 fn register_instance<C: Component, S: ScheduleLabel>(
     trigger: Trigger<OnInsert, ContextPriority<C>>,
     mut instances: ResMut<ContextInstances<S>>,
-    contexts: Query<&ContextPriority<C>>,
+    // TODO Bevy 0.17: Use `Allows` filter instead of `Has`.
+    contexts: Query<(&ContextPriority<C>, Has<Disabled>)>,
 ) {
     debug!(
         "registering `{}` to `{}`",
@@ -233,8 +235,8 @@ fn register_instance<C: Component, S: ScheduleLabel>(
         trigger.target(),
     );
 
-    let priority = **contexts.get(trigger.target()).unwrap();
-    instances.add::<C>(trigger.target(), priority);
+    let (&priority, _) = contexts.get(trigger.target()).unwrap();
+    instances.add::<C>(trigger.target(), *priority);
 }
 
 fn remove_context<C: Component, S: ScheduleLabel>(
@@ -287,7 +289,14 @@ fn update<S: ScheduleLabel>(
     reader.clear_consumed::<S>();
 
     for instance in &**instances {
-        let mut context = contexts.get_mut(instance.entity).unwrap();
+        let Ok(mut context) = contexts.get_mut(instance.entity) else {
+            trace!(
+                "skipping updating `{}` on `{}`",
+                instance.name, instance.entity
+            );
+            continue;
+        };
+
         let gamepad = context.get::<GamepadDevice>().copied().unwrap_or_default();
         let Some(context_actions) = instance.actions_mut(&mut context) else {
             continue;
@@ -480,6 +489,10 @@ fn apply<S: ScheduleLabel>(
 ) {
     for instance in &**instances {
         let Ok(context_entity) = contexts.get(instance.entity) else {
+            trace!(
+                "skipping triggering for `{}` on `{}`",
+                instance.name, instance.entity,
+            );
             continue;
         };
         let Some(context_actions) = instance.actions(&context_entity) else {
