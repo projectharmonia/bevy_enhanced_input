@@ -32,19 +32,19 @@ fn setup(
         // Actions are related to specific context since a single entity can have multiple contexts.
         actions!(FlyCam[
             (
-                // Bindings like WASD or sticks are very common,
-                // so we provide built-ins to assign all keys/axes at once.
-                // We don't assign any conditions and in this case the action will
-                // be triggered with any non-zero value.
                 Action::<Move>::new(),
-                // Conditions are components.
+                // Conditions and modifiers as components.
                 DeadZone::default(), // Apply non-uniform normalization that works for both digital and analog inputs, otherwise diagonal movement will be faster.
                 SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
-                // Modifiers also components.
                 Scale::splat(0.3), // Additionally multiply by a constant to achieve the desired speed.
                 // Bindings are entities related to actions.
                 // An action can have multiple bindings and will respond to any of them.
-                Bindings::spawn((Cardinal::wasd_keys(), Axial::left_stick())),
+                Bindings::spawn((
+                    // Bindings like WASD or sticks are very common,
+                    // so we provide built-in `SpawnableList`s to assign all keys/axes at once.
+                    Cardinal::wasd_keys(),
+                    Axial::left_stick()
+                )),
             ),
             (
                 Action::<Rotate>::new(),

@@ -6,6 +6,7 @@ pub mod value;
 use core::{any, fmt::Debug, time::Duration};
 
 use bevy::prelude::*;
+use log::trace;
 use serde::{Deserialize, Serialize};
 
 use crate::{context::input_reader::PendingBindings, prelude::*};
@@ -27,8 +28,12 @@ pub(crate) fn remove_action(
     )>,
     bindings: Query<&Binding>,
 ) {
-    let (action_bindings, settings, fns, mut value, mut state, mut events, mut time) =
-        actions.get_mut(trigger.target()).unwrap();
+    let Ok((action_bindings, settings, fns, mut value, mut state, mut events, mut time)) =
+        actions.get_mut(trigger.target())
+    else {
+        trace!("ignoring removal on `{}`", trigger.target());
+        return;
+    };
 
     *time = Default::default();
     events.set_if_neq(ActionEvents::new(*state, ActionState::None));
