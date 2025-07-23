@@ -37,10 +37,9 @@ fn setup(
                 // We don't assign any conditions and in this case the action will
                 // be triggered with any non-zero value.
                 Action::<Move>::new(),
-                // Conditions are components.
+                // Conditions and modifiers as components.
                 DeadZone::default(), // Apply non-uniform normalization that works for both digital and analog inputs, otherwise diagonal movement will be faster.
                 SmoothNudge::default(), // Make movement smooth and independent of the framerate. To only make it framerate-independent, use `DeltaScale`.
-                // Modifiers also components.
                 Scale::splat(0.3), // Additionally multiply by a constant to achieve the desired speed.
                 // Bindings are entities related to actions.
                 // An action can have multiple bindings and will respond to any of them.
