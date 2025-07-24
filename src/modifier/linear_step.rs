@@ -14,10 +14,7 @@ pub struct LinearStep {
     /// in no movement and `1.0` snaps directly to the target value.
     pub accel_step_rate: f32,
 
-    /// The fraction of the distance to step per frame while decelerating.
-    ///
-    /// Must be between `0.0` and `1.0`, where `0.0` results
-    /// in no movement and `1.0` snaps directly to the target value.
+    /// Like [`Self::accel_step_rate`], but for deceleration.
     pub decel_step_rate: f32,
 
     current_value: Vec3,
