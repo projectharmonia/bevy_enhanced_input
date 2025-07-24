@@ -8,20 +8,27 @@ use crate::prelude::*;
 /// [`ActionValue::Bool`] will be transformed into [`ActionValue::Axis1D`]
 #[derive(Component, Reflect, Debug, Clone, Copy)]
 pub struct LinearStep {
-    /// The fraction of the distance to step per frame.
+    /// The fraction of the distance to step per frame while accelerating.
     ///
     /// Must be between `0.0` and `1.0`, where `0.0` results
     /// in no movement and `1.0` snaps directly to the target value.
-    pub step_rate: f32,
+    pub accel_step_rate: f32,
+
+    /// The fraction of the distance to step per frame while decelerating.
+    ///
+    /// Must be between `0.0` and `1.0`, where `0.0` results
+    /// in no movement and `1.0` snaps directly to the target value.
+    pub decel_step_rate: f32,
 
     current_value: Vec3,
 }
 
 impl LinearStep {
     #[must_use]
-    pub const fn new(step_rate: f32) -> Self {
+    pub const fn new(accel_step_rate: f32, decel_step_rate: f32) -> Self {
         Self {
-            step_rate,
+            accel_step_rate,
+            decel_step_rate,
             current_value: Vec3::ZERO,
         }
     }
@@ -34,34 +41,38 @@ impl InputModifier for LinearStep {
         _time: &ContextTime,
         value: ActionValue,
     ) -> ActionValue {
-        if !(0.0..=1.0).contains(&self.step_rate) {
-            // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
-            warn!("step rate can't be outside 0.0..=1.0: {}", self.step_rate);
-            return value;
-        }
-
         if let ActionValue::Bool(value) = value {
             let value = if value { 1.0 } else { 0.0 };
             return self.transform(_actions, _time, value.into());
         }
 
         let target_value = value.as_axis3d();
+        let diff = target_value.length() - self.current_value.length();
+        let step_rate = if diff > 0.0 {
+            self.accel_step_rate
+        } else {
+            self.decel_step_rate
+        };
+        if !(0.0..=1.0).contains(&step_rate) {
+            // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
+            warn!("step rate can't be outside 0.0..=1.0: {step_rate}");
+            return value;
+        }
 
         // Snap if distance is less than one step.
         let distance = self.current_value.distance(target_value);
-        if distance <= self.step_rate {
+        if distance <= step_rate {
             self.current_value = target_value;
             return value;
         }
 
-        let diff = target_value.length() - self.current_value.length();
         if diff == 0.0 {
             return value;
         }
         if diff > 0.0 {
-            self.current_value += self.step_rate * target_value;
+            self.current_value += step_rate * target_value;
         } else {
-            self.current_value -= self.step_rate * self.current_value.signum();
+            self.current_value -= step_rate * self.current_value.signum();
         }
 
         ActionValue::Axis3D(self.current_value).convert(value.dim())
