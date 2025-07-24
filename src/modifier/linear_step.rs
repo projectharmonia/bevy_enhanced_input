@@ -53,6 +53,7 @@ impl InputModifier for LinearStep {
         } else {
             self.decel_step_rate
         };
+
         if !(0.0..=1.0).contains(&step_rate) {
             // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
             warn!("step rate can't be outside 0.0..=1.0: {step_rate}");
