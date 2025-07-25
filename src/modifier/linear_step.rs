@@ -21,6 +21,12 @@ pub struct LinearStep {
 }
 
 impl LinearStep {
+    /// Creates a new instance with acceleration and deceleration rates set to `step_rate`.
+    #[must_use]
+    pub const fn splat(step_rate: f32) -> Self {
+        Self::new(step_rate, step_rate)
+    }
+
     #[must_use]
     pub const fn new(accel_step_rate: f32, decel_step_rate: f32) -> Self {
         Self {
@@ -29,13 +35,6 @@ impl LinearStep {
             current_value: Vec3::ZERO,
         }
     }
-    pub const fn splat(step_rate: f32) -> Self {
-        Self {
-            accel_step_rate: step_rate,
-            decel_step_rate: step_rate,
-            current_value: Vec3::ZERO,
-        }
-}        
 }
 
 impl InputModifier for LinearStep {
