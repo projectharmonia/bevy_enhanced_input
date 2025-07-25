@@ -4,6 +4,7 @@ pub mod dead_zone;
 pub mod delta_scale;
 pub mod exponential_curve;
 pub mod fns;
+pub mod linear_step;
 pub mod negate;
 pub mod scale;
 pub mod smooth_nudge;
