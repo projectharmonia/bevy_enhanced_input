@@ -103,9 +103,28 @@ mod tests {
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.1.into());
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.2.into());
 
+        // No movement
+        assert_eq!(modifier.transform(&actions, &time, 0.2.into()), 0.2.into());
+
         // Backward
         assert_eq!(modifier.transform(&actions, &time, 0.0.into()), 0.1.into());
         assert_eq!(modifier.transform(&actions, &time, 0.0.into()), 0.0.into());
+    }
+
+    #[test]
+    fn invalid_step_rate() {
+        let (mut world, mut state) = context::init_world();
+        world
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(100));
+        let (time, actions) = state.get(&world);
+
+        let mut modifier = LinearStep::splat(2.0);
+        assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
+        assert_eq!(
+            modifier.transform(&actions, &time, (-1.0).into()),
+            (-1.0).into()
+        );
     }
 
     #[test]
