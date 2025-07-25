@@ -29,6 +29,13 @@ impl LinearStep {
             current_value: Vec3::ZERO,
         }
     }
+    pub const fn splat(step_rate: f32) -> Self {
+        Self {
+            accel_step_rate: step_rate,
+            decel_step_rate: step_rate,
+            current_value: Vec3::ZERO,
+        }
+}        
 }
 
 impl InputModifier for LinearStep {
@@ -92,7 +99,7 @@ mod tests {
             .advance_by(Duration::from_millis(100));
         let (time, actions) = state.get(&world);
 
-        let mut modifier = LinearStep::new(0.1);
+        let mut modifier = LinearStep::splat(0.1);
         // Forward
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.1.into());
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 0.2.into());
@@ -110,7 +117,7 @@ mod tests {
             .advance_by(Duration::from_millis(100));
         let (time, actions) = state.get(&world);
 
-        let mut modifier = LinearStep::new(0.1);
+        let mut modifier = LinearStep::splat(0.1);
         assert_eq!(
             modifier.transform(&actions, &time, false.into()),
             0.0.into()
@@ -128,7 +135,8 @@ mod tests {
 
         let mut modifier = LinearStep {
             current_value: Vec3::X * 0.95,
-            step_rate: 0.1,
+            accel_step_rate: 0.1,
+            decel_step_rate: 0.1,
         };
         assert_eq!(modifier.transform(&actions, &time, 1.0.into()), 1.0.into());
     }
