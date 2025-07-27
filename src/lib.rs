@@ -246,6 +246,7 @@ action observers.
 During [`EnhancedInputSet::Apply`], events are triggered based on transitions of [`ActionState`], such as
 [`Started<A>`], [`Fired<A>`], and others, where `A` is your action type. This includes transitions between identical states.
 For a full list of transition events, see the [`ActionEvents`] component documentation.
+Just like with the [`ActionState`], their meaning depends on the assigned [input conditions](crate::condition),
 
 The event target will be the entity with the context component, and the output type will match the action's [`InputAction::Output`].
 Events also include additional data, such as timings and state. See the documentation for each [event type](crate::action::events)
