@@ -286,7 +286,7 @@ pub enum ActionState {
 }
 
 /// Timing information for [`Action<C>`].
-#[derive(Component, Reflect, Debug, Default, Clone, Copy)]
+#[derive(Component, Reflect, Debug, Default, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct ActionTime {
     /// Time the action was in [`ActionState::Ongoing`] and [`ActionState::Fired`] states.
     pub elapsed_secs: f32,
