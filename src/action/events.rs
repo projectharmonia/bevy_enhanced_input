@@ -72,11 +72,37 @@ impl ActionEvents {
 ///
 /// Triggered before [`Fired`] and [`Ongoing`].
 ///
-/// For example, with the [`Down`] condition, this event is triggered
-/// only once per press. It will not trigger again until the key is
-/// released and pressed again.
-///
 /// See [`ActionEvents`] for all transitions.
+///
+/// # Examples
+///
+/// Throw an item on the first frame when the button is pressed.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut app = App::new();
+/// app.add_observer(throw);
+///
+/// app.world_mut().spawn((
+///     Player,
+///     actions!(Player[Action::<Throw>::new(), bindings![KeyCode::KeyF]]),
+/// ));
+///
+/// /// Triggered only once on the first press, similar to `just_pressed` in `bevy_input`.
+/// ///
+/// /// It will not trigger again until the key is released and pressed again.
+/// fn throw(trigger: Trigger<Fired<Throw>>, players: Query<(&Transform, &mut Health)>) {
+///     // ...
+/// }
+/// # #[derive(Component)]
+/// # struct Player;
+/// # #[derive(Component)]
+/// # struct Health;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct Throw;
+/// ```
 #[derive(Event)]
 pub struct Started<A: InputAction> {
     /// Current action value.
@@ -105,11 +131,48 @@ impl<A: InputAction> Copy for Started<A> {}
 
 /// Triggers every frame when an action state is [`ActionState::Ongoing`].
 ///
-/// For example, with the [`Hold`] condition, this event is triggered
-/// continuously while the user is holding down the button, until the
-/// specified duration is reached.
+///
+/// Usually useful in combination with [`Completed`] to apply some
+/// logic while the action condition is partially met, and additional
+/// logic when the condition is fully met.
 ///
 /// See [`ActionEvents`] for all transitions.
+///
+/// # Examples
+///
+/// Apply healing until the button is held down.
+/// Can be paired with [`Completed`] to apply a bonus healing when the hold duration is met.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut app = App::new();
+/// app.add_observer(heal);
+///
+/// app.world_mut().spawn((
+///     Player,
+///     actions!(Player[
+///         (
+///             Action::<Heal>::new(),
+///             Hold::new(2.0), // The action lasts for 2.0 seconds.
+///             bindings![KeyCode::KeyH],
+///         ),
+///     ])
+/// ));
+///
+/// /// Triggered continuously while the user is holding down the button,
+/// /// until the specified duration is reached.
+/// fn heal(trigger: Trigger<Ongoing<Heal>>, players: Query<&mut Health>) {
+///     // ..
+/// }
+/// # #[derive(Component)]
+/// # struct Player;
+/// # #[derive(Component)]
+/// # struct Health;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct Heal;
+/// ```
 #[derive(Event)]
 pub struct Ongoing<A: InputAction> {
     /// Current action value.
@@ -142,13 +205,38 @@ impl<A: InputAction> Copy for Ongoing<A> {}
 
 /// Triggers every frame when an action state is [`ActionState::Fired`].
 ///
-/// For example, with the [`Down`] condition, this event is triggered
-/// every frame while the key is held down. If you want to respond only
-/// on the first or last frame this state is active, see [`Started`] or
-/// [`Completed`] respectively. For this condition, these correspond to
-/// "just pressed" and "just released".
+/// If you want to respond only on the first or last frame this state
+/// is active, see [`Started`] or [`Completed`] respectively.
 ///
 /// See [`ActionEvents`] for all transitions.
+///
+/// # Examples
+///
+/// Continuously fires while the button is held down.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut app = App::new();
+/// app.add_observer(primary_fire);
+///
+/// app.world_mut().spawn((
+///     Player,
+///     actions!(Player[Action::<PrimaryFire>::new(), bindings![MouseButton::Left]])
+/// ));
+///
+/// /// Triggered every frame while the key is held down.
+/// fn primary_fire(trigger: Trigger<Fired<PrimaryFire>>, players: Query<(&Transform, &mut Health)>) {
+///     // ...
+/// }
+/// # #[derive(Component)]
+/// # struct Player;
+/// # #[derive(Component)]
+/// # struct Health;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct PrimaryFire;
+/// ```
 #[derive(Event)]
 pub struct Fired<A: InputAction> {
     /// Current action value.
@@ -185,10 +273,43 @@ impl<A: InputAction> Copy for Fired<A> {}
 
 /// Triggers when action switches its state from [`ActionState::Ongoing`] to [`ActionState::None`].
 ///
-/// For example, with the [`Hold`] condition, this event is triggered
-/// if the user releases the button before the hold duration is met.
-///
 /// See [`ActionEvents`] for all transitions.
+///
+/// # Examples
+///
+/// Perform a weak attack when not holding the button enough with the [`Hold`] condition.
+/// Can be paired with [`Completed`] to apply a strong attack when the hold duration is met.
+///
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut app = App::new();
+/// app.add_observer(weak_attack);
+///
+/// app.world_mut().spawn((
+///     Player,
+///     actions!(Player[
+///         (
+///             Action::<SecondaryAttack>::new(),
+///             Hold::new(1.5), // User needs to hold the button for 1.5 seconds.
+///             bindings![MouseButton::Left],
+///         ),
+///     ])
+/// ));
+///
+/// /// Triggered if the user releases the key before 1.5 seconds.
+/// fn weak_attack(trigger: Trigger<Canceled<SecondaryAttack>>, players: Query<(&Transform, &mut Health)>) {
+///     // ...
+/// }
+/// # #[derive(Component)]
+/// # struct Player;
+/// # #[derive(Component)]
+/// # struct Health;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct SecondaryAttack;
+/// ```
 #[derive(Event)]
 pub struct Canceled<A: InputAction> {
     /// Current action value.
@@ -221,10 +342,65 @@ impl<A: InputAction> Copy for Canceled<A> {}
 
 /// Triggers when action switches its state from [`ActionState::Fired`] to [`ActionState::None`].
 ///
-/// For example, with the [`Down`] condition, this event is triggered
-/// when the user releases the key.
-///
 /// See [`ActionEvents`] for all transitions.
+///
+/// # Examples
+///
+/// Perform a jump when the button is released.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut app = App::new();
+/// app.add_observer(jump);
+///
+/// app.world_mut().spawn((
+///     Player,
+///     actions!(Player[Action::<Jump>::new(), bindings![KeyCode::Space]]),
+/// ));
+///
+/// /// Triggered only once when the user releases the key, similar to `just_released` in `bevy_input`.
+/// fn jump(trigger: Trigger<Completed<Jump>>, players: Query<&mut Transform>) {
+///     // ...
+/// }
+/// # #[derive(Component)]
+/// # struct Player;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct Jump;
+/// ```
+///
+/// Perform a strong attack after holding the button enough with the [`Hold`] condition.
+///
+/// ```
+/// # use bevy::prelude::*;
+/// # use bevy_enhanced_input::prelude::*;
+/// # let mut app = App::new();
+/// app.add_observer(strong_attack);
+///
+/// app.world_mut().spawn((
+///     Player,
+///     actions!(Player[
+///         (
+///             Action::<SecondaryAttack>::new(),
+///             Hold::new(1.5), // User needs to hold the button for 1.5 seconds.
+///             bindings![MouseButton::Left],
+///         ),
+///     ])
+/// ));
+///
+/// /// Triggered if the user releases the key before 1.5 seconds.
+/// fn strong_attack(trigger: Trigger<Completed<SecondaryAttack>>, players: Query<(&Transform, &mut Health)>) {
+///     // ...
+/// }
+/// # #[derive(Component)]
+/// # struct Player;
+/// # #[derive(Component)]
+/// # struct Health;
+/// # #[derive(InputAction)]
+/// # #[action_output(bool)]
+/// # struct SecondaryAttack;
+/// ```
 #[derive(Event)]
 pub struct Completed<A: InputAction> {
     /// Current action value.
