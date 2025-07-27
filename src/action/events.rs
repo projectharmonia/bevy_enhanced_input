@@ -27,7 +27,7 @@ use crate::prelude::*;
 /// | [`ActionState::Fired`]      | [`ActionState::None`]    | [`Completed`]             |
 ///
 /// The meaning of each kind depends on the assigned [`InputCondition`]s. The events are
-/// fired in the action evaluation order.
+/// triggered in the action evaluation order.
 #[derive(
     Component, Reflect, Default, Debug, PartialEq, Eq, Serialize, Deserialize, Clone, Copy,
 )]
@@ -70,7 +70,7 @@ impl ActionEvents {
 /// Triggers when an action switches its state from [`ActionState::None`]
 /// to [`ActionState::Fired`] or [`ActionState::Ongoing`].
 ///
-/// Fired before [`Fired`] and [`Ongoing`].
+/// Triggered before [`Fired`] and [`Ongoing`].
 ///
 /// For example, with the [`Down`] condition, this event is triggered
 /// only once per press. It will not trigger again until the key is
