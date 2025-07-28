@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- `Chord` modifier now caps at `ActionState::Ongoing` if any of the actions aren't `ActionState::Fired`.
+- `Chord` now caps at `ActionState::Ongoing` if any of the actions aren't `ActionState::Fired`.
 
 ## [0.15.0] - 2025-07-23
 
