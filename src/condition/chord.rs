@@ -4,7 +4,7 @@ use smallvec::{SmallVec, smallvec};
 
 use crate::prelude::*;
 
-/// Returns the maximum [`ActionState`] among the given actions.
+/// Returns [`ActionState::Fired`] if all given actions fire, otherwise returns their maximum [`ActionState`], capped at [`ActionState::Ongoing`].
 ///
 /// Useful for defining a composite action that fires only when all listed actions are active.
 ///
@@ -72,8 +72,9 @@ impl InputCondition for Chord {
         _time: &ContextTime,
         _value: ActionValue,
     ) -> ActionState {
-        // All actions must be at least Ongoing for the chord to trigger.
-        let mut min_state = ActionState::Fired;
+        // Inherit state from the most significant chorded action.
+        let mut max_state = Default::default();
+        let mut all_fired = true;
         for &action in &self.actions {
             let Ok((_, &state, ..)) = actions.get(action) else {
                 // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
@@ -81,18 +82,20 @@ impl InputCondition for Chord {
                 continue;
             };
 
-            // If any action is not active (None), the chord cannot fire.
-            if state == ActionState::None {
-                return ActionState::None;
+            if state != ActionState::Fired {
+                all_fired = false;
             }
 
-            // Track the minimum state among all active actions.
-            if state < min_state {
-                min_state = state;
+            if state > max_state {
+                max_state = state;
             }
         }
 
-        min_state
+        if !all_fired {
+            max_state = max_state.min(ActionState::Ongoing);
+        }
+
+        max_state
     }
 
     fn kind(&self) -> ConditionKind {
@@ -108,7 +111,7 @@ mod tests {
     use crate::context;
 
     #[test]
-    fn chord() {
+    fn fired() {
         let (mut world, mut state) = context::init_world();
         let action = world
             .spawn((Action::<TestAction>::new(), ActionState::Fired))
@@ -119,6 +122,42 @@ mod tests {
         assert_eq!(
             condition.evaluate(&actions, &time, true.into()),
             ActionState::Fired,
+        );
+    }
+
+    #[test]
+    fn ongoing() {
+        let (mut world, mut state) = context::init_world();
+        let action1 = world
+            .spawn((Action::<TestAction>::new(), ActionState::Fired))
+            .id();
+        let action2 = world
+            .spawn((Action::<TestAction>::new(), ActionState::None))
+            .id();
+        let (time, actions) = state.get(&world);
+
+        let mut condition = Chord::new([action1, action2]);
+        assert_eq!(
+            condition.evaluate(&actions, &time, true.into()),
+            ActionState::Ongoing,
+        );
+    }
+
+    #[test]
+    fn none() {
+        let (mut world, mut state) = context::init_world();
+        let action1 = world
+            .spawn((Action::<TestAction>::new(), ActionState::None))
+            .id();
+        let action2 = world
+            .spawn((Action::<TestAction>::new(), ActionState::None))
+            .id();
+        let (time, actions) = state.get(&world);
+
+        let mut condition = Chord::new([action1, action2]);
+        assert_eq!(
+            condition.evaluate(&actions, &time, true.into()),
+            ActionState::None,
         );
     }
 
