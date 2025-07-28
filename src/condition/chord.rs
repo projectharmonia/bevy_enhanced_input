@@ -72,8 +72,8 @@ impl InputCondition for Chord {
         _time: &ContextTime,
         _value: ActionValue,
     ) -> ActionState {
-        // Inherit state from the most significant chorded action.
-        let mut max_state = Default::default();
+        // All actions must be at least Ongoing for the chord to trigger.
+        let mut min_state = ActionState::Fired;
         for &action in &self.actions {
             let Ok((_, &state, ..)) = actions.get(action) else {
                 // TODO: use `warn_once` when `bevy_log` becomes `no_std` compatible.
@@ -81,12 +81,18 @@ impl InputCondition for Chord {
                 continue;
             };
 
-            if state > max_state {
-                max_state = state;
+            // If any action is not active (None), the chord cannot fire.
+            if state == ActionState::None {
+                return ActionState::None;
+            }
+
+            // Track the minimum state among all active actions.
+            if state < min_state {
+                min_state = state;
             }
         }
 
-        max_state
+        min_state
     }
 
     fn kind(&self) -> ConditionKind {
